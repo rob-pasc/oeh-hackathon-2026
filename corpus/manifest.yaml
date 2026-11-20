@@ -1,0 +1,414 @@
+# Curated corpus for retrieval (feature 002). Format and rules: corpus/README.md.
+# Aliases list only exact identity strings confirmed for a model; add more from real scans.
+schema_version: 1
+manufacturers:
+  - name: Lenovo
+    aliases: []          # firmware reports "LENOVO"; case is normalized
+  - name: Dell
+    aliases: [Dell Inc.]
+  - name: HP
+    aliases: [Hewlett-Packard, HP Inc.]
+models:
+  - manufacturer: Lenovo
+    model: ThinkPad T480   # Lenovo reports this in product_version; model holds the machine type (20L5/20L6)
+    aliases: []
+    demo: true
+    cpus: [i5-7200U, i5-7300U, i3-8130U, i5-8250U, i5-8350U, i7-8550U, i7-8650U]
+  - manufacturer: Dell
+    model: XPS 13 9360
+    aliases: []
+    demo: true
+  - manufacturer: HP
+    model: EliteBook 840 G5
+    aliases: [HP EliteBook 840 G5]   # HP firmware usually prefixes the brand; confirm from a real scan
+    demo: true
+    cpus: [i5-7200U, i5-7300U, i5-8250U, i5-8350U, i7-8550U, i7-8650U]
+documents:
+- id: lenovo-t480-hmm
+  title: T480 Hardware Maintenance Manual
+  url: https://download.lenovo.com/pccbbs/mobiles_pdf/t480_hmm_en.pdf
+  publisher: Lenovo
+  accessed_on: '2026-11-20'
+  terms: Lenovo copyright publication offered as a free public download under Lenovo's site terms of use;
+    we store only short verbatim quotations with page markers and a link, as permitted quotation (Austrian
+    UrhG §42f / fair use), not the full manual.
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: Lenovo
+    model: ThinkPad T480
+  file: docs/lenovo-t480-hmm.md
+
+- id: lenovo-t480-psref
+  title: ThinkPad T480 Platform Specifications (PSREF)
+  url: https://psref.lenovo.com/syspool/Sys/PDF/ThinkPad/ThinkPad_T480/ThinkPad_T480_Spec.PDF
+  publisher: Lenovo
+  accessed_on: '2026-11-20'
+  terms: Public Lenovo product specification sheet (PSREF, July 2020) under Lenovo's site terms of use;
+    we store only short verbatim specification lines with a link, as permitted quotation (Austrian UrhG
+    §42f / fair use).
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: Lenovo
+    model: ThinkPad T480
+  file: docs/lenovo-t480-psref.md
+
+- id: ifixit-t480-ram-replacement
+  title: Lenovo ThinkPad T480 RAM Replacement
+  url: https://www.ifixit.com/Guide/Lenovo+ThinkPad+T480+RAM+Replacement/139943
+  publisher: iFixit
+  accessed_on: '2026-11-20'
+  terms: CC BY-NC-SA 3.0 (iFixit, guide by Sarah Westberg); non-commercial hackathon use with attribution
+    and link, short verbatim excerpts only, shared under the same licence.
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: Lenovo
+    model: ThinkPad T480
+  file: docs/ifixit-t480-ram-replacement.md
+
+- id: lenovo-t480-bios-readme
+  title: BIOS Update CD (ISO image file for bootable CD) ReadMe - ThinkPad T480
+  url: https://download.lenovo.com/pccbbs/mobiles/n24ur43w.html
+  publisher: Lenovo
+  accessed_on: '2026-11-20'
+  terms: Public Lenovo driver readme under Lenovo's site terms of use; we store only short verbatim quotations
+    (supported OS, version history) with a link, as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: software-support
+  applies_to:
+  - manufacturer: Lenovo
+    model: ThinkPad T480
+  file: docs/lenovo-t480-bios-readme.md
+
+- id: lenovo-windows11-upgrade-devices
+  title: Lenovo devices supported for upgrade to Windows 11
+  url: https://pcsupport.lenovo.com/us/en/solutions/ht512623
+  publisher: Lenovo
+  accessed_on: '2026-11-20'
+  terms: Public Lenovo support article under Lenovo's site terms of use; we store only short verbatim
+    quotations and an excerpt of the model list with a link, as permitted quotation (Austrian UrhG §42f
+    / fair use).
+  topic: software-support
+  applies_to:
+  - manufacturer: Lenovo
+    model: ThinkPad T480
+  file: docs/lenovo-windows11-upgrade-devices.md
+
+- id: dell-xps13-9360-service-manual
+  title: XPS 13 (XPS 9360) Service Manual
+  url: https://dl.dell.com/topicspdf/xps-13-9360-laptop_service-manual_en-us.pdf
+  publisher: Dell
+  accessed_on: '2026-11-20'
+  terms: Copyright Dell Inc., all rights reserved; publicly downloadable from Dell's support site. We
+    store only short verbatim quotations with page markers and a link to the original, as permitted quotation
+    (Austrian UrhG §42f / fair use), not the full manual.
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: Dell
+    model: XPS 13 9360
+  file: docs/dell-xps13-9360-service-manual.md
+
+- id: dell-xps13-9360-setup-specs
+  title: XPS 13 (XPS 9360) Setup and Specifications
+  url: https://dl.dell.com/topicspdf/xps-13-9360-laptop_setup-guide_en-us.pdf
+  publisher: Dell
+  accessed_on: '2026-11-20'
+  terms: Copyright Dell Inc., all rights reserved; publicly downloadable from Dell's support site. We
+    store only short verbatim quotations of specification values with a link, as permitted quotation (Austrian
+    UrhG §42f / fair use), not the full document.
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: Dell
+    model: XPS 13 9360
+  file: docs/dell-xps13-9360-setup-specs.md
+
+- id: ifixit-xps13-9360-device
+  title: Dell XPS 13 9360 (iFixit device page)
+  url: https://www.ifixit.com/Device/Dell_XPS_13_9360
+  publisher: iFixit
+  accessed_on: '2026-11-20'
+  terms: 'CC BY-NC-SA 3.0 (iFixit: "All iFixit content is licensed under the Creative Commons BY-NC-SA
+    3.0 license."); non-commercial hackathon use with attribution and link.'
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: Dell
+    model: XPS 13 9360
+  file: docs/ifixit-xps13-9360-device.md
+
+- id: ifixit-xps13-9360-ssd-replacement
+  title: Dell XPS 13 9360 SSD Replacement (iFixit guide)
+  url: https://www.ifixit.com/Guide/Dell+XPS+13+9360+SSD+Replacement/170743
+  publisher: iFixit
+  accessed_on: '2026-11-20'
+  terms: CC BY-NC-SA 3.0 (iFixit licensing page); guide authored by Diana Ramirez-S. on iFixit; non-commercial
+    hackathon use with attribution and link.
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: Dell
+    model: XPS 13 9360
+  file: docs/ifixit-xps13-9360-ssd-replacement.md
+
+- id: dell-windows11-tested-computers
+  title: Dell Computers Tested for Update to Windows 11 (KB 000187485)
+  url: https://www.dell.com/support/kbdoc/en-us/000187485/dell-computers-tested-for-upgrade-to-windows-11
+  publisher: Dell
+  accessed_on: '2026-11-20'
+  terms: Dell support article, copyright Dell Inc.; publicly accessible. We store only a few short verbatim
+    quotations (the XPS 13 9360 entry and its notes) with a link, as permitted quotation (Austrian UrhG
+    §42f / fair use).
+  topic: software-support
+  applies_to:
+  - manufacturer: Dell
+    model: XPS 13 9360
+  file: docs/dell-windows11-tested-computers.md
+
+- id: hp-elitebook-840-g5-msg
+  title: HP EliteBook 840 G5 Healthcare Edition Notebook PC / HP EliteBook 846 G5 Healthcare Edition Notebook
+    PC Maintenance and Service Guide
+  url: https://kaas.hpcloud.hp.com/pdf-public/pdf_13037776_en-US-1.pdf
+  publisher: HP
+  accessed_on: '2026-11-20'
+  terms: HP-hosted service manual (© 2018 HP Development Company, L.P.); HP's terms of use permit viewing
+    and personal use. We store only short verbatim quotations with page markers and a link to the source,
+    as permitted quotation (Austrian UrhG §42f / fair use), not the full manual.
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: HP
+    model: EliteBook 840 G5
+  file: docs/hp-elitebook-840-g5-msg.md
+
+- id: hp-elitebook-840-g5-quickspecs
+  title: QuickSpecs HP EliteBook 840 G5 Notebook PC (c05868510, Version 9, May 16, 2018)
+  url: https://static.bhphoto.com/lit_files/392656.pdf
+  publisher: HP
+  accessed_on: '2026-11-20'
+  terms: HP-authored QuickSpecs data sheet, fetched from a retailer's mirror (B&H) because HP's own h20195
+    link now redirects to "page not found". HP copyright; we store only short verbatim quotations with
+    a link, as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: HP
+    model: EliteBook 840 G5
+  file: docs/hp-elitebook-840-g5-quickspecs.md
+
+- id: ifixit-hp-elitebook-840-g5-battery
+  title: HP EliteBook 840 G5 Battery Replacement (iFixit)
+  url: https://www.ifixit.com/Guide/HP+EliteBook+840+G5+Battery+Replacement/109791
+  publisher: iFixit
+  accessed_on: '2026-11-20'
+  terms: CC BY-NC-SA 3.0 (iFixit); non-commercial hackathon use with attribution to iFixit and the guide
+    author (Ryan McMullen). Text read via the iFixit public API (api/2.0/guides/109791).
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: HP
+    model: EliteBook 840 G5
+  file: docs/ifixit-hp-elitebook-840-g5-battery.md
+
+- id: ifixit-hp-elitebook-840-g5-ram
+  title: HP EliteBook 840 G5 RAM Replacement (iFixit)
+  url: https://www.ifixit.com/Guide/HP+EliteBook+840+G5+RAM+Replacement/109792
+  publisher: iFixit
+  accessed_on: '2026-11-20'
+  terms: CC BY-NC-SA 3.0 (iFixit); non-commercial hackathon use with attribution to iFixit and the guide
+    author (Ryan McMullen). Text read via the iFixit public API (api/2.0/guides/109792).
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: HP
+    model: EliteBook 840 G5
+  file: docs/ifixit-hp-elitebook-840-g5-ram.md
+
+- id: ms-win11-supported-intel-processors
+  title: Windows 11 supported Intel processors
+  url: https://learn.microsoft.com/en-us/windows-hardware/design/minimum/supported/windows-11-supported-intel-processors
+  publisher: Microsoft
+  accessed_on: '2026-11-20'
+  terms: Microsoft Learn content under Microsoft's terms of use; we store only short verbatim quotations
+    (intro text and the relevant table rows) with a link, as permitted quotation (Austrian UrhG §42f /
+    fair use).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-win11-supported-intel-processors.md
+
+- id: ms-win11-system-requirements
+  title: Windows 11 System Requirements
+  url: https://support.microsoft.com/en-us/windows/experience/compatibility/windows-11-system-requirements
+  publisher: Microsoft
+  accessed_on: '2026-11-20'
+  terms: Microsoft Support content under Microsoft's terms of use; short verbatim quotations with a link,
+    as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-win11-system-requirements.md
+
+- id: ms-win10-end-of-support
+  title: Windows 10 support has ended on October 14, 2025
+  url: https://support.microsoft.com/en-us/windows/deployment/updates-lifecycle/windows-10-support-has-ended-on-october-14-2025
+  publisher: Microsoft
+  accessed_on: '2026-11-20'
+  terms: Microsoft Support content under Microsoft's terms of use; short verbatim quotations with a link,
+    as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-win10-end-of-support.md
+
+- id: ms-win10-esu-consumer-at
+  title: Windows 10 Consumer Extended Security Updates (ESU) – Microsoft Österreich
+  url: https://www.microsoft.com/de-at/windows/extended-security-updates
+  publisher: Microsoft
+  accessed_on: '2026-11-20'
+  terms: Microsoft website content under Microsoft's terms of use; short verbatim German quotations (Austrian/EEA
+    version of the page) with a link, as permitted quotation (Austrian UrhG §42f).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-win10-esu-consumer-at.md
+
+- id: ms-win11-unsupported-hardware
+  title: Windows 11 on devices that don't meet minimum system requirements
+  url: https://support.microsoft.com/en-us/windows/experience/compatibility/windows-11-on-devices-that-don-t-meet-minimum-system-requirements
+  publisher: Microsoft
+  accessed_on: '2026-11-20'
+  terms: Microsoft Support content under Microsoft's terms of use; short verbatim quotations with a link,
+    as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-win11-unsupported-hardware.md
+
+- id: ms-reset-your-pc
+  title: Reset your PC
+  url: https://support.microsoft.com/en-us/windows/experience/backup-recovery/reset-your-pc
+  publisher: Microsoft
+  accessed_on: '2026-11-20'
+  terms: Microsoft Support content under Microsoft's terms of use; short verbatim quotations with a link,
+    as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: circular-economy
+  applies_to: generic
+  file: docs/ms-reset-your-pc.md
+
+- id: at-geraete-retter-praemie
+  title: Geräte-Retter-Prämie (vormals Reparaturbonus) – Förderaktion des BMLUK
+  url: https://www.xn--gerte-retter-prmie-ntbm.at/
+  publisher: Bundesministerium für Land- und Forstwirtschaft, Klima- und Umweltschutz, Regionen und Wasserwirtschaft
+    (BMLUK); Abwicklung KPC
+  accessed_on: '2026-11-20'
+  terms: Public information of an Austrian federal funding programme (www.geräte-retter-prämie.at, reached
+    via redirect from reparaturbonus.at); no explicit licence found, so we store only short verbatim German
+    quotations with a link, as permitted quotation (Austrian UrhG §42f).
+  topic: circular-economy
+  applies_to: generic
+  file: docs/at-geraete-retter-praemie.md
+
+- id: ec-repair-directive-2024-1799
+  title: Directive on repair of goods (Directive (EU) 2024/1799)
+  url: https://commission.europa.eu/law/law-topic/consumer-protection-law/directive-repair-goods_en
+  publisher: European Commission
+  accessed_on: '2026-11-20'
+  terms: European Commission website; the Commission's reuse policy (Decision 2011/833/EU) generally authorises
+    reuse with acknowledgement of the source (not separately verified for this page). We store short verbatim
+    excerpts with a link.
+  topic: circular-economy
+  applies_to: generic
+  file: docs/ec-repair-directive-2024-1799.md
+
+- id: at-pcs-fuer-alle
+  title: PCs für alle – Helfen statt Wegwerfen
+  url: https://www.pcsfueralle.at/
+  publisher: PCs für alle (gemeinnütziger Verein, Wien)
+  accessed_on: '2026-11-20'
+  terms: Website of a private non-profit association; no licence stated, so we store only short verbatim
+    German quotations with a link, as permitted quotation (Austrian UrhG §42f).
+  topic: circular-economy
+  applies_to: generic
+  file: docs/at-pcs-fuer-alle.md
+
+- id: at-bmluk-elektroaltgeraete-kostenlose-abgabe
+  title: Kostenlose Abgabemöglichkeit von Elektroaltgeräten
+  url: https://www.bmluk.gv.at/themen/abfall-und-kreislaufwirtschaft/abfallsammlung-behandlung-und-verbringung/elektroaltgeraete/kostenlos.html
+  publisher: Bundesministerium für Land- und Forstwirtschaft, Klima- und Umweltschutz, Regionen und Wasserwirtschaft
+    (BMLUK)
+  accessed_on: '2026-11-20'
+  terms: Austrian federal ministry public information; short verbatim German quotations with a link, as
+    permitted quotation (Austrian UrhG §42f).
+  topic: environmental
+  applies_to: generic
+  file: docs/at-bmluk-elektroaltgeraete-kostenlose-abgabe.md
+
+- id: at-bmluk-elektroaltgeraete-ruecknahmepflicht
+  title: Kostenlose Rücknahmepflicht des Handels für Elektroaltgeräte
+  url: https://www.bmluk.gv.at/themen/abfall-und-kreislaufwirtschaft/abfallsammlung-behandlung-und-verbringung/elektroaltgeraete/ruecknahmepflicht.html
+  publisher: Bundesministerium für Land- und Forstwirtschaft, Klima- und Umweltschutz, Regionen und Wasserwirtschaft
+    (BMLUK)
+  accessed_on: '2026-11-20'
+  terms: Austrian federal ministry public information; short verbatim German quotations with a link, as
+    permitted quotation (Austrian UrhG §42f).
+  topic: environmental
+  applies_to: generic
+  file: docs/at-bmluk-elektroaltgeraete-ruecknahmepflicht.md
+
+- id: at-bmluk-falsch-entsorgte-akkus
+  title: 'Riskante Begleiter im Alltag: Wenn falsch entsorgte Akkus brandgefährlich werden'
+  url: https://www.bmluk.gv.at/themen/abfall-und-kreislaufwirtschaft/abfallsammlung-behandlung-und-verbringung/elektroaltgeraete/falsch-entsorgte-akkus.html
+  publisher: Bundesministerium für Land- und Forstwirtschaft, Klima- und Umweltschutz, Regionen und Wasserwirtschaft
+    (BMLUK)
+  accessed_on: '2026-11-20'
+  terms: Austrian federal ministry press/public information; short verbatim German quotations with a link,
+    as permitted quotation (Austrian UrhG §42f).
+  topic: environmental
+  applies_to: generic
+  file: docs/at-bmluk-falsch-entsorgte-akkus.md
+
+- id: ec-weee-directive
+  title: Waste from Electrical and Electronic Equipment (WEEE)
+  url: https://environment.ec.europa.eu/topics/waste-and-recycling/waste-electrical-and-electronic-equipment-weee_en
+  publisher: European Commission (DG Environment)
+  accessed_on: '2026-11-20'
+  terms: European Commission website; the Commission's reuse policy (Decision 2011/833/EU) generally authorises
+    reuse with acknowledgement of the source (not separately verified for this page). We store short verbatim
+    excerpts with a link.
+  topic: environmental
+  applies_to: generic
+  file: docs/ec-weee-directive.md
+
+- id: itu-global-ewaste-monitor-2024
+  title: The Global E-waste Monitor 2024
+  url: https://www.itu.int/en/ITU-D/Environment/Pages/Publications/The-Global-E-waste-Monitor-2024.aspx
+  publisher: International Telecommunication Union (ITU), with UNITAR
+  accessed_on: '2026-11-20'
+  terms: ITU web page (© ITU); short verbatim quotations of the key findings with a link, as permitted
+    quotation (Austrian UrhG §42f / fair use).
+  topic: environmental
+  applies_to: generic
+  file: docs/itu-global-ewaste-monitor-2024.md
+
+- id: epa-used-lithium-ion-batteries
+  title: Used Lithium-Ion Batteries
+  url: https://www.epa.gov/recycle/used-lithium-ion-batteries
+  publisher: United States Environmental Protection Agency (EPA)
+  accessed_on: '2026-11-20'
+  terms: Work of the US federal government, generally in the public domain; we store short verbatim excerpts
+    with attribution and a link. US-specific regulatory parts omitted.
+  topic: environmental
+  applies_to: generic
+  file: docs/epa-used-lithium-ion-batteries.md
+
+- id: uba-de-computer-pc-laptop
+  title: Computer, PC, Laptop – Umwelttipps für den Alltag
+  url: https://www.umweltbundesamt.de/umwelttipps-fuer-den-alltag/elektrogeraete/computer-pc-laptop
+  publisher: Umweltbundesamt (Deutschland)
+  accessed_on: '2026-11-20'
+  terms: UBA's own texts are licensed CC BY-NC-ND 4.0 unless marked otherwise (per UBA's "Datenschutz,
+    Haftung und Urheberrecht" page); non-commercial hackathon use, unmodified verbatim excerpts with attribution
+    and link.
+  topic: environmental
+  applies_to: generic
+  file: docs/uba-de-computer-pc-laptop.md
+
+- id: uba-de-lithium-akkus
+  title: Sachgemäßer Umgang mit Lithium-Batterien und -Akkus
+  url: https://www.umweltbundesamt.de/umwelttipps-fuer-den-alltag/sachgemaesser-umgang-lithium-batterien-akkus
+  publisher: Umweltbundesamt (Deutschland)
+  accessed_on: '2026-11-20'
+  terms: UBA's own texts are licensed CC BY-NC-ND 4.0 unless marked otherwise (per UBA's "Datenschutz,
+    Haftung und Urheberrecht" page); non-commercial hackathon use, unmodified verbatim excerpts with attribution
+    and link. German legal context (Batteriegesetz).
+  topic: environmental
+  applies_to: generic
+  file: docs/uba-de-lithium-akkus.md
+

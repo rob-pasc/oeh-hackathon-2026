@@ -10,6 +10,7 @@ import {
   checkManifest,
   chunkMarkdown,
   coverageProblems,
+  cpuGenerationTerms,
   cpuModelNumbers,
   createModelMatcher,
   createRetriever,
@@ -287,10 +288,25 @@ describe('query helpers', () => {
     ['Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz', ['i5-8250U']],
     ['Intel(R) Core(TM) i7-7500U CPU @ 2.70GHz', ['i7-7500U']],
     ['Intel(R) Core(TM) i7 8650U', ['i7-8650U']],
+    ['11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz', ['i7-1165G7']],
     ['AMD Ryzen 5 3500U', []],
     [null, []],
   ])('extracts Intel model numbers from %s', (name, expected) => {
     expect(cpuModelNumbers(name)).toEqual(expected)
+  })
+
+  it.each([
+    ['Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz', ['8th generation']],
+    ['Intel(R) Core(TM) i7-7500U CPU @ 2.70GHz', ['7th generation']],
+    ['11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz', ['11th generation']],
+    ['Intel(R) Core(TM) i3-2310M', ['2nd generation']],
+    ['AMD Ryzen 5 3500U', []],
+  ])('derives the Intel Core generation of %s', (name, expected) => {
+    expect(cpuGenerationTerms(name)).toEqual(expected)
+  })
+
+  it('turns a trailing * into an FTS5 prefix query', () => {
+    expect(ftsQuery(['elektroaltger*', 'akku'])).toBe('"elektroaltger"* OR "akku"')
   })
 
   it('quotes every term so FTS5 operators in terms are inert', () => {

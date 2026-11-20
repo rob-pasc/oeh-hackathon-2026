@@ -1,8 +1,8 @@
 // Model-aware retrieval (feature 002 FR-004 to FR-008).
 //
 // For each path: filter by applicability and topic in SQL first (generic documents, plus
-// documents for the exact matched model), then rank the remaining passages with BM25 over a
-// path-specific keyword query. Model-specific passages can therefore only come from documents
+// documents for the exact matched model), then rank the remaining passages with BM25 over the
+// path's keyword facets and interleave the facets' results. Model-specific passages can therefore only come from documents
 // for that exact model. Ranking is keyword-only by decision (PLAN.md, T-002): the corpus is
 // small and the metadata filter does most of the work.
 import { DatabaseSync } from 'node:sqlite'
@@ -12,52 +12,89 @@ import { createModelMatcher, type ModelMatcher } from './normalize.ts'
 
 type Topic = Passage['topic']
 
+/**
+ * One aspect of a path, e.g. memory for upgrade. Facets are searched separately and their results
+ * interleaved, so one aspect with many matching words cannot crowd out the others in the top k.
+ */
+interface Facet {
+  name: string
+  /**
+   * Keywords and phrases; any one may match. A trailing `*` makes a prefix term, needed for
+   * German compounds ("elektroaltger*" finds "Elektroaltgeräten"), which the English stemmer misses.
+   */
+  terms: readonly string[]
+  /**
+   * Device facet: a passage must match one of `terms` AND name the device, by its matched model
+   * (vendor support lists, "T480") or its Intel CPU model number or generation (Microsoft's list,
+   * "8th Generation"). Without the AND, short passages that merely repeat the model name win.
+   * Skipped when the device offers no such terms.
+   */
+  device?: boolean
+  /** Narrows the path's topics for this facet. */
+  topics?: readonly Topic[]
+}
+
 interface PathQuery {
   /** Topics whose documents may serve this path (AC-007). */
   topics: readonly Topic[]
-  /** Keywords and phrases; any one may match. English and German, since some sources are Austrian. */
-  terms: readonly string[]
-  /** Whether the device's CPU model number is added, so OS-support lists return its row. */
-  cpu: boolean
+  facets: readonly Facet[]
 }
+
+const WINDOWS_11_TERMS = ['windows 11', 'supported processors', 'upgrade to windows 11', 'tpm 2.0', 'pc health check']
+
+/** Whether Windows 11 supports this device: vendor lists and the processor list. */
+const WINDOWS_11_DEVICE: Facet = { name: 'windows-11-device', terms: WINDOWS_11_TERMS, device: true, topics: ['software-support'] }
+/** General Windows 11 requirements, for any device. */
+const WINDOWS_11: Facet = { name: 'windows-11', terms: WINDOWS_11_TERMS, topics: ['software-support'] }
 
 /** Path-specific queries (FR-008). Changing them changes which passages each path cites. */
 export const PATH_QUERIES: Record<Path, PathQuery> = {
   upgrade: {
     topics: ['repair-hardware', 'software-support'],
-    terms: ['memory', 'ram', 'sodimm', 'so-dimm', 'dimm', 'slot', 'soldered', 'onboard', 'maximum', 'ddr4', 'lpddr3',
-      'ssd', 'solid-state drive', 'storage', 'm.2', 'nvme', 'pcie', 'sata', 'hard drive', 'upgrade', 'windows 11'],
-    cpu: true,
+    facets: [
+      { name: 'memory', terms: ['memory', 'ram', 'sodimm', 'so-dimm', 'dimm', 'memory slot', 'soldered', 'onboard memory', 'ddr4', 'lpddr3'] },
+      { name: 'storage', terms: ['ssd', 'solid-state drive', 'storage', 'm.2', 'nvme', 'pcie', 'sata', 'hard drive', 'hard disk'] },
+      WINDOWS_11_DEVICE,
+      WINDOWS_11,
+    ],
   },
   repair: {
     topics: ['repair-hardware', 'circular-economy'],
-    terms: ['battery', 'replace', 'replacement', 'remove', 'removal', 'keyboard', 'display', 'screen', 'fan', 'repair',
-      'spare part', 'part number', 'fru', 'cru', 'customer replaceable', 'service provider', 'reparatur', 'reparaturbonus'],
-    cpu: false,
+    facets: [
+      { name: 'battery', terms: ['battery', 'batteries', 'replace the battery', 'removing the battery', 'built-in battery', 'removable battery'] },
+      { name: 'parts', terms: ['cru', 'fru', 'customer replaceable', 'self-service', 'service provider', 'spare part', 'keyboard', 'display', 'lcd', 'fan'] },
+      { name: 'support', terms: ['repair', 'reparatur*', 'geräte-retter*', 'förderung', 'bonus', 'right to repair'] },
+    ],
   },
   pass_on: {
     topics: ['software-support', 'circular-economy'],
-    terms: ['windows 11', 'supported', 'processor', 'tpm', 'secure boot', 'end of support', 'security updates',
-      'extended security updates', 'reset', 'remove everything', 'personal files', 'donate', 'reuse', 'second-hand', 'refurbish'],
-    cpu: true,
+    facets: [
+      WINDOWS_11_DEVICE,
+      { name: 'updates', terms: ['end of support', 'security updates', 'extended security updates', 'esu', 'bios', 'firmware', 'sicherheitsupdates'] },
+      { name: 'wipe', terms: ['reset this pc', 'remove everything', 'clean data', 'personal files', 'recovery'] },
+      { name: 'reuse', terms: ['donate', 'donation', 'reuse', 'refurbish*', 'second-hand', 'spenden', 'gebraucht*'] },
+    ],
   },
   salvage: {
     topics: ['repair-hardware', 'circular-economy', 'environmental'],
-    terms: ['remove', 'removal', 'disconnect', 'memory', 'ssd', 'solid-state drive', 'battery', 'display', 'spare part',
-      'reuse', 'components', 'disassembly', 'electrostatic', 'caution', 'warning'],
-    cpu: false,
+    facets: [
+      { name: 'components', terms: ['removing the memory', 'memory module', 'removing the solid-state drive', 'solid-state drive', 'ssd', 'remove'] },
+      { name: 'safety', terms: ['caution', 'warning', 'electrostatic', 'esd', 'disconnect the battery', 'swollen', 'lithium'] },
+      { name: 'reuse', terms: ['spare part', 'reuse', 'components', 'parts', 'wiederverwend*', 'ersatzteil*'] },
+    ],
   },
   recycle: {
     topics: ['environmental', 'circular-economy'],
-    terms: ['recycle', 'recycling', 'e-waste', 'weee', 'collection', 'collected', 'take back', 'lithium', 'batteries',
-      'disposal', 'household waste', 'hazardous', 'raw materials', 'elektroaltgeräte', 'sammelstelle', 'altstoffsammelzentrum',
-      'rückgabe', 'entsorgung'],
-    cpu: false,
+    facets: [
+      { name: 'collection', terms: ['collection point', 'take back', 'free of charge', 'weee', 'elektroaltger*', 'sammelstelle*', 'altstoffsammel*', 'rücknahme*', 'kostenlos*', 'abgabe*'] },
+      { name: 'batteries', terms: ['lithium', 'batteries', 'household waste', 'fire', 'akku*', 'batterie*', 'brand*'] },
+      { name: 'materials', terms: ['recycle', 'recycling', 'e-waste', 'raw materials', 'hazardous', 'recovered', 'verwertung'] },
+    ],
   },
 }
 
-/** Default passages per path (open question in the plan, proposed default 4). */
-export const DEFAULT_K = 4
+/** Default passages per path. 5 rather than the proposed 4, so a path with four facets still gets a second Windows 11 passage (see PLAN.md). */
+export const DEFAULT_K = 5
 
 /**
  * Model-specific passages rank above equally relevant generic ones: BM25 scores are negative
@@ -68,12 +105,49 @@ export const MODEL_SPECIFIC_BOOST = 1.5
 /** Intel model numbers as written in OS-support lists, e.g. "Core(TM) i5-8250U CPU" -> "i5-8250U". */
 export function cpuModelNumbers(cpuName: string | null): string[] {
   if (!cpuName) return []
-  return [...new Set([...cpuName.matchAll(/\b(i[3579]|m[357]|pentium|celeron)[\s-]+(\d{4,5}[a-z]{0,2})\b/gi)].map((m) => `${m[1]}-${m[2]}`))]
+  return [...new Set([...cpuName.matchAll(/\b(i[3579]|m[357]|pentium|celeron)[\s-]+(\d{4,5}[a-z]{0,2}\d?)\b/gi)].map((m) => `${m[1]}-${m[2]}`))]
 }
 
-/** FTS5 query: every term as a quoted phrase, joined with OR. Quotes inside terms are escaped. */
+const ordinal = (n: number) => {
+  const tens = n % 100
+  if (tens >= 11 && tens <= 13) return `${n}th`
+  return `${n}${({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'}`
+}
+
+/**
+ * Intel Core generation phrases, e.g. "i5-8250U" -> "8th generation", "i7-1165G7" -> "11th generation".
+ * Microsoft's Windows 11 processor list names generations, not model numbers, so this is what
+ * finds the device's row there.
+ */
+export function cpuGenerationTerms(cpuName: string | null): string[] {
+  if (!cpuName) return []
+  const generations = [...cpuName.matchAll(/\bi[3579][\s-]+(\d{4,5})[a-z]{0,2}\d?\b/gi)].map((m) => {
+    const digits = m[1]!
+    // 2nd to 9th generation numbers start with the generation digit; 10th and later start with "1x".
+    return Number(digits.startsWith('1') ? digits.slice(0, 2) : digits.slice(0, 1))
+  })
+  return [...new Set(generations)].map((g) => `${ordinal(g)} generation`)
+}
+
+/**
+ * FTS5 query: every term as a quoted phrase, joined with OR, so FTS5 operators inside terms are
+ * inert. A trailing `*` becomes a prefix query on the last token.
+ */
 export function ftsQuery(terms: readonly string[]): string {
-  return terms.map((t) => `"${t.replaceAll('"', '""')}"`).join(' OR ')
+  return terms
+    .map((t) => {
+      const prefix = t.endsWith('*')
+      const phrase = `"${(prefix ? t.slice(0, -1) : t).replaceAll('"', '""')}"`
+      return prefix ? `${phrase}*` : phrase
+    })
+    .join(' OR ')
+}
+
+/** The matched model's name and, without its brand word, the short form vendor lists use ("T480"). */
+export function modelTerms(model: ModelMatch | null): string[] {
+  if (!model) return []
+  const short = model.model.split(' ').slice(1).join(' ')
+  return [...new Set([model.model, ...(short ? [short] : [])])]
 }
 
 interface Row {
@@ -133,7 +207,7 @@ export function createRetriever(db: DatabaseSync): Retriever {
   const search = db.prepare(`
     SELECT p.passage_id, p.document_id, p.section, p.page, p.text,
            d.title, d.url, d.publisher, d.topic, d.accessed_on, d.generic,
-           bm25(passages_fts, 2.0, 1.0) AS score
+           bm25(passages_fts, 0.5, 2.0, 1.0) AS score
     FROM passages_fts
     JOIN passages p ON p.rowid = passages_fts.rowid
     JOIN documents d ON d.id = p.document_id
@@ -159,18 +233,34 @@ export function createRetriever(db: DatabaseSync): Retriever {
     text: row.text,
   })
 
-  function forPath(path: Path, scan: DeviceScan, model: ModelMatch | null, k: number): Passage[] {
-    const q = PATH_QUERIES[path]
-    const terms = q.cpu ? [...q.terms, ...cpuModelNumbers(scan.cpu.name)] : q.terms
+  function facetRows(facet: Facet, topics: readonly Topic[], scan: DeviceScan, model: ModelMatch | null): Row[] {
+    let query = ftsQuery(facet.terms)
+    if (facet.device) {
+      const deviceTerms = [...cpuModelNumbers(scan.cpu.name), ...cpuGenerationTerms(scan.cpu.name), ...modelTerms(model)]
+      if (deviceTerms.length === 0) return []
+      query = `(${query}) AND (${ftsQuery(deviceTerms)})`
+    }
     const rows = search.all({
-      query: ftsQuery(terms),
-      topics: JSON.stringify(q.topics),
+      query,
+      topics: JSON.stringify(topics),
       manufacturer: model?.manufacturer ?? null,
       model: model?.model ?? null,
     }) as unknown as Row[]
     const adjusted = (r: Row) => (r.generic === 1 ? r.score : r.score * MODEL_SPECIFIC_BOOST)
-    rows.sort((a, b) => adjusted(a) - adjusted(b) || a.passage_id.localeCompare(b.passage_id))
-    return rows.slice(0, k).map((r) => toPassage(r, model))
+    return rows.sort((a, b) => adjusted(a) - adjusted(b) || a.passage_id.localeCompare(b.passage_id))
+  }
+
+  /** Takes the best unused passage of each facet in turn until k passages are chosen. */
+  function forPath(path: Path, scan: DeviceScan, model: ModelMatch | null, k: number): Passage[] {
+    const { topics, facets } = PATH_QUERIES[path]
+    const ranked = facets.map((f) => facetRows(f, f.topics?.filter((t) => topics.includes(t)) ?? topics, scan, model))
+    const chosen = new Map<string, Row>()
+    for (let depth = 0; chosen.size < k && ranked.some((rows) => rows.length > depth); depth++)
+      for (const rows of ranked) {
+        const row = rows.slice(depth).find((r) => !chosen.has(r.passage_id))
+        if (row && chosen.size < k) chosen.set(row.passage_id, row)
+      }
+    return [...chosen.values()].map((r) => toPassage(r, model))
   }
 
   return {

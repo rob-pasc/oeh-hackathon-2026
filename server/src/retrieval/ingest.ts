@@ -10,7 +10,7 @@ import { loadManifest, type CorpusManifest } from './manifest.ts'
 import { normalizeName } from './normalize.ts'
 
 /** Bump when the index tables change; the retriever refuses an index with another version. */
-export const INDEX_SCHEMA_VERSION = '1'
+export const INDEX_SCHEMA_VERSION = '2'
 
 const SCHEMA = `
 DROP TABLE IF EXISTS passages_fts;
@@ -36,11 +36,13 @@ CREATE TABLE document_models (
 );
 CREATE TABLE passages (
   rowid INTEGER PRIMARY KEY, passage_id TEXT NOT NULL UNIQUE, document_id TEXT NOT NULL REFERENCES documents(id),
-  ord INTEGER NOT NULL, section TEXT, page INTEGER, text TEXT NOT NULL
+  ord INTEGER NOT NULL, title TEXT NOT NULL, section TEXT, page INTEGER, text TEXT NOT NULL
 );
 -- Porter stemming so "soldered" matches "solder"; unicode61 also folds diacritics in German sources.
+-- The document title is indexed with every passage, so a table row such as "8th Generation Core i5
+-- Processors" still matches "windows 11" through its document's title.
 CREATE VIRTUAL TABLE passages_fts USING fts5(
-  section, text, content='passages', content_rowid='rowid', tokenize='porter unicode61'
+  title, section, text, content='passages', content_rowid='rowid', tokenize='porter unicode61'
 );
 `
 
@@ -90,14 +92,14 @@ export function writeIndex(db: DatabaseSync, corpus: ReturnType<typeof readCorpu
       'INSERT INTO documents (id, title, url, publisher, topic, accessed_on, terms, generic) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     )
     const docModel = db.prepare('INSERT INTO document_models (document_id, manufacturer, model) VALUES (?, ?, ?)')
-    const passage = db.prepare('INSERT INTO passages (passage_id, document_id, ord, section, page, text) VALUES (?, ?, ?, ?, ?, ?)')
+    const passage = db.prepare('INSERT INTO passages (passage_id, document_id, ord, title, section, page, text) VALUES (?, ?, ?, ?, ?, ?, ?)')
     let passages = 0
     for (const [i, d] of manifest.documents.entries()) {
       const generic = d.applies_to === 'generic'
       doc.run(d.id, d.title, d.url, d.publisher, d.topic, d.accessed_on, d.terms, generic ? 1 : 0)
       if (d.applies_to !== 'generic') for (const ref of d.applies_to) docModel.run(d.id, ref.manufacturer, ref.model)
       for (const c of documents[i]!.chunks) {
-        passage.run(c.passage_id, d.id, c.ord, c.section, c.page, c.text)
+        passage.run(c.passage_id, d.id, c.ord, d.title, c.section, c.page, c.text)
         passages++
       }
     }

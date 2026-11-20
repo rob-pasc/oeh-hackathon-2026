@@ -56,7 +56,7 @@ Rules for callers:
 
 `npm run corpus:ingest -w server` validates [`corpus/manifest.yaml`](../corpus/README.md), chunks the Markdown extracts, and writes the search index to `CORPUS_INDEX_PATH` (default `data/corpus.sqlite`). It fails, naming each document and missing field, on an invalid manifest, and prints coverage gaps for the demo models. The index is built ahead of time, never per request.
 
-`openRetriever(path).retrieve(scan, { k })` returns the shared `RetrievalResult`. It matches the device to a manifest model exactly (after case and whitespace normalization and the alias lists), keeps generic documents plus documents for that exact model, and ranks passages per path with SQLite FTS5 BM25 over a path-specific query (`PATH_QUERIES` in `src/retrieval/retrieve.ts`). An unmatched device gets `model_evidence: "none"` and generic passages only. No route calls it yet.
+`openRetriever(path).retrieve(scan, { k })` returns the shared `RetrievalResult`. It matches the device to a manifest model exactly (after case and whitespace normalization and the alias lists), keeps generic documents plus documents for that exact model, and ranks passages per path with SQLite FTS5 BM25 over the path's keyword facets, interleaved round-robin (`PATH_QUERIES` in `src/retrieval/retrieve.ts`; default `k` = 5). An unmatched device gets `model_evidence: "none"` and generic passages only. No route calls it yet.
 
 ## Configuration
 

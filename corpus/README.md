@@ -2,6 +2,10 @@
 
 Curated knowledge base for retrieval ([feature 002](../docs/features/feature-002-knowledge-base-retrieval/PLAN.md)): `manifest.yaml`, which holds the source, terms/licence note and model applicability for each document, plus Markdown extracts in `docs/`.
 
+It covers the three demo models (Lenovo ThinkPad T480, Dell XPS 13 9360, HP EliteBook 840 G5) with five documents each, plus 16 generic documents on Windows support, data wiping, repair funding, reuse, e-waste collection, and battery safety, with an Austrian focus. Sources, gaps, and licence notes are summarised in the feature's [RESEARCH.md](../docs/features/feature-002-knowledge-base-retrieval/RESEARCH.md).
+
+Licences: iFixit extracts are CC BY-NC-SA 3.0 and Umweltbundesamt extracts are CC BY-NC-ND 4.0, both non-commercial only; the rest are short quotations with links. Revisit before any commercial use.
+
 Only add documents whose terms allow our use, and record the basis in the `terms` note. Store short verbatim quotations with a link to the source, not whole manuals.
 
 After any change, rebuild the index and run the tests:
@@ -53,4 +57,5 @@ Quoted text, copied exactly from the source. [...] marks an omission.
 
 - `##` headings name the source's own sections, so a citation can be followed back.
 - `<!-- page: N -->` sets the PDF page for the text after it (1-based page index).
+- Editorial notes go in square brackets, e.g. `[Introduction sentence repeated]`; everything else is verbatim.
 - A passage never spans a heading or page marker, so it cites one section and page. Passage IDs are `<id>#<section-slug>-<n>`; renaming a heading changes the IDs that cite it.
