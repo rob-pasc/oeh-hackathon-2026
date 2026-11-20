@@ -1,0 +1,61 @@
+// Formatting and derived figures for impact ranges. All numbers come from the Assessment contract
+// (feature 003); nothing here invents a figure. Ranges stay ranges (feature 003 NFR "Honesty").
+import type { Assessment, Impact } from '@leaaf/shared/assessment'
+import type { Range } from '@leaaf/shared/common'
+
+type Baseline = Assessment['baseline']
+
+const round = (n: number) => Math.round(n)
+const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n))
+
+export function formatEur(range: Range): string {
+  const low = round(range.low)
+  const high = round(range.high)
+  return low === high ? `€${low}` : `€${low}–${high}`
+}
+
+export function formatYears(range: Range): string {
+  const low = Math.round(range.low * 10) / 10
+  const high = Math.round(range.high * 10) / 10
+  if (high <= 0) return 'No extra life'
+  if (low === high) return `+${low} ${low === 1 ? 'year' : 'years'}`
+  return `+${low}–${high} years`
+}
+
+/** "180–342 kg CO₂e avoided", or a plain statement when nothing is credited (displacement `none`). */
+export function formatAvoided(impact: Impact): string {
+  const { low, high } = impact.co2e_kg.avoided_vs_baseline
+  const hi = round(high)
+  if (hi <= 0) return 'No avoided production'
+  const lo = Math.max(0, round(low))
+  const range = lo === hi ? `${hi}` : `${lo}–${hi}`
+  return `${range} kg CO₂e avoided${impact.displacement === 'conditional' ? ' (conditional)' : ''}`
+}
+
+/** Money relative to the baseline purchase, only where the contract credits the baseline. */
+export function formatSavings(impact: Impact, baseline: Baseline): string {
+  if (impact.displacement === 'conditional') return 'Only if the receiver would otherwise buy new'
+  if (impact.displacement === 'none') return 'No savings vs. buying new'
+  const low = Math.max(0, baseline.cost_eur.low - impact.cost_eur.high)
+  const high = Math.max(0, baseline.cost_eur.high - impact.cost_eur.low)
+  return `Saves ${formatEur({ low, high })} vs. new`
+}
+
+export interface GaugeValue {
+  /** Percent of a comparable new laptop's production CO₂e that this path avoids (0–100). */
+  mid: number
+  low: number
+  high: number
+}
+
+/**
+ * Gauge scale: avoided CO₂e (contract field `avoided_vs_baseline`) divided by the midpoint of the baseline
+ * range, clamped to 0–100 %. Low and high give the shaded range on the gauge.
+ */
+export function gaugeValue(impact: Impact, baseline: Baseline): GaugeValue | null {
+  const baselineMid = (baseline.co2e_kg.low + baseline.co2e_kg.high) / 2
+  if (!(baselineMid > 0)) return null
+  const { low, high } = impact.co2e_kg.avoided_vs_baseline
+  const pct = (kg: number) => clamp(round((kg / baselineMid) * 100), 0, 100)
+  return { mid: pct((low + high) / 2), low: pct(low), high: pct(high) }
+}

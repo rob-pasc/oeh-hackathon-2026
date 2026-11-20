@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "workspaces": [
-    "shared"
+    "shared",
+    "web"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
