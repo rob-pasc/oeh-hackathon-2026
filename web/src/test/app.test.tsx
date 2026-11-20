@@ -10,6 +10,9 @@ import { ApiContext } from '../api'
 import { App } from '../app/App'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
 import { ResultsView } from '../components/ResultsView'
+import { SpecsCard } from '../components/SpecsCard'
+import type { DeviceScan } from '@leaaf/shared/device'
+import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import { PATH_TITLES } from '../lib/labels'
 import { Landing } from '../pages/Landing'
 import { ScanSession } from '../pages/ScanSession'
@@ -295,5 +298,23 @@ describe('App routes (feature 001 AC-010)', () => {
     render(withApi(<App />))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Page not found')
     window.history.replaceState(null, '', '/')
+  })
+})
+
+describe('SpecsCard (feature 001 AC-009)', () => {
+  it('shows values the scan could not read as "Unknown", including battery health', () => {
+    const base = laptopScanJson as unknown as DeviceScan
+    const scan: DeviceScan = {
+      ...base,
+      scan_status: 'partial',
+      battery: { ...base.battery, present: true, health_percent: null },
+      cpu: { ...base.cpu, name: null },
+    }
+    render(<SpecsCard scan={scan} />)
+    const card = screen.getByRole('region', { name: 'Your device' })
+    const valueOf = (label: string) => within(card).getByText(label).nextElementSibling
+    expect(valueOf('Battery health')).toHaveTextContent(/^Unknown$/)
+    expect(valueOf('Processor')).toHaveTextContent(/^Unknown$/)
+    expect(within(card).getByText(/Results are less certain/)).toBeInTheDocument()
   })
 })

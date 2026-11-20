@@ -140,7 +140,7 @@ This feature builds the web surface that features 001, 003, and 004 describe and
 
 **Implemented here (no change in intent):**
 
-- `feature-001-device-scan-and-upload` / FR-010, FR-011, FR-012 (device page, not-found page, landing page and download), task T-008.
+- `feature-001-device-scan-and-upload` / FR-010, FR-011, FR-012 (device page, not-found page, landing page and download), task T-008. *(2026-11-20: feature 001 FR-010 was narrowed from "all scanned fields" to this feature's FR-010 field set, so the specs card is now its effective contract.)*
 - `feature-003-five-path-ranking` / FR-001 (picker), FR-012 (ranked view), and the Environment first / Money first toggle.
 - `feature-004-explained-report` / FR-001, FR-003 (cards with Recommended label, reason, expandable details).
 

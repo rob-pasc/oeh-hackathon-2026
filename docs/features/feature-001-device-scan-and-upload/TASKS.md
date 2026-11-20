@@ -14,7 +14,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-005:** Implement the local JSON write, HTTPS upload, link output, browser open, and failure exit code (supports `AC-005`, `AC-008`)
 - [x] **T-006:** Implement the upload endpoint with schema validation, a size limit, SQLite storage, and secure ID generation, with integration tests (supports `AC-006`, `AC-007`)
 - [x] **T-007:** Implement `GET /api/devices/:id` and the not-found behavior, with tests (supports `AC-010`)
-- [ ] **T-008:** Build the React landing page with the download and data disclosure, and the device page with "Unknown" rendering, with tests (supports `AC-009`, `AC-011`)
+- [x] **T-008:** Build the React landing page with the download and data disclosure, and the device page with "Unknown" rendering, with tests (supports `AC-009`, `AC-011`)
 - [ ] **T-009:** Run the scanner manually on a real Windows laptop, accepting and declining the elevation prompt, and record the evidence, including which sources still read `null` when elevated (supports `AC-001`, `AC-005`, `AC-008`). *(Revised 2026-11-20; originally run as a non-admin user.)*
 - [x] **T-011:** *(amendment)* Implement the FR-013 collectors (RAM slots and type, TPM, Secure Boot, firmware type, battery cycle count, GPU names) with fixture tests, including access-denied cases (supports `AC-013`)
 - [x] **T-012:** *(Added 2026-11-20)* Embed a `requireAdministrator` manifest and version info with `go-winres`, commit the generated `.syso` files, open the browser non-elevated, and add a test for the manifest (supports `AC-001`)
@@ -51,6 +51,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
   - The "Upload failed" screen was rendered off screen and checked visually.
 - Unverified assumption for T-003/T-011: whether `root\WMI` battery classes and `Win32_Tpm` can be read without admin rights. Test this early on a real laptop; the schema already allows `null`. *(2026-11-20: moot for TPM once T-012 elevates the scanner; whether the battery classes work elevated is still checked in T-009.)*
 
+- 2026-11-20: T-008 done after FR-010 was narrowed to feature 006's specs card fields (user decision). AC-009 and AC-010 pass; see the acceptance criteria.
+
 ## Lifecycle history
 
 - 2026-11-20: Scope extended by an amendment (FR-013, AC-013, T-011); see the [scope change log](./PLAN.md#scope-change-log).
@@ -58,3 +60,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: FR-001 replaced (administrator rights required) and T-012 added; see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
 - 2026-11-20: FR-009 replaced (no automatic browser opening) and FR-014 added (scanner window); T-013 added. See the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
 - 2026-11-20: Scope extended by an amendment (FR-015, AC-015, T-014); see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
+- 2026-11-20: FR-010 narrowed to feature 006 FR-010 (behavioral replacement); see the [scope change log](./PLAN.md#scope-change-log).
