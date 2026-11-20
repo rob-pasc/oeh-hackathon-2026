@@ -9,7 +9,7 @@ How leaaf is built, published, and run in production. Scope and open decisions a
 | Image | Built from | Serves | Port |
 |---|---|---|---|
 | `ghcr.io/rob-pasc/leaaf-web` | [`web/Dockerfile`](../web/Dockerfile) | The built React app via unprivileged nginx ([`web/nginx.conf`](../web/nginx.conf)), with `index.html` fallback for client routes and `/healthz` | 8080 |
-| `ghcr.io/rob-pasc/leaaf-server` | [`server/Dockerfile`](../server/Dockerfile) | The Node API (TypeScript run directly by Node 24), data under `/data`, and the Windows scanner at `/downloads/leaaf-scanner.exe` | 3000 |
+| `ghcr.io/rob-pasc/leaaf-server` | [`server/Dockerfile`](../server/Dockerfile) | The Node API (TypeScript run directly by Node 24), data under `/data`, the retrieval index built from `corpus/` at image build time (`CORPUS_INDEX_PATH=/app/corpus-index/corpus.sqlite`; an invalid manifest fails the build), and the Windows scanner at `/downloads/leaaf-scanner.exe` | 3000 |
 
 Both build from the repository root because they need the root lockfile and `shared/`:
 

@@ -1,6 +1,6 @@
 # server
 
-The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), and the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights). Retrieval (002), the assessment API (003 T-007), and reports (004) come next.
+The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights), and **retrieval** (`src/retrieval/`, feature 002). The assessment API (003 T-007) and reports (004) come next.
 
 The LLM API key is configured only here, through environment variables. It never ships in the scanner or the web app.
 
@@ -52,6 +52,12 @@ Rules for callers:
 
 `assess({ deviceId, scan, use, modelEvidence, facts, impactTable, weights })` (`src/assessment/`) returns the shared `Assessment`: a status, reasons, impact ranges, four criterion scores, and a confidence level per path. It is a pure function; no route calls it yet. `loadWeights()` reads [`config/weights.yaml`](../config/weights.yaml). `main.ts` loads the weights and the impact table at startup, so an invalid file stops the server. The gate rules and scoring rubrics are documented in the [feature 003 design](../docs/features/feature-003-five-path-ranking/DESIGN.md).
 
+## Retrieval
+
+`npm run corpus:ingest -w server` validates [`corpus/manifest.yaml`](../corpus/README.md), chunks the Markdown extracts, and writes the search index to `CORPUS_INDEX_PATH` (default `data/corpus.sqlite`). It fails, naming each document and missing field, on an invalid manifest, and prints coverage gaps for the demo models. The index is built ahead of time, never per request.
+
+`openRetriever(path).retrieve(scan, { k })` returns the shared `RetrievalResult`. It matches the device to a manifest model exactly (after case and whitespace normalization and the alias lists), keeps generic documents plus documents for that exact model, and ranks passages per path with SQLite FTS5 BM25 over the path's keyword facets, interleaved round-robin (`PATH_QUERIES` in `src/retrieval/retrieve.ts`; default `k` = 5). An unmatched device gets `model_evidence: "none"` and generic passages only. No route calls it yet.
+
 ## Configuration
 
 ```sh
@@ -64,6 +70,8 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 | `DATABASE_PATH` | `data/leaaf.sqlite` | SQLite file (gitignored `server/data/`) |
 | `PUBLIC_BASE_URL` | `http://localhost:5173` | Web origin used to build device URLs |
 | `SCANNER_EXE_PATH` | `../scanner/dist/leaaf-scanner.exe` | Executable served as the download |
+| `CORPUS_INDEX_PATH` | `data/corpus.sqlite` | Retrieval index built by `corpus:ingest` |
+| `CORPUS_DIR` | `../corpus` | Corpus read by `corpus:ingest` |
 | `LLM_API_KEY` | (required for LLM features) | Provider API key |
 | `LLM_BASE_URL` | `https://api.deepseek.com` | OpenAI-compatible endpoint |
 | `LLM_MODEL` | `deepseek-flash` | Model name |
@@ -83,6 +91,7 @@ npm test -w server        # unit tests against a fake provider (no network, no k
 npm run typecheck -w server
 npm run llm:smoke -w server   # live call to the configured provider; needs server/.env
 npm run facts:smoke -w server # live fact extraction over shared/fixtures, compared with the expected facts
+npm run corpus:ingest -w server # build the retrieval index from corpus/ into data/corpus.sqlite
 ```
 
 The smoke test sends one tiny non-personal prompt per thinking setting. It prints the model, attempts, latency, and token usage, and never the key or the prompt.

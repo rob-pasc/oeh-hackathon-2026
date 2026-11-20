@@ -1,6 +1,6 @@
 # Product Context
 
-**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No core journey works end to end yet: the shared contracts, the web app, the Windows scanner, the server's device and scan session API, fact extraction, and the impact table exist (see the [README status](../README.md)), while retrieval, ranking, and reports do not. The scanner has not yet run on a real Windows laptop. This document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No core journey works end to end yet: the shared contracts, the web app, the Windows scanner, the server's device and scan session API, retrieval over the curated corpus, fact extraction, and the impact table exist (see the [README status](../README.md)), while the ranking API and reports do not. The scanner has not yet run on a real Windows laptop. This document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
@@ -30,7 +30,8 @@ Scanning on macOS, Linux, or a bootable USB; user accounts; a fleet dashboard (d
 ## Uncertainty and references
 
 - Domain: `leaaf.green` (registered by the team; nothing is deployed yet).
-- Unresolved: demo laptop models, the embedding approach for retrieval, and the VPS provider (the host type, a VPS behind an external Caddy, is decided). These are tracked in the feature plans. CO₂e sources were chosen on 2026-11-20 (see [`data/README.md`](../data/README.md)).
+- Demo laptop models (ThinkPad T480, XPS 13 9360, EliteBook 840 G5) and keyword-only retrieval were chosen on 2026-11-20 ([feature 002](features/feature-002-knowledge-base-retrieval/PLAN.md)).
+- Unresolved: the VPS provider (the host type, a VPS behind an external Caddy, is decided). These are tracked in the feature plans. CO₂e sources were chosen on 2026-11-20 (see [`data/README.md`](../data/README.md)).
 - Source material: the team's `Idea.md` and `Suggestions.md` (outside this repository).
 - Terms: [GLOSSARY.md](GLOSSARY.md). Feature navigation: [features/INDEX.md](features/INDEX.md).
 

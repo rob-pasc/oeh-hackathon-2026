@@ -63,18 +63,24 @@ This is what lets the system know things rules alone cannot: soldered RAM, user-
 
 ## Proposed technical approach
 
-Not yet adopted; to be confirmed during implementation.
+Adopted during implementation (2026-11-20) unless marked otherwise.
 
 - **Contract (adopted 2026-11-20):** `Passage` and `RetrievalResult` in [`shared/src/retrieval.ts`](../../../shared/src/retrieval.ts), with passages grouped per path in `passages_by_path`. See [ADR-001](../../adr/adr-001-shared-contracts-typebox.md).
-- **Location:** `corpus/manifest.yaml` plus source files or extracts in `corpus/docs/`; retrieval code in `server/src/retrieval/`.
-- **Ingestion:** A Node script parses Markdown, HTML, and PDF (for example with `pdf-parse`), chunks by heading or page with overlap, and writes passages and embeddings to SQLite.
-- **Search:** Metadata filtering in SQL first, then ranking of the remaining passages. Because the corpus is tiny, a brute-force cosine similarity in process is enough; no separate vector database. Possibly combined with keyword (BM25/FTS5) scoring for exact part names.
-- **Embeddings:** **Open.** Options are a local model through `transformers.js` (no extra API key, works offline) or a hosted embedding API. The chat LLM provider ([ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md), DeepSeek) is not assumed to offer embeddings, so a hosted option may mean an extra provider. Proposed default: a local model, for offline robustness.
-- **Tests:** Unit tests for manifest validation, normalization and aliases, and deterministic chunking. Integration tests with a small fixture corpus of two fake models, checking cross-model isolation and the `none` case.
+- **Location:** `corpus/manifest.yaml` plus Markdown extracts in `corpus/docs/`; code in `server/src/retrieval/`; the ingestion command is `npm run corpus:ingest -w server` (`server/scripts/corpus-ingest.ts`).
+- **Manifest (adopted):** `manufacturers` (canonical name + aliases), `models` (canonical manufacturer/model, exact `aliases`, optional `demo` and `cpus` for the coverage check), and `documents` with the FR-001 fields plus `file`. Documents reference models by canonical name only; every declared model needs at least one document, and aliases may not collide. Format details: [`corpus/README.md`](../../../corpus/README.md).
+- **Documents (user decision 2026-11-20):** Markdown extracts only, no PDF parsing. Each extract holds short verbatim quotations under `##` headings that name the source's own sections, with `<!-- page: N -->` markers for PDF pages, and links to the original. No `pdf-parse` dependency.
+- **Chunking (adopted):** A passage never spans a heading or page marker, so it cites one section and page. Paragraphs are packed up to about 1,000 characters and split at sentence ends only when one paragraph is longer. No overlap: the extracts are short quotations, and overlap would make two passages cite the same text. Passage IDs are `<document>#<section-slug>-<n>`, which is stable for an unchanged corpus.
+- **Index (adopted):** A separate SQLite file (default `server/data/corpus.sqlite`, `CORPUS_INDEX_PATH`), rebuilt in one transaction and written to a temporary file that replaces the old one, so a failed ingestion leaves the previous index untouched. Built-in `node:sqlite`, no new dependency. The FTS5 table indexes the document title (weight 0.5), the section (2) and the text (1); the title gives table rows such as Microsoft's "8th Generation Core i5 Processors" their "Windows 11" context. The server image builds the index at image build time (`server/Dockerfile`, `CORPUS_INDEX_PATH=/app/corpus-index/corpus.sqlite`).
+- **Matching (adopted):** Names are normalized (NFKC, lower case, collapsed whitespace). The device's manufacturer must equal a canonical name or alias, and its `model` or `product_version` must equal a canonical model name or alias. No prefix or fuzzy matching.
+- **Search (user decision 2026-11-20, T-002):** Keyword-only. SQL filters by topic and applicability first (generic documents plus documents for the exact matched model), then FTS5 BM25 ranks the rest, with the Porter stemmer. Each path has allowed topics and several keyword facets (`PATH_QUERIES` in `retrieve.ts`), for example memory, storage, and Windows 11 for upgrade. Facets are ranked separately and interleaved round-robin, so an aspect with many matching words cannot crowd out the others; this was needed on the real corpus, where one combined query returned only Windows 10 end-of-support passages for pass on. The Windows 11 device facet requires a Windows 11 term AND a device term: the matched model's name (vendor lists such as Lenovo's "T480") or the Intel CPU model number and generation (Microsoft's list names generations, for example "8th Generation", not model numbers). Trailing-`*` prefix terms handle German compounds (`elektroaltger*`). Model-specific passages get a 1.5× score boost over equally relevant generic ones. There are no embeddings; they can be added behind the same retriever interface if keyword ranking proves too weak.
+- **k:** 5 passages per path by default (`DEFAULT_K`), configurable per call. Raised from the proposed 4 so pass on (four facets) also gets a second Windows 11 passage; at most 25 passages go to fact extraction.
+- **Wiring:** No route calls the retriever yet; the assessment API (feature 003 T-007) will open it with `openRetriever(path)`.
+- **Tests:** `server/test/retrieval.test.ts` covers manifest validation, chunking, idempotent ingestion, normalization and aliases, cross-model isolation, the `none` case, citation completeness, path-specific queries, and the coverage check, using the fixture corpus in `server/test/fixtures/corpus/` (fictional models Acme Book 14 and Book 15). `server/test/corpus.test.ts` checks the real corpus: manifest validity, demo models, coverage with its known gap, model isolation, the Windows 11 passages, the T480s near miss, and timing.
+- **Real corpus (2026-11-20):** 31 documents, 197 passages: 5 per demo model (service manual or equivalent, spec sheet, iFixit guides, vendor Windows 11 or BIOS support pages) and 16 generic (Microsoft Windows 11 and Windows 10 support pages, reset, Austrian Geräte-Retter-Prämie, EU repair directive, PCs für alle, Austrian e-waste and battery pages, WEEE, Global E-waste Monitor, EPA, Umweltbundesamt). Every extract was checked against the fetched source text. Research notes, gaps, and terms decisions are in [`RESEARCH.md`](./RESEARCH.md).
 
 ## Dependencies and risks
 
-- **Blocking:** The 2–3 demo laptop models are not chosen yet. FR-009, the alias list, and corpus curation cannot be completed without them. The other tasks can proceed with the fixture corpus.
+- **Resolved:** The demo models were chosen on 2026-11-20 (see Assumptions and open questions). Real scans are still needed to confirm their identity strings and aliases.
 - **Dependency:** Feature 001 device schema (`manufacturer`, `model`).
 - **Risk:** Manufacturer documents may forbid redistribution. Mitigation: store only short extracts with links, or choose other sources; record this in the terms note.
 - **Risk:** Windows model strings are inconsistent (machine-type codes, OEM names). Mitigation: an explicit alias list built from real scans of the demo laptops.
@@ -92,9 +98,10 @@ Not applicable to this feature: the index is shipped with the deployment owned b
 
 ## Assumptions and open questions
 
-- **Blocking:** Which 2–3 demo laptop models? Ideally one upgradeable model, one with soldered RAM or another hard limitation, and access to at least one physically for the live demo (see Suggestions.md §9).
-- **Open:** Embedding approach (local versus hosted). Proposed default: local.
-- **Open:** The value of *k* per path. Proposed default: 4.
+- **Resolved (2026-11-20, user decision):** The demo models are Lenovo ThinkPad T480 (upgradeable: two SO-DIMM slots, 8th-gen CPU), Dell XPS 13 9360 (soldered memory, mostly 7th-gen CPUs), and HP EliteBook 840 G5 (upgradeable, 8th gen). Physical access for the live demo and real scans (AC-009) is not yet confirmed.
+- **Resolved (2026-11-20, user decision):** Keyword BM25 over built-in SQLite FTS5, no embeddings; and Markdown extracts, no PDF parsing.
+- **Adopted:** *k* = 5 per path (see the technical approach); revisit once fact extraction runs on the real corpus.
+- **Open (coverage gap):** No fetched source states whether Windows 11 supports the 7th-gen CPUs (i5-7200U, i5-7300U) that some EliteBook 840 G5 units shipped with. HP's Windows 11 tested list could not be fetched. Options: add HP's list once reachable, or accept the gap (those units get "cannot verify" for Windows 11). AC-008 fails until one is chosen.
 - Assumption: Documents can be stored as text extracts in the repository where their terms allow; otherwise only metadata and a short quotation are stored.
 
 ## Scope change log
@@ -111,5 +118,5 @@ None superseded. Depends on [feature 001](../feature-001-device-scan-and-upload/
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: None yet
+- Related ADRs: [ADR-001](../../adr/adr-001-shared-contracts-typebox.md) (contracts)
 - Terms: [`docs/GLOSSARY.md`](../../GLOSSARY.md)

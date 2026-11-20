@@ -42,7 +42,8 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0 \
     DATABASE_PATH=/data/leaaf.sqlite \
-    SCANNER_EXE_PATH=/app/scanner/leaaf-scanner.exe
+    SCANNER_EXE_PATH=/app/scanner/leaaf-scanner.exe \
+    CORPUS_INDEX_PATH=/app/corpus-index/corpus.sqlite
 WORKDIR /app
 COPY --from=prod-deps /app/node_modules node_modules
 COPY --from=build-shared /app/shared/package.json shared/package.json
@@ -54,6 +55,11 @@ COPY server/src server/src
 COPY data data
 COPY config config
 COPY --from=scanner /out/leaaf-scanner.exe scanner/leaaf-scanner.exe
+# The retrieval index is built at image build time, never per request (feature 002); an invalid
+# corpus manifest fails the build.
+COPY corpus corpus
+COPY server/scripts server/scripts
+RUN cd server && node scripts/corpus-ingest.ts
 RUN mkdir -p /data && chown node:node /data
 USER node
 WORKDIR /app/server

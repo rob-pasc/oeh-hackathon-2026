@@ -1,0 +1,64 @@
+# Fixture corpus for retrieval tests (feature 002). Fictional models and texts; not real sources.
+schema_version: 1
+manufacturers:
+  - name: Acme
+    aliases: [ACME Corp.]
+models:
+  - manufacturer: Acme
+    model: Book 14
+    aliases: [AB14-2019]
+    demo: true
+    cpus: [i5-8250U]
+  - manufacturer: Acme
+    model: Book 15
+    aliases: [AB15-2020]
+documents:
+  - id: acme-book14-manual
+    title: Acme Book 14 Service Manual
+    url: https://example.org/acme/book14-manual.pdf
+    publisher: Acme
+    accessed_on: 2026-11-20
+    terms: Fictional test document.
+    topic: repair-hardware
+    applies_to:
+      - manufacturer: Acme
+        model: Book 14
+    file: docs/acme-book14-manual.md
+  - id: acme-book15-manual
+    title: Acme Book 15 Service Manual
+    url: https://example.org/acme/book15-manual.pdf
+    publisher: Acme
+    accessed_on: 2026-11-20
+    terms: Fictional test document.
+    topic: repair-hardware
+    applies_to:
+      - manufacturer: Acme
+        model: Book 15
+    file: docs/acme-book15-manual.md
+  - id: os-cpu-list
+    title: Example OS supported processors
+    url: https://example.org/os/supported-cpus
+    publisher: Example OS Vendor
+    accessed_on: 2026-11-20
+    terms: Fictional test document.
+    topic: software-support
+    applies_to: generic
+    file: docs/os-cpu-list.md
+  - id: reset-guide
+    title: Resetting a computer before passing it on
+    url: https://example.org/reset
+    publisher: Example OS Vendor
+    accessed_on: 2026-11-20
+    terms: Fictional test document.
+    topic: circular-economy
+    applies_to: generic
+    file: docs/reset-guide.md
+  - id: ewaste-guide
+    title: Electronic waste collection guide
+    url: https://example.org/ewaste
+    publisher: Example Environment Agency
+    accessed_on: 2026-11-20
+    terms: Fictional test document.
+    topic: environmental
+    applies_to: generic
+    file: docs/ewaste-guide.md
