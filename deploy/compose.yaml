@@ -3,8 +3,7 @@
 # Both ports are published on loopback only, so nothing is reachable except through Caddy.
 # Usage and the Caddy routes: docs/DEPLOYMENT.md.
 #
-#   cp .env.example .env               # image tag, ports
-#   cp server.env.example server.env   # server secrets (LLM key), once the server runs
+#   cp .env.example .env               # image tag, ports, server secrets
 #   docker compose up -d               # web only, until the server has an entry point
 #   docker compose --profile server up -d
 
@@ -22,8 +21,9 @@ services:
     # Opt-in until feature 001 adds the server's HTTP entry point; the image cannot run before.
     profiles: [server]
     restart: unless-stopped
+    # The same .env Compose reads for the tag and ports; the server ignores those extra variables.
     env_file:
-      - path: server.env
+      - path: .env
         required: false
     ports:
       - "127.0.0.1:${SERVER_PORT:-3000}:3000"

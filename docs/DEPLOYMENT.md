@@ -44,8 +44,7 @@ You need Docker with Compose v2.24 or later, and Caddy running outside this setu
 
 ```sh
 cd deploy
-cp .env.example .env                 # LEAAF_TAG, ports
-cp server.env.example server.env     # LLM_API_KEY etc.; only needed once the server runs; never commit it
+cp .env.example .env                 # LEAAF_TAG, ports, LLM_API_KEY etc.; never commit it
 # For private packages, log in with a token that has only read:packages:
 echo "$GHCR_TOKEN" | docker login ghcr.io -u <github-user> --password-stdin
 docker compose pull
@@ -53,7 +52,7 @@ docker compose up -d                       # web only, for now
 # docker compose --profile server up -d    # once the server has an entry point
 ```
 
-Both containers publish their ports on `127.0.0.1` only. The server's data lives in the named volume `leaaf_server-data`. Variable names for `server.env` are in [`server/README.md`](../server/README.md#configuration).
+Both containers publish their ports on `127.0.0.1` only. The server's data lives in the named volume `leaaf_server-data`. `deploy/.env` both configures Compose and is passed to the server container. The server variables are described in [`server/README.md`](../server/README.md#configuration).
 
 ### External Caddy routes
 
