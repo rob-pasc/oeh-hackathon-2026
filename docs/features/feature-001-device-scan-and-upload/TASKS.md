@@ -24,7 +24,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Progress notes
 
-None yet.
+- 2026-11-20: At the user's request, the top-level folders (`scanner/`, `server/`, `web/`, `shared/`, `corpus/`, `data/`, `demo/`) were created with README placeholders only. T-001 remains open: there are no build, test, or type-check commands yet, and implementation of this feature has not started.
 
 ## Lifecycle history
 

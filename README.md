@@ -14,6 +14,21 @@
 
 Proposed stack (not yet adopted): a Go scanner for Windows, a TypeScript/Node backend with SQLite, a React web app, and a cloud LLM via the Anthropic API.
 
+## Repository layout
+
+| Folder | Contents | Owning feature |
+|---|---|---|
+| [`scanner/`](scanner/) | Go Windows hardware scanner | 001, 005 (release build) |
+| [`server/`](server/) | TypeScript/Node API, storage, retrieval, assessment, reports | 001–005 |
+| [`web/`](web/) | React web app | 001, 003, 004 |
+| [`shared/`](shared/) | Versioned device JSON schema and shared code | 001 |
+| [`corpus/`](corpus/) | Curated knowledge base and its manifest | 002 |
+| [`data/`](data/) | Static impact table (CO₂e, prices, useful life) | 003 |
+| [`demo/`](demo/) | Seeded demo device scans and caches | 005 |
+| [`docs/`](docs/) | Product, workflow, feature specs, ADRs | — |
+
+The folders currently contain only README placeholders.
+
 ## Documentation
 
 - Product context: [docs/PRODUCT.md](docs/PRODUCT.md)

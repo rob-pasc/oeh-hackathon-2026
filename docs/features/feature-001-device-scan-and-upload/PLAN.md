@@ -74,7 +74,7 @@ This is the first slice of the Second Life Scanner MVP and the data foundation f
 
 Not yet adopted; to be confirmed during implementation.
 
-- **Repository layout:** `scanner/` (Go), `server/` (TypeScript, Node), `web/` (React + TypeScript, built with Vite), and `shared/` for the device JSON schema, which both the server and the web app use.
+- **Repository layout (folders created 2026-11-20 at the user's request):** `scanner/` (Go), `server/` (TypeScript, Node), `web/` (React + TypeScript, proposed Vite build), and `shared/` for the device JSON schema, which both the server and the web app use. `corpus/`, `data/`, and `demo/` hold data for features 002, 003, and 005.
 - **Scanner:** Go querying WMI/CIM (`Win32_ComputerSystem`, `Win32_Processor`, `Win32_PhysicalMemory`, `MSFT_PhysicalDisk` for media and bus type and health, `Win32_Battery` / `BatteryFullChargedCapacity` / `BatteryStaticData` for capacities, `Win32_BIOS` for the release date), with `powercfg /batteryreport` as a fallback for battery capacity. Each collector is isolated so a failure yields `null`. Parsing and normalization are pure functions with unit tests on recorded WMI output fixtures. The backend URL is injected via `-ldflags` at build time.
 - **Backend:** A Node HTTP framework (e.g. Fastify) with JSON Schema validation (e.g. Ajv) of the shared schema, and SQLite storage (e.g. `better-sqlite3`). Device IDs are 22-character base64url strings from `crypto.randomBytes(16)`. Upload body limit around 32 KB.
 - **Web:** React routes `/` (landing and download) and `/d/:id` (device page) fetching `GET /api/devices/:id`.
