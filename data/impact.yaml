@@ -1,0 +1,342 @@
+# Static impact table for the five-path assessment (feature 003 FR-007).
+#
+# Every entry is a low/high range with a unit, a status, and its sources. Status:
+#   sourced     - derived from the cited sources; `derivation` shows how.
+#   assumption  - a modelling assumption informed by the cited sources.
+#   placeholder - not yet backed by a source; fails the coverage check (npm test -w server).
+# The calculator (T-004) cites entry IDs in `impact_refs`. Validate with `npm test -w server`.
+#
+# Scope: a typical 14-inch Windows laptop (the demo models are not chosen yet). Part prices are
+# Austrian/German retail in EUR incl. VAT on the access date; RAM and SSD prices are inflated by
+# the 2025-2026 memory shortage (see sources.memory_price_crisis) and should be rechecked before
+# the demo. Values from the team's component research (v6 spreadsheet) were cross-checked;
+# where research disagreed, the entry says so in `notes`.
+
+schema_version: 1
+
+sources:
+  izm_framework_lca_2023:
+    title: Life Cycle Assessment of the Framework Laptop 2022 (ISO 14044 / ISO 14067), version LCA-FW-NB2022/IZM2023-1.0
+    publisher: Fraunhofer IZM (commissioned by Framework Computer Inc.)
+    url: https://downloads.frame.work/resources/Framework-Life-Cycle-Report.pdf
+    accessed_on: 2026-11-20
+  izm_reuse_2022:
+    title: Communicating the carbon savings potential associated with reuse of ICT equipment (position paper)
+    publisher: Fraunhofer IZM (Clemm, Poppe, Schischke; commissioned by Google)
+    url: https://www.izm.fraunhofer.de/content/dam/izm/de/documents/Abteilungen/Environmental_Reliability_Engineering/Projekte/Carbon%20savings%20reuse%20of%20ICT%20equipment%20November_2022.pdf
+    accessed_on: 2026-11-20
+  dell_latitude_7350_pcf:
+    title: Latitude 7350 Detachable product carbon footprint report (April 2024, PAIA 1.4.0)
+    publisher: Dell Technologies
+    url: https://www.delltechnologies.com/asset/zh-tw/products/laptops-and-2-in-1s/technical-support/latitude-7350-detachable-pcf-report.pdf
+    accessed_on: 2026-11-20
+  dell_latitude_7450_pcf_listing:
+    title: Dell Latitude 7450 Intel Core Ultra 7, product listing with Dell PCF values
+    publisher: SHI (reseller; secondary source for Dell's PCF)
+    url: https://www.shi.com/product/48079111/Dell-Latitude-7450-Intel-Core-Ultra-7
+    accessed_on: 2026-11-20
+  dell_optiplex_7020_pcf:
+    title: Dell OptiPlex Tower 7020 and Tower Plus 7020 product carbon footprints (2024)
+    publisher: Dell Technologies (Tower Plus report); Climatiq (secondary listing of Dell values)
+    url: https://www.delltechnologies.com/asset/zh-tw/products/desktops-and-all-in-ones/technical-support/optiplex-tower-plus-7020-pcf-report.pdf
+    accessed_on: 2026-11-20
+  price_new_desktop:
+    title: Lenovo ThinkCentre neo 50s (16 GB RAM, 512 GB SSD) offers
+    publisher: heise Preisvergleich; Bechtle; MediaMarkt Österreich
+    url: https://preisvergleich.heise.de/lenovo-thinkcentre-neo-50s-g4-sff-raven-black-12jh000pge-a3085887.html
+    accessed_on: 2026-11-20
+  tannu_nair_ssd_2023:
+    title: "The Dirty Secret of SSDs: Embodied Carbon (Energy Informatics Review 3(3), 2023)"
+    publisher: Swamit Tannu, Prashant J. Nair (arXiv 2207.10793)
+    url: https://arxiv.org/abs/2207.10793
+    accessed_on: 2026-11-20
+  boavizta_ram:
+    title: Boavizta API methodology, RAM component
+    publisher: Boavizta
+    url: https://doc.api.boavizta.org/Explanations/components/ram/
+    accessed_on: 2026-11-20
+  boavizta_ssd:
+    title: Boavizta API methodology, SSD component
+    publisher: Boavizta
+    url: https://doc.api.boavizta.org/Explanations/components/ssd/
+    accessed_on: 2026-11-20
+  battery_ghg_review_2024:
+    title: Review of greenhouse gas emissions of lithium-ion battery production (World Electric Vehicle Journal, June 2024)
+    publisher: World Electric Vehicle Journal (via DOAJ)
+    url: https://doaj.org/article/5fffa9d66dcf4abf83d2de6551c2e821
+    accessed_on: 2026-11-20
+  battery_ghg_llamas_orozco_2023:
+    title: Estimating the environmental impacts of global lithium-ion battery supply chain (PNAS Nexus, 2023)
+    publisher: Llamas-Orozco et al.
+    url: https://pmc.ncbi.nlm.nih.gov/articles/PMC10683946
+    accessed_on: 2026-11-20
+  price_ram_8gb:
+    title: Kingston ValueRAM SO-DIMM 8GB DDR4-3200 (KVR32S22S8/8), price comparison
+    publisher: guenstiger.de; office-partner.de
+    url: https://www.guenstiger.de/Produkt/Kingston/ValueRAM_DDR4_3200_8GB_KVR32S22S8_8.html
+    accessed_on: 2026-11-20
+  price_ram_16gb:
+    title: Kingston ValueRAM SO-DIMM 16GB DDR4-3200 (KVR32S22S8/16), price comparison and MediaMarkt Austria listing
+    publisher: guenstiger.de; MediaMarkt Österreich
+    url: https://www.guenstiger.de/Produkt/Kingston/ValueRAM_DDR4_3200_16GB_KVR32S22S8_16.html
+    accessed_on: 2026-11-20
+  price_ssd_nvme_500gb:
+    title: Kingston NV3 500GB M.2 2280 (SNV3S/500G), price comparison and MediaMarkt Austria listing
+    publisher: billiger.de; MediaMarkt Österreich
+    url: https://www.billiger.de/products/5010500828-kingston-nv3-500-gb-m-2-2280-snv3s-500g
+    accessed_on: 2026-11-20
+  price_ssd_nvme_1tb:
+    title: Kingston NV3 1TB M.2 2280 (SNV3S/1000G), heise Preisvergleich (offers dated 2026-11-20)
+    publisher: heise Preisvergleich (geizhals); Bechtle
+    url: https://preisvergleich.heise.de/kingston-nv3-nvme-pcie-4-0-ssd-1tb-snv3s-1000g-a3248579.html
+    accessed_on: 2026-11-20
+  price_ssd_sata_500gb:
+    title: Samsung 870 EVO 500GB 2.5" SATA (MZ-77E500B), geizhals.at and German retailers
+    publisher: geizhals.at; guenstiger.de; Alternate; MediaMarkt Österreich
+    url: https://geizhals.at/a2458833.html
+    accessed_on: 2026-11-20
+  price_battery:
+    title: Laptop replacement batteries (Lenovo 01AV421 for ThinkPad T470/T480 offers; Dell batteries at iFixit; eBay buying guide)
+    publisher: iFixit; eBay
+    url: https://www.ifixit.com/en-eu/products/lenovo-01av421-laptop-battery
+    accessed_on: 2026-11-20
+  price_new_laptop:
+    title: 14-inch laptops with 16 GB RAM / 512 GB SSD (Lenovo IdeaPad Slim 3i at CHECK24, ThinkPad E14 G7 at billiger.de, ThinkPad E14 G8 at Notebookcheck)
+    publisher: CHECK24; billiger.de; Notebookcheck
+    url: https://www.notebookcheck.com/Die-besten-Laptops-unter-1000-Euro.135028.0.html
+    accessed_on: 2026-11-20
+  memory_price_crisis:
+    title: "Speicherkrise: RAM-Preise sollen frühestens 2028 sinken"
+    publisher: PC Games Hardware
+    url: https://www.pcgameshardware.de/RAM-Hardware-154108/News/Speicherkrise-bis-2028-1521839/
+    accessed_on: 2026-11-20
+
+entries:
+  # --- Baseline: the owner buys a comparable new laptop now ---
+  - id: new_laptop.production_co2e
+    description: Production and distribution emissions of a comparable new 14-inch laptop
+    low: 85
+    high: 200
+    unit: kg_co2e
+    status: sourced
+    sources: [dell_latitude_7350_pcf, dell_latitude_7450_pcf_listing, izm_framework_lca_2023, izm_reuse_2022]
+    derivation: >-
+      Low: Dell Latitude 7450 manufacturing 85.6 kg (Dell PCF via SHI listing), consistent with the
+      Latitude 7350 Detachable report (mean 110 kg, about 77% manufacturing = 84 kg). Middle:
+      Framework Laptop cradle-to-gate 132.4 kg plus transport to point of sale 18.9 kg = 151 kg
+      (IZM Table 5-2). High: ADEME 2022 new laptop 177.6 kg over 5 years including use (cited in
+      IZM 2022), rounded up to 200 kg for heavier configurations.
+  - id: new_laptop.price
+    description: Price of a comparable new 14-inch laptop (16 GB RAM, 512 GB SSD)
+    low: 700
+    high: 1100
+    unit: eur
+    status: sourced
+    sources: [price_new_laptop]
+    derivation: Lenovo IdeaPad Slim 3i from EUR 699 (CHECK24); ThinkPad E14 G7 from EUR 899.90 (billiger.de); ThinkPad E14 G8 best price EUR 1089 (Notebookcheck).
+
+  - id: new_desktop.production_co2e
+    description: Production and distribution emissions of a comparable new office desktop (without monitor)
+    low: 90
+    high: 290
+    unit: kg_co2e
+    status: sourced
+    sources: [dell_optiplex_7020_pcf, izm_reuse_2022]
+    derivation: >-
+      Low: Dell OptiPlex Tower 7020 manufacturing 94 kg, Tower Plus 7020 104 kg (Dell PCF values
+      via Climatiq; Dell's own Tower Plus 7020 report gives 198 kg total for EU use). High: ADEME
+      2022 new desktop 289.8 kg over 5 years including use (cited in IZM 2022).
+  - id: new_desktop.price
+    description: Price of a comparable new office desktop (16 GB RAM, 512 GB SSD, without monitor)
+    low: 700
+    high: 1000
+    unit: eur
+    status: sourced
+    sources: [price_new_desktop]
+    derivation: Lenovo ThinkCentre neo 50s Gen 4 from EUR 714.93 (heise Preisvergleich); Gen 6 EUR 772.31 incl. VAT (Bechtle); Gen 5 EUR 884.51 (MediaMarkt Austria, 30-day low EUR 982.79).
+
+  # --- Parts used by upgrade and repair ---
+  - id: part.ram_8gb_ddr4.production_co2e
+    description: Production emissions of one 8 GB DDR4 SO-DIMM module
+    low: 9
+    high: 14
+    unit: kg_co2e
+    status: sourced
+    sources: [izm_framework_lca_2023, boavizta_ram]
+    derivation: >-
+      Low: Framework LCA, two 8 GB DDR4 modules = 18.44 kg, so 9.2 kg per module (Table 5-3). High:
+      Boavizta formula 8 GB / 2.06 GB/cm2 x 2.20 kg/cm2 + 5.22 kg = 13.8 kg, using the die density
+      measured in the Framework teardown (8 ICs x 0.485 cm2 per 8 GB).
+    notes: The team research (v6) did not list an 8 GB module.
+  - id: part.ram_8gb_ddr4.price
+    description: Price of one 8 GB DDR4-3200 SO-DIMM module
+    low: 88
+    high: 105
+    unit: eur
+    status: sourced
+    sources: [price_ram_8gb, memory_price_crisis]
+    derivation: Kingston KVR32S22S8/8 lowest offers EUR 87.64-92.84 (guenstiger.de), EUR 103.24 (office-partner.de).
+  - id: part.ram_16gb_ddr4.production_co2e
+    description: Production emissions of one 16 GB DDR4 SO-DIMM module
+    low: 14
+    high: 23
+    unit: kg_co2e
+    status: sourced
+    sources: [izm_framework_lca_2023, boavizta_ram]
+    derivation: >-
+      Low: Framework 8 GB module 9.2 kg with the memory ICs, which dominate its GWP (IZM section
+      5.2), doubled and the board shared, about 14 kg. High: Boavizta formula 16 / 2.06 x 2.20 +
+      5.22 = 22.3 kg.
+    notes: Team research (v6) estimated 8-15 kg; replaced because both sources give higher values.
+  - id: part.ram_16gb_ddr4.price
+    description: Price of one 16 GB DDR4-3200 SO-DIMM module
+    low: 115
+    high: 165
+    unit: eur
+    status: sourced
+    sources: [price_ram_16gb, memory_price_crisis]
+    derivation: Kingston KVR32S22S8/16 from EUR 114.99, typical lowest offers EUR 135-145 (guenstiger.de); MediaMarkt Austria EUR 162.93.
+    notes: Team research (v6) gave EUR 35-50 (pre-shortage prices).
+  - id: part.ssd_500gb.production_co2e
+    description: Production emissions of a 500 GB SSD (M.2 NVMe or 2.5-inch SATA)
+    low: 28
+    high: 80
+    unit: kg_co2e
+    status: sourced
+    sources: [izm_framework_lca_2023, boavizta_ssd, tannu_nair_ssd_2023]
+    derivation: >-
+      Low: Boavizta formula 500 GB / 48.5 GB/cm2 x 2.20 kg/cm2 + 6.34 kg = 29 kg (Framework's
+      256 GB SSD measured 16.3 kg). High: Tannu and Nair, 0.16 kg CO2e per GB of flash x 500 GB =
+      80 kg. The 2.5-inch casing adds well under 1 kg and is ignored.
+  - id: part.ssd_500gb.price
+    description: Price of a 500 GB M.2 2280 NVMe SSD
+    low: 100
+    high: 135
+    unit: eur
+    status: sourced
+    sources: [price_ssd_nvme_500gb, memory_price_crisis]
+    derivation: Kingston NV3 500GB from EUR 100 (billiger.de, 51 offers); MediaMarkt Austria EUR 130.99.
+  - id: part.ssd_sata_500gb.price
+    description: Price of a 500 GB 2.5-inch SATA SSD (for laptops with only a 2.5-inch bay)
+    low: 150
+    high: 210
+    unit: eur
+    status: sourced
+    sources: [price_ssd_sata_500gb, memory_price_crisis]
+    derivation: Samsung 870 EVO 500GB from EUR 154.98 (guenstiger.de), EUR 189.87 (geizhals.at), EUR 203.90 (Alternate), EUR 206.36 (MediaMarkt Austria).
+    notes: Budget SATA models may be cheaper; recheck before the demo.
+  - id: part.ssd_1tb.production_co2e
+    description: Production emissions of a 1 TB SSD
+    low: 50
+    high: 160
+    unit: kg_co2e
+    status: sourced
+    sources: [boavizta_ssd, izm_framework_lca_2023, tannu_nair_ssd_2023]
+    derivation: >-
+      Low: Boavizta formula 1000 / 48.5 x 2.20 + 6.34 = 51.7 kg. With the flash density measured in
+      the Framework teardown (about 30 GB/cm2) the same formula gives 79 kg. High: Tannu and Nair
+      0.16 kg/GB x 1000 GB = 160 kg.
+    notes: Team research (v6) estimated 20-32 kg for a 1 TB NVMe SSD; replaced because all three sources give higher values.
+  - id: part.ssd_1tb.price
+    description: Price of a 1 TB M.2 2280 NVMe SSD
+    low: 125
+    high: 155
+    unit: eur
+    status: sourced
+    sources: [price_ssd_nvme_1tb, memory_price_crisis]
+    derivation: Kingston NV3 1TB lowest offer EUR 132.90 on 2026-11-20 (heise Preisvergleich, 65 offers); Bechtle EUR 124.99.
+    notes: Team research (v6) gave EUR 60-78 (pre-shortage prices).
+  - id: part.battery_laptop.production_co2e
+    description: Production emissions of a 40-60 Wh laptop battery pack, including the battery management board
+    low: 5
+    high: 12
+    unit: kg_co2e
+    status: sourced
+    sources: [izm_framework_lca_2023, battery_ghg_llamas_orozco_2023, battery_ghg_review_2024]
+    derivation: >-
+      Framework 55 Wh battery module 8.46 kg (Table 5-3). Cell production 56-79 kg/kWh global
+      averages (Llamas-Orozco 2023), up to about 150 kg/kWh in most studies of the 2024 review,
+      times 0.04-0.06 kWh = 2-9 kg, plus pack electronics.
+    notes: Team research (v6) estimated 15-25 kg for a 60 Wh pack; replaced because the sources give 5-12 kg.
+  - id: part.battery_laptop.price
+    description: Price of a replacement laptop battery (model-specific; original or quality third-party)
+    low: 30
+    high: 150
+    unit: eur
+    status: sourced
+    sources: [price_battery]
+    derivation: Lenovo 01AV421 offers EUR 20-71 (iFixit, eBay); Dell batteries EUR 84.95-89.95 (iFixit); eBay buying guide EUR 50-150. The low end excludes the cheapest no-name offers.
+    notes: Narrow this per demo model once the models are chosen (T-008).
+  - id: service.battery_replacement.price
+    description: Labour for a professional battery replacement (glued or internal batteries)
+    low: 30
+    high: 80
+    unit: eur
+    status: placeholder
+    sources: []
+    notes: >-
+      No source found yet. Ask two local repair shops for a quote. Austria's Geräte-Retter-Prämie
+      refunds 50% of repair costs up to EUR 130 for private persons, with vouchers available until
+      the end of 2026 (https://www.oesterreich.gv.at/de/themen/umwelt_und_klima/energie_und_ressourcen_sparen/geraete-retter-praemie, checked 2026-11-20); not modelled yet.
+
+  # --- Path processes ---
+  - id: pass_on.handover_co2e
+    description: Emissions of passing the laptop on privately (data wipe, local handover)
+    low: 0
+    high: 25
+    unit: kg_co2e
+    status: assumption
+    sources: [izm_reuse_2022]
+    derivation: >-
+      A private handover has almost no emissions. Upper bound: ADEME 2022 refurbished laptop,
+      24.28 kg including commercial refurbishment and transport (cited in IZM 2022), which notes
+      that preparation for reuse has a minor impact compared with production.
+  - id: recycle.processing_co2e
+    description: Emissions of transport to and treatment at end of life, without recycling credits
+    low: 0.5
+    high: 2
+    unit: kg_co2e
+    status: sourced
+    sources: [izm_framework_lca_2023]
+    derivation: Framework LCA transport to end of life 0.01 kg plus end-of-life treatment 0.97 kg (Table 5-2), widened for longer transport.
+
+  # --- Extra useful life per path and intended use (years) ---
+  # Assumptions: ADEME 2022 assumes 3 years of second use for a refurbished laptop and André et
+  # al. 2019 assume 3 years of first and 3 years of second use (both cited in IZM 2022).
+  # Development use needs more performance, so upgrades and repairs extend it less.
+  - &life
+    id: life_extra.upgrade.office
+    description: Extra useful life after an SSD/RAM upgrade, office use
+    low: 2
+    high: 4
+    unit: years
+    status: assumption
+    sources: [izm_reuse_2022]
+    derivation: Around the 3 years of second use assumed by ADEME and André et al.
+  - { <<: *life, id: life_extra.upgrade.study, description: "Extra useful life after an SSD/RAM upgrade, study use" }
+  - { <<: *life, id: life_extra.upgrade.development, description: "Extra useful life after an SSD/RAM upgrade, development use", low: 1, high: 3 }
+  - { <<: *life, id: life_extra.upgrade.pass_on, description: "Extra useful life after an SSD/RAM upgrade before passing on" }
+  - { <<: *life, id: life_extra.repair.office, description: "Extra useful life after a battery repair, office use", high: 3 }
+  - { <<: *life, id: life_extra.repair.study, description: "Extra useful life after a battery repair, study use", high: 3 }
+  - { <<: *life, id: life_extra.repair.development, description: "Extra useful life after a battery repair, development use", low: 1, high: 3 }
+  - { <<: *life, id: life_extra.repair.pass_on, description: "Extra useful life after a battery repair before passing on", high: 3 }
+  - { <<: *life, id: life_extra.pass_on.office, description: "Extra useful life with a new owner (any current use)" }
+  - { <<: *life, id: life_extra.pass_on.study, description: "Extra useful life with a new owner (any current use)" }
+  - { <<: *life, id: life_extra.pass_on.development, description: "Extra useful life with a new owner (any current use)" }
+  - { <<: *life, id: life_extra.pass_on.pass_on, description: "Extra useful life with a new owner (any current use)" }
+  - &ends
+    id: life_extra.salvage.office
+    description: Extra useful life of the device when salvaged for parts (the device leaves service)
+    low: 0
+    high: 0
+    unit: years
+    status: assumption
+    sources: [izm_reuse_2022]
+    derivation: The device is taken out of service; reused parts are credited through their production emissions instead.
+  - { <<: *ends, id: life_extra.salvage.study }
+  - { <<: *ends, id: life_extra.salvage.development }
+  - { <<: *ends, id: life_extra.salvage.pass_on }
+  - { <<: *ends, id: life_extra.recycle.office, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }
+  - { <<: *ends, id: life_extra.recycle.study, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }
+  - { <<: *ends, id: life_extra.recycle.development, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }
+  - { <<: *ends, id: life_extra.recycle.pass_on, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }

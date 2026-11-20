@@ -1,6 +1,6 @@
 # server
 
-The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **LLM adapter** (`src/llm/`) and **fact extraction** (`src/facts/`, feature 003 T-001). The upload API (feature 001), retrieval (002), the rest of the assessment (003), and reports (004) come next.
+The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **LLM adapter** (`src/llm/`) **fact extraction** (`src/facts/`, feature 003 T-001), and the **impact table loader** (`src/impact/`, T-003). The upload API (feature 001), retrieval (002), the rest of the assessment (003), and reports (004) come next.
 
 The LLM API key is configured only here, through environment variables. It never ships in the scanner or the web app.
 
@@ -28,6 +28,10 @@ Rules for callers:
 ## Fact extraction
 
 `createFactExtractor({ llm, cache }).extract({ scan, retrieval })` returns the device model's `FactSet`. It sends the retrieved passages, the model identity, and the CPU name to the LLM, never the device ID. It keeps a fact only if every passage it cites was retrieved, and drops repeated keys whose values conflict. Results are cached under the model plus a hash of the prompt input, using `createSqliteFactCache(db)` (built-in `node:sqlite`) or `createMemoryFactCache()`. On LLM failure it throws `LlmError` and caches nothing. Change `PROMPT_VERSION` in `src/facts/prompt.ts` when editing the prompt.
+
+## Impact table
+
+`loadImpactTable()` (`src/impact/table.ts`) reads and validates [`data/impact.yaml`](../data/impact.yaml) and throws on any problem. `coverageProblems(table)` lists required entries that are missing or still placeholders. See [`data/README.md`](../data/README.md).
 
 ## Configuration
 

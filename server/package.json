@@ -21,6 +21,7 @@
   "dependencies": {
     "@leaaf/shared": "*",
     "openai": "^7.62.0",
-    "typebox": "^1.4.7"
+    "typebox": "^1.4.7",
+    "yaml": "^2.9.1"
   }
 }

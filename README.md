@@ -1,6 +1,6 @@
 # leaaf: Lifecycle Evaluation and Action Finder
 
-**Status:** In progress. Five MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The server has the LLM adapter and fact extraction; the scanner, web app, and the rest of the server are not built yet.
+**Status:** In progress. Five MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The server has the LLM adapter, fact extraction, and the sourced impact table (`data/impact.yaml`); the scanner, web app, and the rest of the server are not built yet.
 
 ÖH Hackathon 2026 project (theme: AI for Green), planned to run at [leaaf.green](https://leaaf.green) (not deployed yet). A small Windows scanner reads an old laptop's hardware. The platform then ranks five next lives for it (upgrade, repair, pass it on, salvage for parts, recycle) in Environment first or Money first mode, with cited evidence and honest cost and CO₂e ranges.
 
