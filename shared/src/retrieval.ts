@@ -33,6 +33,7 @@ export type Passage = Static<typeof Passage>
 
 /** Normalized model a device was matched to, using the manifest's canonical names. */
 export const ModelMatch = Type.Object({ manufacturer: Type.String(), model: Type.String() }, strict)
+export type ModelMatch = Static<typeof ModelMatch>
 
 const byPath = Object.fromEntries(PATHS.map((p) => [p, Type.Array(Passage)])) as Record<
   (typeof PATHS)[number],

@@ -1,13 +1,13 @@
 # Implementation Tasks: Five-path assessment and ranking
 
 - **Feature ID:** `feature-003-five-path-ranking`
-- **Status:** Specified
+- **Status:** In progress
 
 This is the **authoritative progress checklist**. Check a task only after its work is actually complete.
 
 ## Tasks
 
-- [ ] **T-001:** Define the fact schema and implement LLM fact extraction with citation validation and per-model caching, tested with a mocked LLM (supports `AC-002`)
+- [x] **T-001:** Define the fact schema and implement LLM fact extraction with citation validation and per-model caching, tested with a mocked LLM (supports `AC-002`)
 - [ ] **T-002:** Implement the feasibility and safety gates as pure functions, with table-driven tests (supports `AC-003`–`AC-006`)
 - [ ] **T-003:** Define the `impact.yaml` structure and validator with clearly marked placeholder entries (supports `AC-007`)
 - [ ] **T-004:** Implement the range calculator with provenance, the baseline statement, and the conditional displacement credit, with tests (supports `AC-008`, `AC-009`)
@@ -27,7 +27,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 - 2026-11-20: Contracts for facts and the assessment, the invariant checks, and `rankPaths`/`totalScore` are in `shared/` with tests. They support T-001, T-005, and T-007 but do not complete any of them: extraction, gates, the calculator, rubrics, and the API are not built yet.
 - 2026-11-20: LLM adapter (`server/src/llm/`) built with mocked-provider tests, ready for T-001 fact extraction; live check via `npm run llm:smoke -w server`.
+- 2026-11-20: T-001 done: `server/src/facts/` (prompt, citation filter, memory and SQLite caches) with 13 mocked-LLM tests. Live check `npm run facts:smoke -w server` on the fixtures matched `facts.example-laptop-14.json` with thinking enabled (1 attempt, 10.8 s, 2176/2063 tokens) and disabled (1 attempt, 1.5 s, 2151/264 tokens). Thinking stays enabled as decided; revisit against the 20 s budget once real manuals are in the corpus. The assessment does not call the extractor yet (T-002 onward).
 
 ## Lifecycle history
 
-No lifecycle events recorded yet.
+- 2026-11-20: Implementation started (T-001, fact extraction).

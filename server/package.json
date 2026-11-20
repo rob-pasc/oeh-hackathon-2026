@@ -10,7 +10,8 @@
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
-    "llm:smoke": "node --env-file-if-exists=.env scripts/llm-smoke.ts"
+    "llm:smoke": "node --env-file-if-exists=.env scripts/llm-smoke.ts",
+    "facts:smoke": "node --env-file-if-exists=.env scripts/facts-smoke.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

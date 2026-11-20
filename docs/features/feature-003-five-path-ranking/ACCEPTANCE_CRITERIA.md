@@ -1,14 +1,14 @@
 # Acceptance Criteria: Five-path assessment and ranking
 
 - **Feature ID:** `feature-003-five-path-ranking`
-- **Verification status:** Not started
+- **Verification status:** In progress
 
 Defines the feature's acceptance criteria and records how each criterion was verified, including results and evidence.
 
 | ID     | Requirement | Scenario / expected outcome | Verification method | Result  | Evidence |
 | ------ | ----------- | --------------------------- | ------------------- | ------- | -------- |
 | AC-001 | FR-001 | Given a device page, no ranking is shown until an intended use is chosen. Choosing one of the four options shows a ranking, and changing the option recomputes it. | Automated web test, plus a manual browser check | Not run | |
-| AC-002 | FR-002 | Given a mocked LLM response containing a fact that cites a passage ID that was not retrieved, then that fact is discarded and the facts with valid citations are kept. A second assessment of the same model makes no new LLM call. | Automated server test with a mocked LLM | Not run | |
+| AC-002 | FR-002 | Given a mocked LLM response containing a fact that cites a passage ID that was not retrieved, then that fact is discarded and the facts with valid citations are kept. A second assessment of the same model makes no new LLM call. | Automated server test with a mocked LLM | Pass | 2026-11-20: `server/test/facts.test.ts` ("drops one citing an unretrieved passage", "reuses cached facts … without an LLM call"), `npm test -w server` 36/36 passing |
 | AC-003 | FR-003 | For any assessed device, all five paths appear, each with exactly one status and at least one reason. | Automated unit test over the fixture devices | Not run | |
 | AC-004 | FR-004 | Given `model_evidence: "none"`, then upgrade and repair are `conditional` with a "cannot verify" reason, and no compatibility-dependent path is `viable`. | Automated unit test | Not run | |
 | AC-005 | FR-005 | Given the fact "RAM soldered" with a passage citation, and an upgrade that relies only on RAM, then upgrade is `not_suitable` and its reason cites that fact. | Automated unit test, plus a manual check on the soldered-RAM demo model once chosen | Not run | |
