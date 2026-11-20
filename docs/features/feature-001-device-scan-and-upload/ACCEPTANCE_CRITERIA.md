@@ -1,7 +1,7 @@
 # Acceptance Criteria: Device scan and upload
 
 - **Feature ID:** `feature-001-device-scan-and-upload`
-- **Verification status:** Not started
+- **Verification status:** In progress
 
 Defines the feature's acceptance criteria and records how each criterion was verified, including results and evidence.
 
@@ -12,11 +12,11 @@ Defines the feature's acceptance criteria and records how each criterion was ver
 | AC-003 | FR-004         | Given fixture output where the battery and disk-health sources fail or are absent, when normalized, then those fields are `null`, `scan_status` is `partial`, and the remaining fields are still populated. | Automated scanner unit test | Not run | |
 | AC-004 | FR-005         | Given fixture output that includes serial numbers, a UUID, a host name, a user name, and a MAC address, when the payload is built, then none of those values appear anywhere in the serialized JSON. | Automated scanner unit test searching the output for the planted values | Not run | |
 | AC-005 | FR-006, FR-009 | Given the backend is unreachable, when the scanner runs, then it writes the JSON file next to the exe, prints its path and a readable error, and exits with a non-zero code. | Automated scanner test against an unreachable URL, plus one manual run | Not run | |
-| AC-006 | FR-007         | Given a payload with a missing `model` and a string for `ram_gb`, when it is posted to the upload endpoint, then the response is a 4xx naming both fields and no record is stored. | Automated server integration test | Not run | |
-| AC-007 | FR-008         | Given two valid uploads, when stored, then each returns a distinct ID of at least 22 base64url characters (≥128 random bits) and a device URL containing that ID. | Automated server integration test, plus code review of the ID source | Not run | |
+| AC-006 | FR-007         | Given a payload with a missing `model` and a string for `ram_gb`, when it is posted to the upload endpoint, then the response is a 4xx naming both fields and no record is stored. | Automated server integration test | Pass | 2026-11-20: `server/test/devices.test.ts` "names every invalid field and stores nothing": 400 with fields `/identity/model` and `/memory/total_gb`, row count 0 |
+| AC-007 | FR-008         | Given two valid uploads, when stored, then each returns a distinct ID of at least 22 base64url characters (≥128 random bits) and a device URL containing that ID. | Automated server integration test, plus code review of the ID source | Pass | 2026-11-20: `devices.test.ts` "stores a valid scan…" and "device IDs…" (1000 IDs, 22 chars, 16 bytes). Code review: `newDeviceId()` in `server/src/devices/store.ts` uses `crypto.randomBytes(16)` |
 | AC-008 | FR-009         | Given a reachable backend, when the scanner completes on a real laptop, then it prints the device URL and the default browser opens that page. | Manual run on a real Windows laptop | Not run | |
 | AC-009 | FR-010         | Given a stored device with `battery_health_percent: null`, when its device page is opened, then all scanned fields are shown in plain language and battery health reads "Unknown". | Automated web component test, plus manual check in a browser | Not run | |
-| AC-010 | FR-011         | Given an unknown ID and a malformed ID, when their device URLs are requested, then both show "device not found", and no API route returns a list of devices. | Automated server and web tests, plus a route inventory review | Not run | |
+| AC-010 | FR-011         | Given an unknown ID and a malformed ID, when their device URLs are requested, then both show "device not found", and no API route returns a list of devices. | Automated server and web tests, plus a route inventory review | Not run | 2026-11-20, server part: `devices.test.ts` "answers unknown and malformed IDs…" and "offers no route that lists devices" pass. Web part not yet checked. |
 | AC-011 | FR-012         | Given the landing page, when opened, then it lists the collected data, states what is not collected, and the download link returns the scanner exe. | Manual browser check, plus an automated test that the download route serves the file | Not run | |
 | AC-013 | FR-013         | Given recorded WMI outputs that include RAM slot and type data, TPM and Secure Boot state, a battery report with a cycle count, and video controllers, when normalized, then those fields are populated. When their sources are absent or access is denied, the fields are `null` and the scan still succeeds. | Automated scanner unit tests on fixtures | Not run | |
 | AC-012 | Review         | The final diff is self-reviewed against this plan, with findings and their resolution recorded below. | Self-review | Not run | |

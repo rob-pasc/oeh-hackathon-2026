@@ -1,8 +1,20 @@
 # server
 
-The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **LLM adapter** (`src/llm/`) **fact extraction** (`src/facts/`, feature 003 T-001), and the **impact table loader** (`src/impact/`, T-003). The upload API (feature 001), retrieval (002), the rest of the assessment (003), and reports (004) come next.
+The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), and the **impact table loader** (`src/impact/`, T-003). Retrieval (002), the rest of the assessment (003), and reports (004) come next.
 
 The LLM API key is configured only here, through environment variables. It never ships in the scanner or the web app.
+
+## Device API
+
+`npm start -w server` runs Fastify on `HOST:PORT` (default `127.0.0.1:3000`) with SQLite at `DATABASE_PATH`.
+
+| Route | Result |
+|---|---|
+| `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above 32 KiB |
+| `GET /api/devices/:id` | `200 DeviceRecord`; unknown and malformed IDs both get the same `404 not_found` |
+| `GET /downloads/leaaf-scanner.exe` | The file at `SCANNER_EXE_PATH`, or 404 while it does not exist |
+
+No route lists devices: the device ID (16 random bytes, base64url) is the only access control. Request logs record the method and route pattern only, never the URL or the client IP.
 
 ## LLM adapter
 
@@ -41,7 +53,11 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `LLM_API_KEY` | (required) | Provider API key |
+| `PORT`, `HOST` | `3000`, `127.0.0.1` | API listen address |
+| `DATABASE_PATH` | `data/leaaf.sqlite` | SQLite file (gitignored `server/data/`) |
+| `PUBLIC_BASE_URL` | `http://localhost:5173` | Web origin used to build device URLs |
+| `SCANNER_EXE_PATH` | `../scanner/dist/leaaf-scanner.exe` | Executable served as the download |
+| `LLM_API_KEY` | (required for LLM features) | Provider API key |
 | `LLM_BASE_URL` | `https://api.deepseek.com` | OpenAI-compatible endpoint |
 | `LLM_MODEL` | `deepseek-flash` | Model name |
 | `LLM_TIMEOUT_MS` | `25000` | Per-request timeout |
@@ -51,6 +67,7 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 ## Commands
 
 ```sh
+npm start -w server       # device API on http://127.0.0.1:3000
 npm test -w server        # unit tests against a fake provider (no network, no key)
 npm run typecheck -w server
 npm run llm:smoke -w server   # live call to the configured provider; needs server/.env
