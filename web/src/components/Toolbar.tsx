@@ -43,8 +43,8 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
   return (
     // Same two columns as the result screen, so the tag bar ends exactly where the cards end and the priority
     // toggle lines up with the gauge and specs column.
-    <div className="grid grid-cols-[1fr_400px] items-center gap-7">
-      <div className="flex min-w-0 items-center gap-4">
+    <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] items-center gap-7">
+      <div className="flex min-w-0 flex-col items-stretch gap-4 md:flex-row md:items-center">
         <label className="flex flex-none items-center gap-3 text-sm font-semibold">
           <span className="text-muted">Use</span>
           <span className="relative inline-flex">
@@ -78,8 +78,8 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
           </span>
         </label>
 
-        <div role="group" aria-label="Show steps for" className="flex min-w-0 flex-1 rounded-full bg-white p-1 shadow-card">
-          <div className="relative flex min-w-0 flex-1 gap-1">
+        <div role="group" aria-label="Show steps for" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white p-1 shadow-card">
+          <div className="relative flex min-w-[32rem] flex-1 xl:min-w-0 gap-1">
           <SlidingHighlight index={PATH_TABS.indexOf(pathTab)} count={PATH_TABS.length} className="bg-leaf-tint" />
           {PATH_TABS.map((tab) => {
             const active = tab === pathTab

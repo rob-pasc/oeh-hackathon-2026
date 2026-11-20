@@ -2,6 +2,9 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { Assessment } from '@leaaf/shared/assessment'
+import { formatEur, formatYears } from '../lib/impact'
+import fixture from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
+import sampleReport from '@leaaf/fixtures/report.example-laptop-14.office.json'
 import { rankPaths } from '@leaaf/shared/ranking'
 import { ApiContext } from '../api'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
@@ -89,6 +92,55 @@ describe('ResultsView', () => {
     await waitFor(() => expect(within(upgrade).getAllByRole('listitem').length).toBeGreaterThan(0))
   })
 
+  it('shows calculator ranges and the baseline for the recommended path', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
+    const a = fixture as Assessment
+    const top = rankPaths(a.paths, a.weights.environment_first).find(p => p.path.status === 'viable')!.path
+    const impact = top.impact!
+    const summary = await screen.findByLabelText('Recommendation summary')
+    expect(summary).toHaveTextContent(PATH_TITLES[top.path])
+    expect(summary).toHaveTextContent(formatEur(impact.cost_eur))
+    expect(summary).toHaveTextContent(formatYears(impact.useful_life_years))
+    expect(summary).toHaveTextContent(`${impact.co2e_kg.avoided_vs_baseline.low}–${impact.co2e_kg.avoided_vs_baseline.high} kg CO₂e`)
+    expect(summary).toHaveTextContent(a.baseline.description)
+  })
+
+  it('shows the complete cited evidence on keyboard expansion', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
+    const card = await screen.findByRole('region', { name: 'Upgrade' })
+    within(card).getByRole('button').focus()
+    await userEvent.keyboard('{Enter}')
+    const details = await within(card).findByText('Evidence, assumptions and safety')
+    await userEvent.click(details)
+    const explanation = sampleReport.paths.find(p => p.path === 'upgrade')!
+    for (const claim of explanation.claims) {
+      expect(within(card).getByText(claim.text)).toBeVisible()
+      for (const id of claim.passage_ids) {
+        const p = sampleReport.passages.find(p => p.passage_id === id)!
+        expect(within(card).getAllByText(p.text)[0]).toBeVisible()
+        expect(Array.from(card.querySelectorAll('blockquote a')).some(a => a.getAttribute('href') === p.url && a.textContent?.includes(p.title))).toBe(true)
+      }
+    }
+  })
+
+  it('keeps the ranking and template notice when model evidence is missing', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.desktop} />))
+    expect(await screen.findByText(/AI explanation unavailable/)).toBeVisible()
+    for (const name of ['Upgrade', 'Repair']) {
+      expect(screen.getByRole('region', { name })).toHaveTextContent(/cannot verify|could not be verified|cannot be verified/i)
+    }
+  })
+
+  it('explains when no path is viable', async () => {
+    const api: typeof fast = { ...fast, streamReport: (id, use, handlers) =>
+      fast.streamReport(id, use, { ...handlers, onAssessment: a => handlers.onAssessment({
+        ...a, paths: a.paths.map(p => ({ ...p, status: p.status === 'viable' ? 'conditional' : p.status })),
+      }) }) }
+    render(<ApiContext.Provider value={api}><ResultsView deviceId={MOCK_DEVICE_IDS.laptop} /></ApiContext.Provider>)
+    expect(await screen.findByText(/no path is clearly recommended/i)).toBeVisible()
+    expect(screen.queryByText('Recommended')).toBeNull()
+  })
+
   it('offers the six use tags with General as default', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
     const select = (await screen.findByRole('combobox')) as HTMLSelectElement
@@ -140,6 +192,7 @@ describe('ResultsView', () => {
     if (!a) throw new Error('no assessment arrived')
     const expected = rankPaths(a.paths, a.weights.money_first).map(({ path }) => PATH_TITLES[path.path])
     await waitFor(() => expect(cardOrder()).toEqual(expected))
+    expect(screen.getByRole('status')).toHaveTextContent(/moved above.*economic value/i)
     expect(streams).toBe(1)
     expect(fetchSpy).not.toHaveBeenCalled()
     fetchSpy.mockRestore()

@@ -9,6 +9,9 @@ import { DEFAULT_USE, type PathTab, type UseTag } from '../lib/labels'
 import { buildOptionViews } from '../lib/optionView'
 import { useFlip } from '../lib/motion'
 import { buildPathViews } from '../lib/pathView'
+import { ReportDetails } from './ReportDetails'
+import { explainModeChange } from '../lib/modeChange'
+import { formatEur, formatYears } from '../lib/impact'
 import { Equivalents } from './Equivalents'
 import { Gauge } from './Gauge'
 import { PathCard } from './PathCard'
@@ -25,6 +28,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const api = useApi()
   const [use, setUse] = useState<UseTag>(DEFAULT_USE)
   const [mode, setMode] = useState<Mode>('environment_first')
+  const [change, setChange] = useState<string[]>([])
   const [scan, setScan] = useState<Load<DeviceScan>>({ state: 'loading' })
   const [assessment, setAssessment] = useState<Assessment | null>(null)
   const [report, setReport] = useState<Report | null>(null)
@@ -61,7 +65,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     setStreamError(null)
     setStreamEnded(false)
     return api.streamReport(deviceId, use, {
-      onAssessment: setAssessment,
+      onAssessment: value => { setAssessment(value); setChange([]) },
       onReport: setReport,
       onOptions: setOptions,
       onEnd: () => setStreamEnded(true),
@@ -74,11 +78,13 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   // Default selection follows the recommendation until the user picks a card themselves.
   const recommendedId = views.find((v) => v.isRecommended)?.id ?? views[0]?.id ?? null
   // A chosen path tag decides the selected path; in the overview it is the last clicked card.
+  const recommendation = views.find(v => v.isRecommended)
+  const explanations = new Map(report?.paths.map(p => [p.path, p]))
+  const impact = assessment?.paths.find(p => p.path === recommendation?.id)?.impact
   const tabView = pathTab === 'overview' ? null : (views.find((v) => v.id === pathTab) ?? null)
   const selectedView =
     tabView ?? views.find((v) => v.id === selected) ?? views.find((v) => v.id === recommendedId) ?? null
-  // A stream can end without a report (the server sends none until feature 004 exists); the cards then
-  // say that no steps are available instead of showing placeholders forever.
+  // Older streams can end after the assessment alone.
   const reportPending = report === null && streamError === null && !streamEnded
 
   // Options of the selected path tag; the gauge follows the option the user last clicked.
@@ -119,22 +125,33 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="results-view flex flex-col gap-6">
       <Toolbar
         use={use}
         mode={mode}
         pathTab={pathTab}
         onUseChange={setUse}
-        onModeChange={setMode}
+        onModeChange={next => {
+          if (next === mode) return
+          setChange(assessment ? explainModeChange(assessment, mode, next) : [])
+          setMode(next)
+        }}
         onPathTabChange={changePathTab}
       />
+      {change.length > 0 && <div role="status" className="text-sm text-muted">{change.map(t => <p key={t}>{t}</p>)}</div>}
       {streamError && !assessment ? (
         <ErrorCard title="We could not load your results" message={streamError.message} />
       ) : !assessment || scan.state === 'loading' ? (
         <ResultSkeleton />
       ) : (
-        <div className="fade-up grid grid-cols-[1fr_400px] items-start gap-7">
+        <div className="fade-up grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] items-start gap-7">
           <div className="relative flex flex-col gap-3.5">
+            {!tabView && <p className="px-1 text-sm text-muted" aria-label="Recommendation summary">
+              {recommendation && impact ? <>
+                <strong className="text-ink">{recommendation.title}</strong> · {formatEur(impact.cost_eur)} · {formatYears(impact.useful_life_years)} · {impact.co2e_kg.avoided_vs_baseline.low}–{impact.co2e_kg.avoided_vs_baseline.high} kg CO₂e avoided.
+                {' '}Baseline: {assessment.baseline.description}.
+              </> : 'No path is clearly recommended. Each is conditional or unsuitable for this use.'}
+            </p>}
             {tabView ? (
               <PathTabView
                 key={tabView.id}
@@ -160,7 +177,9 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
                     setSelected(view.id)
                     setOpen((current) => (current === view.id ? null : view.id))
                   }}
-                />
+                >
+                  {report && <ReportDetails explanation={explanations.get(view.id)} passages={report.passages} />}
+                </PathCard>
                 </div>
               ))
             )}
@@ -168,7 +187,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
               <p className="m-0 rounded-[10px] bg-amber-tint px-3 py-2 text-[13px] text-amber-ink">{report.notice}</p>
             ) : null}
           </div>
-          <div className="sticky top-6 flex flex-col gap-5">
+          <div className="xl:sticky top-6 flex flex-col gap-5">
             <section aria-label="CO₂e gauge" className="rounded-[20px] bg-white p-6 shadow-card">
               <Gauge value={gaugeValue} pathTitle={gaugeTitle} />
               <Equivalents avoided={gaugeItem?.co2?.avoided ?? null} conditional={gaugeItem?.co2?.conditional ?? false} />

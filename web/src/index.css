@@ -47,6 +47,11 @@ select {
   outline-offset: 2px;
 }
 
+.results-view :focus-visible {
+  outline-color: var(--color-leaf-dark);
+  outline-offset: -3px;
+}
+
 /* Skeleton shimmer (loading placeholders) and spinner. */
 .sk {
   background: linear-gradient(90deg, #e8edea 25%, #f4f7f4 50%, #e8edea 75%);

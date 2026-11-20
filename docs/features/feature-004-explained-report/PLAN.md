@@ -66,10 +66,10 @@ The ranked result from feature 003 becomes a readable report. A highlighted reco
 
 ## Proposed technical approach
 
-Not yet adopted; to be confirmed during implementation.
+Implemented as described below.
 
 - **Delivery (adopted 2026-11-20, user decision):** Server-Sent Events. `GET /api/devices/:id/report?intended_use=…` first sends an `assessment` event (so the ranking is visible at once), then a `report` event (from the LLM or the template), then `end`, or `error` instead. Cached results are streamed the same way without delay. Contracts are `Report`, `StreamEnd`, and the routes in [`shared/src/report.ts`](../../../shared/src/report.ts) and [`shared/src/api.ts`](../../../shared/src/api.ts). The "Recommended" label uses `recommendedPath` from `shared/src/ranking.ts`.
-- **Backend:** `server/src/report/`. A prompt builder that passes the structured input as data, and a call through the provider-neutral `LlmClient.completeJson` ([ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md): DeepSeek `deepseek-flash`, JSON mode, thinking disabled by default for latency), validated against the server’s `ExplanationOutput` schema (adopted for T-001). Its `paths` object has one required key per path, with fields derived from the shared `PathExplanation` contract, including `claims[].passage_ids`. The server supplies the outer `Report` metadata and citation passages. A validator applies FR-005. T-002 adds the SQLite table `explanation_cache` keyed by `(device_id, intended_use)`. Concurrent opens share the pending explanation call. The server reapplies citation and figure checks on cache hits. Existing device rows need no migration. Timeout of about 25 s, then the fallback.
+- **Backend:** `server/src/report/`. A prompt builder that passes the structured input as data, and a call through the provider-neutral `LlmClient.completeJson` ([ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md): DeepSeek `deepseek-flash`, JSON mode, thinking disabled by default for latency), validated against the server’s `ExplanationOutput` schema (adopted for T-001). Its `paths` object has one required key per path, with fields derived from the shared `PathExplanation` contract, including `claims[].passage_ids`. The server supplies the outer `Report` metadata and citation passages. A validator applies FR-005. T-002 adds the SQLite table `explanation_cache` keyed by `(device_id, intended_use)`. Concurrent opens share the pending explanation call. The server reapplies citation and figure checks on cache hits. Existing device rows need no migration. Fact and explanation prompt changes from the demo review invalidate older cached generations on read. The default 25 s explanation deadline covers retries and repair attempts. A missing provider or typed LLM failure uses the template.
 - **Template fallback:** Deterministic sentence templates per status and reason type, in the same output shape.
 - **Mode-change explanation:** A pure function comparing the two orders and the per-criterion weighted contributions.
 - **Web:** Report and card components with expandable sections that build on feature 003's ranked view; source links open in a new tab.
@@ -86,7 +86,7 @@ Not yet adopted; to be confirmed during implementation.
 
 - **Completion boundary:** Locally verified handoff with self-review.
 - **Review:** Self-review of the diff and of a sample of generated reports for the demo models, recorded in `ACCEPTANCE_CRITERIA.md`.
-- **CI/merge:** No CI yet. Server and web tests and type checks must pass locally. Pushing and merging need user authorization.
+- **CI/merge:** Server and web tests and type checks must pass locally. Pushing and merging need user authorization.
 
 ## Release and recovery (when applicable)
 
@@ -96,7 +96,7 @@ Not applicable to this feature: deployment is owned by feature 005.
 
 - Assumption: English-only report text.
 - **Resolved (2026-11-20, user decision):** `deepseek-flash` via an OpenAI-compatible adapter, with thinking disabled for explanations and a 25 s default timeout (`LLM_TIMEOUT_MS`). Any `LlmError` (timeout, auth, rate limit, invalid output) triggers the FR-009 fallback ([ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md)).
-- **Open:** Visual style. If shared conventions emerge, record them in `docs/VISUAL_DESIGN.md` during implementation.
+- **Resolved:** The report reuses the feature 006 toolbar, cards and gauge. The compact summary and nested evidence disclosure retain the laptop layout. The report stacks at narrower widths as authorized on 2026-11-20. See [visual design](../../VISUAL_DESIGN.md).
 
 ## Scope change log
 
@@ -112,5 +112,5 @@ None superseded. Builds on [feature 003](../feature-003-five-path-ranking/PLAN.m
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: None yet
+- Related ADRs: [shared contracts](../../adr/adr-001-shared-contracts-typebox.md) and [LLM adapter](../../adr/adr-002-llm-openai-compatible-deepseek.md)
 - Terms: [`docs/GLOSSARY.md`](../../GLOSSARY.md)

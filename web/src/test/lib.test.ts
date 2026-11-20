@@ -9,6 +9,7 @@ import { INTENDED_USES } from '@leaaf/shared/common'
 import { describe, expect, it, vi } from 'vitest'
 import { liveClient } from '../api/live'
 import { USE_TAGS } from '../lib/labels'
+import { explainModeChange } from '../lib/modeChange'
 import { parseRoute } from '../app/router'
 import { GAUGE, TRACK_PATH, arcPath, needleAngle, polar } from '../lib/gauge'
 import { formatEur, formatYears, gaugeValue } from '../lib/impact'
@@ -227,5 +228,16 @@ describe('use tags in live mode (feature 003 AC-020)', () => {
       vi.unstubAllGlobals()
     }
     expect(urls).toEqual(USE_TAGS.map((use) => `/api/devices/q3Xk9vT2mB7pLw0cZr1sEa/report?intended_use=${use}`))
+  })
+})
+
+describe('mode change explanations', () => {
+  it('explains reversals using the changed weighted score differences', () => {
+    const a = assessmentJson as Assessment
+    const changes = explainModeChange(a, 'environment_first', 'money_first')
+    expect(changes.join(' ')).toContain('economic value (10% → 45%)')
+    expect(changes.join(' ')).toContain('moved above')
+    const unchanged = { ...a, weights: { ...a.weights, money_first: a.weights.environment_first } }
+    expect(explainModeChange(unchanged, 'environment_first', 'money_first')).toEqual([])
   })
 })

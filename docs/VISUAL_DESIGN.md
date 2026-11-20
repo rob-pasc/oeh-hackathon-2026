@@ -39,14 +39,14 @@ Calm, light, and friendly: mostly white and off-white surfaces with one fresh gr
 
 ## Responsive behavior, accessibility, and motion
 
-- Laptop screens only for now (1280 px and wider). No responsive layouts.
+- Report pages retain two columns from 1280 px. On narrower screens the gauge and specs follow the cards. The compact toolbar allows horizontal scrolling within the path tags.
 - Visible focus ring (3 px light green). Native `select` and `button` elements. Color is never the only carrier of meaning: statuses are also written out.
 - Shimmer, spinner, and needle motion are switched off for `prefers-reduced-motion`.
 
 ## Proposed changes and open questions
 
 - Dark mode: not planned.
-- Mobile layout: deferred; feature 004 currently requires 360 px (see feature 006, planned replacements).
+- The report journey is verified at 360 px. The wider feature 006 team review is tracked separately.
 - Exact green and amber values will be reviewed with the team after the first look at the screens.
 
 ## References

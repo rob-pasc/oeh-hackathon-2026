@@ -5,6 +5,7 @@ import { Sk } from './ui'
 const SECTION_LABEL = 'text-xs font-bold tracking-wider text-leaf uppercase'
 
 interface Props {
+  children?: React.ReactNode
   view: CardView
   selected: boolean
   open: boolean
@@ -13,7 +14,7 @@ interface Props {
   onToggle: () => void
 }
 
-export function PathCard({ view, selected, open, reportPending, onToggle }: Props) {
+export function PathCard({ view, selected, open, reportPending, onToggle, children }: Props) {
   return (
     <section
       aria-label={view.title}
@@ -43,7 +44,7 @@ export function PathCard({ view, selected, open, reportPending, onToggle }: Prop
       </button>
 
       {open ? (
-        <div className="fade-up grid grid-cols-2 gap-x-7 gap-y-3.5 border-t border-line pt-4 pr-5 pb-5 pl-[84px]">
+        <div className="fade-up grid sm:grid-cols-2 gap-x-7 gap-y-3.5 border-t border-line pt-4 pr-5 pb-5 pl-5 sm:pl-[84px]">
           <div className="flex flex-col gap-2">
             <span className={SECTION_LABEL}>What to do</span>
             {view.steps.length > 0 ? (
@@ -84,11 +85,13 @@ export function PathCard({ view, selected, open, reportPending, onToggle }: Prop
               </a>
             ) : null}
           </div>
+          {children}
           {view.changes.length > 0 ? (
-            <div className="col-span-2 flex flex-col gap-2" data-testid="before-after">
+            <div className="col-span-full flex flex-col gap-2" data-testid="before-after">
               <span className={SECTION_LABEL}>Before → after</span>
               <div className="grid grid-cols-[auto_auto_auto_1fr] items-center gap-x-3 gap-y-1.5 rounded-[12px] bg-page px-4 py-3 text-sm">
-                {view.changes.map((change) => (
+                {children}
+          {view.changes.map((change) => (
                   <div key={change.label} className="contents">
                     <span className="text-muted">{change.label}</span>
                     <span className="text-muted">{change.before}</span>

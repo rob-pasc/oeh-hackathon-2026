@@ -65,6 +65,11 @@ export function buildPathViews(assessment: Assessment, report: Report | null, mo
   return ranked.map(({ path, total }, index) => {
     const explanation = report?.paths.find((p) => p.path === path.path) ?? null
     const firstReason = path.reasons[0]?.text ?? ''
+    const missingModel = assessment.model_evidence === 'none' && (path.path === 'repair' || path.path === 'upgrade')
+    const unknown = path.reasons.find(r => r.code.startsWith('cannot_verify') || /could not|cannot be verified/i.test(r.text))
+    const missingReading = path.confidence.reasons.find(reason => reason.startsWith('Some scan readings were unavailable'))
+    const summary = explanation?.summary ?? firstReason
+    const evidenceNote = unknown?.text ?? missingReading ?? (missingModel ? `Model-specific ${path.path} compatibility could not be verified.` : '')
     const passageId = explanation?.claims[0]?.passage_ids[0]
     const passage = passageId ? (report?.passages.find((p) => p.passage_id === passageId) ?? null) : null
     const cost = path.impact ? formatEur(path.impact.cost_eur) : '—'
@@ -85,7 +90,7 @@ export function buildPathViews(assessment: Assessment, report: Report | null, mo
         { label: 'Extra life', value: life },
         { label: 'Score', value: total === null ? '—' : String(Math.round(total)) },
       ],
-      summary: explanation?.summary ?? firstReason,
+      summary: evidenceNote && !summary.includes(evidenceNote) ? `${summary} ${evidenceNote}` : summary,
       summaryFromAssessment: explanation === null,
       steps: explanation?.next_steps ?? [],
       why: explanation?.why ?? null,

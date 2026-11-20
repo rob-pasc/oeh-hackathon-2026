@@ -43,7 +43,7 @@ export function ScanSession({ sessionId }: { sessionId: string }) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 mx-auto flex w-full max-w-[1312px] flex-col gap-6 px-16 pt-4 pb-16">
+      <main className="flex-1 mx-auto flex w-full max-w-[1312px] flex-col gap-6 px-4 sm:px-8 xl:px-16 pt-4 pb-16">
         {progress.phase === 'failed' ? (
           <ErrorCard
             title="The scan did not finish"

@@ -6,7 +6,9 @@ React + TypeScript single-page app (Vite, Tailwind CSS v4). Specified in [featur
 |---|---|
 | `/` | Landing page with **Scan now** |
 | `/s/:sessionId` | Scan session: result skeleton and live scanner status; becomes the result screen when the scan completes |
-| `/d/:deviceId` | Result screen: five ranked path cards, CO₂e gauge, scan specs, Use and priority toolbar |
+| `/d/:deviceId` | Result screen: five ranked path cards, CO₂e gauge, scan specs, Use and priority toolbar, and expandable report evidence |
+
+The recommendation summary uses calculator ranges. Open a path and its evidence disclosure for excerpts and source links. Switching priority reorders the paths locally and explains which weight changes affected the order.
 
 ## Run
 
