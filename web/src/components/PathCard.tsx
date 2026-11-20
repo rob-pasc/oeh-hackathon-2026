@@ -99,13 +99,6 @@ export function PathCard({ view, selected, open, reportPending, onToggle }: Prop
               </div>
             </div>
           ) : null}
-          {view.notes.length > 0 ? (
-            <div className="col-span-2 flex flex-col gap-1 rounded-[10px] bg-amber-tint px-3 py-2 text-[13px] leading-snug text-amber-ink">
-              {view.notes.map((note) => (
-                <span key={note}>{note}</span>
-              ))}
-            </div>
-          ) : null}
         </div>
       ) : null}
     </section>

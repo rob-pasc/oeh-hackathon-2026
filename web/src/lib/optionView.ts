@@ -30,7 +30,6 @@ export function buildOptionViews(options: readonly PathOption[], baseline: Asses
       steps: option.steps,
       why: option.why,
       source: null,
-      notes: option.unverified,
       gauge,
       co2: co2Of(impact),
       changes: option.changes ?? [],

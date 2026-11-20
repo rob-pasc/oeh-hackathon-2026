@@ -42,7 +42,7 @@ export function StepsView({ view, reportPending }: Props) {
         <div className={`${BLOCK} px-5 py-[18px] text-[15px] text-muted`}>No steps available for this path.</div>
       )}
 
-      {view.why || view.source || view.notes.length > 0 ? (
+      {view.why || view.source ? (
         <section aria-label="Why" className={`${BLOCK} flex flex-col gap-2 px-5 py-[18px]`}>
           <span className="text-xs font-bold tracking-wider text-leaf uppercase">Why</span>
           {view.why ? <span className="text-sm leading-snug">{view.why}</span> : null}
@@ -55,13 +55,6 @@ export function StepsView({ view, reportPending }: Props) {
             >
               Source: {view.source.label}
             </a>
-          ) : null}
-          {view.notes.length > 0 ? (
-            <div className="flex flex-col gap-1 rounded-[10px] bg-amber-tint px-3 py-2 text-[13px] leading-snug text-amber-ink">
-              {view.notes.map((note) => (
-                <span key={note}>{note}</span>
-              ))}
-            </div>
           ) : null}
         </section>
       ) : null}

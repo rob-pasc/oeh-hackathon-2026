@@ -1,11 +1,11 @@
 // Turns the server payloads (Assessment, Report) into what the result screen renders.
 // Ordering comes from shared/src/ranking.ts so the browser and the server agree (feature 003 FR-012).
 import type { Assessment, Impact } from '@leaaf/shared/assessment'
-import type { ConfidenceLevel, Mode, Path, Range, Suitability } from '@leaaf/shared/common'
+import type { Mode, Path, Range, Suitability } from '@leaaf/shared/common'
 import { rankPaths, recommendedPath } from '@leaaf/shared/ranking'
 import type { Report } from '@leaaf/shared/report'
 import type { SpecChange } from '../api/types'
-import { formatAvoided, formatEur, formatSavings, formatYears, gaugeValue, type GaugeValue } from './impact'
+import { formatEur, formatYears, gaugeValue, type GaugeValue } from './impact'
 import { PATH_TITLES, STATUS_LABELS } from './labels'
 
 export interface SourceRef {
@@ -37,8 +37,6 @@ export interface CardView {
   steps: string[]
   why: string | null
   source: SourceRef | null
-  /** What could not be verified (feature 004 FR-007). */
-  notes: string[]
   gauge: GaugeValue | null
   /** Avoided CO₂e for the equivalents under the gauge; null when nothing is credited. */
   co2: { avoided: Range; conditional: boolean } | null
@@ -56,14 +54,8 @@ export interface PathView extends CardView {
   id: Path
   /** Weighted score for the active mode; null for not-suitable paths. */
   total: number | null
-  cost: string
-  life: string
-  avoided: string
-  savings: string
   /** True while `summary` still comes from the assessment because the report has not arrived. */
   summaryFromAssessment: boolean
-  confidence: ConfidenceLevel
-  impact: Impact | null
 }
 
 export function buildPathViews(assessment: Assessment, report: Report | null, mode: Mode): PathView[] {
@@ -88,15 +80,11 @@ export function buildPathViews(assessment: Assessment, report: Report | null, mo
       statusLabel: STATUS_LABELS[path.status],
       total,
       isRecommended: recommended !== null && recommended.path.path === path.path,
-      cost,
-      life,
       metrics: [
         { label: 'Cost', value: cost },
         { label: 'Extra life', value: life },
         { label: 'Score', value: total === null ? '—' : String(Math.round(total)) },
       ],
-      avoided: path.impact ? formatAvoided(path.impact) : 'No figures for this path',
-      savings: path.impact ? formatSavings(path.impact, assessment.baseline) : '—',
       summary: explanation?.summary ?? firstReason,
       summaryFromAssessment: explanation === null,
       steps: explanation?.next_steps ?? [],
@@ -104,12 +92,9 @@ export function buildPathViews(assessment: Assessment, report: Report | null, mo
       source: passage
         ? { label: passage.section ? `${passage.title}, ${passage.section}` : passage.title, url: passage.url }
         : null,
-      notes: explanation?.unverified ?? [],
       gauge: path.impact ? gaugeValue(path.impact, assessment.baseline) : null,
       co2: co2Of(path.impact),
       changes: [],
-      confidence: path.confidence.level,
-      impact: path.impact,
     }
   })
 }

@@ -37,6 +37,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-028:** CO₂e equivalents with sourced factors (supports `AC-032`)
 - [x] **T-029:** Before/after on action cards (supports `AC-033`)
 - [x] **T-030:** Hover lift, sliding highlights, fade-in, reduced-motion handling (supports `AC-034`)
+- [x] **T-031:** Show the laptop view by default; remove the "could not be verified" notes from cards (supports `AC-035`, `AC-036`)
 
 ## Dependencies and blockers
 
@@ -61,3 +62,4 @@ The first version was written without network access. After the merge into `main
 - 2026-11-20: Sixth scope extension by amendment (FR-024, AC-026, T-022); see the plan's scope change log. Implemented the same day; verification pending.
 - 2026-11-20: Seventh scope extension by amendment (FR-025, AC-027, T-023); see the plan's scope change log. Implemented the same day; verification pending.
 - 2026-11-20: Eighth scope extension by amendment (FR-026 to FR-032, AC-028 to AC-034, T-024 to T-030); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
+- 2026-11-20: Ninth scope extension by amendment (FR-033, FR-034, AC-035, AC-036, T-031); see the plan's scope change log. Implemented the same day; verification by the team pending.

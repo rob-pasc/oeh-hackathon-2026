@@ -47,7 +47,8 @@ describe('ScanSession', () => {
     await waitFor(() => expect(window.location.pathname).toBe(`/d/${MOCK_DEVICE_IDS.laptop}`))
   })
 
-  it('lists the parts the scanner finds and shows the laptop view only on request', async () => {
+  it('lists the parts the scanner finds and shows the laptop view unless it is hidden', async () => {
+    window.localStorage.clear()
     const slow = createMockClient({ stepMs: 200 })
     window.history.pushState(null, '', '/s/CCCCCCCCCCCCCCCCCCCCCCCCCC')
     render(
@@ -56,11 +57,12 @@ describe('ScanSession', () => {
       </ApiContext.Provider>,
     )
     const card = screen.getByRole('region', { name: 'Found in your device' })
-    expect(within(card).queryByRole('img')).toBeNull()
+    expect(within(card).getByRole('img', { name: /Laptop view/ })).toBeInTheDocument()
     expect(await within(card).findByText('Processor')).toBeInTheDocument()
     expect(await within(card).findByText('Parts list')).toBeInTheDocument()
-    await userEvent.click(within(card).getByRole('button', { name: 'Show laptop view' }))
-    expect(within(card).getByRole('img', { name: /Laptop view/ })).toBeInTheDocument()
+    await userEvent.click(within(card).getByRole('button', { name: 'Hide laptop view' }))
+    expect(within(card).queryByRole('img', { name: /Laptop view/ })).toBeNull()
+    window.localStorage.clear()
   })
 })
 

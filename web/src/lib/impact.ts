@@ -22,25 +22,6 @@ export function formatYears(range: Range): string {
   return `+${low}–${high} years`
 }
 
-/** "180–342 kg CO₂e avoided", or a plain statement when nothing is credited (displacement `none`). */
-export function formatAvoided(impact: Impact): string {
-  const { low, high } = impact.co2e_kg.avoided_vs_baseline
-  const hi = round(high)
-  if (hi <= 0) return 'No avoided production'
-  const lo = Math.max(0, round(low))
-  const range = lo === hi ? `${hi}` : `${lo}–${hi}`
-  return `${range} kg CO₂e avoided${impact.displacement === 'conditional' ? ' (conditional)' : ''}`
-}
-
-/** Money relative to the baseline purchase, only where the contract credits the baseline. */
-export function formatSavings(impact: Impact, baseline: Baseline): string {
-  if (impact.displacement === 'conditional') return 'Only if the receiver would otherwise buy new'
-  if (impact.displacement === 'none') return 'No savings vs. buying new'
-  const low = Math.max(0, baseline.cost_eur.low - impact.cost_eur.high)
-  const high = Math.max(0, baseline.cost_eur.high - impact.cost_eur.low)
-  return `Saves ${formatEur({ low, high })} vs. new`
-}
-
 export interface GaugeValue {
   /** Percent of a comparable new laptop's production CO₂e that this path avoids (0–100). */
   mid: number

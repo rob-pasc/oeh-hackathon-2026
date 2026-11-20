@@ -10,12 +10,13 @@ const CHIP: Record<Exclude<PartLookup, 'pending'>, { label: string; className: s
 
 const STORAGE_KEY = 'leaaf.showLaptopView'
 
-// Remembered per browser; storage can be missing or blocked, so every access is guarded.
+// Shown unless the person hid it; the choice is remembered per browser. Storage can be missing or blocked, so
+// every access is guarded.
 function readShowLaptop(): boolean {
   try {
-    return window.localStorage.getItem(STORAGE_KEY) === '1'
+    return window.localStorage.getItem(STORAGE_KEY) !== '0'
   } catch {
-    return false
+    return true
   }
 }
 
