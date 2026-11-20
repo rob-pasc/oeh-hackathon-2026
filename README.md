@@ -1,6 +1,6 @@
 # Second Life Scanner
 
-**Status:** Specified. Five MVP features are approved and specified; implementation has not started.
+**Status:** In progress. Five MVP features are specified. The shared data contracts (`shared/`) are implemented and tested; the scanner, server, and web app are not built yet.
 
 ÖH Hackathon 2026 project (theme: AI for Green). A small Windows scanner reads an old laptop's hardware. The platform then ranks five next lives for it (upgrade, repair, pass it on, salvage for parts, recycle) in Environment first or Money first mode, with cited evidence and honest cost and CO₂e ranges.
 
@@ -21,19 +21,32 @@ Proposed stack (not yet adopted): a Go scanner for Windows, a TypeScript/Node ba
 | [`scanner/`](scanner/) | Go Windows hardware scanner | 001, 005 (release build) |
 | [`server/`](server/) | TypeScript/Node API, storage, retrieval, assessment, reports | 001–005 |
 | [`web/`](web/) | React web app | 001, 003, 004 |
-| [`shared/`](shared/) | Versioned device JSON schema and shared code | 001 |
+| [`shared/`](shared/) | Data contracts (TypeBox → JSON Schema), fixtures, and ranking helpers | 001–004 |
 | [`corpus/`](corpus/) | Curated knowledge base and its manifest | 002 |
 | [`data/`](data/) | Static impact table (CO₂e, prices, useful life) | 003 |
 | [`demo/`](demo/) | Seeded demo device scans and caches | 005 |
 | [`docs/`](docs/) | Product, workflow, feature specs, ADRs | — |
 
-The folders currently contain only README placeholders.
+Apart from `shared/`, the folders contain only README placeholders.
+
+## Development
+
+Requires Node.js 24 or later (Go is needed later for `scanner/`). From the repository root:
+
+```sh
+npm install
+npm test            # all workspaces
+npm run typecheck
+npm run build
+```
+
+See [`shared/README.md`](shared/README.md) for the contracts, the mock fixtures, and how to change a contract.
 
 ## Documentation
 
 - Product context: [docs/PRODUCT.md](docs/PRODUCT.md)
 - Glossary: [docs/GLOSSARY.md](docs/GLOSSARY.md)
 - Feature index: [docs/features/INDEX.md](docs/features/INDEX.md)
+- Architecture decisions: [docs/adr/](docs/adr/)
 - Workflow for agents and contributors: [AGENTS.md](AGENTS.md), [docs/WORKFLOW.md](docs/WORKFLOW.md)
 
-Setup and usage instructions will be added with feature 001.

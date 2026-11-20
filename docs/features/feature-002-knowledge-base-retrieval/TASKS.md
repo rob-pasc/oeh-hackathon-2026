@@ -24,7 +24,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Progress notes
 
-None yet.
+- 2026-11-20: The retrieval output contract (`Passage`, `RetrievalResult`) is defined in `shared/` with example fixtures. No retrieval tasks have been started yet.
 
 ## Lifecycle history
 

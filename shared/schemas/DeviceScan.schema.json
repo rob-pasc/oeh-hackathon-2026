@@ -1,0 +1,527 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "DeviceScan.schema.json",
+  "title": "Device scan payload (v1)",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "scanner_version",
+    "scanned_at",
+    "scan_status",
+    "identity",
+    "os",
+    "firmware",
+    "tpm",
+    "cpu",
+    "memory",
+    "storage",
+    "battery",
+    "gpus"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "number",
+      "const": 1
+    },
+    "scanner_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scanned_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "scan_status": {
+      "enum": [
+        "complete",
+        "partial"
+      ],
+      "description": "partial when at least one nullable field is null (feature 001 FR-004)"
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "manufacturer",
+        "model",
+        "product_version",
+        "system_family",
+        "system_sku",
+        "form_factor"
+      ],
+      "properties": {
+        "manufacturer": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Win32_ComputerSystem.Manufacturer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Win32_ComputerSystem.Model; on Lenovo this is a machine-type code such as 20L5CTO1WW"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "product_version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Win32_ComputerSystemProduct.Version; on Lenovo the readable name such as \"ThinkPad T480\""
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "system_family": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Win32_ComputerSystem.SystemFamily"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "system_sku": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Win32_ComputerSystem.SystemSKUNumber (a product SKU, not a serial number)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "form_factor": {
+          "anyOf": [
+            {
+              "enum": [
+                "laptop",
+                "desktop",
+                "other"
+              ],
+              "description": "Derived from Win32_SystemEnclosure.ChassisTypes"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "Raw identity strings as reported by firmware. Placeholder text such as \"To be filled by O.E.M.\" must be reported as null. Model matching and aliases are feature 002."
+    },
+    "os": {
+      "type": "object",
+      "required": [
+        "caption",
+        "build",
+        "display_version"
+      ],
+      "properties": {
+        "caption": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Win32_OperatingSystem.Caption, e.g. \"Microsoft Windows 11 Pro\""
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "build": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Win32_OperatingSystem.Version, e.g. \"10.0.22631\""
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "display_version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Registry DisplayVersion, e.g. \"23H2\""
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "firmware": {
+      "type": "object",
+      "required": [
+        "bios_release_date",
+        "firmware_type",
+        "secure_boot_enabled"
+      ],
+      "properties": {
+        "bios_release_date": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "firmware_type": {
+          "anyOf": [
+            {
+              "enum": [
+                "uefi",
+                "legacy_bios"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "secure_boot_enabled": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "BIOS date is an age hint only; it changes with BIOS updates"
+    },
+    "tpm": {
+      "type": "object",
+      "required": [
+        "present",
+        "spec_version"
+      ],
+      "properties": {
+        "present": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "spec_version": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Highest supported TPM spec version, e.g. \"2.0\""
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "Win32_Tpm may need admin rights; report null when unreadable"
+    },
+    "cpu": {
+      "type": "object",
+      "required": [
+        "name",
+        "cores",
+        "threads"
+      ],
+      "properties": {
+        "name": {
+          "anyOf": [
+            {
+              "type": "string",
+              "description": "Win32_Processor.Name"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cores": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "threads": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "memory": {
+      "type": "object",
+      "required": [
+        "total_gb",
+        "type",
+        "speed_mts",
+        "slots_total",
+        "slots_used"
+      ],
+      "properties": {
+        "total_gb": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "description": "Installed RAM in GiB, rounded to one decimal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "anyOf": [
+            {
+              "enum": [
+                "ddr3",
+                "ddr4",
+                "ddr5",
+                "lpddr3",
+                "lpddr4",
+                "lpddr4x",
+                "lpddr5",
+                "lpddr5x",
+                "other"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "speed_mts": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Configured speed in MT/s"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slots_total": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Win32_PhysicalMemoryArray.MemoryDevices"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slots_used": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Count of Win32_PhysicalMemory entries"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "Slot counts from SMBIOS are unreliable for soldered RAM; soldering is a retrieved fact (feature 003), not a scan field"
+    },
+    "storage": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "media",
+              "bus",
+              "capacity_gb",
+              "health"
+            ],
+            "properties": {
+              "media": {
+                "enum": [
+                  "hdd",
+                  "ssd",
+                  "scm",
+                  "unknown"
+                ],
+                "description": "MSFT_PhysicalDisk.MediaType 3/4/5, else unknown"
+              },
+              "bus": {
+                "enum": [
+                  "nvme",
+                  "sata",
+                  "other",
+                  "unknown"
+                ],
+                "description": "MSFT_PhysicalDisk.BusType 17/11, else other/unknown"
+              },
+              "capacity_gb": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Decimal GB (10^9 bytes), as printed on drives"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "health": {
+                "enum": [
+                  "healthy",
+                  "warning",
+                  "unhealthy",
+                  "unknown"
+                ],
+                "description": "MSFT_PhysicalDisk.HealthStatus"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Internal drives only; USB and virtual disks are excluded by the scanner"
+          },
+          "description": "null when storage could not be enumerated"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "battery": {
+      "type": "object",
+      "required": [
+        "present",
+        "design_capacity_mwh",
+        "full_charge_capacity_mwh",
+        "health_percent",
+        "cycle_count"
+      ],
+      "properties": {
+        "present": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "design_capacity_mwh": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "root\\WMI BatteryStaticData.DesignedCapacity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "full_charge_capacity_mwh": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "root\\WMI BatteryFullChargedCapacity.FullChargedCapacity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "health_percent": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200,
+              "description": "full_charge / design * 100. Some firmware reports identical values for both; consumers should treat exactly 100 with low confidence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cycle_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "description": "From powercfg /batteryreport when available"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "present=false means no battery was detected (e.g. desktop); null means it could not be determined"
+    },
+    "gpus": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Win32_VideoController.Name values"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

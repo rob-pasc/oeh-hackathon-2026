@@ -1,0 +1,213 @@
+{
+  "device_id": "q3Xk9vT2mB7pLw0cZr1sEa",
+  "intended_use": "office",
+  "generated_at": "2026-11-20T09:31:25Z",
+  "source": "llm",
+  "notice": null,
+  "paths": [
+    {
+      "path": "upgrade",
+      "summary": "Add an SSD and a second RAM module to keep this laptop fast for office work.",
+      "next_steps": [
+        "Buy a 500 GB M.2 2280 NVMe SSD and an 8 GB DDR4 SO-DIMM.",
+        "Back up your data, then install the SSD and clone the old drive.",
+        "Insert the RAM module into the free slot."
+      ],
+      "why": "Replacing the hard drive with an SSD is the biggest speed gain for office work, and the laptop has a free M.2 slot and RAM slot.",
+      "assumptions": [
+        "Sample part prices; no labour cost."
+      ],
+      "safety": [
+        "Unplug the charger and disconnect the battery before opening the case."
+      ],
+      "unverified": [],
+      "claims": [
+        {
+          "text": "The laptop has an M.2 2280 slot that supports NVMe SSDs.",
+          "passage_ids": [
+            "ex14-hmm#storage-1"
+          ]
+        },
+        {
+          "text": "One of two DDR4 slots is free, supporting up to 32 GB.",
+          "passage_ids": [
+            "ex14-hmm#memory-1"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "repair",
+      "summary": "Replace the worn battery; the rest of the laptop is in good shape.",
+      "next_steps": [
+        "Order replacement battery EX-BAT-57.",
+        "Remove the two battery screws and swap the pack."
+      ],
+      "why": "The battery has lost about a quarter of its capacity, and it can be swapped without special tools.",
+      "assumptions": [
+        "Battery health readings may be inaccurate on some firmware."
+      ],
+      "safety": [
+        "Do not use a swollen battery; take it to a repair shop."
+      ],
+      "unverified": [],
+      "claims": [
+        {
+          "text": "The battery is customer-replaceable and secured by two screws.",
+          "passage_ids": [
+            "ex14-hmm#battery-1"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "pass_on",
+      "summary": "Give it to someone who needs a laptop for office or school work.",
+      "next_steps": [
+        "Reset the operating system and securely erase the drive.",
+        "Offer it to a school, a student, or a local reuse initiative."
+      ],
+      "why": "The laptop still runs a supported operating system, but the environmental benefit depends on the recipient not buying a new one.",
+      "assumptions": [
+        "The recipient would otherwise buy a new laptop."
+      ],
+      "safety": [],
+      "unverified": [
+        "Whether a local recipient needs this device."
+      ],
+      "claims": [
+        {
+          "text": "The CPU is on the supported processor list.",
+          "passage_ids": [
+            "os-cpu-list#intel-8th-gen"
+          ]
+        },
+        {
+          "text": "Drives should be securely erased before passing on.",
+          "passage_ids": [
+            "reuse-guide#data-wipe"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "salvage",
+      "summary": "Only salvage parts if nobody can use the laptop as a whole.",
+      "next_steps": [
+        "Keep the laptop in use or pass it on first."
+      ],
+      "why": "The device still works, so taking it apart wastes more value than it recovers.",
+      "assumptions": [],
+      "safety": [],
+      "unverified": [
+        "A reuse channel for individual parts."
+      ],
+      "claims": []
+    },
+    {
+      "path": "recycle",
+      "summary": "Recycle it at a certified e-waste point once no other option fits.",
+      "next_steps": [
+        "Erase all data.",
+        "Bring it to a certified e-waste collection point."
+      ],
+      "why": "Recycling recovers materials but gives the device no further use.",
+      "assumptions": [],
+      "safety": [
+        "Remove nothing yourself; recyclers handle batteries safely."
+      ],
+      "unverified": [],
+      "claims": [
+        {
+          "text": "Securely erase drives before handing over a computer.",
+          "passage_ids": [
+            "reuse-guide#data-wipe"
+          ]
+        }
+      ]
+    }
+  ],
+  "passages": [
+    {
+      "passage_id": "ex14-hmm#storage-1",
+      "document_id": "ex14-hmm",
+      "title": "Example Laptop 14 Hardware Maintenance Manual",
+      "url": "https://example.org/manuals/ex14-hmm.pdf",
+      "publisher": "Example Manufacturer",
+      "topic": "repair-hardware",
+      "section": "Storage drive",
+      "page": 68,
+      "applicability": {
+        "kind": "model",
+        "manufacturer": "Example Manufacturer",
+        "model": "Example Laptop 14"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "A 2.5-inch SATA drive bay and one M.2 2280 slot supporting NVMe or SATA SSDs are available."
+    },
+    {
+      "passage_id": "ex14-hmm#memory-1",
+      "document_id": "ex14-hmm",
+      "title": "Example Laptop 14 Hardware Maintenance Manual",
+      "url": "https://example.org/manuals/ex14-hmm.pdf",
+      "publisher": "Example Manufacturer",
+      "topic": "repair-hardware",
+      "section": "Memory modules",
+      "page": 72,
+      "applicability": {
+        "kind": "model",
+        "manufacturer": "Example Manufacturer",
+        "model": "Example Laptop 14"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "The computer has two SO-DIMM DDR4 slots and supports up to 32 GB of memory. No memory is soldered to the system board."
+    },
+    {
+      "passage_id": "ex14-hmm#battery-1",
+      "document_id": "ex14-hmm",
+      "title": "Example Laptop 14 Hardware Maintenance Manual",
+      "url": "https://example.org/manuals/ex14-hmm.pdf",
+      "publisher": "Example Manufacturer",
+      "topic": "repair-hardware",
+      "section": "Battery pack",
+      "page": 60,
+      "applicability": {
+        "kind": "model",
+        "manufacturer": "Example Manufacturer",
+        "model": "Example Laptop 14"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "The battery is a customer-replaceable unit secured by two screws. Replacement packs are available under part number EX-BAT-57."
+    },
+    {
+      "passage_id": "os-cpu-list#intel-8th-gen",
+      "document_id": "os-cpu-list",
+      "title": "Example OS supported processors",
+      "url": "https://example.org/os/supported-cpus",
+      "publisher": "Example OS Vendor",
+      "topic": "software-support",
+      "section": "Intel 8th generation",
+      "page": null,
+      "applicability": {
+        "kind": "generic"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "Example CPU i5-8250U is listed as a supported processor."
+    },
+    {
+      "passage_id": "reuse-guide#data-wipe",
+      "document_id": "reuse-guide",
+      "title": "Guide to reusing and donating computers",
+      "url": "https://example.org/circular/reuse-guide",
+      "publisher": "Example Circular Economy Network",
+      "topic": "circular-economy",
+      "section": "Erasing data before passing on",
+      "page": null,
+      "applicability": {
+        "kind": "generic"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "Before passing on a computer, reset the operating system and securely erase all drives."
+    }
+  ]
+}

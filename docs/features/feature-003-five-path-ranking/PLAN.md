@@ -75,6 +75,7 @@ Rules enforce hard constraints, the calculator produces the numbers, and feature
 
 Not yet adopted; to be confirmed during implementation.
 
+- **Contracts (adopted 2026-11-20):** `Fact`/`FactSet` in [`shared/src/facts.ts`](../../../shared/src/facts.ts) and `Assessment` in [`shared/src/assessment.ts`](../../../shared/src/assessment.ts). Cross-field rules (weights sum to 100, not-suitable paths have no score or impact, `low <= high`, displacement sign rules) are in `shared/src/invariants.ts`. Ordering (`rankPaths`) is in `shared/src/ranking.ts`, so that the server and the browser toggle produce the same order. The payload carries criterion scores and both weight sets, never totals.
 - **Location:** `server/src/assessment/` for facts, gates, calculator, and scoring; `data/impact.yaml` for the static impact table; `config/weights.yaml` for weights; `docs/` or code comments for rubrics.
 - **Fact extraction:** Claude via the Anthropic API with tool use / structured output against a JSON schema. Each fact has `{key, value, source_passage_ids[]}`. Code validation drops facts whose passage IDs were not in the retrieved set. Results are cached in SQLite by normalized model.
 - **Pure-function core:** `gates(scan, facts, use)` → statuses; `calculate(path, scan, facts, impactTable, use)` → ranges; `score(...)`. The browser receives criterion scores and both weight sets, so the toggle is a client-side recomputation.
@@ -104,7 +105,8 @@ Not applicable to this feature: deployment is owned by feature 005.
 - Assumption: The weights are the adopted initial defaults, explicitly illustrative and tunable by the team (user decision, 2026-11-20).
 - Assumption: The financial perspective is the current owner's out-of-pocket cost versus buying new. For "pass it on", the owner's cost is about zero, and any resale value is excluded.
 - **Open:** Which CO₂e sources and boundaries to use for the new-laptop baseline and the parts. Decided during impact table curation and recorded with sources.
-- **Open:** Exact fact schema keys. Finalized when the demo models' documents are known.
+- **Resolved (2026-11-20, user decision when the shared contracts were defined together, 2026-11-20):** v1 fact keys are the memory facts (`ram_soldered`, `ram_slots_total`, `ram_max_gb`, `ram_type`), storage facts (`storage_slots`), battery facts (`battery_user_replaceable`, `battery_replacement_part_available`), and software support facts (`windows11_supported_cpu`, `latest_supported_os`, `vendor_bios_updates_ended`). Adding keys later is an additive contract change.
+- **Resolved (2026-11-20, user decision):** CO₂e per path is shown as three ranges: the path's own emissions, the shared baseline, and `avoided_vs_baseline` (the credited baseline minus the path). How much of the baseline is credited follows `displacement` (`assumed`, `conditional`, or `none`). This implements FR-008 and FR-009.
 - **Open:** LLM model choice for extraction. Proposed default: a current Claude model via the Anthropic API.
 
 ## Scope change log

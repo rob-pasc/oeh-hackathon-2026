@@ -23,7 +23,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Progress notes
 
-None yet.
+- 2026-11-20: The report and SSE event contracts and an example report fixture are in `shared/`. T-001 (output schema) is partly covered; the prompt builder is not built yet.
 
 ## Lifecycle history
 

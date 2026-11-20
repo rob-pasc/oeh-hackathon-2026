@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "scanner_version": "0.1.0",
+  "scanned_at": "2026-11-20T09:30:00Z",
+  "scan_status": "complete",
+  "identity": {
+    "manufacturer": "Example Manufacturer",
+    "model": "EX14-2019",
+    "product_version": "Example Laptop 14",
+    "system_family": "Example Laptop",
+    "system_sku": "EX14_SKU_0001",
+    "form_factor": "laptop"
+  },
+  "os": { "caption": "Microsoft Windows 10 Pro", "build": "10.0.19045", "display_version": "22H2" },
+  "firmware": { "bios_release_date": "2021-03-15", "firmware_type": "uefi", "secure_boot_enabled": true },
+  "tpm": { "present": true, "spec_version": "2.0" },
+  "cpu": { "name": "Example CPU i5-8250U @ 1.60GHz", "cores": 4, "threads": 8 },
+  "memory": { "total_gb": 8, "type": "ddr4", "speed_mts": 2400, "slots_total": 2, "slots_used": 1 },
+  "storage": [{ "media": "hdd", "bus": "sata", "capacity_gb": 500, "health": "healthy" }],
+  "battery": {
+    "present": true,
+    "design_capacity_mwh": 57000,
+    "full_charge_capacity_mwh": 41040,
+    "health_percent": 72,
+    "cycle_count": 412
+  },
+  "gpus": ["Example Integrated Graphics 620"]
+}

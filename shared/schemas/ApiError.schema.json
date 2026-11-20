@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ApiError.schema.json",
+  "title": "ApiError",
+  "type": "object",
+  "required": [
+    "error",
+    "message"
+  ],
+  "properties": {
+    "error": {
+      "enum": [
+        "invalid_payload",
+        "not_found",
+        "payload_too_large",
+        "rate_limited",
+        "internal"
+      ]
+    },
+    "message": {
+      "type": "string"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "message"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "JSON Pointer, e.g. /memory/total_gb"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Present for invalid_payload: names each invalid field (feature 001 FR-007)"
+    }
+  },
+  "additionalProperties": false
+}

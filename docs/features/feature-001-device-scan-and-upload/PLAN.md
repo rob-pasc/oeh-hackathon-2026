@@ -52,6 +52,7 @@ This is the first slice of the Second Life Scanner MVP and the data foundation f
 - **FR-010:** The device page at the device URL shows all scanned fields in plain language. Fields that are `null` appear as "Unknown".
 - **FR-011:** Requesting a device URL with an unknown or malformed ID shows a "device not found" page. No endpoint lists or enumerates devices.
 - **FR-012:** The website landing page explains what the scanner does and what data it collects, and offers the scanner executable for download.
+- **FR-013** *(amendment 2026-11-20)*: When available, the scanner also collects: RAM type, configured speed, and total and used slot counts; Windows 11 readiness indicators (TPM presence and spec version, Secure Boot state, and firmware type UEFI or legacy BIOS); the battery cycle count; and the names of the graphics adapters. Unreadable values are `null`, as in FR-004. The field list and its Windows data sources are defined in [`shared/src/device.ts`](../../../shared/src/device.ts).
 
 ## Non-functional requirements and constraints
 
@@ -59,7 +60,7 @@ This is the first slice of the Second Life Scanner MVP and the data foundation f
 - **Performance:** A scan on typical demo hardware should finish in under 30 seconds, excluding upload time.
 - **Compatibility:** Windows 10 and 11, x64. Reading battery or disk health may need data sources that are unavailable without admin rights; the scanner degrades to `null` rather than requesting elevation.
 - **Security:** The scanner contains no secrets (in particular, no LLM API key). The backend validates and size-limits input before storing it.
-- **Schema:** The device JSON schema is versioned (`schema_version`) so features 002–005 can rely on it.
+- **Schema:** The device JSON schema is versioned (`schema_version`) so features 002–005 can rely on it. It is defined once in `shared/` with TypeBox and exported as JSON Schema 2020-12 files; see [ADR-001](../../adr/adr-001-shared-contracts-typebox.md).
 
 ## User journeys and edge cases
 
@@ -109,6 +110,7 @@ Not applicable to this feature: release and hosting are owned by feature 005 (`f
 | Date       | Change                 | User approval                                                                                     |
 | ---------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
 | 2026-11-20 | Initial approved scope | User replied "accept" to the five-feature MVP proposal in the specification conversation, 2026-11-20 |
+| 2026-11-20 | Amendment: added FR-013 (extra scan fields: RAM slots and type, Windows 11 readiness, battery cycle count, GPU names), AC-013, and T-011. Existing requirements and exclusions are unchanged. | The user selected these fields when the shared contracts were defined together, 2026-11-20 |
 
 ## Related and superseded features
 

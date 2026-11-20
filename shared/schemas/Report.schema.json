@@ -1,0 +1,269 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "Report.schema.json",
+  "title": "Report",
+  "type": "object",
+  "required": [
+    "device_id",
+    "intended_use",
+    "generated_at",
+    "source",
+    "notice",
+    "paths",
+    "passages"
+  ],
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22}$",
+      "description": "22-character base64url string encoding 128 random bits"
+    },
+    "intended_use": {
+      "enum": [
+        "office",
+        "study",
+        "development",
+        "pass_on"
+      ],
+      "description": "office = office/browsing, study = school/university, development = programming, pass_on = pass to someone else"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "enum": [
+        "llm",
+        "template"
+      ],
+      "description": "template = fallback (FR-009)"
+    },
+    "notice": {
+      "anyOf": [
+        {
+          "type": "string",
+          "description": "Shown when source is template, e.g. \"AI explanation unavailable\""
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "summary",
+          "next_steps",
+          "why",
+          "assumptions",
+          "safety",
+          "unverified",
+          "claims"
+        ],
+        "properties": {
+          "path": {
+            "enum": [
+              "upgrade",
+              "repair",
+              "pass_on",
+              "salvage",
+              "recycle"
+            ],
+            "description": "One of the five next lives for a device"
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One-sentence reason shown on the collapsed card"
+          },
+          "next_steps": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "why": {
+            "type": "string",
+            "description": "Why it ranks here; must not contain CO2e or euro figures (FR-005)"
+          },
+          "assumptions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "safety": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "unverified": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "What could not be verified (FR-007)"
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "text",
+                "passage_ids"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "passage_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "minItems": 1
+                }
+              },
+              "additionalProperties": false,
+              "description": "A technical claim; uncited claims are removed by the server (FR-005)"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "passages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "passage_id",
+          "document_id",
+          "title",
+          "url",
+          "publisher",
+          "topic",
+          "section",
+          "page",
+          "applicability",
+          "accessed_on",
+          "text"
+        ],
+        "properties": {
+          "passage_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "document_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1
+          },
+          "topic": {
+            "enum": [
+              "repair-hardware",
+              "software-support",
+              "environmental",
+              "circular-economy"
+            ]
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "applicability": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "manufacturer",
+                  "model"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "model"
+                  },
+                  "manufacturer": {
+                    "type": "string"
+                  },
+                  "model": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "generic"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "accessed_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "description": "At least one of section or page is non-null (checked in invariants.ts)"
+      },
+      "description": "Every passage cited by any claim, for the Evidence section"
+    }
+  },
+  "additionalProperties": false
+}

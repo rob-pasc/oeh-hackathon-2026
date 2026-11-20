@@ -25,7 +25,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Progress notes
 
-None yet.
+- 2026-11-20: Contracts for facts and the assessment, the invariant checks, and `rankPaths`/`totalScore` are in `shared/` with tests. They support T-001, T-005, and T-007 but do not complete any of them: extraction, gates, the calculator, rubrics, and the API are not built yet.
 
 ## Lifecycle history
 

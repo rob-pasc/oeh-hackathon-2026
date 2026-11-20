@@ -1,0 +1,296 @@
+{
+  "device_id": "Zp4Wc8nR1tYv6Lm2Qa9xKe",
+  "intended_use": "development",
+  "created_at": "2026-11-20T10:06:00Z",
+  "model_evidence": "none",
+  "weights": {
+    "environment_first": {
+      "environment": 45,
+      "useful_life": 25,
+      "economic": 10,
+      "feasibility": 20
+    },
+    "money_first": {
+      "environment": 15,
+      "useful_life": 20,
+      "economic": 45,
+      "feasibility": 20
+    }
+  },
+  "baseline": {
+    "description": "The owner buys a comparable new desktop now",
+    "co2e_kg": {
+      "low": 250,
+      "high": 450
+    },
+    "cost_eur": {
+      "low": 700,
+      "high": 1100
+    },
+    "impact_refs": [
+      "new_desktop.production_co2e",
+      "new_desktop.price"
+    ]
+  },
+  "paths": [
+    {
+      "path": "upgrade",
+      "status": "conditional",
+      "reasons": [
+        {
+          "code": "cannot_verify_compatibility",
+          "text": "Cannot verify which RAM and storage this model supports; no model-specific documentation was found.",
+          "fact_keys": [],
+          "passage_ids": []
+        }
+      ],
+      "scores": {
+        "environment": 75,
+        "useful_life": 60,
+        "economic": 65,
+        "feasibility": 40
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 90,
+          "high": 160
+        },
+        "useful_life_years": {
+          "low": 1,
+          "high": 3
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 15,
+            "high": 35
+          },
+          "baseline": {
+            "low": 250,
+            "high": 450
+          },
+          "avoided_vs_baseline": {
+            "low": 215,
+            "high": 435
+          }
+        },
+        "displacement": "assumed",
+        "assumptions": [
+          {
+            "text": "Adds 12 GB RAM and an SSD at sample prices.",
+            "impact_refs": [
+              "part.ram_8gb_ddr4.price",
+              "part.ssd_500gb.price",
+              "part.ram_8gb_ddr4.production_co2e",
+              "part.ssd_500gb.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "low",
+        "reasons": [
+          "No model-specific evidence",
+          "Model name could not be read"
+        ]
+      }
+    },
+    {
+      "path": "repair",
+      "status": "conditional",
+      "reasons": [
+        {
+          "code": "disk_warning",
+          "text": "The hard drive reports a health warning; replacing it needs a compatible drive, which cannot be verified.",
+          "fact_keys": [],
+          "passage_ids": []
+        }
+      ],
+      "scores": {
+        "environment": 70,
+        "useful_life": 45,
+        "economic": 60,
+        "feasibility": 45
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 40,
+          "high": 70
+        },
+        "useful_life_years": {
+          "low": 1,
+          "high": 2
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 8,
+            "high": 15
+          },
+          "baseline": {
+            "low": 250,
+            "high": 450
+          },
+          "avoided_vs_baseline": {
+            "low": 235,
+            "high": 442
+          }
+        },
+        "displacement": "assumed",
+        "assumptions": [
+          {
+            "text": "Replacement SSD at sample price.",
+            "impact_refs": [
+              "part.ssd_500gb.price",
+              "part.ssd_500gb.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "low",
+        "reasons": [
+          "No model-specific evidence"
+        ]
+      }
+    },
+    {
+      "path": "pass_on",
+      "status": "not_suitable",
+      "reasons": [
+        {
+          "code": "os_unsupported",
+          "text": "The CPU is not supported by a current operating system with security updates, so passing it on unchanged is not safe.",
+          "fact_keys": [
+            "windows11_supported_cpu"
+          ],
+          "passage_ids": [
+            "os-cpu-list#intel-8th-gen"
+          ]
+        }
+      ],
+      "scores": null,
+      "impact": null,
+      "confidence": {
+        "level": "medium",
+        "reasons": [
+          "Based on generic OS support documentation"
+        ]
+      }
+    },
+    {
+      "path": "salvage",
+      "status": "viable",
+      "reasons": [
+        {
+          "code": "parts_reusable",
+          "text": "The RAM module is a standard part that can serve another computer.",
+          "fact_keys": [],
+          "passage_ids": []
+        }
+      ],
+      "scores": {
+        "environment": 45,
+        "useful_life": 35,
+        "economic": 50,
+        "feasibility": 70
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 0,
+          "high": 0
+        },
+        "useful_life_years": {
+          "low": 0,
+          "high": 3
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 0,
+            "high": 0
+          },
+          "baseline": {
+            "low": 250,
+            "high": 450
+          },
+          "avoided_vs_baseline": {
+            "low": 0,
+            "high": 0
+          }
+        },
+        "displacement": "none",
+        "assumptions": [
+          {
+            "text": "Reused parts are not credited against the baseline.",
+            "impact_refs": [
+              "part.ram_8gb_ddr4.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "medium",
+        "reasons": [
+          "Part condition not verified"
+        ]
+      }
+    },
+    {
+      "path": "recycle",
+      "status": "viable",
+      "reasons": [
+        {
+          "code": "always_available",
+          "text": "Certified e-waste recycling is always possible after erasing data.",
+          "fact_keys": [],
+          "passage_ids": [
+            "reuse-guide#data-wipe"
+          ]
+        }
+      ],
+      "scores": {
+        "environment": 15,
+        "useful_life": 0,
+        "economic": 50,
+        "feasibility": 95
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 0,
+          "high": 0
+        },
+        "useful_life_years": {
+          "low": 0,
+          "high": 0
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 0,
+            "high": 0
+          },
+          "baseline": {
+            "low": 250,
+            "high": 450
+          },
+          "avoided_vs_baseline": {
+            "low": 0,
+            "high": 0
+          }
+        },
+        "displacement": "none",
+        "assumptions": [
+          {
+            "text": "Recycling recovers materials but does not avoid a new purchase.",
+            "impact_refs": [
+              "new_desktop.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "high",
+        "reasons": [
+          "Generic guidance applies"
+        ]
+      }
+    }
+  ]
+}

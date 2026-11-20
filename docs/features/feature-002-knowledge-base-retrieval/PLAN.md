@@ -65,6 +65,7 @@ This is what lets the system know things rules alone cannot: soldered RAM, user-
 
 Not yet adopted; to be confirmed during implementation.
 
+- **Contract (adopted 2026-11-20):** `Passage` and `RetrievalResult` in [`shared/src/retrieval.ts`](../../../shared/src/retrieval.ts), with passages grouped per path in `passages_by_path`. See [ADR-001](../../adr/adr-001-shared-contracts-typebox.md).
 - **Location:** `corpus/manifest.yaml` plus source files or extracts in `corpus/docs/`; retrieval code in `server/src/retrieval/`.
 - **Ingestion:** A Node script parses Markdown, HTML, and PDF (for example with `pdf-parse`), chunks by heading or page with overlap, and writes passages and embeddings to SQLite.
 - **Search:** Metadata filtering in SQL first, then ranking of the remaining passages. Because the corpus is tiny, a brute-force cosine similarity in process is enough; no separate vector database. Possibly combined with keyword (BM25/FTS5) scoring for exact part names.

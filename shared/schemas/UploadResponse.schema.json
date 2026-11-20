@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "UploadResponse.schema.json",
+  "title": "UploadResponse",
+  "type": "object",
+  "required": [
+    "device_id",
+    "device_url"
+  ],
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22}$",
+      "description": "22-character base64url string encoding 128 random bits"
+    },
+    "device_url": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": false
+}

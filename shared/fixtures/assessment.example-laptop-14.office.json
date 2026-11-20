@@ -1,0 +1,342 @@
+{
+  "device_id": "q3Xk9vT2mB7pLw0cZr1sEa",
+  "intended_use": "office",
+  "created_at": "2026-11-20T09:31:10Z",
+  "model_evidence": "model_specific",
+  "weights": {
+    "environment_first": {
+      "environment": 45,
+      "useful_life": 25,
+      "economic": 10,
+      "feasibility": 20
+    },
+    "money_first": {
+      "environment": 15,
+      "useful_life": 20,
+      "economic": 45,
+      "feasibility": 20
+    }
+  },
+  "baseline": {
+    "description": "The owner buys a comparable new laptop now",
+    "co2e_kg": {
+      "low": 200,
+      "high": 350
+    },
+    "cost_eur": {
+      "low": 600,
+      "high": 900
+    },
+    "impact_refs": [
+      "new_laptop.production_co2e",
+      "new_laptop.price"
+    ]
+  },
+  "paths": [
+    {
+      "path": "upgrade",
+      "status": "viable",
+      "reasons": [
+        {
+          "code": "ssd_slot_available",
+          "text": "An M.2 2280 slot and a free RAM slot are available.",
+          "fact_keys": [
+            "storage_slots",
+            "ram_slots_total"
+          ],
+          "passage_ids": [
+            "ex14-hmm#storage-1",
+            "ex14-hmm#memory-1"
+          ]
+        }
+      ],
+      "scores": {
+        "environment": 85,
+        "useful_life": 80,
+        "economic": 75,
+        "feasibility": 80
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 60,
+          "high": 110
+        },
+        "useful_life_years": {
+          "low": 2,
+          "high": 3
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 8,
+            "high": 20
+          },
+          "baseline": {
+            "low": 200,
+            "high": 350
+          },
+          "avoided_vs_baseline": {
+            "low": 180,
+            "high": 342
+          }
+        },
+        "displacement": "assumed",
+        "assumptions": [
+          {
+            "text": "Adds a 500 GB SSD and an 8 GB DDR4 module at sample prices.",
+            "impact_refs": [
+              "part.ssd_500gb.price",
+              "part.ram_8gb_ddr4.price",
+              "part.ssd_500gb.production_co2e",
+              "part.ram_8gb_ddr4.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "high",
+        "reasons": [
+          "Model-specific service manual found"
+        ]
+      }
+    },
+    {
+      "path": "repair",
+      "status": "viable",
+      "reasons": [
+        {
+          "code": "battery_worn",
+          "text": "Battery holds 72% of its design capacity and is user-replaceable.",
+          "fact_keys": [
+            "battery_user_replaceable"
+          ],
+          "passage_ids": [
+            "ex14-hmm#battery-1"
+          ]
+        }
+      ],
+      "scores": {
+        "environment": 80,
+        "useful_life": 55,
+        "economic": 70,
+        "feasibility": 70
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 50,
+          "high": 90
+        },
+        "useful_life_years": {
+          "low": 1,
+          "high": 2
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 3,
+            "high": 8
+          },
+          "baseline": {
+            "low": 200,
+            "high": 350
+          },
+          "avoided_vs_baseline": {
+            "low": 192,
+            "high": 347
+          }
+        },
+        "displacement": "assumed",
+        "assumptions": [
+          {
+            "text": "Replacement battery at sample price; no labour cost.",
+            "impact_refs": [
+              "part.battery_laptop.price",
+              "part.battery_laptop.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "medium",
+        "reasons": [
+          "Battery capacity readings can be inaccurate on some firmware"
+        ]
+      }
+    },
+    {
+      "path": "pass_on",
+      "status": "viable",
+      "reasons": [
+        {
+          "code": "os_supported",
+          "text": "The CPU is supported by a current operating system.",
+          "fact_keys": [
+            "windows11_supported_cpu"
+          ],
+          "passage_ids": [
+            "os-cpu-list#intel-8th-gen"
+          ]
+        }
+      ],
+      "scores": {
+        "environment": 60,
+        "useful_life": 70,
+        "economic": 90,
+        "feasibility": 85
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 0,
+          "high": 0
+        },
+        "useful_life_years": {
+          "low": 2,
+          "high": 4
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 0,
+            "high": 0
+          },
+          "baseline": {
+            "low": 200,
+            "high": 350
+          },
+          "avoided_vs_baseline": {
+            "low": 0,
+            "high": 350
+          }
+        },
+        "displacement": "conditional",
+        "assumptions": [
+          {
+            "text": "Avoided production counts only if the recipient would otherwise buy a new laptop.",
+            "impact_refs": [
+              "new_laptop.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "medium",
+        "reasons": [
+          "Recipient demand cannot be verified"
+        ]
+      }
+    },
+    {
+      "path": "salvage",
+      "status": "conditional",
+      "reasons": [
+        {
+          "code": "device_functional",
+          "text": "The device works; salvaging parts only makes sense if no one can use it whole.",
+          "fact_keys": [],
+          "passage_ids": []
+        }
+      ],
+      "scores": {
+        "environment": 30,
+        "useful_life": 20,
+        "economic": 40,
+        "feasibility": 60
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 0,
+          "high": 0
+        },
+        "useful_life_years": {
+          "low": 0,
+          "high": 2
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 0,
+            "high": 0
+          },
+          "baseline": {
+            "low": 200,
+            "high": 350
+          },
+          "avoided_vs_baseline": {
+            "low": 0,
+            "high": 0
+          }
+        },
+        "displacement": "none",
+        "assumptions": [
+          {
+            "text": "Reused RAM could serve another device; not credited against the baseline.",
+            "impact_refs": [
+              "part.ram_8gb_ddr4.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "low",
+        "reasons": [
+          "No reuse channel for parts verified"
+        ]
+      }
+    },
+    {
+      "path": "recycle",
+      "status": "viable",
+      "reasons": [
+        {
+          "code": "always_available",
+          "text": "Certified e-waste recycling is always possible after erasing data.",
+          "fact_keys": [],
+          "passage_ids": [
+            "reuse-guide#data-wipe"
+          ]
+        }
+      ],
+      "scores": {
+        "environment": 15,
+        "useful_life": 0,
+        "economic": 50,
+        "feasibility": 95
+      },
+      "impact": {
+        "cost_eur": {
+          "low": 0,
+          "high": 0
+        },
+        "useful_life_years": {
+          "low": 0,
+          "high": 0
+        },
+        "co2e_kg": {
+          "path": {
+            "low": 0,
+            "high": 0
+          },
+          "baseline": {
+            "low": 200,
+            "high": 350
+          },
+          "avoided_vs_baseline": {
+            "low": 0,
+            "high": 0
+          }
+        },
+        "displacement": "none",
+        "assumptions": [
+          {
+            "text": "Recycling recovers materials but does not avoid a new purchase.",
+            "impact_refs": [
+              "new_laptop.production_co2e"
+            ]
+          }
+        ]
+      },
+      "confidence": {
+        "level": "high",
+        "reasons": [
+          "Generic guidance applies"
+        ]
+      }
+    }
+  ]
+}

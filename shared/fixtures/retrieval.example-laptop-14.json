@@ -1,0 +1,132 @@
+{
+  "model_evidence": "model_specific",
+  "matched_model": {
+    "manufacturer": "Example Manufacturer",
+    "model": "Example Laptop 14"
+  },
+  "passages_by_path": {
+    "upgrade": [
+      {
+        "passage_id": "ex14-hmm#memory-1",
+        "document_id": "ex14-hmm",
+        "title": "Example Laptop 14 Hardware Maintenance Manual",
+        "url": "https://example.org/manuals/ex14-hmm.pdf",
+        "publisher": "Example Manufacturer",
+        "topic": "repair-hardware",
+        "section": "Memory modules",
+        "page": 72,
+        "applicability": {
+          "kind": "model",
+          "manufacturer": "Example Manufacturer",
+          "model": "Example Laptop 14"
+        },
+        "accessed_on": "2026-11-20",
+        "text": "The computer has two SO-DIMM DDR4 slots and supports up to 32 GB of memory. No memory is soldered to the system board."
+      },
+      {
+        "passage_id": "ex14-hmm#storage-1",
+        "document_id": "ex14-hmm",
+        "title": "Example Laptop 14 Hardware Maintenance Manual",
+        "url": "https://example.org/manuals/ex14-hmm.pdf",
+        "publisher": "Example Manufacturer",
+        "topic": "repair-hardware",
+        "section": "Storage drive",
+        "page": 68,
+        "applicability": {
+          "kind": "model",
+          "manufacturer": "Example Manufacturer",
+          "model": "Example Laptop 14"
+        },
+        "accessed_on": "2026-11-20",
+        "text": "A 2.5-inch SATA drive bay and one M.2 2280 slot supporting NVMe or SATA SSDs are available."
+      }
+    ],
+    "repair": [
+      {
+        "passage_id": "ex14-hmm#battery-1",
+        "document_id": "ex14-hmm",
+        "title": "Example Laptop 14 Hardware Maintenance Manual",
+        "url": "https://example.org/manuals/ex14-hmm.pdf",
+        "publisher": "Example Manufacturer",
+        "topic": "repair-hardware",
+        "section": "Battery pack",
+        "page": 60,
+        "applicability": {
+          "kind": "model",
+          "manufacturer": "Example Manufacturer",
+          "model": "Example Laptop 14"
+        },
+        "accessed_on": "2026-11-20",
+        "text": "The battery is a customer-replaceable unit secured by two screws. Replacement packs are available under part number EX-BAT-57."
+      }
+    ],
+    "pass_on": [
+      {
+        "passage_id": "os-cpu-list#intel-8th-gen",
+        "document_id": "os-cpu-list",
+        "title": "Example OS supported processors",
+        "url": "https://example.org/os/supported-cpus",
+        "publisher": "Example OS Vendor",
+        "topic": "software-support",
+        "section": "Intel 8th generation",
+        "page": null,
+        "applicability": {
+          "kind": "generic"
+        },
+        "accessed_on": "2026-11-20",
+        "text": "Example CPU i5-8250U is listed as a supported processor."
+      },
+      {
+        "passage_id": "reuse-guide#data-wipe",
+        "document_id": "reuse-guide",
+        "title": "Guide to reusing and donating computers",
+        "url": "https://example.org/circular/reuse-guide",
+        "publisher": "Example Circular Economy Network",
+        "topic": "circular-economy",
+        "section": "Erasing data before passing on",
+        "page": null,
+        "applicability": {
+          "kind": "generic"
+        },
+        "accessed_on": "2026-11-20",
+        "text": "Before passing on a computer, reset the operating system and securely erase all drives."
+      }
+    ],
+    "salvage": [
+      {
+        "passage_id": "ex14-hmm#memory-1",
+        "document_id": "ex14-hmm",
+        "title": "Example Laptop 14 Hardware Maintenance Manual",
+        "url": "https://example.org/manuals/ex14-hmm.pdf",
+        "publisher": "Example Manufacturer",
+        "topic": "repair-hardware",
+        "section": "Memory modules",
+        "page": 72,
+        "applicability": {
+          "kind": "model",
+          "manufacturer": "Example Manufacturer",
+          "model": "Example Laptop 14"
+        },
+        "accessed_on": "2026-11-20",
+        "text": "The computer has two SO-DIMM DDR4 slots and supports up to 32 GB of memory. No memory is soldered to the system board."
+      }
+    ],
+    "recycle": [
+      {
+        "passage_id": "reuse-guide#data-wipe",
+        "document_id": "reuse-guide",
+        "title": "Guide to reusing and donating computers",
+        "url": "https://example.org/circular/reuse-guide",
+        "publisher": "Example Circular Economy Network",
+        "topic": "circular-economy",
+        "section": "Erasing data before passing on",
+        "page": null,
+        "applicability": {
+          "kind": "generic"
+        },
+        "accessed_on": "2026-11-20",
+        "text": "Before passing on a computer, reset the operating system and securely erase all drives."
+      }
+    ]
+  }
+}

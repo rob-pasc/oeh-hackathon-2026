@@ -18,6 +18,7 @@ Defines the feature's acceptance criteria and records how each criterion was ver
 | AC-009 | FR-010         | Given a stored device with `battery_health_percent: null`, when its device page is opened, then all scanned fields are shown in plain language and battery health reads "Unknown". | Automated web component test, plus manual check in a browser | Not run | |
 | AC-010 | FR-011         | Given an unknown ID and a malformed ID, when their device URLs are requested, then both show "device not found", and no API route returns a list of devices. | Automated server and web tests, plus a route inventory review | Not run | |
 | AC-011 | FR-012         | Given the landing page, when opened, then it lists the collected data, states what is not collected, and the download link returns the scanner exe. | Manual browser check, plus an automated test that the download route serves the file | Not run | |
+| AC-013 | FR-013         | Given recorded WMI outputs that include RAM slot and type data, TPM and Secure Boot state, a battery report with a cycle count, and video controllers, when normalized, then those fields are populated. When their sources are absent or access is denied, the fields are `null` and the scan still succeeds. | Automated scanner unit tests on fixtures | Not run | |
 | AC-012 | Review         | The final diff is self-reviewed against this plan, with findings and their resolution recorded below. | Self-review | Not run | |
 
 ## Result legend

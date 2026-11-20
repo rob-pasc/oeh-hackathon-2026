@@ -1,0 +1,352 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "FactSet.schema.json",
+  "title": "FactSet",
+  "type": "object",
+  "required": [
+    "model",
+    "facts"
+  ],
+  "properties": {
+    "model": {
+      "type": "object",
+      "required": [
+        "manufacturer",
+        "model"
+      ],
+      "properties": {
+        "manufacturer": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "ram_soldered"
+              },
+              "value": {
+                "enum": [
+                  "none",
+                  "partial",
+                  "all"
+                ]
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "partial = some RAM soldered plus at least one slot"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "ram_slots_total"
+              },
+              "value": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "User-accessible RAM slots"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "ram_max_gb"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "Maximum supported RAM in GiB"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "ram_type"
+              },
+              "value": {
+                "enum": [
+                  "ddr3",
+                  "ddr4",
+                  "ddr5",
+                  "lpddr3",
+                  "lpddr4",
+                  "lpddr4x",
+                  "lpddr5",
+                  "lpddr5x",
+                  "other"
+                ]
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "Supported memory type"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "storage_slots"
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "form_factor",
+                    "interface"
+                  ],
+                  "properties": {
+                    "form_factor": {
+                      "enum": [
+                        "m2_2230",
+                        "m2_2242",
+                        "m2_2260",
+                        "m2_2280",
+                        "sata_2_5",
+                        "other"
+                      ]
+                    },
+                    "interface": {
+                      "enum": [
+                        "nvme",
+                        "sata",
+                        "nvme_or_sata",
+                        "other"
+                      ]
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "minItems": 0
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "Internal storage slots and their interfaces"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "battery_user_replaceable"
+              },
+              "value": {
+                "type": "boolean"
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "Replaceable without specialist tools or adhesive removal"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "battery_replacement_part_available"
+              },
+              "value": {
+                "type": "boolean"
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "A replacement battery is documented as obtainable"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "windows11_supported_cpu"
+              },
+              "value": {
+                "type": "boolean"
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "CPU is on Microsoft's supported processor list"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "latest_supported_os"
+              },
+              "value": {
+                "type": "string",
+                "minLength": 1
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "Newest OS version the vendor or Microsoft supports"
+          },
+          {
+            "type": "object",
+            "required": [
+              "key",
+              "value",
+              "source_passage_ids"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "const": "vendor_bios_updates_ended"
+              },
+              "value": {
+                "type": "boolean"
+              },
+              "source_passage_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "Vendor no longer ships firmware/security updates"
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

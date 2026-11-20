@@ -1,0 +1,20 @@
+{
+  "model": { "manufacturer": "Example Manufacturer", "model": "Example Laptop 14" },
+  "facts": [
+    { "key": "ram_soldered", "value": "none", "source_passage_ids": ["ex14-hmm#memory-1"] },
+    { "key": "ram_slots_total", "value": 2, "source_passage_ids": ["ex14-hmm#memory-1"] },
+    { "key": "ram_max_gb", "value": 32, "source_passage_ids": ["ex14-hmm#memory-1"] },
+    { "key": "ram_type", "value": "ddr4", "source_passage_ids": ["ex14-hmm#memory-1"] },
+    {
+      "key": "storage_slots",
+      "value": [
+        { "form_factor": "sata_2_5", "interface": "sata" },
+        { "form_factor": "m2_2280", "interface": "nvme_or_sata" }
+      ],
+      "source_passage_ids": ["ex14-hmm#storage-1"]
+    },
+    { "key": "battery_user_replaceable", "value": true, "source_passage_ids": ["ex14-hmm#battery-1"] },
+    { "key": "battery_replacement_part_available", "value": true, "source_passage_ids": ["ex14-hmm#battery-1"] },
+    { "key": "windows11_supported_cpu", "value": true, "source_passage_ids": ["os-cpu-list#intel-8th-gen"] }
+  ]
+}

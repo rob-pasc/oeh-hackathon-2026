@@ -1,0 +1,30 @@
+{
+  "name": "@second-life/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Versioned data contracts shared by the scanner, server, and web app",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schemas/*": "./schemas/*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "schemas": "node scripts/export-schemas.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "typebox": "^1.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  }
+}

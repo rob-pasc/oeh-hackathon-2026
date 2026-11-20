@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "scanner_version": "0.1.0",
+  "scanned_at": "2026-11-20T10:05:00Z",
+  "scan_status": "partial",
+  "identity": {
+    "manufacturer": "Example Builder",
+    "model": null,
+    "product_version": null,
+    "system_family": null,
+    "system_sku": null,
+    "form_factor": "desktop"
+  },
+  "os": { "caption": "Microsoft Windows 10 Home", "build": "10.0.19045", "display_version": "22H2" },
+  "firmware": { "bios_release_date": "2016-07-01", "firmware_type": "legacy_bios", "secure_boot_enabled": false },
+  "tpm": { "present": null, "spec_version": null },
+  "cpu": { "name": "Example CPU i3-6100 @ 3.70GHz", "cores": 2, "threads": 4 },
+  "memory": { "total_gb": 4, "type": "ddr4", "speed_mts": 2133, "slots_total": 4, "slots_used": 1 },
+  "storage": [
+    { "media": "hdd", "bus": "sata", "capacity_gb": 1000, "health": "warning" },
+    { "media": "unknown", "bus": "unknown", "capacity_gb": null, "health": "unknown" }
+  ],
+  "battery": {
+    "present": false,
+    "design_capacity_mwh": null,
+    "full_charge_capacity_mwh": null,
+    "health_percent": null,
+    "cycle_count": null
+  },
+  "gpus": null
+}

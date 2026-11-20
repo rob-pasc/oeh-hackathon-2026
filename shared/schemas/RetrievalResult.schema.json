@@ -1,0 +1,652 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "RetrievalResult.schema.json",
+  "title": "RetrievalResult",
+  "type": "object",
+  "required": [
+    "model_evidence",
+    "matched_model",
+    "passages_by_path"
+  ],
+  "properties": {
+    "model_evidence": {
+      "enum": [
+        "model_specific",
+        "none"
+      ],
+      "description": "none when no model-specific document matched (feature 002 FR-006)"
+    },
+    "matched_model": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "manufacturer",
+            "model"
+          ],
+          "properties": {
+            "manufacturer": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "passages_by_path": {
+      "type": "object",
+      "required": [
+        "upgrade",
+        "repair",
+        "pass_on",
+        "salvage",
+        "recycle"
+      ],
+      "properties": {
+        "upgrade": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "passage_id",
+              "document_id",
+              "title",
+              "url",
+              "publisher",
+              "topic",
+              "section",
+              "page",
+              "applicability",
+              "accessed_on",
+              "text"
+            ],
+            "properties": {
+              "passage_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "publisher": {
+                "type": "string",
+                "minLength": 1
+              },
+              "topic": {
+                "enum": [
+                  "repair-hardware",
+                  "software-support",
+                  "environmental",
+                  "circular-economy"
+                ]
+              },
+              "section": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "page": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "applicability": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "manufacturer",
+                      "model"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "model"
+                      },
+                      "manufacturer": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "generic"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "accessed_on": {
+                "type": "string",
+                "format": "date"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "At least one of section or page is non-null (checked in invariants.ts)"
+          }
+        },
+        "repair": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "passage_id",
+              "document_id",
+              "title",
+              "url",
+              "publisher",
+              "topic",
+              "section",
+              "page",
+              "applicability",
+              "accessed_on",
+              "text"
+            ],
+            "properties": {
+              "passage_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "publisher": {
+                "type": "string",
+                "minLength": 1
+              },
+              "topic": {
+                "enum": [
+                  "repair-hardware",
+                  "software-support",
+                  "environmental",
+                  "circular-economy"
+                ]
+              },
+              "section": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "page": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "applicability": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "manufacturer",
+                      "model"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "model"
+                      },
+                      "manufacturer": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "generic"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "accessed_on": {
+                "type": "string",
+                "format": "date"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "At least one of section or page is non-null (checked in invariants.ts)"
+          }
+        },
+        "pass_on": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "passage_id",
+              "document_id",
+              "title",
+              "url",
+              "publisher",
+              "topic",
+              "section",
+              "page",
+              "applicability",
+              "accessed_on",
+              "text"
+            ],
+            "properties": {
+              "passage_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "publisher": {
+                "type": "string",
+                "minLength": 1
+              },
+              "topic": {
+                "enum": [
+                  "repair-hardware",
+                  "software-support",
+                  "environmental",
+                  "circular-economy"
+                ]
+              },
+              "section": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "page": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "applicability": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "manufacturer",
+                      "model"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "model"
+                      },
+                      "manufacturer": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "generic"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "accessed_on": {
+                "type": "string",
+                "format": "date"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "At least one of section or page is non-null (checked in invariants.ts)"
+          }
+        },
+        "salvage": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "passage_id",
+              "document_id",
+              "title",
+              "url",
+              "publisher",
+              "topic",
+              "section",
+              "page",
+              "applicability",
+              "accessed_on",
+              "text"
+            ],
+            "properties": {
+              "passage_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "publisher": {
+                "type": "string",
+                "minLength": 1
+              },
+              "topic": {
+                "enum": [
+                  "repair-hardware",
+                  "software-support",
+                  "environmental",
+                  "circular-economy"
+                ]
+              },
+              "section": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "page": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "applicability": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "manufacturer",
+                      "model"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "model"
+                      },
+                      "manufacturer": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "generic"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "accessed_on": {
+                "type": "string",
+                "format": "date"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "At least one of section or page is non-null (checked in invariants.ts)"
+          }
+        },
+        "recycle": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "passage_id",
+              "document_id",
+              "title",
+              "url",
+              "publisher",
+              "topic",
+              "section",
+              "page",
+              "applicability",
+              "accessed_on",
+              "text"
+            ],
+            "properties": {
+              "passage_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "document_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "publisher": {
+                "type": "string",
+                "minLength": 1
+              },
+              "topic": {
+                "enum": [
+                  "repair-hardware",
+                  "software-support",
+                  "environmental",
+                  "circular-economy"
+                ]
+              },
+              "section": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "page": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "applicability": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind",
+                      "manufacturer",
+                      "model"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "model"
+                      },
+                      "manufacturer": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "required": [
+                      "kind"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "generic"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "accessed_on": {
+                "type": "string",
+                "format": "date"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "additionalProperties": false,
+            "description": "At least one of section or page is non-null (checked in invariants.ts)"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
