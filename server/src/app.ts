@@ -136,8 +136,9 @@ export function buildApp(options: AppOptions): FastifyInstance {
         const input = await assessments.assessDevice(record, use as IntendedUse)
         send('assessment', input.assessment)
         stage = 'report'
-        if (options.explain) send('report', await options.explain(record.scan, input))
-        send('end', { status: 'complete' } satisfies StreamEnd)
+        const report = await options.explain?.(record.scan, input)
+        if (report) send('report', report)
+        send('end', { status: report?.source === 'template' ? 'fallback' : 'complete' } satisfies StreamEnd)
       } catch (err) {
         app.log.error({ err: err instanceof Error ? err.message : String(err) }, `${stage} failed`)
         send('error', apiError('internal', `the ${stage} failed`))

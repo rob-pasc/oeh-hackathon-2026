@@ -68,7 +68,7 @@ export function createOpenAiCompatibleClient(config: LlmConfig, options: OpenAiC
     ...(options.fetch ? { fetch: options.fetch } : {}),
   })
 
-  async function call(task: JsonRequest<TSchema>['task'], messages: ChatCompletionMessageParam[], maxTokens: number) {
+  async function call(task: JsonRequest<TSchema>['task'], messages: ChatCompletionMessageParam[], maxTokens: number, signal?: AbortSignal) {
     const thinking = config.thinking[task]
     const response = await client.chat.completions.create({
       model: config.model,
@@ -78,7 +78,7 @@ export function createOpenAiCompatibleClient(config: LlmConfig, options: OpenAiC
       stream: false,
       // Non-standard DeepSeek parameter; the SDK forwards unknown body fields as-is.
       ...(thinking === 'omit' ? {} : ({ thinking: { type: thinking } } as object)),
-    })
+    }, signal ? { signal } : {})
     const choice = response.choices[0]
     return {
       content: choice?.message.content ?? '',
@@ -103,12 +103,14 @@ export function createOpenAiCompatibleClient(config: LlmConfig, options: OpenAiC
       const started = performance.now()
       let problems: string[] = []
 
+      const deadline = request.task === 'explanation' ? AbortSignal.timeout(config.timeoutMs) : undefined
       // Attempt 1, then at most one repair attempt that shows the model what was wrong.
       for (let attempt = 1; attempt <= 2; attempt++) {
         let result: Awaited<ReturnType<typeof call>>
         try {
-          result = await call(request.task, messages, maxTokens)
+          result = await call(request.task, messages, maxTokens, deadline)
         } catch (error) {
+          if (deadline?.aborted) throw new LlmError('timeout', 'Explanation deadline exceeded')
           throw toLlmError(error)
         }
         usage.prompt_tokens += result.usage.prompt_tokens

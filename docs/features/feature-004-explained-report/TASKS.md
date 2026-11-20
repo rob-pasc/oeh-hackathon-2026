@@ -9,7 +9,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 - [x] **T-001:** Define the explanation output schema and the prompt builder with passages delimited as data, with a prompt inspection test (supports `AC-004`)
 - [x] **T-002:** Implement the LLM call, the citation and figure validator, and caching by device and use, with mocked-LLM tests (supports `AC-005`, `AC-010`)
-- [ ] **T-003:** Implement the template fallback and timeout handling, with tests (supports `AC-009`)
+- [x] **T-003:** Implement the template fallback and timeout handling, with tests (supports `AC-009`)
 - [ ] **T-004:** Implement the deterministic mode-change explanation, with tests (supports `AC-008`)
 - [ ] **T-005:** Build the report layout (Recommended label, impact summary, cards with expandable sections, evidence links, "cannot verify" text), with web tests (supports `AC-001`–`AC-003`, `AC-006`, `AC-007`)
 - [ ] **T-006:** Check accessibility and responsiveness at 360 px and at laptop width (supports `AC-003`, `AC-011`)

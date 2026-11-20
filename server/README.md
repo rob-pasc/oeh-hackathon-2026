@@ -12,7 +12,7 @@ The LLM API key is configured only here, through environment variables. It never
 |---|---|
 | `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above 32 KiB |
 | `GET /api/devices/:id` | `200 DeviceRecord`; unknown and malformed IDs both get the same `404 not_found` |
-| `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `assessment` (the ranked `Assessment`), then `report` when explanations are configured, then `end` with `{"status":"complete"}`. Generation failures send `error` with an `ApiError`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `500` when the server has no retrieval index |
+| `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `assessment` (the ranked `Assessment`), then `report` (generated or template), then `end` with `{"status":"complete"}`. Templates end with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `500` when the server has no retrieval index |
 | `GET /downloads/leaaf-scanner.exe` | The file at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
 | `POST /api/sessions` | `201 ScanSession`: a new 26-character session ID and its download URL (feature 006) |
 | `POST /api/sessions/:id/events` | The scanner's `step` or `error` event; `204`, `400` if invalid, `404` if unknown |
@@ -41,7 +41,7 @@ Rules for callers:
 - Put document passages in `user`, clearly delimited as data.
 - Never put device IDs or personal data into prompts.
 
-The report service adds the SQLite table `explanation_cache` on startup when an LLM is configured. Repeat requests for the same device and intended use reuse the stored output. Each response filters claims against the retrieved passages and takes citation metadata from retrieval. Concurrent opens share a pending generation in the server process. Failed calls can be retried on the next open.
+The report service adds the SQLite table `explanation_cache` on startup. Repeat requests for the same device and intended use reuse the stored output. Each response filters claims against the retrieved passages and takes citation metadata from retrieval. Concurrent opens share a pending generation in the server process. If no cached result exists, a missing key or typed provider failure produces a template report derived from the assessment. The explanation deadline covers transport retries and JSON repair. A later open can retry generation.
 
 ## Fact extraction
 

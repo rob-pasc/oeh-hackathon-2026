@@ -2,7 +2,8 @@ import type { DatabaseSync } from 'node:sqlite'
 import { createValidator, PATHS, type DeviceScan, type Report } from '@leaaf/shared'
 import type { Static } from 'typebox'
 import type { DeviceAssessment } from '../assessment/service.ts'
-import type { LlmClient } from '../llm/types.ts'
+import { templateReport } from './template.ts'
+import { LlmError, type LlmClient } from '../llm/types.ts'
 import { buildExplanationRequest, ExplanationOutput } from './prompt.ts'
 
 const validateOutput = createValidator(ExplanationOutput)
@@ -42,7 +43,7 @@ function makeReport({ assessment, retrieval }: DeviceAssessment, output: Output,
   }
 }
 
-export function createReportService(db: DatabaseSync, llm: LlmClient) {
+export function createReportService(db: DatabaseSync, llm: LlmClient | null) {
   db.exec(`CREATE TABLE IF NOT EXISTS explanation_cache (
     device_id TEXT NOT NULL, intended_use TEXT NOT NULL, output TEXT NOT NULL,
     generated_at TEXT NOT NULL, PRIMARY KEY (device_id, intended_use))`)
@@ -58,6 +59,7 @@ export function createReportService(db: DatabaseSync, llm: LlmClient) {
       if (checked.ok) return makeReport(input, checked.value, String(row.generated_at))
     }
 
+    if (!llm) return templateReport(input)
     const key = JSON.stringify([device_id, intended_use])
     let generation = pending.get(key)
     if (!generation) {
@@ -68,7 +70,12 @@ export function createReportService(db: DatabaseSync, llm: LlmClient) {
       }).finally(() => pending.delete(key))
       pending.set(key, generation)
     }
-    const { output, generated_at } = await generation
-    return makeReport(input, output, generated_at)
+    try {
+      const { output, generated_at } = await generation
+      return makeReport(input, output, generated_at)
+    } catch (error) {
+      if (error instanceof LlmError) return templateReport(input)
+      throw error
+    }
   }
 }

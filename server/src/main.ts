@@ -39,11 +39,10 @@ try {
   console.warn(`assessments disabled: ${error.message}`)
 }
 
-let explain: ReturnType<typeof createReportService> | undefined
+let llm: ReturnType<typeof createOpenAiCompatibleClient> | null = null
 let extractor: FactExtractor | null = null
 try {
-  const llm = createOpenAiCompatibleClient(loadLlmConfig())
-  explain = createReportService(db, llm)
+  llm = createOpenAiCompatibleClient(loadLlmConfig())
   extractor = createFactExtractor({ llm, cache: createSqliteFactCache(db) })
 } catch (error) {
   if (!(error instanceof LlmError)) throw error
@@ -54,7 +53,7 @@ const app = buildApp({
   devices: createSqliteDeviceStore(db),
   sessions: createSqliteSessionStore(db),
   assessments: retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn: (message, details) => app.log.warn(details ?? {}, message) }) : undefined,
-  explain,
+  explain: createReportService(db, llm),
   publicBaseUrl,
   scannerExePath,
   logger: {
