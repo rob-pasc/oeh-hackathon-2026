@@ -1,8 +1,8 @@
-# Second Life Scanner
+# leaaf: Lifecycle Evaluation and Action Finder
 
 **Status:** In progress. Five MVP features are specified. The shared data contracts (`shared/`) are implemented and tested; the scanner, server, and web app are not built yet.
 
-ÖH Hackathon 2026 project (theme: AI for Green). A small Windows scanner reads an old laptop's hardware. The platform then ranks five next lives for it (upgrade, repair, pass it on, salvage for parts, recycle) in Environment first or Money first mode, with cited evidence and honest cost and CO₂e ranges.
+ÖH Hackathon 2026 project (theme: AI for Green), planned to run at [leaaf.green](https://leaaf.green) (not deployed yet). A small Windows scanner reads an old laptop's hardware. The platform then ranks five next lives for it (upgrade, repair, pass it on, salvage for parts, recycle) in Environment first or Money first mode, with cited evidence and honest cost and CO₂e ranges.
 
 ## Planned features (build order)
 

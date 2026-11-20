@@ -6,9 +6,9 @@
 
 ## Summary
 
-A small Windows scanner, written in Go and downloaded from the Second Life Scanner website, reads the hardware facts needed to judge a laptop's next life. It uploads them as a minimal JSON inventory to the central platform. The platform stores one device record per upload and returns an unguessable link. The owner opens that link to see the device page.
+A small Windows scanner, written in Go and downloaded from the leaaf website, reads the hardware facts needed to judge a laptop's next life. It uploads them as a minimal JSON inventory to the central platform. The platform stores one device record per upload and returns an unguessable link. The owner opens that link to see the device page.
 
-This is the first slice of the Second Life Scanner MVP and the data foundation for retrieval (feature 002), ranking (feature 003), and the explained report (feature 004).
+This is the first slice of the leaaf (Lifecycle Evaluation and Action Finder) MVP and the data foundation for retrieval (feature 002), ranking (feature 003), and the explained report (feature 004).
 
 ## Problem and desired outcome
 

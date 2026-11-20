@@ -6,7 +6,7 @@
 
 ## Summary
 
-Second Life Scanner runs at a public HTTPS URL. The scanner download there is built to upload to it, and a few pre-scanned demo devices are seeded with cached results. A judge can open a demo report even if the live scan, the LLM, or the venue network misbehaves. The public upload endpoint gets basic abuse protection, secrets stay on the host, and `docs/DEPLOYMENT.md` documents how to deploy, seed, check, and roll back.
+leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner download there is built to upload to it, and a few pre-scanned demo devices are seeded with cached results. A judge can open a demo report even if the live scan, the LLM, or the venue network misbehaves. The public upload endpoint gets basic abuse protection, secrets stay on the host, and `docs/DEPLOYMENT.md` documents how to deploy, seed, check, and roll back.
 
 ## Problem and desired outcome
 
@@ -65,6 +65,7 @@ Second Life Scanner runs at a public HTTPS URL. The scanner download there is bu
 Not yet adopted; the host is undecided.
 
 - **Packaging:** One Docker image. Node serves the API and the built React assets, SQLite lives on a mounted persistent volume, and the corpus index is built into the image or the volume.
+- **Domain (decided 2026-11-20):** `leaaf.green`, already registered by the team, so no domain purchase is needed. The scanner release build points at `https://leaaf.green`. DNS records for the chosen host are set up in T-008.
 - **Host:** **Open.** Candidates are a small VPS with Docker and a reverse proxy (Caddy for automatic HTTPS), or a PaaS with persistent volumes (for example Fly.io, Render, Railway). Chosen with the user before deployment.
 - **Scanner build:** Cross-compile with `GOOS=windows GOARCH=amd64` and inject the public URL with `-ldflags`; the binary is published as a static asset.
 - **Seeding:** `npm run seed` reads `demo/devices/*.json`, fixed demo device IDs, and pre-generated caches stored in `demo/cache/`.

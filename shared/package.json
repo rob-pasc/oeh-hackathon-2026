@@ -1,5 +1,5 @@
 {
-  "name": "@second-life/shared",
+  "name": "@leaaf/shared",
   "version": "0.1.0",
   "private": true,
   "description": "Versioned data contracts shared by the scanner, server, and web app",

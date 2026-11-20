@@ -1,10 +1,10 @@
 # Product Context
 
-Second Life Scanner is an ÖH Hackathon 2026 project for the theme **AI for Green**. No capabilities are implemented yet; this document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No capabilities are implemented yet; this document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
-Most of a laptop's carbon footprint comes from manufacturing, so extending its use avoids emissions, but old devices usually end up in a drawer or as e-waste because checking their options takes time and know-how. Second Life Scanner scans an old Windows laptop and ranks five possible next lives (upgrade, repair, pass it on, salvage for parts, recycle) with sourced evidence and honest cost and CO₂e ranges.
+Most of a laptop's carbon footprint comes from manufacturing, so extending its use avoids emissions, but old devices usually end up in a drawer or as e-waste because checking their options takes time and know-how. leaaf scans an old Windows laptop and ranks five possible next lives (upgrade, repair, pass it on, salvage for parts, recycle) with sourced evidence and honest cost and CO₂e ranges.
 
 - **Primary user:** an individual owner of an old Windows laptop or PC.
 - **Other stakeholders:** hackathon judges and demo audience. IT departments and refurbishers are possible future users and are not targeted by the MVP.
@@ -29,6 +29,7 @@ Scanning on macOS, Linux, or a bootable USB; user accounts; a fleet dashboard (d
 
 ## Uncertainty and references
 
+- Domain: `leaaf.green` (registered by the team; nothing is deployed yet).
 - Unresolved: demo laptop models, hosting provider, CO₂e sources. These are tracked in the feature plans.
 - Source material: the team's `Idea.md` and `Suggestions.md` (outside this repository).
 - Terms: [GLOSSARY.md](GLOSSARY.md). Feature navigation: [features/INDEX.md](features/INDEX.md).
