@@ -35,3 +35,39 @@ func TestManifestRequiresAdministrator(t *testing.T) {
 		t.Error(`rsrc_windows_amd64.syso does not request requireAdministrator; rerun go generate ./cmd/leaaf-scanner`)
 	}
 }
+
+// The exe, title bar, and taskbar use the "l." monogram (feature 001 FR-014). Gio's window
+// class loads icon resource 1, so the group must be "#1"; each listed size must exist, and the
+// .syso must contain one image per size (go-winres stores them as PNG).
+func TestIconResource(t *testing.T) {
+	raw, err := os.ReadFile("winres/winres.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cfg struct {
+		Icons map[string]map[string][]string `json:"RT_GROUP_ICON"`
+	}
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		t.Fatal(err)
+	}
+	files := cfg.Icons["#1"]["0000"]
+	if len(files) == 0 {
+		t.Fatal(`winres.json has no RT_GROUP_ICON "#1"`)
+	}
+	for _, f := range files {
+		b, err := os.ReadFile("winres/" + f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.HasPrefix(b, []byte("\x89PNG")) {
+			t.Errorf("%s is not a PNG", f)
+		}
+	}
+	syso, err := os.ReadFile("rsrc_windows_amd64.syso")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := bytes.Count(syso, []byte("\x89PNG")); got != len(files) {
+		t.Errorf("rsrc_windows_amd64.syso holds %d icon images, want %d; rerun go generate ./cmd/leaaf-scanner", got, len(files))
+	}
+}

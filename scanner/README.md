@@ -63,7 +63,9 @@ SCREENSHOT_DIR=/tmp/shots go test -tags screenshot -run TestScreenshots ./intern
 go generate ./cmd/leaaf-scanner   # runs go-winres; commit the updated .syso
 ```
 
-`TestManifestRequiresAdministrator` fails if the JSON or the `.syso` stops requesting elevation. Because the scanner runs elevated, it opens the device link through `explorer.exe`, which hands the URL to the signed-in user's shell, so the browser does not run as admin. On Windows, `go run ./cmd/leaaf-scanner` from a terminal that is not elevated fails with "requires elevation". Build the exe and start it, or use an elevated terminal.
+The JSON also holds the icon (FR-016): `RT_GROUP_ICON` `#1`, which Gio also uses for the title bar and taskbar, made from `winres/icon-*.png`. Those PNGs are rendered by `winres/make_icon.py` (needs Pillow; only to change the icon). After changing them, run `go generate` as above.
+
+`TestManifestRequiresAdministrator` fails if the JSON or the `.syso` stops requesting elevation. `TestIconResource` fails if the icon group is missing or the `.syso` is stale. Because the scanner runs elevated, it opens the device link through `explorer.exe`, which hands the URL to the signed-in user's shell, so the browser does not run as admin. On Windows, `go run ./cmd/leaaf-scanner` from a terminal that is not elevated fails with "requires elevation". Build the exe and start it, or use an elevated terminal.
 
 ## Scan sessions
 
