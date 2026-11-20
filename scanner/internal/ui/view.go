@@ -22,8 +22,8 @@ import (
 
 // Fixed window size in dp.
 const (
-	windowWidth  = 620
-	windowHeight = 340
+	windowWidth  = 820
+	windowHeight = 460
 )
 
 // This file draws the window's screens. It has no platform code, so the screens can also be
@@ -111,10 +111,10 @@ func (w *window) layout(gtx layout.Context) layout.Dimensions {
 	paint.Fill(gtx.Ops, colPage)
 	return layout.Flex{}.Layout(gtx,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
-			return layout.UniformInset(unit.Dp(32)).Layout(gtx, w.screen)
+			return layout.UniformInset(unit.Dp(44)).Layout(gtx, w.screen)
 		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-			size := image.Pt(gtx.Dp(unit.Dp(220)), gtx.Constraints.Max.Y)
+			size := image.Pt(gtx.Dp(unit.Dp(290)), gtx.Constraints.Max.Y)
 			paint.FillShape(gtx.Ops, colLeafTint, clip.Rect{Max: size}.Op())
 			paint.FillShape(gtx.Ops, colLine, clip.Rect{Max: image.Pt(gtx.Dp(1), size.Y)}.Op())
 			gtx.Constraints = layout.Exact(size)
@@ -126,8 +126,8 @@ func (w *window) layout(gtx layout.Context) layout.Dimensions {
 // logo is the web app's wordmark: "leaaf" in ink with a smaller green ".green" on its baseline.
 func (w *window) logo(gtx layout.Context) layout.Dimensions {
 	return layout.Flex{Alignment: layout.Baseline}.Layout(gtx,
-		layout.Rigid(w.label(36, extraBold, colInk, "leaaf")),
-		layout.Rigid(w.label(24, extraBold, colLeaf, ".green")),
+		layout.Rigid(w.label(48, extraBold, colInk, "leaaf")),
+		layout.Rigid(w.label(32, extraBold, colLeaf, ".green")),
 	)
 }
 
@@ -143,8 +143,8 @@ func (w *window) screen(gtx layout.Context) layout.Dimensions {
 	case PhaseIdle:
 		title = "Check this computer"
 		body = []layout.FlexChild{
-			layout.Rigid(w.label(14, regular, colMuted, "leaaf reads hardware facts only: no serial numbers, names, files, or network addresses. It takes under a minute.")),
-			space(24),
+			layout.Rigid(w.label(17, regular, colMuted, "leaaf reads hardware facts only: no serial numbers, names, files, or network addresses. It takes under a minute.")),
+			space(31),
 			layout.Rigid(w.button(&w.start, "Start scan")),
 		}
 	case PhaseRunning:
@@ -153,24 +153,24 @@ func (w *window) screen(gtx layout.Context) layout.Dimensions {
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-						gtx.Constraints = layout.Exact(image.Pt(gtx.Dp(18), gtx.Dp(18)))
+						gtx.Constraints = layout.Exact(image.Pt(gtx.Dp(22), gtx.Dp(22)))
 						l := material.Loader(w.th)
 						l.Color = colLeaf
 						return l.Layout(gtx)
 					}),
-					layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
-					layout.Rigid(w.label(15, semiBold, colInk, s.StepLabel())),
+					layout.Rigid(layout.Spacer{Width: unit.Dp(14)}.Layout),
+					layout.Rigid(w.label(18, semiBold, colInk, s.StepLabel())),
 				)
 			}),
-			space(16),
+			space(21),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
 				bar := material.ProgressBar(w.th, s.Progress())
 				bar.Color, bar.TrackColor = colLeaf, colTrack
-				bar.Height, bar.Radius = unit.Dp(8), unit.Dp(4)
+				bar.Height, bar.Radius = unit.Dp(10), unit.Dp(5)
 				return bar.Layout(gtx)
 			}),
-			space(10),
-			layout.Rigid(w.label(13, regular, colMuted, stepCount(s))),
+			space(13),
+			layout.Rigid(w.label(15, regular, colMuted, stepCount(s))),
 		}
 	case PhaseDone:
 		title = "Scan complete"
@@ -179,13 +179,13 @@ func (w *window) screen(gtx layout.Context) layout.Dimensions {
 			msg = "Your results are ready and also shown in the browser tab that started the scan. Keep the link private: anyone with it can see this scan."
 		}
 		body = []layout.FlexChild{
-			layout.Rigid(w.label(14, regular, colMuted, msg)),
-			space(20),
+			layout.Rigid(w.label(17, regular, colMuted, msg)),
+			space(26),
 			layout.Rigid(w.button(&w.results, "Show my results")),
-			space(16),
+			space(21),
 		}
 		if openFailed {
-			body = append(body, layout.Rigid(w.lines(12, colRoseInk, "The browser could not be opened. Open this link yourself: "+s.DeviceURL, 3)))
+			body = append(body, layout.Rigid(w.lines(14, colRoseInk, "The browser could not be opened. Open this link yourself: "+s.DeviceURL, 3)))
 		} else {
 			body = append(body, layout.Rigid(w.path(s.SavedPath)))
 		}
@@ -197,30 +197,30 @@ func (w *window) screen(gtx layout.Context) layout.Dimensions {
 			actions = func(gtx layout.Context) layout.Dimensions {
 				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
 					layout.Rigid(w.button(&w.retry, "Try again")),
-					layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
+					layout.Rigid(layout.Spacer{Width: unit.Dp(14)}.Layout),
 					layout.Rigid(w.secondaryButton(&w.close, "Close")),
 				)
 			}
 		}
 		body = []layout.FlexChild{
-			layout.Rigid(w.label(14, regular, colInk, s.Message)),
-			space(8),
-			layout.Rigid(w.lines(12, colMuted, s.Detail, 3)),
-			space(16),
+			layout.Rigid(w.label(17, regular, colInk, s.Message)),
+			space(10),
+			layout.Rigid(w.lines(14, colMuted, s.Detail, 3)),
+			space(21),
 			layout.Rigid(actions),
-			space(12),
+			space(16),
 			layout.Rigid(w.path(s.SavedPath)),
 		}
 	}
 	children := append([]layout.FlexChild{
-		layout.Rigid(w.label(22, extraBold, titleColor, title)),
-		space(10),
+		layout.Rigid(w.label(28, extraBold, titleColor, title)),
+		space(13),
 	}, body...)
 	children = append(children,
 		layout.Flexed(1, func(gtx layout.Context) layout.Dimensions {
 			return layout.Dimensions{Size: image.Pt(0, gtx.Constraints.Max.Y)}
 		}),
-		layout.Rigid(w.label(11, regular, colMuted, "leaaf scanner "+w.opts.Version)),
+		layout.Rigid(w.label(13, regular, colMuted, "leaaf scanner "+w.opts.Version)),
 	)
 	return layout.Flex{Axis: layout.Vertical}.Layout(gtx, children...)
 }
@@ -265,9 +265,9 @@ func (w *window) path(p string) layout.Widget {
 			return layout.Dimensions{}
 		}
 		return layout.Flex{Axis: layout.Vertical}.Layout(gtx,
-			layout.Rigid(w.lines(12, colMuted, "A copy of the scan is saved at:", 1)),
+			layout.Rigid(w.lines(14, colMuted, "A copy of the scan is saved at:", 1)),
 			layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-				l := material.Label(w.th, 12, p)
+				l := material.Label(w.th, 14, p)
 				l.Color, l.MaxLines, l.WrapPolicy = colMuted, 2, text.WrapGraphemes
 				return l.Layout(gtx)
 			}),
@@ -281,9 +281,9 @@ func (w *window) button(c *widget.Clickable, txt string) layout.Widget {
 		gtx.Constraints.Min.X = 0 // as wide as its text, like the web button
 		b := material.Button(w.th, c, txt)
 		b.Background, b.Color = colLeaf, colWhite
-		b.Font.Weight, b.TextSize = semiBold, 15
-		b.CornerRadius = 24
-		b.Inset = layout.Inset{Top: 12, Bottom: 12, Left: 28, Right: 28}
+		b.Font.Weight, b.TextSize = semiBold, 17
+		b.CornerRadius = 28
+		b.Inset = layout.Inset{Top: 15, Bottom: 15, Left: 36, Right: 36}
 		return b.Layout(gtx)
 	}
 }
@@ -292,9 +292,9 @@ func (w *window) button(c *widget.Clickable, txt string) layout.Widget {
 func (w *window) secondaryButton(c *widget.Clickable, txt string) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
 		gtx.Constraints.Min.X = 0
-		b := material.ButtonLayoutStyle{Background: colPage, CornerRadius: 24, Button: c}
+		b := material.ButtonLayoutStyle{Background: colPage, CornerRadius: 28, Button: c}
 		return b.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-			return layout.Inset{Top: 12, Bottom: 12, Left: 20, Right: 20}.Layout(gtx, w.label(15, semiBold, colLeaf, txt))
+			return layout.Inset{Top: 15, Bottom: 15, Left: 24, Right: 24}.Layout(gtx, w.label(17, semiBold, colLeaf, txt))
 		})
 	}
 }
