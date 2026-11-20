@@ -4,7 +4,7 @@ Shared visual conventions for the leaaf web app. They come from the design revie
 
 ## Visual direction
 
-Calm, light, and friendly: mostly white and off-white surfaces with one fresh green for actions and highlights. Rounded shapes, soft shadows, and short text. Nothing should be tiring to look at or require reading a wall of text. The brand mark is a leaf in a light-green rounded tile next to the lowercase wordmark "leaaf".
+Calm, light, and friendly: mostly white and off-white surfaces with one fresh green for actions and highlights. Rounded shapes, soft shadows, and short text. Nothing should be tiring to look at or require reading a wall of text. The brand mark is a leaf in a light-green rounded tile next to the wordmark: lowercase "leaaf" large on the landing page, capital letters (LEAAF) in the page header of the other screens.
 
 ## Foundations
 
@@ -29,6 +29,10 @@ Calm, light, and friendly: mostly white and off-white surfaces with one fresh gr
 
 - **Primary button:** green pill, white text, soft green shadow; hover darkens; disabled lowers opacity.
 - **Path card:** white card, 2 px green border when selected, status badge (Viable green, Conditional amber, Not suitable red), "Recommended" green pill on the first viable path, chevron for expand.
+- **Tags:** white pill group with soft shadow; the active tag has a light-green fill with dark-green text (path tags) or a solid green fill with white text (priority toggle).
+- **Toolbar:** a two-column grid like the result screen: Use dropdown and path tags in the left column (the tag bar fills the rest of the column), the priority toggle in the right column. The Use dropdown is a pill with its own chevron, not the browser's default arrow.
+- **Option card:** a path card without rank, with the figures Cost, Extra life, and CO₂e added; opens to the steps like a path card.
+- **Step block:** same white card as a path card, with the step number in a light-green tile and one line of text.
 - **Loading:** grey shimmer blocks in the exact layout of the final screen; a spinner with a one-line status above them.
 - **Errors:** white card with a title and one explanatory sentence; amber notes for incomplete data.
 

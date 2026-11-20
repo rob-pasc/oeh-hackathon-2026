@@ -9,6 +9,7 @@ import laptopAssessmentJson from '@leaaf/fixtures/assessment.example-laptop-14.o
 import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
 import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import laptopReportJson from '@leaaf/fixtures/report.example-laptop-14.office.json'
+import { LAPTOP_OPTIONS } from './mockOptions'
 import { ApiClientError, SCAN_STEPS, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
 import type { UseTag } from '../lib/labels'
 
@@ -142,6 +143,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       timers.push(
         setTimeout(() => {
           handlers.onReport(report)
+          // Options exist for the laptop fixture only; the desktop fixture shows the path-level steps instead.
+          if (deviceId === MOCK_DEVICE_IDS.laptop) handlers.onOptions?.(clone(LAPTOP_OPTIONS))
           handlers.onEnd(report.source === 'llm' ? 'complete' : 'fallback')
         }, assessmentMs + reportMs),
       )

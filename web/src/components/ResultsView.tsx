@@ -2,12 +2,15 @@ import type { Assessment } from '@leaaf/shared/assessment'
 import type { Mode } from '@leaaf/shared/common'
 import type { DeviceScan } from '@leaaf/shared/device'
 import type { Report } from '@leaaf/shared/report'
+import type { PathOption } from '../api/types'
 import { useEffect, useMemo, useState } from 'react'
 import { ApiClientError, useApi } from '../api'
-import { DEFAULT_USE, type UseTag } from '../lib/labels'
+import { DEFAULT_USE, type PathTab, type UseTag } from '../lib/labels'
+import { buildOptionViews } from '../lib/optionView'
 import { buildPathViews } from '../lib/pathView'
 import { Gauge } from './Gauge'
 import { PathCard } from './PathCard'
+import { PathTabView } from './PathTabView'
 import { ResultSkeleton } from './ResultSkeleton'
 import { SpecsCard } from './SpecsCard'
 import { Toolbar } from './Toolbar'
@@ -23,9 +26,13 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const [scan, setScan] = useState<Load<DeviceScan>>({ state: 'loading' })
   const [assessment, setAssessment] = useState<Assessment | null>(null)
   const [report, setReport] = useState<Report | null>(null)
+  const [options, setOptions] = useState<PathOption[]>([])
   const [streamError, setStreamError] = useState<ApiClientError | null>(null)
+  const [pathTab, setPathTab] = useState<PathTab>('overview')
   const [selected, setSelected] = useState<string | null>(null)
   const [open, setOpen] = useState<string | null>(null)
+  const [optionSelected, setOptionSelected] = useState<string | null>(null)
+  const [optionOpen, setOptionOpen] = useState<string | null>(null)
 
   // Scan data: loaded once per device.
   useEffect(() => {
@@ -47,10 +54,12 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   // until the new assessment arrives, so switching tags does not flash the skeleton.
   useEffect(() => {
     setReport(null)
+    setOptions([])
     setStreamError(null)
     return api.streamReport(deviceId, use, {
       onAssessment: setAssessment,
       onReport: setReport,
+      onOptions: setOptions,
       onEnd: () => {},
       onError: setStreamError,
     })
@@ -60,7 +69,32 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
 
   // Default selection follows the recommendation until the user picks a card themselves.
   const recommendedId = views.find((v) => v.isRecommended)?.id ?? views[0]?.id ?? null
-  const selectedView = views.find((v) => v.id === selected) ?? views.find((v) => v.id === recommendedId) ?? null
+  // A chosen path tag decides the selected path; in the overview it is the last clicked card.
+  const tabView = pathTab === 'overview' ? null : (views.find((v) => v.id === pathTab) ?? null)
+  const selectedView =
+    tabView ?? views.find((v) => v.id === selected) ?? views.find((v) => v.id === recommendedId) ?? null
+  const reportPending = report === null && streamError === null
+
+  // Options of the selected path tag; the gauge follows the option the user last clicked.
+  const optionViews = useMemo(
+    () =>
+      tabView && assessment
+        ? buildOptionViews(
+            options.filter((o) => o.path === tabView.id),
+            assessment.baseline,
+          )
+        : [],
+    [options, tabView, assessment],
+  )
+  const selectedOption = optionViews.find((o) => o.key === optionSelected) ?? null
+  const gaugeValue = selectedOption ? selectedOption.gauge : (selectedView?.gauge ?? null)
+  const gaugeTitle = selectedOption && tabView ? `${tabView.title} · ${selectedOption.title}` : (selectedView?.title ?? '')
+
+  function changePathTab(tab: PathTab) {
+    setPathTab(tab)
+    setOptionSelected(null)
+    setOptionOpen(null)
+  }
 
   if (scan.state === 'error') {
     return (
@@ -77,7 +111,14 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <Toolbar use={use} mode={mode} onUseChange={setUse} onModeChange={setMode} />
+      <Toolbar
+        use={use}
+        mode={mode}
+        pathTab={pathTab}
+        onUseChange={setUse}
+        onModeChange={setMode}
+        onPathTabChange={changePathTab}
+      />
       {streamError && !assessment ? (
         <ErrorCard title="We could not load your results" message={streamError.message} />
       ) : !assessment || scan.state === 'loading' ? (
@@ -85,26 +126,40 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
       ) : (
         <div className="grid grid-cols-[1fr_400px] items-start gap-7">
           <div className="flex flex-col gap-3.5">
-            {views.map((view) => (
-              <PathCard
-                key={view.id}
-                view={view}
-                selected={selectedView?.id === view.id}
-                open={open === view.id}
-                reportPending={report === null && streamError === null}
-                onToggle={() => {
-                  setSelected(view.id)
-                  setOpen((current) => (current === view.id ? null : view.id))
+            {tabView ? (
+              <PathTabView
+                path={tabView}
+                options={optionViews}
+                pending={reportPending}
+                selectedKey={optionSelected}
+                openKey={optionOpen}
+                onToggle={(key) => {
+                  setOptionSelected(key)
+                  setOptionOpen((current) => (current === key ? null : key))
                 }}
               />
-            ))}
+            ) : (
+              views.map((view) => (
+                <PathCard
+                  key={view.key}
+                  view={view}
+                  selected={selectedView?.id === view.id}
+                  open={open === view.id}
+                  reportPending={reportPending}
+                  onToggle={() => {
+                    setSelected(view.id)
+                    setOpen((current) => (current === view.id ? null : view.id))
+                  }}
+                />
+              ))
+            )}
             {report && report.source === 'template' && report.notice ? (
               <p className="m-0 rounded-[10px] bg-amber-tint px-3 py-2 text-[13px] text-amber-ink">{report.notice}</p>
             ) : null}
           </div>
           <div className="sticky top-6 flex flex-col gap-5">
             <section aria-label="CO₂e gauge" className="rounded-[20px] bg-white p-6 shadow-card">
-              <Gauge value={selectedView?.gauge ?? null} pathTitle={selectedView?.title ?? ''} />
+              <Gauge value={gaugeValue} pathTitle={gaugeTitle} />
             </section>
             <SpecsCard scan={scan.value} />
           </div>

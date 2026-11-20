@@ -19,13 +19,16 @@ export const TRACK_PATH = (() => {
   return `M${f(a.x)} ${f(a.y)}A${GAUGE.r} ${GAUGE.r} 0 0 1 ${f(b.x)} ${f(b.y)}`
 })()
 
-/** SVG path of the arc between two percentages, or null when the range is empty. */
+/**
+ * SVG path of the arc between two percentages, or null when the range is empty.
+ * The scale is a half circle, so no arc is ever longer than 180 degrees: the SVG "large arc" flag must stay 0.
+ * (Setting it for ranges above 50 % makes the arc swing around the wrong centre.)
+ */
 export function arcPath(lowPct: number, highPct: number): string | null {
   if (highPct - lowPct < 0.5) return null
   const a = polar(lowPct)
   const b = polar(highPct)
-  const large = highPct - lowPct > 50 ? 1 : 0
-  return `M${f(a.x)} ${f(a.y)}A${GAUGE.r} ${GAUGE.r} 0 ${large} 1 ${f(b.x)} ${f(b.y)}`
+  return `M${f(a.x)} ${f(a.y)}A${GAUGE.r} ${GAUGE.r} 0 0 1 ${f(b.x)} ${f(b.y)}`
 }
 
 /** Rotation of a needle that points straight up at 50 %: -90° at 0 %, +90° at 100 %. */

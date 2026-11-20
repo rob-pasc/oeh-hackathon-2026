@@ -16,9 +16,9 @@ web/src
   main.tsx, index.css        entry and design tokens (Tailwind @theme)
   app/                       App (route switch), router (History API)
   pages/                     Landing, ScanSession, DevicePage, NotFound
-  components/                PathCard, Gauge, SpecsCard, Toolbar, ResultsView, skeletons, status
-  lib/                       labels, impact formatting, gauge geometry, path views, scan summary
-  api/                       ApiClient interface, mock client (fixtures), live client
+  components/                PathCard, PathTabView, StepsView, Gauge, SpecsCard, Toolbar, ResultsView, skeletons, status
+  lib/                       labels, impact formatting, gauge geometry, path and option views, scan summary
+  api/                       ApiClient interface, mock client (fixtures), live client, sample options
   test/                      Vitest setup and tests
 ```
 
@@ -51,6 +51,28 @@ Existing routes (see `shared/src/api.ts`): `GET /api/devices/:id`, `GET /api/dev
 ```
 
 `step` is one of `started`, `cpu_memory`, `storage`, `battery`, `upload`; `state` is `running`, `done`, or `skipped`. Error `code` is `scanner_failed`, `upload_failed`, `timeout`, or `unknown`. The TypeScript form is in `web/src/api/types.ts`. The session ID is a separate secret from the device ID and is not returned by any device route.
+
+### Proposed option payload (not yet agreed with the backend team)
+
+The result contract has one combined impact per path. For the upgrade path that is "SSD and RAM together". People ask what each single action brings, including actions that are not possible (CPU, graphics in a laptop). The proposal is one more event after `report`:
+
+```json
+event: options
+data: { "options": [
+  { "option_id": "ssd", "path": "upgrade", "title": "SSD upgrade", "status": "viable",
+    "summary": "Swap the old hard disk for a 500 GB NVMe SSD.",
+    "impact": { "cost_eur": {…}, "useful_life_years": {…}, "co2e_kg": { "path": {…}, "baseline": {…}, "avoided_vs_baseline": {…} }, "displacement": "assumed", "assumptions": [{…}] },
+    "steps": ["Buy a 500 GB M.2 2280 NVMe SSD.", "Back up your data, then install the SSD and clone the old drive."],
+    "why": "The old drive is a slow hard disk.", "unverified": [] },
+  { "option_id": "cpu", "path": "upgrade", "title": "CPU upgrade", "status": "not_suitable",
+    "summary": "The processor is soldered to the board and cannot be replaced.",
+    "impact": null, "steps": [], "why": "…", "unverified": [] }
+] }
+```
+
+`impact` has exactly the shape of `Impact` in `shared/src/assessment.ts` (same calculator, same ranges), `null` for options that are not suitable, like `PathAssessment`. The TypeScript form is `PathOption` in `web/src/api/types.ts`. Until the server sends this event, the path tab shows the path's own steps (FR-015).
+
+Open for the backend team: (1) where the options come from (the calculator for figures, the explanation step for steps and reasons); (2) what `avoided_vs_baseline` means for one action alone: the sample data credits the share of the avoided production that the action's extra life justifies, which is an assumption to confirm in feature 003; (3) whether options need a place in `shared/` (this feature did not edit `shared/`).
 
 ## Failure modes and operational considerations
 

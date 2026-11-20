@@ -12,29 +12,45 @@ export interface SourceRef {
   url: string
 }
 
-export interface PathView {
-  id: Path
-  rank: number
+export interface CardMetric {
+  label: string
+  value: string
+}
+
+/** What a card needs to draw itself; shared by path cards and option cards. */
+export interface CardView {
+  /** Stable key within one list. */
+  key: string
+  /** Path whose icon the card shows. */
+  iconPath: Path
+  /** Rank within the list, or null for items that are not ranked (options). */
+  rank: number | null
   title: string
   status: Suitability
   statusLabel: string
-  /** Weighted score for the active mode; null for not-suitable paths. */
-  total: number | null
   isRecommended: boolean
-  cost: string
-  life: string
-  avoided: string
-  savings: string
-  /** One-sentence reason: the explanation's summary once the report arrived, else the first assessment reason. */
+  /** One-sentence reason. */
   summary: string
-  /** True while `summary` still comes from the assessment because the report has not arrived. */
-  summaryFromAssessment: boolean
+  /** Short key figures under the summary. */
+  metrics: CardMetric[]
   steps: string[]
   why: string | null
   source: SourceRef | null
   /** What could not be verified (feature 004 FR-007). */
   notes: string[]
   gauge: GaugeValue | null
+}
+
+export interface PathView extends CardView {
+  id: Path
+  /** Weighted score for the active mode; null for not-suitable paths. */
+  total: number | null
+  cost: string
+  life: string
+  avoided: string
+  savings: string
+  /** True while `summary` still comes from the assessment because the report has not arrived. */
+  summaryFromAssessment: boolean
   confidence: ConfidenceLevel
   impact: Impact | null
 }
@@ -48,17 +64,26 @@ export function buildPathViews(assessment: Assessment, report: Report | null, mo
     const firstReason = path.reasons[0]?.text ?? ''
     const passageId = explanation?.claims[0]?.passage_ids[0]
     const passage = passageId ? (report?.passages.find((p) => p.passage_id === passageId) ?? null) : null
+    const cost = path.impact ? formatEur(path.impact.cost_eur) : '—'
+    const life = path.impact ? formatYears(path.impact.useful_life_years) : '—'
 
     return {
+      key: path.path,
       id: path.path,
+      iconPath: path.path,
       rank: index + 1,
       title: PATH_TITLES[path.path],
       status: path.status,
       statusLabel: STATUS_LABELS[path.status],
       total,
       isRecommended: recommended !== null && recommended.path.path === path.path,
-      cost: path.impact ? formatEur(path.impact.cost_eur) : '—',
-      life: path.impact ? formatYears(path.impact.useful_life_years) : '—',
+      cost,
+      life,
+      metrics: [
+        { label: 'Cost', value: cost },
+        { label: 'Extra life', value: life },
+        { label: 'Score', value: total === null ? '—' : String(Math.round(total)) },
+      ],
       avoided: path.impact ? formatAvoided(path.impact) : 'No figures for this path',
       savings: path.impact ? formatSavings(path.impact, assessment.baseline) : '—',
       summary: explanation?.summary ?? firstReason,

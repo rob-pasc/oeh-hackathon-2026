@@ -14,19 +14,24 @@ function withApi(ui: React.ReactElement) {
 }
 
 describe('Landing', () => {
-  it('shows the three steps and the Scan now button', () => {
+  it('shows the three steps and the Download and Scan now button', () => {
     render(withApi(<Landing />))
-    expect(screen.getByRole('button', { name: /scan now/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /download and scan now/i })).toBeInTheDocument()
     for (const title of ['Scan Device', 'AI Analysis', 'Save CO₂ & Money']) {
       expect(screen.getByRole('heading', { name: title })).toBeInTheDocument()
     }
+  })
+
+  it('shows the contact address as a mailto link', () => {
+    render(withApi(<Landing />))
+    expect(screen.getByRole('link', { name: 'contact@leaaf.green' })).toHaveAttribute('href', 'mailto:contact@leaaf.green')
   })
 
   it('opens a new tab on the session route when Scan now is clicked', async () => {
     const tab = { location: { href: '' }, close: vi.fn() }
     const open = vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window)
     render(withApi(<Landing />))
-    await userEvent.click(screen.getByRole('button', { name: /scan now/i }))
+    await userEvent.click(screen.getByRole('button', { name: /download and scan now/i }))
     await waitFor(() => expect(tab.location.href).toMatch(/^\/s\/[A-Za-z0-9_-]{22}$/))
     expect(open).toHaveBeenCalledWith('', '_blank')
     open.mockRestore()
@@ -77,6 +82,52 @@ describe('ResultsView', () => {
     await userEvent.click(money)
     expect(money).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Environment first' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('offers the overview and the five paths as tags next to the use dropdown', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
+    const group = await screen.findByRole('group', { name: 'Show steps for' })
+    expect(within(group).getAllByRole('button').map((b) => b.textContent)).toEqual([
+      'Overview',
+      'Upgrade',
+      'Repair',
+      'Pass on',
+      'Salvage',
+      'Recycle',
+    ])
+    expect(within(group).getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('shows the single actions of a path as cards when its tag is selected, and the overview again on request', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
+    const group = await screen.findByRole('group', { name: 'Show steps for' })
+    await screen.findByRole('region', { name: 'Upgrade' })
+    await userEvent.click(within(group).getByRole('button', { name: 'Upgrade' }))
+
+    const ssd = await screen.findByRole('region', { name: 'SSD upgrade' })
+    for (const name of ['RAM upgrade', 'CPU upgrade', 'Graphics upgrade']) {
+      expect(screen.getByRole('region', { name })).toBeInTheDocument()
+    }
+    expect(within(screen.getByRole('region', { name: 'CPU upgrade' })).getByText('Not suitable')).toBeInTheDocument()
+
+    // Opening an option looks like opening a card in the overview and shows its steps; the gauge follows it.
+    await userEvent.click(within(ssd).getByRole('button'))
+    expect(within(ssd).getByText('What to do')).toBeInTheDocument()
+    expect(within(ssd).getAllByRole('listitem')).toHaveLength(2)
+    expect(screen.getByText('Upgrade · SSD upgrade')).toBeInTheDocument()
+
+    await userEvent.click(within(group).getByRole('button', { name: 'Overview' }))
+    for (const name of ['Upgrade', 'Repair', 'Pass it on', 'Salvage for parts', 'Recycle']) {
+      expect(await screen.findByRole('region', { name })).toBeInTheDocument()
+    }
+  })
+
+  it('falls back to the path steps when the server sends no options', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.desktop} />))
+    const group = await screen.findByRole('group', { name: 'Show steps for' })
+    await screen.findByRole('region', { name: 'Upgrade' })
+    await userEvent.click(within(group).getByRole('button', { name: 'Repair' }))
+    expect(await screen.findByText('No steps available for this path.')).toBeInTheDocument()
   })
 
   it('explains an unknown device instead of failing silently', async () => {

@@ -29,6 +29,9 @@ The web app can run without a backend. In mock mode it serves the fictional fixt
 - Use tags: `office`, `study`, `development`, `pass_on` (shown as "Give to a friend"), and `gaming`. The default is `office`.
 - A mock API with sample data, and a live API client selected by an environment variable.
 - English text. Laptop screens only.
+- *(amendment 2026-11-20)* The landing button reads "Download and Scan now".
+- *(amendment 2026-11-20)* Path tags (Overview, Upgrade, Repair, Pass on, Salvage, Recycle) next to the Use dropdown. Selecting a path shows that path's single steps as blocks in the style of the path cards.
+- *(amendment 2026-11-20, second)* A path tag shows the individual actions of that path (for example the SSD, RAM, CPU, and graphics upgrades), each with its own CO₂e figures and its own steps when opened. The toolbar lines up with the two result columns, and the Use dropdown has a larger chevron.
 
 ### Out of scope
 
@@ -54,6 +57,13 @@ The web app can run without a backend. In mock mode it serves the fictional fixt
 - **FR-012:** Mock mode is the default. It labels the landing page "Sample data" and simulates the scanner steps, the assessment, and the report with short delays. Live mode, selected with `VITE_API_MODE=live`, calls the routes in `shared/src/api.ts` and the session routes in `DESIGN.md`.
 - **FR-013:** Colors, type, and spacing follow [`docs/VISUAL_DESIGN.md`](../../VISUAL_DESIGN.md). Text blocks stay short: card summaries are one sentence and no panel needs scrolling to read its main message at 1440 × 900.
 
+- **FR-014** *(amendment 2026-11-20)*: The primary button on the landing page is labelled "Download and Scan now". Its behavior is unchanged (FR-002). This replaces the label "Scan now" used in FR-001 and FR-002; those requirements otherwise stay in force.
+- **FR-015** *(amendment 2026-11-20)*: The toolbar shows the path tags Overview, Upgrade, Repair, Pass on, Salvage, and Recycle next to the Use dropdown. Overview is selected at first and shows the five path cards (FR-005, FR-006). Selecting a path tag replaces the cards in the left column with that path's header (rank, name, status, reason, cost, extra life, score) followed by one block per step, numbered in order, and a "Why" block with the source link and the points that could not be verified. While the report is loading, the step blocks show placeholders; if a path has no steps, the column says so. Selecting a path tag also selects that path for the gauge (FR-007). Changing the Use dropdown or the priority toggle keeps the selected tag. *(Second amendment 2026-11-20: for paths that deliver options, FR-017 replaces the step blocks described here; this requirement stays in force as the fallback when no options arrive.)*
+- **FR-016** *(amendment 2026-11-20)*: The gauge arcs (value and likely range) follow the half-circle scale for every value from 0 to 100 %. This restates FR-007 after a defect fix: arcs above 50 % had been drawn around the wrong centre.
+- **FR-017** *(amendment 2026-11-20, second)*: When a path tag is selected and the server has sent options for that path, the left column shows the path summary and then one card per option (for example SSD upgrade, RAM upgrade, CPU upgrade, Graphics upgrade). An option card looks like a path card in the overview: icon, name, status (Viable, Conditional, Not suitable), one-sentence reason, and the figures cost, extra life, and CO₂e added by the action. Opening a card shows "What to do" with its steps and a "Why" text with the points that could not be verified. Options are listed suitable first, then conditional, then not suitable; options that are not suitable carry a reason and no figures. The gauge follows the option the user last opened and shows the share of a new laptop's production CO₂e that this option avoids; before any option is opened, it shows the path. While the report is loading the column shows placeholders. If the server sends no options for a path, FR-015 applies.
+- **FR-018** *(amendment 2026-11-20, second)*: The toolbar uses the same two columns as the result screen. The Use dropdown and the path tags fill the left column, so the tag bar ends exactly where the cards end, and the priority toggle fills the right column. The Use dropdown shows a chevron that is clearly visible and sits close to the text.
+- **FR-019** *(amendment 2026-11-20, third)*: Every screen ends with a footer line "Questions? contact@leaaf.green" where the address is a `mailto:` link. In the page header of the screens after the landing page, the wordmark next to the logo is written in capital letters (LEAAF); the large wordmark on the landing page keeps its lowercase spelling.
+
 ## Non-functional requirements and constraints
 
 - **Layout:** Designed for laptop screens (1280 px and wider). There is no responsive behavior.
@@ -78,6 +88,7 @@ Vite, React 19, and TypeScript, styled with Tailwind CSS v4 through PostCSS. The
 ## Dependencies and risks
 
 - **Backend team:** The session routes and events in `DESIGN.md` are a proposal. Embedding the session ID in the downloaded scanner needs a decision from the scanner and server owners. Until agreed, only mock mode is supported.
+- **Contract gap (options):** `shared/` delivers one combined result per path. For the upgrade path the sample impact adds the SSD and the RAM module together (60–110 €, 8–20 kg CO₂e added). There are no figures per single action, and none for CPU or graphics upgrades. The web app therefore shows options only when the server sends them (proposal in `DESIGN.md`) and uses clearly labelled sample data in mock mode.
 - **Contract gap:** `gaming` is missing in `shared/src/common.ts` (FR-009). Storage fill level is not in `DeviceScan`, so the specs card cannot show "used space".
 - **Tooling:** Dependencies could not be installed while the first version was written, so `npm install`, `vite build`, and the Vitest suite have not been run (see `ACCEPTANCE_CRITERIA.md`).
 
@@ -89,6 +100,7 @@ The completion boundary is a locally verified handoff with self-review, per the 
 
 - **Non-blocking:** The backend accepts the proposed session routes and events (`DESIGN.md`), or proposes its own.
 - **Non-blocking:** Adding `gaming` to `INTENDED_USES` and to the scoring rubrics (feature 003) is the backend team's decision.
+- **Non-blocking:** What "avoided CO₂e" means for a single option, for example the SSD upgrade alone, is a decision for the backend team (feature 003). The sample data credits each option the share of the avoided production that its extra life justifies.
 - **Non-blocking:** The gauge definition (share of a new laptop's production CO₂e) was chosen by the team on 2026-11-20 and is easy to change.
 
 ## Scope change log
@@ -96,6 +108,9 @@ The completion boundary is a locally verified handoff with self-review, per the 
 | Date       | Change                 | User approval                                                                                                                |
 | ---------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | 2026-11-20 | Initial approved scope | User, in the planning conversation on 2026-11-20 ("accept und lets go, erstelle uns die Seite bitte"), after the design review |
+| 2026-11-20 | Amendment: added FR-014 (button label "Download and Scan now"), FR-015 (path tags and step blocks), FR-016 (gauge arc defect fix), AC-015 to AC-017, and T-011 to T-013. Existing requirements and exclusions are unchanged. | User, 2026-11-20, 16:18 Vienna time ("bug fixing next: Das Tacho ist überall kaputt … Download and Scan now … neues feature … tags repair, upgrade") |
+| 2026-11-20 | Second amendment: added FR-017 (individual actions per path as option cards, replacing the step blocks of FR-015 where options exist), FR-018 (toolbar alignment and dropdown chevron), AC-018 to AC-020, and T-014 to T-016. Existing requirements and exclusions are unchanged. | User, 2026-11-20, 16:53 Vienna time ("Der Plan war dass … nicht die einzelnen steps … sondern die einzelnen upgrades die alle ihren eigenen co2 score haben … Probiers mal so bitte") |
+| 2026-11-20 | Third amendment: added FR-019 (contact address in a footer on every screen, capital-letter wordmark in the page header), AC-021, and T-017. Existing requirements and exclusions are unchanged. | User, 2026-11-20, 17:02 Vienna time ("wir haben noch eine mail adresse: contact@leaaf.green … oben neben dem logo das leaaf groß schreiben"), clarified as capital letters in the follow-up question |
 
 ## Related and superseded features
 

@@ -59,3 +59,12 @@ export function gaugeValue(impact: Impact, baseline: Baseline): GaugeValue | nul
   const pct = (kg: number) => clamp(round((kg / baselineMid) * 100), 0, 100)
   return { mid: pct((low + high) / 2), low: pct(low), high: pct(high) }
 }
+
+/** Emissions caused by the action itself (new parts), as "+5–12 kg CO₂e". Shown on option cards. */
+export function formatAdded(impact: Impact): string {
+  const { low, high } = impact.co2e_kg.path
+  const hi = round(high)
+  if (hi <= 0) return '0 kg'
+  const lo = Math.max(0, round(low))
+  return `+${lo === hi ? hi : `${lo}–${hi}`} kg`
+}

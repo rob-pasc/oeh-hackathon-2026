@@ -34,9 +34,9 @@ export function ResultSkeleton() {
 /** Toolbar placeholder, shown while the scan is still running. */
 export function ToolbarSkeleton() {
   return (
-    <div className="flex items-center justify-between" aria-hidden="true">
-      <Sk className="h-11 w-52 rounded-full" />
-      <Sk className="h-11 w-72 rounded-full" />
+    <div className="grid grid-cols-[1fr_400px] items-center gap-7" aria-hidden="true">
+      <Sk className="h-12 w-full rounded-full" />
+      <Sk className="h-12 w-full rounded-full" />
     </div>
   )
 }

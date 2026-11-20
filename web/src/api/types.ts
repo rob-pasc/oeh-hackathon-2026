@@ -1,4 +1,5 @@
-import type { Assessment } from '@leaaf/shared/assessment'
+import type { Assessment, Impact } from '@leaaf/shared/assessment'
+import type { Path, Suitability } from '@leaaf/shared/common'
 import type { DeviceRecord } from '@leaaf/shared/device'
 import type { Report } from '@leaaf/shared/report'
 import type { UseTag } from '../lib/labels'
@@ -38,9 +39,29 @@ export class ApiClientError extends Error {
   }
 }
 
+/**
+ * One concrete action inside a path, for example the SSD upgrade or the RAM upgrade inside "upgrade".
+ * PROPOSED contract: shared/ delivers only one combined result per path today, so the web app shows options
+ * only when the server sends them (feature-006 DESIGN.md). `impact` has the same shape and meaning as the path's
+ * impact, and is null for options that are not suitable.
+ */
+export interface PathOption {
+  option_id: string
+  path: Path
+  title: string
+  status: Suitability
+  summary: string
+  impact: Impact | null
+  steps: string[]
+  why: string | null
+  unverified: string[]
+}
+
 export interface ReportStreamHandlers {
   onAssessment: (assessment: Assessment) => void
   onReport: (report: Report) => void
+  /** Proposed `options` event; optional because the contract does not define it yet. */
+  onOptions?: (options: PathOption[]) => void
   onEnd: (status: 'complete' | 'fallback') => void
   onError: (error: ApiClientError) => void
 }

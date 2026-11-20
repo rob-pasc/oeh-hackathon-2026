@@ -9,6 +9,8 @@ import { describe, expect, it } from 'vitest'
 import { parseRoute } from '../app/router'
 import { GAUGE, TRACK_PATH, arcPath, needleAngle, polar } from '../lib/gauge'
 import { formatEur, formatYears, gaugeValue } from '../lib/impact'
+import { LAPTOP_OPTIONS } from '../api/mockOptions'
+import { buildOptionViews } from '../lib/optionView'
 import { buildPathViews } from '../lib/pathView'
 import { summarizeScan } from '../lib/specs'
 
@@ -40,6 +42,19 @@ describe('gauge geometry', () => {
     expect(needleAngle(50)).toBe(0)
     expect(needleAngle(100)).toBe(90)
     expect(needleAngle(250)).toBe(90)
+  })
+  it('never sets the large-arc flag, because the scale is a half circle', () => {
+    for (const [low, high] of [[0, 95], [0, 100], [10, 60], [65, 100], [0, 64], [0, 1]] as const) {
+      const d = arcPath(low, high)
+      expect(d).not.toBeNull()
+      expect(d!).toContain(`A${GAUGE.r} ${GAUGE.r} 0 0 1 `)
+    }
+  })
+  it('keeps arc end points on the gauge circle', () => {
+    for (const pct of [0, 25, 64, 95, 100]) {
+      const { x, y } = polar(pct)
+      expect(Math.hypot(x - GAUGE.cx, y - GAUGE.cy)).toBeCloseTo(GAUGE.r)
+    }
   })
   it('skips empty arcs', () => {
     expect(arcPath(40, 40)).toBeNull()
@@ -86,6 +101,38 @@ describe('path views', () => {
     const views = buildPathViews(assessment, null, 'environment_first')
     expect(views.every((v) => v.summaryFromAssessment)).toBe(true)
     expect(views.every((v) => v.steps.length === 0)).toBe(true)
+  })
+})
+
+describe('option views', () => {
+  const upgrade = buildOptionViews(
+    LAPTOP_OPTIONS.filter((o) => o.path === 'upgrade'),
+    assessment.baseline,
+  )
+  it('lists the single upgrades, suitable ones first and not-suitable ones last', () => {
+    expect(upgrade.map((o) => o.key)).toEqual(['upgrade:ssd', 'upgrade:ram', 'upgrade:cpu', 'upgrade:gpu'])
+    expect(upgrade.map((o) => o.status)).toEqual(['viable', 'viable', 'not_suitable', 'not_suitable'])
+  })
+  it('gives each suitable option its own CO2e figures and gauge value', () => {
+    const [ssd, ram] = upgrade
+    expect(ssd!.metrics.map((m) => m.label)).toEqual(['Cost', 'Extra life', 'CO₂e added'])
+    expect(ssd!.metrics[2]!.value).toBe('+5–12 kg')
+    expect(ssd!.gauge!.mid).toBeGreaterThan(ram!.gauge!.mid)
+    for (const o of upgrade.slice(0, 2)) {
+      expect(o.gauge!.mid).toBeGreaterThanOrEqual(0)
+      expect(o.gauge!.mid).toBeLessThanOrEqual(100)
+    }
+  })
+  it('shows no invented figures for options that are not suitable', () => {
+    for (const o of upgrade.slice(2)) {
+      expect(o.gauge).toBeNull()
+      expect(o.metrics.every((m) => m.value === '—')).toBe(true)
+    }
+  })
+  it('keeps every path covered by at least one option in the sample data', () => {
+    for (const path of ['upgrade', 'repair', 'pass_on', 'salvage', 'recycle']) {
+      expect(LAPTOP_OPTIONS.some((o) => o.path === path)).toBe(true)
+    }
   })
 })
 
