@@ -4,7 +4,7 @@ Shared visual conventions for the leaaf web app. They come from the design revie
 
 ## Visual direction
 
-Calm, light, and friendly: mostly white and off-white surfaces with one fresh green for actions and highlights. Rounded shapes, soft shadows, and short text. Nothing should be tiring to look at or require reading a wall of text. The brand mark is a leaf in a light-green rounded tile next to the lowercase wordmark "leaaf", large on the landing page and smaller in the page header.
+Calm, light, and friendly: mostly white and off-white surfaces with one fresh green for actions and highlights. Rounded shapes, soft shadows, and short text. Nothing should be tiring to look at or require reading a wall of text. The leaaf.green wordmark is large on the landing page and smaller in the page header.
 
 ## Foundations
 

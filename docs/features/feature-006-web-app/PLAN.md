@@ -144,7 +144,7 @@ This feature builds the web surface that features 001, 003, and 004 describe and
 - `feature-003-five-path-ranking` / FR-001 (picker), FR-012 (ranked view), and the Environment first / Money first toggle.
 - `feature-004-explained-report` / FR-001, FR-003 (cards with Recommended label, reason, expandable details).
 
-**Planned replacements (not yet effective; the earlier plans stay in force until then):**
+**Replacement history and effective behavior**
 
 - `feature-001-device-scan-and-upload` / FR-009 (scanner opens the device page in the default browser): replaced by FR-002 to FR-004 here **for downloads that carry a session**. The browser tab is opened before the download, and the scanner reports progress and the final device ID to it. A download without a session (or a dev build) keeps FR-009 unchanged. Implemented 2026-11-20 on the branch `feat/device-scan-and-upload` (commit "feat(sessions): link scanner runs to the browser tab") and merged into `main` the same day, so it is effective. *(2026-11-20: feature 001 later revised FR-009 itself. The scanner now never opens the browser and offers a **Show my results** button in its window instead. It sends session events only after the user presses **Start scan**. FR-002 to FR-004 here are unchanged.)*
 - `feature-003-five-path-ranking` / FR-001 (four options, ranking only after a choice): planned to be replaced by FR-008 and FR-009 here (five options including `gaming`, default `office`, ranking shown at once). Feature 003's amendment of 2026-11-20 (FR-015 to FR-018) adds `general` and `gaming` to the contract and their assessment rules; implemented 2026-11-20 on `main`, so this replacement is effective, and the live client now sends all six tags to a server that assesses them.

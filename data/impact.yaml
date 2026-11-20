@@ -6,7 +6,7 @@
 #   placeholder - not yet backed by a source; fails the coverage check (npm test -w server).
 # The calculator (T-004) cites entry IDs in `impact_refs`. Validate with `npm test -w server`.
 #
-# Scope: a typical 14-inch Windows laptop (the demo models are not chosen yet). Part prices are
+# Scope: a typical 14-inch Windows laptop (model-specific impact entries are pending). Part prices are
 # Austrian/German retail in EUR incl. VAT on the access date; RAM and SSD prices are inflated by
 # the 2025-2026 memory shortage (see sources.memory_price_crisis) and should be rechecked before
 # the demo. Values from the team's component research (v6 spreadsheet) were cross-checked;
@@ -266,7 +266,7 @@ entries:
     status: sourced
     sources: [price_battery]
     derivation: Lenovo 01AV421 offers EUR 20-71 (iFixit, eBay); Dell batteries EUR 84.95-89.95 (iFixit); eBay buying guide EUR 50-150. The low end excludes the cheapest no-name offers.
-    notes: Narrow this per demo model once the models are chosen (T-008).
+    notes: Narrow this per demo model using the selected configurations (T-008).
   - id: service.battery_replacement.price
     description: Labour for a professional battery replacement (glued or internal batteries)
     low: 30

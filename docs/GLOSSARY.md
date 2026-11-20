@@ -3,7 +3,7 @@
 | Term | Meaning in this project | Notes / related terms |
 | ---- | ----------------------- | --------------------- |
 | Path | One of the five possible next lives for a device: **upgrade**, **repair**, **pass it on**, **salvage for parts**, **recycle**. | Contract keys: `upgrade`, `repair`, `pass_on`, `salvage`, `recycle`. Also called "action" or "outcome" in early notes. |
-| Intended use | The owner's planned use, chosen before ranking: office/browsing, school/university, programming/development, pass to someone else. | Contract keys: `office`, `study`, `development`, `pass_on`. Changes the rubrics and baseline assumptions. |
+| Intended use | The owner’s planned use. The first ranking uses General. Changing the selection recomputes the ranking. | Contract keys: `general`, `office`, `study`, `development`, `gaming`, `pass_on`. Changes the rubrics and baseline assumptions. |
 | Suitability status | The per-path result of the gates: `viable`, `conditional` (possible but unverified or needing professional help), or `not_suitable` (contradicted by a verified fact or unsafe). | Not-suitable paths have no score. |
 | Gate | A deterministic feasibility or safety rule applied before scoring. | Feature 003 |
 | Fact | A structured device property (for example RAM soldered) extracted from retrieved passages; valid only with a passage citation. | Feature 003 FR-002 |

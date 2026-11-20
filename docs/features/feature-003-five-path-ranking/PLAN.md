@@ -78,7 +78,7 @@ Rules enforce hard constraints, the calculator produces the numbers, and feature
 
 ## Proposed technical approach
 
-Not yet adopted; to be confirmed during implementation.
+The assessment pipeline and its adopted contracts are implemented. Real-device checks and model-specific impact coverage are pending.
 
 - **Contracts (adopted 2026-11-20):** `Fact`/`FactSet` in [`shared/src/facts.ts`](../../../shared/src/facts.ts) and `Assessment` in [`shared/src/assessment.ts`](../../../shared/src/assessment.ts). Cross-field rules (weights sum to 100, not-suitable paths have no score or impact, `low <= high`, displacement sign rules) are in `shared/src/invariants.ts`. Ordering (`rankPaths`) is in `shared/src/ranking.ts`, so that the server and the browser toggle produce the same order. The payload carries criterion scores and both weight sets, never totals.
 - **Location:** `server/src/assessment/` for facts, gates, calculator, and scoring; `data/impact.yaml` for the static impact table; `config/weights.yaml` for weights; `docs/` or code comments for rubrics.
@@ -90,7 +90,7 @@ Not yet adopted; to be confirmed during implementation.
 ## Dependencies and risks
 
 - **Dependency:** Feature 001 (scan schema, device page) and feature 002 (retrieval results, `model_evidence`).
-- **Blocking for the real impact table:** The demo models need to be chosen (part types and prices), and defensible CO₂e sources need to be found (manufacturer product environmental reports, studies). The structure and tests can proceed with placeholder entries clearly marked as such.
+- **Impact coverage:** Generic CO₂e sources and the three demo models are selected. T-008 still needs model-specific part prices and a sourced professional battery labour range.
 - **Risk:** The rubrics or weights could double-count lifespan, which is already part of the CO₂e estimate. Mitigation: document how each criterion is derived; adjust after testing on the demo devices.
 - **Risk:** LLM extraction may misread passages. Mitigation: required passage IDs, a deterministic schema, and manual checking of extracted facts for the demo models.
 - **Risk:** Size. With 14 requirements this exceeds the usual guideline of about 10 criteria; the user accepted it as one feature because the gates, calculator, and scoring are not verifiable without each other.
@@ -132,5 +132,5 @@ FR-001's list of four options is replaced by FR-015 here together with feature 0
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Design (gate rules, calculator, rubrics, confidence): [`DESIGN.md`](./DESIGN.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: None yet
+- Related ADRs: [Shared contracts](../../adr/adr-001-shared-contracts-typebox.md) and [LLM adapter](../../adr/adr-002-llm-openai-compatible-deepseek.md)
 - Terms: [`docs/GLOSSARY.md`](../../GLOSSARY.md)

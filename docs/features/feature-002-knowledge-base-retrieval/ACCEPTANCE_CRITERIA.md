@@ -29,7 +29,7 @@ If the user approves changing or waiving a criterion, update the approved scope 
 
 ## Review and integration evidence
 
-Completion boundary: locally verified handoff with self-review (see [PLAN.md § Review and integration](./PLAN.md#review-and-integration)). Demo models chosen 2026-11-20; AC-008 waits for the curated corpus, AC-009 for real scans of the demo laptops. Not yet reviewed.
+Completion boundary: locally verified handoff with self-review (see [PLAN.md § Review and integration](./PLAN.md#review-and-integration)). Demo models chosen 2026-11-20; AC-008 records the 7th-generation EliteBook CPU coverage gap, AC-009 for real scans of the demo laptops. Not yet reviewed.
 
 ## Verification notes
 

@@ -8,7 +8,7 @@ The static impact table (FR-007): CO₂e ranges for a new laptop and desktop (th
 
 - **Status:** `sourced` (derived from the sources), `assumption` (a modelling assumption informed by the sources), `estimate` (the cited sources do not cover the case, as with the gaming useful-life figures; it lowers the path's confidence), or `placeholder` (no source yet). Placeholders fail the coverage check.
 - **Boundaries:** production emissions are cradle-to-gate plus distribution. End of life carries no recycling credits. Reuse figures follow Fraunhofer IZM's 2022 recommendation to cite ADEME (2022).
-- **Scope:** a typical 14-inch Windows laptop, because the demo models are not chosen yet. Model-specific entries (for example the exact battery) are added with the demo models (T-008).
+- **Scope:** a typical 14-inch Windows laptop. The ThinkPad T480, XPS 13 9360 and EliteBook 840 G5 still need model-specific entries such as battery prices (T-008).
 - **Prices:** Austrian and German retail in EUR incl. VAT, checked 2026-11-20. RAM and SSD prices are inflated by the 2025–2026 memory shortage; recheck them before the demo.
 - **Team research:** the team's component research (spreadsheet v6) was cross-checked. Where the sources disagreed, the entry was changed and its `notes` record the earlier estimate.
 
