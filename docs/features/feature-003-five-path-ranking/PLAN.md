@@ -33,6 +33,7 @@ Rules enforce hard constraints, the calculator produces the numbers, and feature
 
 - Free text explaining the ranking, and citations rendered as rich cards (feature 004).
 - User-adjustable weight sliders (possible later amendment).
+- *(amendment 2026-11-20)* The graphics card's gaming performance class, game-specific requirements, and adding a graphics card to a desktop.
 - Live prices, part purchase links, and local recycler or recipient lookup.
 - A full lifecycle assessment, or use-phase energy modelling beyond what the static table covers.
 - Aggregating impact across several devices (fleet dashboard, deferred).
@@ -53,6 +54,10 @@ Rules enforce hard constraints, the calculator produces the numbers, and feature
 - **FR-012:** The total score is the weighted sum. The ranked view lists viable paths by score, then conditional paths by score marked "Conditional", then not-suitable paths without a score, with their reasons.
 - **FR-013:** Switching between Environment first and Money first recomputes the scores and order in the browser without a page reload or a new LLM call. The per-criterion breakdown for each path stays visible.
 - **FR-014:** Each path shows a confidence level (high, medium, low) with reasons, lowered by missing scan fields, `model_evidence: "none"`, or impact entries with wide ranges.
+- **FR-015** *(amendment 2026-11-20)*: The intended uses also include `general` (an everyday computer without a specific purpose) and `gaming`, so the contract's `IntendedUse` has six values. Together with feature 006 FR-008, FR-009, FR-021, and FR-023 this replaces the four-option list of FR-001 (see "Related and superseded features"). All other requirements apply to both new uses.
+- **FR-016** *(amendment 2026-11-20)*: `general` uses the same RAM need (8 GB) and rubric rules as `office`. Its extra-useful-life entries reuse the `office` values and say so in their derivation.
+- **FR-017** *(amendment 2026-11-20)*: `gaming` needs 16 GB of RAM and a dedicated graphics card, detected from the scan's GPU names. With integrated graphics only, upgrade and repair are `conditional` with the reason that integrated graphics cannot meet gaming needs. With no GPU names in the scan, they are `conditional` with a "cannot verify the graphics" reason. Pass it on, salvage, and recycle are assessed as for any other use.
+- **FR-018** *(amendment 2026-11-20)*: The impact table has extra-useful-life entries for `gaming` on every path, marked as estimates in their derivation, because the cited reuse sources (ADEME, Fraunhofer IZM) have no gaming figures. Upgrade and repair for `gaming` show lower confidence than for `office` on the same device, with a reason naming the estimate.
 
 ## Non-functional requirements and constraints
 
@@ -115,10 +120,11 @@ Not applicable to this feature: deployment is owned by feature 005.
 | Date       | Change                 | User approval                                                                                     |
 | ---------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
 | 2026-11-20 | Initial approved scope | User replied "accept" to the five-feature MVP proposal in the specification conversation, 2026-11-20 |
+| 2026-11-20 | Amendment: `general` and `gaming` intended uses (FR-015 to FR-018, AC-016 to AC-020, T-011 to T-014), plus the exclusion of GPU performance classes. FR-015 replaces FR-001's four-option list together with feature 006. Other requirements and exclusions are unchanged. | User chose "Add both to contract" when asked how the assessment route should handle the web app's `general` and `gaming` tags, then replied "accept" to the proposed scope, 2026-11-20 |
 
 ## Related and superseded features
 
-None superseded. Depends on [feature 001](../feature-001-device-scan-and-upload/PLAN.md) and [feature 002](../feature-002-knowledge-base-retrieval/PLAN.md). Its result view is extended by [feature 004](../feature-004-explained-report/PLAN.md).
+FR-001's list of four options is replaced by FR-015 here together with feature 006 FR-008, FR-009, FR-021, and FR-023 (six options, `general` as the default, ranking shown at once for the default). This is a planned replacement until T-011 to T-014 are implemented; the rest of FR-001 (changing the use recomputes the ranking) stays in force. Depends on [feature 001](../feature-001-device-scan-and-upload/PLAN.md) and [feature 002](../feature-002-knowledge-base-retrieval/PLAN.md). Its result view is extended by [feature 004](../feature-004-explained-report/PLAN.md).
 
 ## References
 

@@ -22,6 +22,11 @@ Defines the feature's acceptance criteria and records how each criterion was ver
 | AC-013 | FR-010, FR-001 | Given the same device with "office" use and with "programming" use (8 GB soldered RAM), the criterion scores differ, consistent with the use-specific rubric. | Automated unit test | Pass | 2026-11-20: `assessment.test.ts` ("scores the same soldered-RAM laptop differently…") |
 | AC-014 | FR-014 | A device with `null` battery health and `model_evidence: "none"` shows lower confidence, with these reasons listed, than the same device with complete data and model evidence. | Automated unit test | Pass | 2026-11-20: `assessment.test.ts` ("confidence (AC-014)") |
 | AC-015 | Review | The diff, rubrics, and impact table sources are self-reviewed, with findings recorded below. | Self-review | Not run | |
+| AC-016 | FR-015 | The contract's `IntendedUse` has six values, and `GET /api/devices/:id/report` streams an assessment for `general` and for `gaming`; other values still get `400`. | Automated shared and server tests | Not run | |
+| AC-017 | FR-016 | For the fixture laptop, `general` and `office` give the same statuses, criterion scores, and impact ranges, and every `general` life entry names the `office` entry it reuses. | Automated unit test | Not run | |
+| AC-018 | FR-017 | With `gaming`: a scan with integrated graphics only makes upgrade and repair `conditional` with the graphics reason; a scan with a dedicated GPU shows no graphics reason; a scan with `gpus: null` makes them `conditional` with "cannot verify the graphics". Pass it on keeps the status it has for `office`. | Automated unit test | Not run | |
+| AC-019 | FR-018 | Every path has a `life_extra.<path>.gaming` entry marked as an estimate, the coverage check requires them, and gaming upgrade and repair have lower confidence than office on the same device, with the estimate reason listed. | Automated unit and validation tests | Not run | |
+| AC-020 | FR-015 | The web app sends each of the six tags unchanged in live mode and shows a ranking for each; it no longer marks `general` and `gaming` as missing from the contract. | Automated web test | Not run | |
 
 ## Result legend
 

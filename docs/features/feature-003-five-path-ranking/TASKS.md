@@ -17,12 +17,16 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [ ] **T-008:** Curate the real impact table entries with sources for the chosen demo models, replacing the placeholders (supports `AC-007`)
 - [ ] **T-009:** Manually check extracted facts and rankings on the demo models, including the soldered-RAM case (supports `AC-005`)
 - [ ] **T-010:** Run checks, self-review the diff, rubrics, and sources, and update the README and the feature index (supports `AC-015`)
+- [ ] **T-011:** *(amendment)* Add `general` and `gaming` to `INTENDED_USES` in `shared/`, regenerate the schemas, and accept them on the report stream, with tests (supports `AC-016`)
+- [ ] **T-012:** *(amendment)* Add the use rules: RAM needs, the dedicated-GPU check for `gaming`, use labels, and the confidence reason, and document them in `DESIGN.md`, with table-driven tests (supports `AC-017`, `AC-018`, `AC-019`)
+- [ ] **T-013:** *(amendment)* Add the `general` (reused from `office`) and `gaming` (estimate) life entries to `data/impact.yaml` and the coverage check (supports `AC-017`, `AC-019`)
+- [ ] **T-014:** *(amendment)* Switch the web app's use tags to the contract type, remove the "not in the contract" notes, and update feature 006's plan and the feature index (supports `AC-020`)
 
 ## Dependencies and blockers
 
 - Requires feature 001 (schema, device page) and feature 002 (retrieval).
 - Demo models chosen 2026-11-20 (ThinkPad T480, XPS 13 9360, EliteBook 840 G5; see feature 002). CO₂e sources are selected (see `data/impact.yaml`). **Blocking for T-009:** real scans of the demo laptops.
-- The web app defaults to the `general` use tag and offers `gaming`, which the contract does not have yet: in live mode those tags get `400 invalid_payload`. The user chose on 2026-11-20 to add both to the contract; the amendment scope is not yet recorded or approved.
+- The web app defaults to the `general` use tag and offers `gaming`, which the contract does not have yet: in live mode those tags get `400 invalid_payload` until T-011 to T-014 are done. The amendment scope was approved on 2026-11-20 and is recorded in the plan (FR-015 to FR-018).
 
 ## Progress notes
 
@@ -38,3 +42,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 ## Lifecycle history
 
 - 2026-11-20: Implementation started (T-001, fact extraction).
+- 2026-11-20: Amendment approved: `general` and `gaming` intended uses (FR-015 to FR-018). The feature was already in progress, so its status stays `In progress`.
