@@ -8,11 +8,11 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 ## Tasks
 
 - [x] **T-001:** Define the fact schema and implement LLM fact extraction with citation validation and per-model caching, tested with a mocked LLM (supports `AC-002`)
-- [ ] **T-002:** Implement the feasibility and safety gates as pure functions, with table-driven tests (supports `AC-003`–`AC-006`)
+- [x] **T-002:** Implement the feasibility and safety gates as pure functions, with table-driven tests (supports `AC-003`–`AC-006`)
 - [x] **T-003:** Define the `impact.yaml` structure and validator with clearly marked placeholder entries (supports `AC-007`)
-- [ ] **T-004:** Implement the range calculator with provenance, the baseline statement, and the conditional displacement credit, with tests (supports `AC-008`, `AC-009`)
-- [ ] **T-005:** Write the criterion rubrics, including use-specific rules, and implement scoring and confidence (supports `AC-010`, `AC-013`, `AC-014`)
-- [ ] **T-006:** Implement the weights config and its startup validation (supports `AC-010`)
+- [x] **T-004:** Implement the range calculator with provenance, the baseline statement, and the conditional displacement credit, with tests (supports `AC-008`, `AC-009`)
+- [x] **T-005:** Write the criterion rubrics, including use-specific rules, and implement scoring and confidence (supports `AC-010`, `AC-013`, `AC-014`)
+- [x] **T-006:** Implement the weights config and its startup validation (supports `AC-010`)
 - [ ] **T-007:** Add the assessment API and the device page's intended-use picker, ranked view, and client-side mode toggle, with web tests (supports `AC-001`, `AC-011`, `AC-012`)
 - [ ] **T-008:** Curate the real impact table entries with sources for the chosen demo models, replacing the placeholders (supports `AC-007`)
 - [ ] **T-009:** Manually check extracted facts and rankings on the demo models, including the soldered-RAM case (supports `AC-005`)
@@ -29,6 +29,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: LLM adapter (`server/src/llm/`) built with mocked-provider tests, ready for T-001 fact extraction; live check via `npm run llm:smoke -w server`.
 - 2026-11-20: T-001 done: `server/src/facts/` (prompt, citation filter, memory and SQLite caches) with 13 mocked-LLM tests. Live check `npm run facts:smoke -w server` on the fixtures matched `facts.example-laptop-14.json` with thinking enabled (1 attempt, 10.8 s, 2176/2063 tokens) and disabled (1 attempt, 1.5 s, 2151/264 tokens). Thinking stays enabled as decided; revisit against the 20 s budget once real manuals are in the corpus. The assessment does not call the extractor yet (T-002 onward).
 - 2026-11-20: T-003 done: `data/impact.yaml` with a loader, validator, and coverage check (`server/src/impact/table.ts`, 11 tests). It goes beyond placeholders: 38 entries for a typical 14-inch laptop and an office desktop are sourced from manufacturer PCFs, Fraunhofer IZM, Boavizta, peer-reviewed studies, and dated retail prices. One placeholder remains (`service.battery_replacement.price`). T-008 stays open for the demo-model-specific entries (for example exact batteries) once the models are chosen.
+- 2026-11-20: T-002, T-004, T-005, and T-006 done on the branch `feat/five-path-ranking`: `server/src/assessment/` (gates, calculator, scoring and confidence, `assess()`), `config/weights.yaml` with startup validation in `main.ts`, and 52 tests in `server/test/assessment.test.ts`. The gate rules and rubrics are in [`DESIGN.md`](./DESIGN.md). Two rules were added while checking the scores on the fixtures: recycling is `conditional` while any reuse path is still possible, and a repair that leaves RAM below the use's need gets a halved useful-life score. No route calls `assess()` yet (T-007), and the scores are not yet checked on real devices (T-009).
+- The scan has no battery-swelling signal, so the swelling part of FR-006/AC-006 cannot trigger yet; the non-replaceable and unknown cases are covered.
 
 ## Lifecycle history
 

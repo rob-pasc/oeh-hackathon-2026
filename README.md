@@ -1,6 +1,6 @@
 # leaaf: Lifecycle Evaluation and Action Finder
 
-**Status:** In progress. Six MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The web app (`web/`, first version on sample data) passes its automated checks; the browser review is pending. The Windows scanner (`scanner/`) and the server's device upload API are built and tested on recorded readings, but have not yet run on a real Windows laptop. The server also has the LLM adapter, fact extraction, and the sourced impact table (`data/impact.yaml`). Retrieval, ranking, and reports are not built yet. Container images for `web` (on the real API) and `server` (with the Windows scanner) are built by CI and published to GHCR on tag pushes ([deployment guide](docs/DEPLOYMENT.md)); until ranking and reports exist, a real scan ends on a result screen without paths.
+**Status:** In progress. Six MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The web app (`web/`, first version on sample data) passes its automated checks; the browser review is pending. The Windows scanner (`scanner/`) and the server's device upload API are built and tested on recorded readings, but have not yet run on a real Windows laptop. The server also has the LLM adapter, fact extraction, the sourced impact table (`data/impact.yaml`), and the assessment core (gates, impact ranges, scoring, weights in `config/weights.yaml`), which no route serves yet. Retrieval, the assessment API, and reports are not built yet. Container images for `web` (on the real API) and `server` (with the Windows scanner) are built by CI and published to GHCR on tag pushes ([deployment guide](docs/DEPLOYMENT.md)); until ranking and reports exist, a real scan ends on a result screen without paths.
 
 ÖH Hackathon 2026 project (theme: AI for Green), planned to run at [leaaf.green](https://leaaf.green) (not deployed yet). A small Windows scanner reads an old laptop's hardware. The platform then ranks five next lives for it (upgrade, repair, pass it on, salvage for parts, recycle) in Environment first or Money first mode, with cited evidence and honest cost and CO₂e ranges.
 
@@ -25,6 +25,7 @@ Stack: a Go scanner for Windows, a TypeScript/Node backend with SQLite, and a Re
 | [`shared/`](shared/) | Data contracts (TypeBox → JSON Schema), fixtures, and ranking helpers | 001–004 |
 | [`corpus/`](corpus/) | Curated knowledge base and its manifest | 002 |
 | [`data/`](data/) | Static impact table (CO₂e, prices, useful life) | 003 |
+| [`config/`](config/) | Ranking weights (illustrative) | 003 |
 | [`demo/`](demo/) | Seeded demo device scans and caches | 005 |
 | [`deploy/`](deploy/) | Example production Compose file and env templates | 005 |
 | [`docs/`](docs/) | Product, workflow, feature specs, ADRs | — |
