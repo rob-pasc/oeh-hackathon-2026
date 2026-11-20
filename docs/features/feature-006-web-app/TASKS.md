@@ -28,6 +28,15 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-019:** Add the `general` use tag (supports `AC-023`)
 - [x] **T-020:** Make the path summary block in path tabs visibly non-interactive (supports `AC-024`)
 - [x] **T-021:** Make `general` the default use tag (supports `AC-025`)
+- [x] **T-022:** Replace the leaf icon logo with the terminal-style logo (supports `AC-026`)
+- [x] **T-023:** Replace the terminal-style logo with the "leaaf.green" wordmark; more space under the scan button (supports `AC-027`)
+- [x] **T-024:** Live parts list on the scan page with mock lookups (supports `AC-028`)
+- [x] **T-025:** Optional laptop view, remembered per browser (supports `AC-029`)
+- [x] **T-026:** Animated reordering of the path cards (supports `AC-030`)
+- [x] **T-027:** Counting numbers (supports `AC-031`)
+- [x] **T-028:** CO₂e equivalents with sourced factors (supports `AC-032`)
+- [x] **T-029:** Before/after on action cards (supports `AC-033`)
+- [x] **T-030:** Hover lift, sliding highlights, fade-in, reduced-motion handling (supports `AC-034`)
 
 ## Dependencies and blockers
 
@@ -49,3 +58,6 @@ The first version was written without network access. After the merge into `main
 - 2026-11-20: Fifth scope extension by amendment (FR-023, AC-025, T-021); see the plan's scope change log. Implemented the same day; verification pending.
 - 2026-11-20: Merged into `main` (b879a96). T-008 done; T-009 and T-010 still pending.
 - 2026-11-20: Branch `feat/device-scan-and-upload` (T-010, session routes and live mode) merged into `main` together with the amendments above. T-009 and T-016 remain open.
+- 2026-11-20: Sixth scope extension by amendment (FR-024, AC-026, T-022); see the plan's scope change log. Implemented the same day; verification pending.
+- 2026-11-20: Seventh scope extension by amendment (FR-025, AC-027, T-023); see the plan's scope change log. Implemented the same day; verification pending.
+- 2026-11-20: Eighth scope extension by amendment (FR-026 to FR-032, AC-028 to AC-034, T-024 to T-030); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.

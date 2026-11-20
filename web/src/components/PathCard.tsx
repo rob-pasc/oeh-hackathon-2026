@@ -17,7 +17,7 @@ export function PathCard({ view, selected, open, reportPending, onToggle }: Prop
   return (
     <section
       aria-label={view.title}
-      className={`overflow-hidden rounded-[20px] border-2 bg-white shadow-card transition-shadow hover:shadow-lift ${
+      className={`overflow-hidden rounded-[20px] border-2 bg-white shadow-card transition-[box-shadow,translate] duration-200 hover:shadow-lift motion-safe:hover:-translate-y-0.5 ${
         selected ? 'border-leaf' : 'border-transparent'
       }`}
     >
@@ -43,7 +43,7 @@ export function PathCard({ view, selected, open, reportPending, onToggle }: Prop
       </button>
 
       {open ? (
-        <div className="grid grid-cols-2 gap-x-7 gap-y-3.5 border-t border-line pt-4 pr-5 pb-5 pl-[84px]">
+        <div className="fade-up grid grid-cols-2 gap-x-7 gap-y-3.5 border-t border-line pt-4 pr-5 pb-5 pl-[84px]">
           <div className="flex flex-col gap-2">
             <span className={SECTION_LABEL}>What to do</span>
             {view.steps.length > 0 ? (
@@ -84,6 +84,21 @@ export function PathCard({ view, selected, open, reportPending, onToggle }: Prop
               </a>
             ) : null}
           </div>
+          {view.changes.length > 0 ? (
+            <div className="col-span-2 flex flex-col gap-2" data-testid="before-after">
+              <span className={SECTION_LABEL}>Before → after</span>
+              <div className="grid grid-cols-[auto_auto_auto_1fr] items-center gap-x-3 gap-y-1.5 rounded-[12px] bg-page px-4 py-3 text-sm">
+                {view.changes.map((change) => (
+                  <div key={change.label} className="contents">
+                    <span className="text-muted">{change.label}</span>
+                    <span className="text-muted">{change.before}</span>
+                    <span aria-hidden="true" className="text-leaf">→</span>
+                    <strong className="text-leaf-deep">{change.after}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
           {view.notes.length > 0 ? (
             <div className="col-span-2 flex flex-col gap-1 rounded-[10px] bg-amber-tint px-3 py-2 text-[13px] leading-snug text-amber-ink">
               {view.notes.map((note) => (

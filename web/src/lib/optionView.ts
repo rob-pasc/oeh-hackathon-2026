@@ -5,7 +5,7 @@ import type { Suitability } from '@leaaf/shared/common'
 import type { PathOption } from '../api/types'
 import { formatAdded, formatEur, formatYears, gaugeValue } from './impact'
 import { STATUS_LABELS } from './labels'
-import type { CardView } from './pathView'
+import { co2Of, type CardView } from './pathView'
 
 const STATUS_ORDER: Record<Suitability, number> = { viable: 0, conditional: 1, not_suitable: 2 }
 
@@ -32,6 +32,8 @@ export function buildOptionViews(options: readonly PathOption[], baseline: Asses
       source: null,
       notes: option.unverified,
       gauge,
+      co2: co2Of(impact),
+      changes: option.changes ?? [],
     }
     return view
   })

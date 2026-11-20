@@ -23,7 +23,7 @@ export function PathTabView({ path, options, pending, selectedKey, openKey, onTo
     return <StepsView view={path} reportPending={false} />
   }
   return (
-    <div className="flex flex-col gap-3.5" data-testid="path-tab-view">
+    <div className="fade-up flex flex-col gap-3.5" data-testid="path-tab-view">
       <section aria-label={`${path.title} summary`} className={SUMMARY_BLOCK}>
         <PathHeader view={path} onTint />
       </section>

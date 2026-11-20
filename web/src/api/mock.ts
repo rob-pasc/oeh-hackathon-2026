@@ -10,6 +10,8 @@ import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
 import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import laptopReportJson from '@leaaf/fixtures/report.example-laptop-14.office.json'
 import { LAPTOP_OPTIONS } from './mockOptions'
+import { MOCK_LOOKUPS } from './mockParts'
+import { partsFromScan, STEP_KINDS } from '../lib/parts'
 import { ApiClientError, SCAN_STEPS, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
 import type { UseTag } from '../lib/labels'
 
@@ -104,7 +106,7 @@ function reportFor(deviceId: string, assessment: Assessment): Report {
 }
 
 export function createMockClient(options: MockOptions = {}): ApiClient {
-  const { stepMs = 650, assessmentMs = 1400, reportMs = 1600 } = options
+  const { stepMs = 900, assessmentMs = 1400, reportMs = 1600 } = options
   const known = new Set<string>(Object.values(MOCK_DEVICE_IDS))
 
   return {
@@ -116,9 +118,18 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
 
     subscribeScanSession(_sessionId, onEvent: (event: ScanSessionEvent) => void) {
       const timers: ReturnType<typeof setTimeout>[] = []
+      const parts = partsFromScan(laptopScan)
       let t = 0
       for (const step of SCAN_STEPS) {
         timers.push(setTimeout(() => onEvent({ type: 'step', step: step.id, state: 'running' }), t))
+        // Parts of this step appear one after another, then their lookups finish (sample results).
+        const stepParts = parts.filter((p) => STEP_KINDS[step.id].includes(p.kind))
+        stepParts.forEach((part, i) => {
+          const found = t + stepMs * (0.15 + i * 0.15)
+          timers.push(setTimeout(() => onEvent({ type: 'part', part: { ...part } }), found))
+          const lookup = MOCK_LOOKUPS[part.part_id] ?? { lookup: 'not_found' as const, detail: null, source: null }
+          timers.push(setTimeout(() => onEvent({ type: 'part', part: { ...part, ...lookup } }), found + stepMs * 0.4))
+        })
         t += stepMs
         timers.push(setTimeout(() => onEvent({ type: 'step', step: step.id, state: 'done' }), t))
       }

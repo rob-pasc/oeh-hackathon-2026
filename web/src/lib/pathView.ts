@@ -1,9 +1,10 @@
 // Turns the server payloads (Assessment, Report) into what the result screen renders.
 // Ordering comes from shared/src/ranking.ts so the browser and the server agree (feature 003 FR-012).
 import type { Assessment, Impact } from '@leaaf/shared/assessment'
-import type { ConfidenceLevel, Mode, Path, Suitability } from '@leaaf/shared/common'
+import type { ConfidenceLevel, Mode, Path, Range, Suitability } from '@leaaf/shared/common'
 import { rankPaths, recommendedPath } from '@leaaf/shared/ranking'
 import type { Report } from '@leaaf/shared/report'
+import type { SpecChange } from '../api/types'
 import { formatAvoided, formatEur, formatSavings, formatYears, gaugeValue, type GaugeValue } from './impact'
 import { PATH_TITLES, STATUS_LABELS } from './labels'
 
@@ -39,6 +40,16 @@ export interface CardView {
   /** What could not be verified (feature 004 FR-007). */
   notes: string[]
   gauge: GaugeValue | null
+  /** Avoided CO₂e for the equivalents under the gauge; null when nothing is credited. */
+  co2: { avoided: Range; conditional: boolean } | null
+  /** Spec lines the action changes (before → after); empty for whole paths. */
+  changes: SpecChange[]
+}
+
+/** Avoided CO₂e of an impact for the equivalents, or null when the contract credits nothing. */
+export function co2Of(impact: Impact | null): CardView['co2'] {
+  if (!impact || impact.displacement === 'none' || !(impact.co2e_kg.avoided_vs_baseline.high > 0)) return null
+  return { avoided: impact.co2e_kg.avoided_vs_baseline, conditional: impact.displacement === 'conditional' }
 }
 
 export interface PathView extends CardView {
@@ -95,6 +106,8 @@ export function buildPathViews(assessment: Assessment, report: Report | null, mo
         : null,
       notes: explanation?.unverified ?? [],
       gauge: path.impact ? gaugeValue(path.impact, assessment.baseline) : null,
+      co2: co2Of(path.impact),
+      changes: [],
       confidence: path.confidence.level,
       impact: path.impact,
     }

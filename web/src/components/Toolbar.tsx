@@ -21,6 +21,24 @@ interface Props {
   disabled?: boolean
 }
 
+/**
+ * The highlight behind the active button of a segmented control. It slides to the active button instead of
+ * jumping. The buttons are equally wide (flex-1) with a 4 px gap, so position and width follow from the index.
+ */
+function SlidingHighlight({ index, count, className }: { index: number; count: number; className: string }) {
+  if (index < 0) return null
+  return (
+    <span
+      aria-hidden="true"
+      className={`pointer-events-none absolute inset-y-0 left-0 rounded-full motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out ${className}`}
+      style={{
+        width: `calc((100% - ${4 * (count - 1)}px) / ${count})`,
+        transform: `translateX(calc(${index} * (100% + 4px)))`,
+      }}
+    />
+  )
+}
+
 export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathTabChange, disabled = false }: Props) {
   return (
     // Same two columns as the result screen, so the tag bar ends exactly where the cards end and the priority
@@ -60,7 +78,9 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
           </span>
         </label>
 
-        <div role="group" aria-label="Show steps for" className="flex min-w-0 flex-1 gap-1 rounded-full bg-white p-1 shadow-card">
+        <div role="group" aria-label="Show steps for" className="flex min-w-0 flex-1 rounded-full bg-white p-1 shadow-card">
+          <div className="relative flex min-w-0 flex-1 gap-1">
+          <SlidingHighlight index={PATH_TABS.indexOf(pathTab)} count={PATH_TABS.length} className="bg-leaf-tint" />
           {PATH_TABS.map((tab) => {
             const active = tab === pathTab
             return (
@@ -70,18 +90,21 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
                 aria-pressed={active}
                 disabled={disabled}
                 onClick={() => onPathTabChange(tab)}
-                className={`min-w-0 flex-1 cursor-pointer rounded-full border-0 px-2 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-default ${
-                  active ? 'bg-leaf-tint text-leaf-deep' : 'bg-transparent text-muted hover:text-ink'
+                className={`relative min-w-0 flex-1 cursor-pointer rounded-full border-0 bg-transparent px-2 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-default ${
+                  active ? 'text-leaf-deep' : 'text-muted hover:text-ink'
                 }`}
               >
                 {PATH_TAB_LABELS[tab]}
               </button>
             )
           })}
+          </div>
         </div>
       </div>
 
-      <div role="group" aria-label="Ranking priority" className="flex gap-1 rounded-full bg-white p-1 shadow-card">
+      <div role="group" aria-label="Ranking priority" className="flex rounded-full bg-white p-1 shadow-card">
+        <div className="relative flex flex-1 gap-1">
+        <SlidingHighlight index={MODE_ORDER.indexOf(mode)} count={MODE_ORDER.length} className="bg-leaf" />
         {MODE_ORDER.map((m) => {
           const active = m === mode
           return (
@@ -91,14 +114,15 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
               aria-pressed={active}
               disabled={disabled}
               onClick={() => onModeChange(m)}
-              className={`flex-1 cursor-pointer rounded-full border-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors ${
-                active ? 'bg-leaf text-white' : 'bg-transparent text-muted hover:text-ink'
+              className={`relative flex-1 cursor-pointer rounded-full border-0 bg-transparent px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors ${
+                active ? 'text-white' : 'text-muted hover:text-ink'
               }`}
             >
               {MODE_LABELS[m]}
             </button>
           )
         })}
+        </div>
       </div>
     </div>
   )

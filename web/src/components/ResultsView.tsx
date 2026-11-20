@@ -7,7 +7,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { ApiClientError, useApi } from '../api'
 import { DEFAULT_USE, type PathTab, type UseTag } from '../lib/labels'
 import { buildOptionViews } from '../lib/optionView'
+import { useFlip } from '../lib/motion'
 import { buildPathViews } from '../lib/pathView'
+import { Equivalents } from './Equivalents'
 import { Gauge } from './Gauge'
 import { PathCard } from './PathCard'
 import { PathTabView } from './PathTabView'
@@ -87,7 +89,10 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     [options, tabView, assessment],
   )
   const selectedOption = optionViews.find((o) => o.key === optionSelected) ?? null
-  const gaugeValue = selectedOption ? selectedOption.gauge : (selectedView?.gauge ?? null)
+  const gaugeItem = selectedOption ?? selectedView
+  const gaugeValue = gaugeItem?.gauge ?? null
+  // Path cards slide to their new places when the ranking changes (priority toggle or use tag).
+  const registerCard = useFlip(views.map((v) => v.key))
   const gaugeTitle = selectedOption && tabView ? `${tabView.title} · ${selectedOption.title}` : (selectedView?.title ?? '')
 
   function changePathTab(tab: PathTab) {
@@ -124,10 +129,11 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
       ) : !assessment || scan.state === 'loading' ? (
         <ResultSkeleton />
       ) : (
-        <div className="grid grid-cols-[1fr_400px] items-start gap-7">
-          <div className="flex flex-col gap-3.5">
+        <div className="fade-up grid grid-cols-[1fr_400px] items-start gap-7">
+          <div className="relative flex flex-col gap-3.5">
             {tabView ? (
               <PathTabView
+                key={tabView.id}
                 path={tabView}
                 options={optionViews}
                 pending={reportPending}
@@ -140,8 +146,8 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
               />
             ) : (
               views.map((view) => (
+                <div key={view.key} ref={registerCard(view.key)}>
                 <PathCard
-                  key={view.key}
                   view={view}
                   selected={selectedView?.id === view.id}
                   open={open === view.id}
@@ -151,6 +157,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
                     setOpen((current) => (current === view.id ? null : view.id))
                   }}
                 />
+                </div>
               ))
             )}
             {report && report.source === 'template' && report.notice ? (
@@ -160,6 +167,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
           <div className="sticky top-6 flex flex-col gap-5">
             <section aria-label="CO₂e gauge" className="rounded-[20px] bg-white p-6 shadow-card">
               <Gauge value={gaugeValue} pathTitle={gaugeTitle} />
+              <Equivalents avoided={gaugeItem?.co2?.avoided ?? null} conditional={gaugeItem?.co2?.conditional ?? false} />
             </section>
             <SpecsCard scan={scan.value} />
           </div>

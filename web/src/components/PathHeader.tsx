@@ -1,5 +1,6 @@
 import type { Suitability } from '@leaaf/shared/common'
 import type { CardView } from '../lib/pathView'
+import { AnimatedText } from './AnimatedText'
 import { PathIcon } from './PathIcon'
 
 const BADGE: Record<Suitability, string> = {
@@ -31,14 +32,18 @@ export function PathHeader({ view, onTint = false }: { view: CardView; onTint?: 
           {view.isRecommended ? (
             <span className="rounded-full bg-leaf px-2.5 py-[3px] text-xs font-bold text-white">Recommended</span>
           ) : null}
-          <span className={`rounded-full px-2.5 py-[3px] text-xs font-bold ${BADGE[view.status]}`}>{view.statusLabel}</span>
+          <span className={`rounded-full px-2.5 py-[3px] text-xs font-bold ${onTint && view.status === 'viable' ? 'bg-white text-leaf-deep' : BADGE[view.status]}`}>
+            {view.statusLabel}
+          </span>
         </div>
         <span className="text-sm leading-snug text-muted">{view.summary}</span>
         <div className="flex flex-wrap gap-x-[18px] text-[13px]">
           {view.metrics.map((metric) => (
             <span key={metric.label}>
               <span className="text-muted">{metric.label} </span>
-              <strong>{metric.value}</strong>
+              <strong>
+                <AnimatedText text={metric.value} />
+              </strong>
             </span>
           ))}
         </div>

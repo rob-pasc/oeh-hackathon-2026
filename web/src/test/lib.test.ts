@@ -13,6 +13,9 @@ import { LAPTOP_OPTIONS } from '../api/mockOptions'
 import { buildOptionViews } from '../lib/optionView'
 import { buildPathViews } from '../lib/pathView'
 import { summarizeScan } from '../lib/specs'
+import { CAR_G_PER_KM, equivalents } from '../lib/equivalents'
+import { interpolateText } from '../lib/motion'
+import { partsFromScan, upsertPart } from '../lib/parts'
 
 const assessment = assessmentJson as unknown as Assessment
 const report = reportJson as unknown as Report
@@ -151,5 +154,49 @@ describe('scan summary', () => {
   it('never invents values for a partial scan', () => {
     const s = summarizeScan(desktopScanJson as unknown as DeviceScan)
     expect(s.rows.some((r) => r.value === 'Unknown')).toBe(true)
+  })
+})
+
+describe('counting numbers', () => {
+  it('moves each number of the text toward its target', () => {
+    expect(interpolateText('€40–70', '€60–90', 0.5)).toBe('€50–80')
+    expect(interpolateText('€40–70', '€60–90', 1)).toBe('€60–90')
+  })
+
+  it('starts from zero when the texts differ in shape, and keeps decimals and grouping', () => {
+    expect(interpolateText('', '+1.5–2.5 years', 0)).toBe('+0.0–0.0 years')
+    expect(interpolateText('No extra life', '1,320 km', 1)).toBe('1,320 km')
+    expect(interpolateText('x', 'No extra life', 0.3)).toBe('No extra life')
+  })
+})
+
+describe('CO₂e equivalents', () => {
+  it('turns the avoided range into car kilometres and flights', () => {
+    const [car, flight] = equivalents({ low: 180, high: 342 })!
+    expect(car!.amount).toBe('1,300–2,500 km')
+    expect(Math.round(180000 / CAR_G_PER_KM)).toBe(1317)
+    expect(flight!.amount).toBe('0.6–1.2')
+    expect(flight!.label).toBe('flights Vienna → London')
+  })
+
+  it('says "up to" for ranges that start at zero and returns nothing when nothing is avoided', () => {
+    expect(equivalents({ low: 0, high: 260 })![0]!.amount).toBe('up to 1,900 km')
+    expect(equivalents({ low: 0, high: 0 })).toBeNull()
+  })
+})
+
+describe('detected parts', () => {
+  it('lists the parts of a scan with the lookup pending', () => {
+    const parts = partsFromScan(scanJson as unknown as DeviceScan)
+    expect(parts.map((p) => p.part_id)).toEqual(['cpu', 'memory', 'gpu-0', 'storage-0', 'battery'])
+    expect(parts.every((p) => p.lookup === 'pending')).toBe(true)
+    expect(parts.find((p) => p.part_id === 'memory')!.value).toBe('8 GB DDR4 · 1/2 slots')
+  })
+
+  it('replaces a part in place when its lookup finishes', () => {
+    const parts = partsFromScan(scanJson as unknown as DeviceScan)
+    const updated = upsertPart(parts, { ...parts[0]!, lookup: 'catalog', detail: 'Soldered.' })
+    expect(updated).toHaveLength(parts.length)
+    expect(updated[0]!.lookup).toBe('catalog')
   })
 })

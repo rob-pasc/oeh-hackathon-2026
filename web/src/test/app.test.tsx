@@ -46,6 +46,22 @@ describe('ScanSession', () => {
     expect(screen.getByRole('status')).toBeInTheDocument()
     await waitFor(() => expect(window.location.pathname).toBe(`/d/${MOCK_DEVICE_IDS.laptop}`))
   })
+
+  it('lists the parts the scanner finds and shows the laptop view only on request', async () => {
+    const slow = createMockClient({ stepMs: 200 })
+    window.history.pushState(null, '', '/s/CCCCCCCCCCCCCCCCCCCCCCCCCC')
+    render(
+      <ApiContext.Provider value={slow}>
+        <ScanSession sessionId="CCCCCCCCCCCCCCCCCCCCCCCCCC" />
+      </ApiContext.Provider>,
+    )
+    const card = screen.getByRole('region', { name: 'Found in your device' })
+    expect(within(card).queryByRole('img')).toBeNull()
+    expect(await within(card).findByText('Processor')).toBeInTheDocument()
+    expect(await within(card).findByText('Parts list')).toBeInTheDocument()
+    await userEvent.click(within(card).getByRole('button', { name: 'Show laptop view' }))
+    expect(within(card).getByRole('img', { name: /Laptop view/ })).toBeInTheDocument()
+  })
 })
 
 describe('ResultsView', () => {
@@ -117,6 +133,9 @@ describe('ResultsView', () => {
     expect(within(ssd).getByText('What to do')).toBeInTheDocument()
     expect(within(ssd).getAllByRole('listitem')).toHaveLength(2)
     expect(screen.getByText('Upgrade · SSD upgrade')).toBeInTheDocument()
+    // Before/after of the changed spec, and the gauge's avoided CO₂e as car kilometres.
+    expect(within(within(ssd).getByTestId('before-after')).getByText('500 GB SSD · NVMe')).toBeInTheDocument()
+    expect(within(screen.getByTestId('equivalents')).getByText('by car')).toBeInTheDocument()
 
     await userEvent.click(within(group).getByRole('button', { name: 'Overview' }))
     for (const name of ['Upgrade', 'Repair', 'Pass it on', 'Salvage for parts', 'Recycle']) {

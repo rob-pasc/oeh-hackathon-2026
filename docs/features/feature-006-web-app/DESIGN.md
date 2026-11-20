@@ -70,6 +70,31 @@ data: { "options": [
 
 Open for the backend team: (1) where the options come from (the calculator for figures, the explanation step for steps and reasons); (2) what `avoided_vs_baseline` means for one action alone: the sample data credits the share of the avoided production that the action's extra life justifies, which is an assumption to confirm in feature 003; (3) whether options need a place in `shared/` (this feature did not edit `shared/`).
 
+### Proposed part event (not yet agreed with the backend team)
+
+The scan page lists the parts as they are found (FR-026). The proposal is one more session event, sent first when the scanner reports a part and again, with the same `part_id`, when the lookup is finished:
+
+```json
+event: part
+data: { "type": "part", "part": { "part_id": "cpu", "kind": "cpu", "label": "Processor",
+  "value": "Intel Core i5-8250U · 4 cores", "lookup": "pending", "detail": null, "source": null } }
+
+event: part
+data: { "type": "part", "part": { "part_id": "cpu", "kind": "cpu", "label": "Processor",
+  "value": "Intel Core i5-8250U · 4 cores", "lookup": "catalog",
+  "detail": "Soldered to the board. Cannot be replaced.", "source": null } }
+```
+
+`kind` is `cpu`, `memory`, `gpu`, `storage`, or `battery`; `lookup` is `pending`, `catalog` (found in the team's parts list, the Excel file), `ai` (found by the AI web search; `source` should then name the page), or `not_found`. The page keeps the order of first arrival and replaces an entry when the same `part_id` comes again. Suggested server flow: scanner posts a part → server sends `pending` → looks the part up in the parts list → if missing, runs the AI search → sends the result. The TypeScript form is `DetectedPart` in `web/src/api/types.ts`. Without these events the card stays at "Parts appear here as the scanner finds them." and everything else works.
+
+### Proposed `changes` on options
+
+An option may carry `"changes": [{ "label": "Storage", "before": "500 GB HDD · SATA", "after": "500 GB SSD · NVMe" }]` for the before/after view (FR-031). The field is optional; options without it show no block.
+
+### CO₂e equivalents
+
+The factors are fixed constants in `web/src/lib/equivalents.ts`, from the Umweltbundesamt table of emission factors per passenger-km (updated May 2026, data year 2024): average car 136.7 g CO₂e/km (direct emissions), short- and medium-haul flight 236 g CO₂e/km (including the factor 2 for non-CO₂ effects), Vienna–London taken as about 1,240 km. They convert the avoided range from the contract; the app computes no CO₂e of its own.
+
 ## Failure modes and operational considerations
 
 - A scanner that never starts keeps the page waiting; a server-side session timeout that sends `error/timeout` is recommended but not implemented.
@@ -86,7 +111,8 @@ Open for the backend team: (1) where the options come from (the calculator for f
 ## Open technical decisions
 
 - ~~How the session ID is embedded~~ and ~~how the scanner reports progress~~: resolved 2026-11-20 (overlay trailer, direct HTTP POST; see above).
-- Adding `gaming` to `INTENDED_USES` and the scoring rubrics (backend owners).
+- Adding `gaming` and `general` to `INTENDED_USES` and the scoring rubrics (backend owners).
+- The `part` event and how the parts list (Excel) and the AI part search are combined (backend owners).
 - A storage fill level in `DeviceScan` if the specs card should show used space (scanner owners).
 
 ## References
