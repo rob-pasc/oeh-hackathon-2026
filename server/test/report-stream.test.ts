@@ -210,6 +210,30 @@ describe('GET /api/devices/:id/report', () => {
     }
   })
 
+  it('never sends the LLM API key to clients, even when the provider echoes it (feature 005 AC-007)', async () => {
+    const key = 'sk-canary-5d2f9a1c7e4b8063'
+    const db = new DatabaseSync(':memory:')
+    // A provider that rejects the key and echoes it back, as some do in auth errors.
+    const transport = vi.fn<typeof fetch>(async (_url, init) => {
+      const auth = new Headers(init?.headers).get('authorization') ?? ''
+      return new Response(JSON.stringify({ error: { message: `invalid key: ${auth}` } }), { status: 401 })
+    })
+    const llm = createOpenAiCompatibleClient(loadLlmConfig({ LLM_API_KEY: key }), { fetch: transport })
+    try {
+      const { app, device } = setup(service(llm), createReportService(db, llm))
+      const base = await app.listen({ port: 0, host: '127.0.0.1' })
+      const stream = await (await fetch(base + API_ROUTES.reportStream(device.device_id, 'office'))).text()
+      const lookup = await (await fetch(base + `/api/devices/${device.device_id}`)).text()
+
+      expect(transport).toHaveBeenCalled()
+      expect(stream).toContain('event: end')
+      expect(stream).not.toContain(key)
+      expect(lookup).not.toContain(key)
+    } finally {
+      db.close()
+    }
+  })
+
   it('reports an internal error as an error event, without details', async () => {
     const failing: AssessmentService = {
       assessDevice: async () => {

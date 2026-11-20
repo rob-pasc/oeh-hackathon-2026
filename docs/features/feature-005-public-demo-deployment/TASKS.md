@@ -11,7 +11,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [ ] **T-002:** Add the Dockerfile and production config (static web assets, persistent volume path, environment variables) (supports `AC-001`, `AC-008`)
 - [x] **T-003:** Implement the size limits, per-client rate limits, and daily LLM cap with fallback, with tests (supports `AC-005`, `AC-006`)
 - [ ] **T-004:** Implement the idempotent seed command and the demo device and cache files, with tests including an LLM-disabled render (supports `AC-003`, `AC-004`)
-- [ ] **T-005:** Add the scanner release build with the public URL and serve it as the download; run a secret scan of the repository and the binary (supports `AC-002`, `AC-007`)
+- [x] **T-005:** Add the scanner release build with the public URL and serve it as the download; run a secret scan of the repository and the binary (supports `AC-002`, `AC-007`)
 - [ ] **T-006:** Write `docs/DEPLOYMENT.md` (deploy, seed, smoke checks, backup, rollback) (supports `AC-009`)
 - [ ] **T-007:** Self-review and request the user's security review or acceptance before go-live (supports `AC-011`)
 - [ ] **T-008:** With user authorization, deploy, seed, and run the post-release smoke checks, recording the version and evidence (supports `AC-001`–`AC-005`, `AC-008`)
@@ -33,6 +33,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: T-011 to T-013 done. The steps of both image builds and the CI checks were run locally outside Docker, because Docker isn't installed on the dev machine. Details are in the [verification notes](./ACCEPTANCE_CRITERIA.md#verification-notes). No image has been built with Docker yet; the first PR run covers that (T-014). The web part of T-002 is covered by T-011. The production config for the server (data path, port) is prepared but waits for the server's entry point.
 - 2026-11-20: Feature 001's server entry point was merged into `main`. The server image now sets `HOST` and `DATABASE_PATH` for it, the Caddy example routes `/downloads/*` to the server, and both images were built and started with Docker for the first time (see the [verification notes](./ACCEPTANCE_CRITERIA.md#verification-notes)). The Compose profile still keeps the server opt-in.
 - 2026-11-20: T-005 partly done. The server image now builds the Windows scanner for `https://leaaf.green` and serves it as the download; the secret scan of the repository and the binary is still open, so T-005 stays unchecked. CI runs the scanner's Go checks, the web image is built against the real API, and Compose runs the server by default (see the plan's scope change log). Verified locally with Docker (see the [verification notes](./ACCEPTANCE_CRITERIA.md#verification-notes)); not yet on GitHub Actions.
+
+- 2026-11-20: T-005 done. Secret scan with gitleaks (history, working tree, scanner binary strings) and a canary-key response test; see AC-007.
 
 ## Lifecycle history
 
