@@ -1,17 +1,19 @@
 import { PATHS, type IntendedUse, type Mode, type Path, type Suitability } from '@leaaf/shared/common'
 
 /**
- * The five "what do you use this computer for?" tags offered in the dropdown. The first four are the
- * contract's `IntendedUse` values; `gaming` is requested by the team and still has to be added to
- * shared/src/common.ts by the backend team (see docs/features/feature-006-web-app/PLAN.md, FR-009).
+ * The "what do you use this computer for?" tags offered in the dropdown. `office`, `study`, `development`, and
+ * `pass_on` are the contract's `IntendedUse` values. `gaming` and `general` are requested by the team and still
+ * have to be added to shared/src/common.ts by the backend team (see docs/features/feature-006-web-app/PLAN.md,
+ * FR-009 and FR-021).
  */
-export type UseTag = IntendedUse | 'gaming'
+export type UseTag = IntendedUse | 'gaming' | 'general'
 
-export const USE_TAGS: readonly UseTag[] = ['office', 'study', 'development', 'pass_on', 'gaming']
+export const USE_TAGS: readonly UseTag[] = ['general', 'office', 'study', 'development', 'pass_on', 'gaming']
 
-export const DEFAULT_USE: UseTag = 'office'
+export const DEFAULT_USE: UseTag = 'general'
 
 export const USE_LABELS: Record<UseTag, string> = {
+  general: 'General',
   office: 'Office',
   study: 'Study',
   development: 'Development',

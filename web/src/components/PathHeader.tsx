@@ -9,13 +9,17 @@ const BADGE: Record<Suitability, string> = {
 }
 
 /** Icon, rank, name, labels, one-sentence reason, and key figures of a path. Used by the path card and the steps view. */
-export function PathHeader({ view }: { view: CardView }) {
+/** Classes of the flat, tinted block that shows a path's summary above its options. It is not clickable. */
+export const SUMMARY_BLOCK = 'flex items-center gap-4 rounded-[20px] bg-leaf-tint px-5 py-[18px]'
+
+/** `onTint` draws the icon tile white, for use on the tinted summary block. */
+export function PathHeader({ view, onTint = false }: { view: CardView; onTint?: boolean }) {
   const muted = view.status === 'not_suitable'
   return (
     <>
       <div
         className={`flex h-12 w-12 flex-none items-center justify-center rounded-[14px] ${
-          muted ? 'bg-track text-muted' : 'bg-leaf-tint text-leaf'
+          muted ? 'bg-track text-muted' : onTint ? 'bg-white text-leaf' : 'bg-leaf-tint text-leaf'
         }`}
       >
         <PathIcon path={view.iconPath} className="h-6 w-6" />

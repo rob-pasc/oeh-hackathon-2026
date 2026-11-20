@@ -24,6 +24,10 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-015:** Align the toolbar with the result columns and restyle the Use dropdown chevron (supports `AC-019`)
 - [ ] **T-016:** Agree the option payload with the backend team (`DESIGN.md`) and show real options in live mode (supports `AC-018`)
 - [x] **T-017:** Add the contact footer to every screen and write the header wordmark in capitals (supports `AC-021`)
+- [x] **T-018:** Lowercase wordmark in the header; 5 px more space under the scan button (supports `AC-022`)
+- [x] **T-019:** Add the `general` use tag (supports `AC-023`)
+- [x] **T-020:** Make the path summary block in path tabs visibly non-interactive (supports `AC-024`)
+- [x] **T-021:** Make `general` the default use tag (supports `AC-025`)
 
 ## Dependencies and blockers
 
@@ -41,3 +45,5 @@ The first version was written without network access. Its checks are limited to 
 - 2026-11-20: Scope extended by amendment (FR-014 to FR-016, AC-015 to AC-017, T-011 to T-013); see the plan's scope change log. Implemented the same day; verification pending (T-008, T-009 now also cover the new criteria).
 - 2026-11-20: Second scope extension by amendment (FR-017, FR-018, AC-018 to AC-020, T-014 to T-016); see the plan's scope change log. Implemented the same day; verification pending.
 - 2026-11-20: Third scope extension by amendment (FR-019, AC-021, T-017); see the plan's scope change log. Implemented the same day; verification pending.
+- 2026-11-20: Fourth scope extension by amendment (FR-020 to FR-022, AC-022 to AC-024, T-018 to T-020); see the plan's scope change log. Implemented the same day; verification pending.
+- 2026-11-20: Fifth scope extension by amendment (FR-023, AC-025, T-021); see the plan's scope change log. Implemented the same day; verification pending.

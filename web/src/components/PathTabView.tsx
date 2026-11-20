@@ -1,6 +1,6 @@
 import type { CardView } from '../lib/pathView'
 import { PathCard } from './PathCard'
-import { PathHeader } from './PathHeader'
+import { PathHeader, SUMMARY_BLOCK } from './PathHeader'
 import { StepsView } from './StepsView'
 import { Sk } from './ui'
 
@@ -24,9 +24,10 @@ export function PathTabView({ path, options, pending, selectedKey, openKey, onTo
   }
   return (
     <div className="flex flex-col gap-3.5" data-testid="path-tab-view">
-      <section aria-label={`${path.title} summary`} className="flex items-center gap-4 rounded-[20px] border-2 border-transparent bg-white px-5 py-[18px] shadow-card">
-        <PathHeader view={path} />
+      <section aria-label={`${path.title} summary`} className={SUMMARY_BLOCK}>
+        <PathHeader view={path} onTint />
       </section>
+      {options.length > 0 ? <p className="m-0 px-1 text-[13px] text-muted">Select an action to see its steps.</p> : null}
 
       {options.length > 0 ? (
         options.map((option) => (

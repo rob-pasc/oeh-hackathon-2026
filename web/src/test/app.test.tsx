@@ -68,11 +68,11 @@ describe('ResultsView', () => {
     await waitFor(() => expect(within(upgrade).getAllByRole('listitem').length).toBeGreaterThan(0))
   })
 
-  it('offers the five use tags with Office as default', async () => {
+  it('offers the six use tags with General as default', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
     const select = (await screen.findByRole('combobox')) as HTMLSelectElement
-    expect(select.value).toBe('office')
-    expect(Array.from(select.options).map((o) => o.value)).toEqual(['office', 'study', 'development', 'pass_on', 'gaming'])
+    expect(select.value).toBe('general')
+    expect(Array.from(select.options).map((o) => o.value)).toEqual(['general', 'office', 'study', 'development', 'pass_on', 'gaming'])
   })
 
   it('switches the priority toggle', async () => {
@@ -112,6 +112,8 @@ describe('ResultsView', () => {
 
     // Opening an option looks like opening a card in the overview and shows its steps; the gauge follows it.
     await userEvent.click(within(ssd).getByRole('button'))
+    // The path summary above the options is a plain block, not a button.
+    expect(within(screen.getByRole('region', { name: 'Upgrade summary' })).queryByRole('button')).toBeNull()
     expect(within(ssd).getByText('What to do')).toBeInTheDocument()
     expect(within(ssd).getAllByRole('listitem')).toHaveLength(2)
     expect(screen.getByText('Upgrade · SSD upgrade')).toBeInTheDocument()

@@ -1,5 +1,5 @@
 import type { CardView } from '../lib/pathView'
-import { PathHeader } from './PathHeader'
+import { PathHeader, SUMMARY_BLOCK } from './PathHeader'
 import { Sk } from './ui'
 
 const BLOCK = 'rounded-[20px] bg-white shadow-card'
@@ -14,8 +14,8 @@ interface Props {
 export function StepsView({ view, reportPending }: Props) {
   return (
     <div className="flex flex-col gap-3.5" data-testid="steps-view">
-      <section aria-label={view.title} className={`${BLOCK} flex items-center gap-4 border-2 border-leaf px-5 py-[18px]`}>
-        <PathHeader view={view} />
+      <section aria-label={view.title} className={SUMMARY_BLOCK}>
+        <PathHeader view={view} onTint />
       </section>
 
       {view.steps.length > 0 ? (

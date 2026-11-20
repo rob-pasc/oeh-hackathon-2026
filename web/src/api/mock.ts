@@ -55,7 +55,7 @@ const USE_ADJUSTMENTS: Partial<Record<UseTag, Partial<Record<string, Partial<Rec
 function assessmentFor(deviceId: string, use: UseTag): Assessment {
   const isDesktop = deviceId === MOCK_DEVICE_IDS.desktop
   const assessment = clone((isDesktop ? desktopAssessmentJson : laptopAssessmentJson) as unknown as Assessment)
-  // The contract has no `gaming` tag yet; the mock simply echoes the chosen tag.
+  // The contract has no `gaming` or `general` tag yet; the mock simply echoes the chosen tag.
   assessment.intended_use = use as Assessment['intended_use']
   if (!isDesktop) {
     const adjustments = USE_ADJUSTMENTS[use] ?? {}

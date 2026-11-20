@@ -26,7 +26,7 @@ The web app can run without a backend. In mock mode it serves the fictional fixt
 - **Scan now** creates a scan session, starts the scanner download, and opens a new tab on the session page. The session ID is generated when the button is clicked and is embedded in the downloaded scanner.
 - A session page that shows the skeleton of the result screen with loading animation and one status line updated by events the scanner sends.
 - A result screen: five path cards (left), CO₂e gauge (right top), scan specs (right bottom), and a toolbar with the **Use** dropdown and the **Environment first / Money first** toggle.
-- Use tags: `office`, `study`, `development`, `pass_on` (shown as "Give to a friend"), and `gaming`. The default is `office`.
+- Use tags: `office`, `study`, `development`, `pass_on` (shown as "Give to a friend"), and `gaming`. The default is `office`. (Fifth amendment: `general` is added and is the default, see FR-023.)
 - A mock API with sample data, and a live API client selected by an environment variable.
 - English text. Laptop screens only.
 - *(amendment 2026-11-20)* The landing button reads "Download and Scan now".
@@ -63,6 +63,10 @@ The web app can run without a backend. In mock mode it serves the fictional fixt
 - **FR-017** *(amendment 2026-11-20, second)*: When a path tag is selected and the server has sent options for that path, the left column shows the path summary and then one card per option (for example SSD upgrade, RAM upgrade, CPU upgrade, Graphics upgrade). An option card looks like a path card in the overview: icon, name, status (Viable, Conditional, Not suitable), one-sentence reason, and the figures cost, extra life, and CO₂e added by the action. Opening a card shows "What to do" with its steps and a "Why" text with the points that could not be verified. Options are listed suitable first, then conditional, then not suitable; options that are not suitable carry a reason and no figures. The gauge follows the option the user last opened and shows the share of a new laptop's production CO₂e that this option avoids; before any option is opened, it shows the path. While the report is loading the column shows placeholders. If the server sends no options for a path, FR-015 applies.
 - **FR-018** *(amendment 2026-11-20, second)*: The toolbar uses the same two columns as the result screen. The Use dropdown and the path tags fill the left column, so the tag bar ends exactly where the cards end, and the priority toggle fills the right column. The Use dropdown shows a chevron that is clearly visible and sits close to the text.
 - **FR-019** *(amendment 2026-11-20, third)*: Every screen ends with a footer line "Questions? contact@leaaf.green" where the address is a `mailto:` link. In the page header of the screens after the landing page, the wordmark next to the logo is written in capital letters (LEAAF); the large wordmark on the landing page keeps its lowercase spelling.
+- **FR-020** *(amendment 2026-11-20, fourth)*: The wordmark "leaaf" is written in lowercase everywhere, including the page header. This replaces the capital-letter sentence of FR-019; the contact footer of FR-019 stays.
+- **FR-021** *(amendment 2026-11-20, fourth)*: The Use dropdown offers a sixth tag, `general` (label "General"), listed first, for an everyday computer without a specific purpose. The default stays `office`. This extends the list in FR-009; `general` is not yet part of `INTENDED_USES` in `shared/src/common.ts` and has to be added by the backend team like `gaming`.
+- **FR-022** *(amendment 2026-11-20, fourth)*: In a path tab, the block that summarizes the path above its options is visibly not clickable: a flat, light-green block without shadow and chevron, followed by the hint "Select an action to see its steps." The option cards below keep the white card style with a chevron. The same flat block heads the fallback steps view (FR-015).
+- **FR-023** *(amendment 2026-11-20, fifth)*: The Use dropdown starts on `general` instead of `office`. This replaces the default named in FR-009 and FR-021 ("the default stays `office`"); the list and order of tags are unchanged. The backend does not evaluate the use tags yet, so the choice has no effect on the ranking there; the tag is only sent along in live mode.
 
 ## Non-functional requirements and constraints
 
@@ -89,7 +93,7 @@ Vite, React 19, and TypeScript, styled with Tailwind CSS v4 through PostCSS. The
 
 - **Backend team:** The session routes and events in `DESIGN.md` are a proposal. Embedding the session ID in the downloaded scanner needs a decision from the scanner and server owners. Until agreed, only mock mode is supported.
 - **Contract gap (options):** `shared/` delivers one combined result per path. For the upgrade path the sample impact adds the SSD and the RAM module together (60–110 €, 8–20 kg CO₂e added). There are no figures per single action, and none for CPU or graphics upgrades. The web app therefore shows options only when the server sends them (proposal in `DESIGN.md`) and uses clearly labelled sample data in mock mode.
-- **Contract gap:** `gaming` is missing in `shared/src/common.ts` (FR-009). Storage fill level is not in `DeviceScan`, so the specs card cannot show "used space".
+- **Contract gap:** `gaming` and `general` are missing in `shared/src/common.ts` (FR-009, FR-021). Storage fill level is not in `DeviceScan`, so the specs card cannot show "used space".
 - **Tooling:** Dependencies could not be installed while the first version was written, so `npm install`, `vite build`, and the Vitest suite have not been run (see `ACCEPTANCE_CRITERIA.md`).
 
 ## Review and integration
@@ -99,7 +103,7 @@ The completion boundary is a locally verified handoff with self-review, per the 
 ## Assumptions and open questions
 
 - **Non-blocking:** The backend accepts the proposed session routes and events (`DESIGN.md`), or proposes its own.
-- **Non-blocking:** Adding `gaming` to `INTENDED_USES` and to the scoring rubrics (feature 003) is the backend team's decision.
+- **Non-blocking:** Adding `gaming` and `general` to `INTENDED_USES` and to the scoring rubrics (feature 003) is the backend team's decision. Until then `office` (office/browsing in feature 003 FR-001) is the closest tag in the contract. In live mode the web app sends the chosen tag unchanged, so `general` and `gaming` must be accepted or ignored by the backend.
 - **Non-blocking:** What "avoided CO₂e" means for a single option, for example the SSD upgrade alone, is a decision for the backend team (feature 003). The sample data credits each option the share of the avoided production that its extra life justifies.
 - **Non-blocking:** The gauge definition (share of a new laptop's production CO₂e) was chosen by the team on 2026-11-20 and is easy to change.
 
@@ -111,6 +115,8 @@ The completion boundary is a locally verified handoff with self-review, per the 
 | 2026-11-20 | Amendment: added FR-014 (button label "Download and Scan now"), FR-015 (path tags and step blocks), FR-016 (gauge arc defect fix), AC-015 to AC-017, and T-011 to T-013. Existing requirements and exclusions are unchanged. | User, 2026-11-20, 16:18 Vienna time ("bug fixing next: Das Tacho ist überall kaputt … Download and Scan now … neues feature … tags repair, upgrade") |
 | 2026-11-20 | Second amendment: added FR-017 (individual actions per path as option cards, replacing the step blocks of FR-015 where options exist), FR-018 (toolbar alignment and dropdown chevron), AC-018 to AC-020, and T-014 to T-016. Existing requirements and exclusions are unchanged. | User, 2026-11-20, 16:53 Vienna time ("Der Plan war dass … nicht die einzelnen steps … sondern die einzelnen upgrades die alle ihren eigenen co2 score haben … Probiers mal so bitte") |
 | 2026-11-20 | Third amendment: added FR-019 (contact address in a footer on every screen, capital-letter wordmark in the page header), AC-021, and T-017. Existing requirements and exclusions are unchanged. | User, 2026-11-20, 17:02 Vienna time ("wir haben noch eine mail adresse: contact@leaaf.green … oben neben dem logo das leaaf groß schreiben"), clarified as capital letters in the follow-up question |
+| 2026-11-20 | Fourth amendment: added FR-020 (lowercase wordmark everywhere, replacing the capital-letter part of FR-019), FR-021 (`general` use tag), FR-022 (non-clickable path summary block in path tabs), AC-022 to AC-024, and T-018 to T-020. The scan button spacing was a visual fix and needs no requirement. Existing requirements and exclusions are unchanged. | User, 2026-11-20, 17:20 Vienna time ("mach leaaf doch wieder kleingeschrieben … scan button … general tag … oberstes item … anders aussieht") |
+| 2026-11-20 | Fifth amendment: added FR-023 (`general` is the default use tag, replacing `office` as default), AC-025, and T-021. The list of tags is unchanged. Existing requirements and exclusions are unchanged. | User, 2026-11-20, 17:24 Vienna time ("das backend nutzt noch nicht die tags … füge den general tag hinzu und mache ihn den standard wert statt office") |
 
 ## Related and superseded features
 
