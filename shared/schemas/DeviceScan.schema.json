@@ -521,6 +521,11 @@
           "type": "null"
         }
       ]
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "26 Crockford base32 characters encoding 130 random bits"
     }
   },
   "additionalProperties": false

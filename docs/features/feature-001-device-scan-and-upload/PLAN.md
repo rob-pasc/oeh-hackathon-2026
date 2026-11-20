@@ -73,11 +73,13 @@ This is the first slice of the leaaf (Lifecycle Evaluation and Action Finder) MV
 
 ## Proposed technical approach
 
-Not yet adopted; to be confirmed during implementation.
+Partly adopted during implementation (marked below); the rest is still a proposal.
 
+- **Adopted decisions (2026-11-20, user choice):** the scanner reads WMI over COM with the Go modules `github.com/yusufpapurcu/wmi` and `github.com/go-ole/go-ole`, not by running PowerShell. The server uses Fastify.
 - **Repository layout (folders created 2026-11-20 at the user's request):** `scanner/` (Go), `server/` (TypeScript, Node), `web/` (React + TypeScript, proposed Vite build), and `shared/` for the device JSON schema, which both the server and the web app use. `corpus/`, `data/`, and `demo/` hold data for features 002, 003, and 005.
-- **Scanner:** Go querying WMI/CIM (`Win32_ComputerSystem`, `Win32_Processor`, `Win32_PhysicalMemory`, `MSFT_PhysicalDisk` for media and bus type and health, `Win32_Battery` / `BatteryFullChargedCapacity` / `BatteryStaticData` for capacities, `Win32_BIOS` for the release date), with `powercfg /batteryreport` as a fallback for battery capacity. Each collector is isolated so a failure yields `null`. Parsing and normalization are pure functions with unit tests on recorded WMI output fixtures. The backend URL is injected via `-ldflags` at build time.
-- **Backend:** A Node HTTP framework (e.g. Fastify) with JSON Schema validation (e.g. Ajv) of the shared schema, and SQLite storage (e.g. `better-sqlite3`). Device IDs are 22-character base64url strings from `crypto.randomBytes(16)`. Upload body limit around 32 KB.
+- **Scanner (implemented, T-003/T-004/T-005/T-011; see [`scanner/README.md`](../../../scanner/README.md)):** the WMI queries in `scanner/internal/collect/queries.go` name each selected property and are the privacy allowlist, together with `scan.Raw`. Normalization (`internal/scan`) is pure and tested on recorded readings. `MSFT_PhysicalDisk` drives on USB, SD, or virtual buses are excluded. Battery values come from `root\WMI`, with `powercfg /batteryreport /xml` as a fallback (only its battery section is parsed, and the temp file is deleted). The Windows version comes from the registry, the firmware type from `GetFirmwareType`, and Secure Boot from the `SecureBoot\State` registry key. Each source has a 10 s timeout. The scanner refuses to open a device link that is not http(s). It waits for Enter before closing (`-no-wait` skips this). Output is validated against `DeviceScan.schema.json` in a Go test (ADR-001).
+- **Scanner (original proposal):** Go querying WMI/CIM (`Win32_ComputerSystem`, `Win32_Processor`, `Win32_PhysicalMemory`, `MSFT_PhysicalDisk` for media and bus type and health, `Win32_Battery` / `BatteryFullChargedCapacity` / `BatteryStaticData` for capacities, `Win32_BIOS` for the release date), with `powercfg /batteryreport` as a fallback for battery capacity. Each collector is isolated so a failure yields `null`. Parsing and normalization are pure functions with unit tests on recorded WMI output fixtures. The backend URL is injected via `-ldflags` at build time.
+- **Backend (implemented, T-006/T-007):** Fastify in `server/src/app.ts`, started by `server/src/main.ts` (`npm start -w server`). Uploads are validated with the shared TypeBox schema (`server/src/devices/validate.ts`, one error per field as a JSON Pointer) and with `checkDeviceScan` from `shared/src/invariants.ts` (for example, `scan_status` must match the null fields). Records are stored in SQLite through the built-in `node:sqlite` (table `devices`, `server/src/devices/store.ts`), the same as the fact cache, so `better-sqlite3` is not needed. Device IDs are `crypto.randomBytes(16)` as base64url (22 characters). The body limit is `MAX_UPLOAD_BYTES` (32 KiB), answered with 413. Unknown and malformed IDs get the same 404 body. Request logs carry only the method and route pattern, never the URL or the client IP. The server also serves `/downloads/leaaf-scanner.exe` from `SCANNER_EXE_PATH` (404 until a build exists).
 - **Web:** React routes `/` (landing and download) and `/d/:id` (device page) fetching `GET /api/devices/:id`.
 - **Tests:** Go unit tests for the parsers and the privacy filter; backend integration tests for upload, validation, ID format, and not-found; a component test for the device page's rendering of "Unknown".
 
@@ -114,7 +116,10 @@ Not applicable to this feature: release and hosting are owned by feature 005 (`f
 
 ## Related and superseded features
 
-None. This is the first feature. Features 002–005 depend on its device schema and device page.
+Features 002–005 depend on its device schema and device page.
+
+- **FR-009 partly replaced by [feature 006](../feature-006-web-app/PLAN.md#related-and-superseded-features) FR-002 to FR-004** (implemented 2026-11-20 on the branch `feat/device-scan-and-upload`, not yet merged). A scanner downloaded through Scan now carries a session ID. It reports its progress to the browser tab that started it instead of opening the device page itself. A download without a session, including the plain `/downloads/leaaf-scanner.exe` link, keeps FR-009 as written. AC-008 still applies to that case.
+- The payload gained an optional `session_id` (additive, `schema_version` stays 1). The server removes it before storing, so FR-005 and FR-011 are unaffected.
 
 ## References
 

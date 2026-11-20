@@ -12,7 +12,8 @@ The data contracts between the scanner, server, and web app. They are defined wi
 | `Fact`, `FactSet` | `src/facts.ts` | fact extraction → gates (server-internal) | 003 |
 | `Assessment` | `src/assessment.ts` | server → web | 003 |
 | `Report`, `StreamEnd`, SSE events | `src/report.ts` | server → web | 004 |
-| Routes | `src/api.ts` | all | 001–004 |
+| `ScanSession`, `ScannerEvent`, `ScanSessionEvent`, `SessionId` | `src/session.ts` | server ↔ web and scanner | 006 |
+| Routes | `src/api.ts` | all | 001–004, 006 |
 
 Helpers:
 
@@ -30,6 +31,7 @@ Helpers:
   - `assumed`: credited in full;
   - `conditional`: credited only at the high end, so `low <= 0`;
   - `none`: not credited, so `high <= 0`.
+- **Scan sessions:** `session_id` in `DeviceScan` is optional (absent, never `null`), so it does not affect `scan_status`. The server removes it before storing. The downloaded scanner ends with `SCANNER_SESSION_MARKER` + the session ID (37 bytes).
 - **The report stream** is `GET /api/devices/:id/report?intended_use=…`. It sends the events `assessment`, `report` and `end`, or `error` instead.
 
 ## Fixtures

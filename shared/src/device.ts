@@ -9,6 +9,7 @@
 // scanner team is expected to use; they are guidance, not part of the contract.
 import { Type, type Static } from 'typebox'
 import { DeviceId, IsoDate, IsoDateTime, MemoryType, Nullable } from './common.ts'
+import { SessionId } from './session.ts'
 
 export const DEVICE_SCAN_SCHEMA_VERSION = 1 as const
 
@@ -143,6 +144,10 @@ export const DeviceScan = Type.Object(
     storage: Nullable(Type.Array(StorageDevice, { description: 'null when storage could not be enumerated' })),
     battery: Battery,
     gpus: Nullable(Type.Array(Type.String({ minLength: 1 }), { description: 'Win32_VideoController.Name values' })),
+    // Scan session read from the downloaded executable (feature 006). Optional rather than
+    // nullable, so a plain build does not make the scan partial. The server removes it before
+    // storing, so no device route ever returns it.
+    session_id: Type.Optional(SessionId),
   },
   { ...strict, title: 'Device scan payload (v1)' },
 )

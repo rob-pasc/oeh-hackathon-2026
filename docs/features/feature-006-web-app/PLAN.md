@@ -87,18 +87,18 @@ Vite, React 19, and TypeScript, styled with Tailwind CSS v4 through PostCSS. The
 
 ## Dependencies and risks
 
-- **Backend team:** The session routes and events in `DESIGN.md` are a proposal. Embedding the session ID in the downloaded scanner needs a decision from the scanner and server owners. Until agreed, only mock mode is supported.
+- **Backend team (resolved 2026-11-20):** The session routes, the events, and embedding the session ID as a trailer after the executable were decided with the user and implemented (see `DESIGN.md`). Consequence: each download has a different file hash, so SmartScreen cannot build reputation for the scanner.
 - **Contract gap (options):** `shared/` delivers one combined result per path. For the upgrade path the sample impact adds the SSD and the RAM module together (60–110 €, 8–20 kg CO₂e added). There are no figures per single action, and none for CPU or graphics upgrades. The web app therefore shows options only when the server sends them (proposal in `DESIGN.md`) and uses clearly labelled sample data in mock mode.
 - **Contract gap:** `gaming` is missing in `shared/src/common.ts` (FR-009). Storage fill level is not in `DeviceScan`, so the specs card cannot show "used space".
-- **Tooling:** Dependencies could not be installed while the first version was written, so `npm install`, `vite build`, and the Vitest suite have not been run (see `ACCEPTANCE_CRITERIA.md`).
+- **Tooling (resolved 2026-11-20):** Dependencies could not be installed while the first version was written. They are installed now, and the type check, Vitest suite, and build pass (see `ACCEPTANCE_CRITERIA.md`).
 
 ## Review and integration
 
-The completion boundary is a locally verified handoff with self-review, per the repository default. The change is prepared on the branch `feat/web-ui`; pushing, opening a pull request, and merging are done by the team and are not part of this feature's completion. Required checks once dependencies are installed: `npm run typecheck`, `npm test`, and `npm run build -w web`.
+The completion boundary is a locally verified handoff with self-review, per the repository default. The change was prepared on the branch `feat/web-ui` and has been merged into `main` (b879a96) by the team; merging was not part of this feature's completion. Required checks once dependencies are installed: `npm run typecheck`, `npm test`, and `npm run build -w web`.
 
 ## Assumptions and open questions
 
-- **Non-blocking:** The backend accepts the proposed session routes and events (`DESIGN.md`), or proposes its own.
+- **Resolved (2026-11-20, user decision):** session ID format (26 Crockford base32 characters), the `LEAAFSCAN1:` trailer, and the session routes and events (`DESIGN.md`).
 - **Non-blocking:** Adding `gaming` to `INTENDED_USES` and to the scoring rubrics (feature 003) is the backend team's decision.
 - **Non-blocking:** What "avoided CO₂e" means for a single option, for example the SSD upgrade alone, is a decision for the backend team (feature 003). The sample data credits each option the share of the avoided production that its extra life justifies.
 - **Non-blocking:** The gauge definition (share of a new laptop's production CO₂e) was chosen by the team on 2026-11-20 and is easy to change.
@@ -124,7 +124,7 @@ This feature builds the web surface that features 001, 003, and 004 describe and
 
 **Planned replacements (not yet effective; the earlier plans stay in force until then):**
 
-- `feature-001-device-scan-and-upload` / FR-009 (scanner opens the device page in the default browser): planned to be replaced by FR-002 to FR-004 here, where the browser tab is opened before the download and the scanner only reports progress and the final device ID. Needs backend confirmation.
+- `feature-001-device-scan-and-upload` / FR-009 (scanner opens the device page in the default browser): replaced by FR-002 to FR-004 here **for downloads that carry a session**. The browser tab is opened before the download, and the scanner reports progress and the final device ID to it. A download without a session (or a dev build) keeps FR-009 unchanged. Implemented 2026-11-20 on the branch `feat/device-scan-and-upload` (commit "feat(sessions): link scanner runs to the browser tab"). Not merged yet, so not yet effective on `main`.
 - `feature-003-five-path-ranking` / FR-001 (four options, ranking only after a choice): planned to be replaced by FR-008 and FR-009 here (five options including `gaming`, default `office`, ranking shown at once).
 - `feature-004-explained-report` / FR-002 (impact summary above the cards) and FR-003 (sections Evidence, Assumptions, Safety and feasibility): planned to be replaced by the gauge (FR-007) and the shorter card (FR-006). The report payload still carries these sections; the web app does not show them yet.
 - `feature-004-explained-report` / Responsiveness (readable at 360 px): planned to be dropped for this version (laptop screens only).

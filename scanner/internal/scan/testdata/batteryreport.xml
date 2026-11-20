@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<BatteryReport xmlns="http://schemas.microsoft.com/battery/2012">
+  <SystemInformation>
+    <ComputerName>PLANTED-HOSTNAME-7F3A</ComputerName>
+    <SystemProductName>ThinkPad T480</SystemProductName>
+  </SystemInformation>
+  <Batteries>
+    <Battery>
+      <Id>01AV445</Id>
+      <SerialNumber>PLANTEDSERIAL07</SerialNumber>
+      <DesignCapacity>24000</DesignCapacity>
+      <FullChargeCapacity>18000</FullChargeCapacity>
+      <CycleCount>0</CycleCount>
+    </Battery>
+    <Battery>
+      <Id>01AV422</Id>
+      <DesignCapacity>33000</DesignCapacity>
+      <FullChargeCapacity>23040</FullChargeCapacity>
+      <CycleCount>412</CycleCount>
+    </Battery>
+  </Batteries>
+</BatteryReport>

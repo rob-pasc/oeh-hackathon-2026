@@ -15,7 +15,13 @@ export default defineConfig({
       { find: /^@leaaf\/fixtures\/(.*)$/, replacement: `${sharedFixtures}$1` },
     ],
   },
-  server: { fs: { allow: ['..'] } },
+  server: {
+    fs: { allow: ['..'] },
+    // Live mode in development: forward the API and the scanner download to `npm start -w server`.
+    proxy: Object.fromEntries(
+      ['/api', '/downloads'].map((prefix) => [prefix, process.env.VITE_API_PROXY ?? 'http://127.0.0.1:3000']),
+    ),
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
