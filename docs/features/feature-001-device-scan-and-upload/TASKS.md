@@ -28,6 +28,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Progress notes
 
+- 2026-11-20: Landing disclosure and scanner download verified (AC-011). T-008 also covers the device detail view (AC-009), still open.
+
 - 2026-11-20: At the user's request, the top-level folders (`scanner/`, `server/`, `web/`, `shared/`, `corpus/`, `data/`, `demo/`) were created with README placeholders only. T-001 remains open: there are no build, test, or type-check commands yet, and implementation of this feature had not started at that point.
 - 2026-11-20: T-002 done. The versioned device schema and the cross-feature contracts are in `shared/` (`npm test -w shared` passes; see the [shared README](../../../shared/README.md)). T-001 is partly done: the npm workspace and the `shared` package have build, test, and type-check scripts, while `scanner/`, `server/`, and `web/` are not set up yet.
 - 2026-11-20: The `server` workspace exists (TypeScript run natively by Node 24, Vitest) but so far contains only the LLM adapter; the HTTP API (T-006, T-007) is not started.

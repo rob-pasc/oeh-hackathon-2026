@@ -28,6 +28,13 @@ describe('Landing', () => {
     }
   })
 
+  it('discloses scan data, exclusions and upload before download', async () => {
+    render(withApi(<Landing />))
+    await userEvent.click(screen.getByText('What does the scanner collect?'))
+    expect(screen.getByText(/Windows asks for administrator access/)).toHaveTextContent(/device model.*processor.*battery health.*Secure Boot/)
+    expect(screen.getByText(/uploads it to leaaf/)).toHaveTextContent(/personal files.*serial numbers.*network addresses/)
+  })
+
   it('shows the contact address as a mailto link', () => {
     render(withApi(<Landing />))
     expect(screen.getByRole('link', { name: 'contact@leaaf.green' })).toHaveAttribute('href', 'mailto:contact@leaaf.green')

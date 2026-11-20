@@ -91,6 +91,18 @@ export function Landing() {
           </ol>
 
           <div className="flex flex-col items-center gap-3">
+            <details className="max-w-[580px] text-left text-sm text-muted">
+              <summary className="cursor-pointer text-center font-semibold text-ink">What does the scanner collect?</summary>
+              <p className="mt-3">
+                Windows asks for administrator access. When you press Start scan, leaaf reads your device model,
+                processor, graphics, memory, internal drives, battery health, Windows version, and firmware settings
+                including TPM and Secure Boot.
+              </p>
+              <p className="mt-2">
+                It saves the scan next to the scanner and uploads it to leaaf for your report. The scan excludes
+                personal files, user and computer names, serial numbers, device UUIDs, and network addresses.
+              </p>
+            </details>
             <button
               type="button"
               onClick={startScan}
