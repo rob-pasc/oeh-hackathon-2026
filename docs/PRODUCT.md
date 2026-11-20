@@ -1,6 +1,6 @@
 # Product Context
 
-**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No core journey works end to end yet: the shared contracts, a first web app on sample data, and parts of the server exist (see the [README status](../README.md)), while the scanner and the server API do not. This document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No core journey works end to end yet: the shared contracts, the web app, the Windows scanner, the server's device and scan session API, fact extraction, and the impact table exist (see the [README status](../README.md)), while retrieval, ranking, and reports do not. The scanner has not yet run on a real Windows laptop. This document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
@@ -9,7 +9,7 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 - **Primary user:** an individual owner of an old Windows laptop or PC.
 - **Other stakeholders:** hackathon judges and demo audience. IT departments and refurbishers are possible future users and are not targeted by the MVP.
 
-## Core journeys (approved, not yet implemented)
+## Core journeys (approved; journey 1 built but not yet verified on Windows, journeys 2–3 not yet implemented)
 
 1. Download and run the scanner, then open the private device link. See [feature 001](features/feature-001-device-scan-and-upload/PLAN.md).
 2. Choose an intended use, see five assessed and ranked paths, and switch between Environment first and Money first. See [feature 003](features/feature-003-five-path-ranking/PLAN.md).
@@ -30,7 +30,7 @@ Scanning on macOS, Linux, or a bootable USB; user accounts; a fleet dashboard (d
 ## Uncertainty and references
 
 - Domain: `leaaf.green` (registered by the team; nothing is deployed yet).
-- Unresolved: demo laptop models and hosting provider. These are tracked in the feature plans. CO₂e sources were chosen on 2026-11-20 (see [`data/README.md`](../data/README.md)).
+- Unresolved: demo laptop models, the embedding approach for retrieval, and the VPS provider (the host type, a VPS behind an external Caddy, is decided). These are tracked in the feature plans. CO₂e sources were chosen on 2026-11-20 (see [`data/README.md`](../data/README.md)).
 - Source material: the team's `Idea.md` and `Suggestions.md` (outside this repository).
 - Terms: [GLOSSARY.md](GLOSSARY.md). Feature navigation: [features/INDEX.md](features/INDEX.md).
 
