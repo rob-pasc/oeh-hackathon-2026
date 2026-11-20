@@ -22,7 +22,7 @@ npm run build -w web
 
 ## Mock and live mode
 
-By default the app runs on the fictional fixtures in [`shared/fixtures/`](../shared/fixtures/) and simulates the scanner, so no backend is needed. The landing page shows a "Sample data" label. To talk to the real API set `VITE_API_MODE=live` (see [`.env.example`](.env.example)); the session routes it uses are proposed in the [design](../docs/features/feature-006-web-app/DESIGN.md) and still to be agreed with the backend team.
+By default the app runs on the fictional fixtures in [`shared/fixtures/`](../shared/fixtures/) and simulates the scanner, so no backend is needed. The landing page shows a "Sample data" label. To talk to the real API set `VITE_API_MODE=live` (see [`.env.example`](.env.example)) and run `npm start -w server`; the dev server forwards `/api` and `/downloads` to it (`VITE_API_PROXY`, default `http://127.0.0.1:3000`). The scan-session flow is described in the [design](../docs/features/feature-006-web-app/DESIGN.md).
 
 ## Layout
 

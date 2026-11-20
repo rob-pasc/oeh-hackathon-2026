@@ -12,9 +12,12 @@ The LLM API key is configured only here, through environment variables. It never
 |---|---|
 | `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above 32 KiB |
 | `GET /api/devices/:id` | `200 DeviceRecord`; unknown and malformed IDs both get the same `404 not_found` |
-| `GET /downloads/leaaf-scanner.exe` | The file at `SCANNER_EXE_PATH`, or 404 while it does not exist |
+| `GET /downloads/leaaf-scanner.exe` | The file at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
+| `POST /api/sessions` | `201 ScanSession`: a new 26-character session ID and its download URL (feature 006) |
+| `POST /api/sessions/:id/events` | The scanner's `step` or `error` event; `204`, `400` if invalid, `404` if unknown |
+| `GET /api/sessions/:id/events` | Server-Sent Events: the latest event first, then live ones; ends after `complete` or `error` |
 
-No route lists devices: the device ID (16 random bytes, base64url) is the only access control. Request logs record the method and route pattern only, never the URL or the client IP.
+No route lists devices: the device ID (16 random bytes, base64url) is the only access control. An upload carrying `session_id` completes that session; the ID is removed before the scan is stored, so device routes never return it. Request logs record the method and route pattern only, never the URL or the client IP.
 
 ## LLM adapter
 

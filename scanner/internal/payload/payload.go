@@ -23,6 +23,8 @@ type DeviceScan struct {
 	Storage        *[]Disk   `json:"storage"`
 	Battery        Battery   `json:"battery"`
 	GPUs           *[]string `json:"gpus"`
+	// Optional (omitted, not null) so a scan without a session is not partial.
+	SessionID *string `json:"session_id,omitempty"`
 }
 
 type Identity struct {

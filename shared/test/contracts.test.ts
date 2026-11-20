@@ -8,6 +8,9 @@ import {
   Passage,
   Report,
   RetrievalResult,
+  SCANNER_SESSION_MARKER,
+  ScannerEvent,
+  ScanSessionEvent,
   checkAssessment,
   checkDeviceScan,
   checkFactSet,
@@ -212,5 +215,37 @@ describe('Report invariants', () => {
     const r = report()
     r.paths[0]!.claims[0]!.passage_ids = ['made-up#1']
     expect(checkReport(r)).toEqual(['paths[upgrade]: claim cites unknown passage made-up#1'])
+  })
+})
+
+describe('scan sessions', () => {
+  const laptop = fixture<DeviceScanT>('device-scan.laptop-complete.json')
+  const id = '0123456789ABCDEFGHJKMNPQRS'
+
+  it('accepts a scan with or without a session ID, and keeps it out of scan_status', () => {
+    expect(validateScan({ ...laptop, session_id: id }).ok).toBe(true)
+    expect(validateScan(laptop).ok).toBe(true)
+    expect(checkDeviceScan({ ...laptop, session_id: id })).toEqual([])
+  })
+
+  it('rejects session IDs outside Crockford base32 or of the wrong length', () => {
+    for (const bad of ['0123456789ABCDEFGHJKMNPQRI', '0123456789abcdefghjkmnpqrs', '0123456789ABCDEFGHJKMNPQR', null]) {
+      expect(validateScan({ ...laptop, session_id: bad }).ok).toBe(false)
+    }
+  })
+
+  it('marks the executable with an 11-byte marker, 37 bytes with the ID', () => {
+    expect(SCANNER_SESSION_MARKER).toBe('LEAAFSCAN1:')
+    expect(Buffer.byteLength(SCANNER_SESSION_MARKER + id)).toBe(37)
+  })
+
+  it('lets the scanner post steps and errors but not completion', () => {
+    const scanner = createValidator(ScannerEvent)
+    const stream = createValidator(ScanSessionEvent)
+    expect(scanner({ type: 'step', step: 'storage', state: 'running' }).ok).toBe(true)
+    expect(scanner({ type: 'error', code: 'upload_failed', message: 'offline' }).ok).toBe(true)
+    const complete = { type: 'complete', device_id: 'q3Xk9vT2mB7pLw0cZr1sEa' }
+    expect(scanner(complete).ok).toBe(false)
+    expect(stream(complete).ok).toBe(true)
   })
 })

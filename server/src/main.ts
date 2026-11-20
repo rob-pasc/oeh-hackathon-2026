@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { buildApp } from './app.ts'
 import { createSqliteDeviceStore } from './devices/store.ts'
+import { createSqliteSessionStore } from './sessions/store.ts'
 
 const env = process.env
 const port = Number(env.PORT ?? 3000)
@@ -17,6 +18,7 @@ const db = new DatabaseSync(databasePath)
 
 const app = buildApp({
   devices: createSqliteDeviceStore(db),
+  sessions: createSqliteSessionStore(db),
   publicBaseUrl,
   scannerExePath,
   logger: {

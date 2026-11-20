@@ -10,17 +10,18 @@ export type Route =
   | { name: 'device'; id: string }
   | { name: 'not_found' }
 
-// Session and device IDs are 22 base64url characters (128 random bits); anything else is not a valid link.
-const ID_ROUTE = /^\/(s|d)\/([A-Za-z0-9_-]{22})$/
+// Device IDs are 22 base64url characters (128 bits); session IDs are 26 Crockford base32 characters
+// (130 bits, shared/src/session.ts). Anything else is not a valid link.
+const DEVICE_ROUTE = /^\/d\/([A-Za-z0-9_-]{22})$/
+const SESSION_ROUTE = /^\/s\/([0-9A-HJKMNP-TV-Z]{26})$/
 
 export function parseRoute(pathname: string): Route {
   const clean = pathname.replace(/\/+$/, '') || '/'
   if (clean === '/') return { name: 'landing' }
-  const match = ID_ROUTE.exec(clean)
-  if (match) {
-    const id = match[2] as string
-    return match[1] === 's' ? { name: 'session', id } : { name: 'device', id }
-  }
+  const device = DEVICE_ROUTE.exec(clean)
+  if (device) return { name: 'device', id: device[1] as string }
+  const session = SESSION_ROUTE.exec(clean)
+  if (session) return { name: 'session', id: session[1] as string }
   return { name: 'not_found' }
 }
 

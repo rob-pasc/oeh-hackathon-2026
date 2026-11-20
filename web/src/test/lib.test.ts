@@ -17,13 +17,18 @@ const report = reportJson as unknown as Report
 
 describe('router', () => {
   const id = 'q3Xk9vT2mB7pLw0cZr1sEa'
+  const session = '0123456789ABCDEFGHJKMNPQRS'
   it('parses the three screens', () => {
     expect(parseRoute('/')).toEqual({ name: 'landing' })
-    expect(parseRoute(`/s/${id}`)).toEqual({ name: 'session', id })
+    expect(parseRoute(`/s/${session}`)).toEqual({ name: 'session', id: session })
     expect(parseRoute(`/d/${id}/`)).toEqual({ name: 'device', id })
   })
   it('rejects malformed ids and unknown paths', () => {
     expect(parseRoute('/d/short')).toEqual({ name: 'not_found' })
+    // Each route accepts only its own ID format.
+    expect(parseRoute(`/s/${id}`)).toEqual({ name: 'not_found' })
+    expect(parseRoute(`/d/${session}`)).toEqual({ name: 'not_found' })
+    expect(parseRoute('/s/0123456789ABCDEFGHJKMNPQRI')).toEqual({ name: 'not_found' })
     expect(parseRoute('/x')).toEqual({ name: 'not_found' })
   })
 })

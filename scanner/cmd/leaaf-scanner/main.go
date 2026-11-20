@@ -28,9 +28,10 @@ func main() {
 	noWait := flag.Bool("no-wait", false, "exit without waiting for Enter")
 	flag.Parse()
 
-	outDir := "."
+	outDir, sessionID := ".", ""
 	if exe, err := os.Executable(); err == nil {
 		outDir = filepath.Dir(exe)
+		sessionID = run.ReadSessionID(exe)
 	}
 	code := run.Run(run.Config{
 		BackendURL:     backendURL,
@@ -41,6 +42,7 @@ func main() {
 		HTTP:           &http.Client{Timeout: 30 * time.Second},
 		OpenBrowser:    openBrowser,
 		Out:            os.Stdout,
+		SessionID:      sessionID,
 	})
 	// A double-clicked console window closes on exit; keep it open so the link or error stays readable.
 	if !*noWait {

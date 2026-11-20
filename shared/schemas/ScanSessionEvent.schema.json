@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ScanSessionEvent.schema.json",
+  "title": "ScanSessionEvent",
+  "anyOf": [
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "step",
+        "state"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "step"
+        },
+        "step": {
+          "enum": [
+            "started",
+            "cpu_memory",
+            "storage",
+            "battery",
+            "upload"
+          ]
+        },
+        "state": {
+          "enum": [
+            "running",
+            "done",
+            "skipped"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "error"
+        },
+        "code": {
+          "enum": [
+            "scanner_failed",
+            "upload_failed",
+            "timeout",
+            "unknown"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "device_id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "complete"
+        },
+        "device_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{22}$",
+          "description": "22-character base64url string encoding 128 random bits"
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

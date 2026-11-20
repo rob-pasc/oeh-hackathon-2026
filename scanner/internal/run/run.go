@@ -37,6 +37,18 @@ type Config struct {
 	HTTP        *http.Client
 	OpenBrowser func(url string) error
 	Out         io.Writer
+	// SessionID comes from the executable's trailer (ReadSessionID); "" for a plain download.
+	// With a session the browser tab is already open and follows the progress, so the scanner
+	// reports progress to it instead of opening a second tab (feature 006 FR-002 to FR-004).
+	SessionID string
+}
+
+var stepLabels = map[string]string{
+	"started":    "Reading device identity",
+	"cpu_memory": "Reading CPU and memory",
+	"storage":    "Reading storage",
+	"battery":    "Reading battery",
+	"upload":     "Uploading",
 }
 
 type uploadResponse struct {
@@ -59,8 +71,19 @@ func Run(cfg Config) int {
 	fmt.Fprintln(out, "Reads hardware facts only: no serial numbers, names, files, or network addresses.")
 	fmt.Fprintln(out)
 
-	raw, notes := cfg.Collect(func(step string) { fmt.Fprintf(out, "  %s...\n", step) })
+	step := func(id string) {
+		fmt.Fprintf(out, "  %s...\n", stepLabels[id])
+		cfg.report(map[string]string{"type": "step", "step": id, "state": "running"})
+	}
+	fail := func(code, message string) {
+		cfg.report(map[string]string{"type": "error", "code": code, "message": message})
+	}
+
+	raw, notes := cfg.Collect(step)
 	device := scan.Normalize(raw, scan.Meta{ScannerVersion: cfg.ScannerVersion, ScannedAt: cfg.Now()})
+	if cfg.SessionID != "" {
+		device.SessionID = &cfg.SessionID
+	}
 	if device.ScanStatus == "partial" {
 		fmt.Fprintln(out, "Some values could not be read and are reported as unknown:")
 		for _, n := range notes {
@@ -76,24 +99,46 @@ func Run(cfg Config) int {
 	path := filepath.Join(cfg.OutDir, "leaaf-scan-"+cfg.Now().UTC().Format("20060102-150405")+".json")
 	if err := os.WriteFile(path, body, 0o644); err != nil {
 		fmt.Fprintf(out, "Error: could not save the scan to %s: %v\n", path, err)
+		fail("scanner_failed", "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again.")
 		return ExitSaveFailed
 	}
 	fmt.Fprintf(out, "Saved the scan to %s\n", path)
 
-	fmt.Fprintln(out, "  Uploading...")
+	step("upload")
 	res, err := upload(cfg, body)
 	if err != nil {
 		fmt.Fprintf(out, "\nUpload failed: %v\n", err)
+		fail("upload_failed", "The scanner could not upload its results. Check the internet connection and run it again.")
 		fmt.Fprintf(out, "Your scan is saved at %s. Run the scanner again when you are online.\n", path)
 		return ExitUploadFailed
 	}
 
 	fmt.Fprintf(out, "\nDone. Your device page:\n  %s\n", res.DeviceURL)
 	fmt.Fprintln(out, "Keep this link private: anyone with it can see this scan.")
-	if err := cfg.OpenBrowser(res.DeviceURL); err != nil {
+	if cfg.SessionID != "" {
+		fmt.Fprintln(out, "Your results are now shown in the browser tab that started this scan.")
+	} else if err := cfg.OpenBrowser(res.DeviceURL); err != nil {
 		fmt.Fprintf(out, "Could not open the browser (%v). Open the link above yourself.\n", err)
 	}
 	return ExitOK
+}
+
+// report posts a progress event to the scan session. It is best effort: the scan and upload
+// matter more than the progress display, so failures are ignored and the wait is short.
+func (cfg Config) report(event map[string]string) {
+	if cfg.SessionID == "" {
+		return
+	}
+	endpoint, err := url.JoinPath(cfg.BackendURL, "/api/sessions", cfg.SessionID, "events")
+	if err != nil {
+		return
+	}
+	body, _ := json.Marshal(event)
+	client := *cfg.HTTP
+	client.Timeout = 3 * time.Second
+	if resp, err := client.Post(endpoint, "application/json", bytes.NewReader(body)); err == nil {
+		resp.Body.Close()
+	}
 }
 
 func upload(cfg Config, body []byte) (*uploadResponse, error) {

@@ -25,7 +25,7 @@ func testConfig(t *testing.T, backend string, opened *[]string) (Config, *bytes.
 		ScannerVersion: "0.1.0-test",
 		OutDir:         t.TempDir(),
 		Collect: func(progress func(string)) (scan.Raw, []string) {
-			progress("Reading device identity")
+			progress("started")
 			return scan.Raw{ComputerSystem: &[]scan.ComputerSystem{{Model: &model}}}, []string{"Win32_Tpm: access denied"}
 		},
 		Now:  func() time.Time { return time.Date(2026, 11, 20, 9, 30, 0, 0, time.UTC) },
@@ -137,5 +137,134 @@ func TestRefusesNonWebDeviceLink(t *testing.T) {
 	cfg, _ := testConfig(t, srv.URL, &opened)
 	if code := Run(cfg); code == ExitOK || len(opened) != 0 {
 		t.Errorf("code %d, opened %v: a non-http link must not be opened", code, opened)
+	}
+}
+
+const testSession = "0123456789ABCDEFGHJKMNPQRS"
+
+func TestReadSessionID(t *testing.T) {
+	dir := t.TempDir()
+	write := func(name, content string) string {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	exe := "MZ\x90\x00" + strings.Repeat("\x00code", 100)
+	cases := map[string]struct{ content, want string }{
+		"downloaded copy":  {exe + SessionMarker + testSession, testSession},
+		"dev build":        {exe, ""},
+		"too short":        {"MZ", ""},
+		"old format":       {exe + "LEAAFSCAN0:" + testSession, ""},
+		"invalid ID chars": {exe + SessionMarker + "0123456789ABCDEFGHJKMNPQRI", ""},
+		"trailer not last": {exe + SessionMarker + testSession + "x", ""},
+	}
+	for name, c := range cases {
+		if got := ReadSessionID(write(name+".exe", c.content)); got != c.want {
+			t.Errorf("%s: got %q, want %q", name, got, c.want)
+		}
+	}
+	if got := ReadSessionID(filepath.Join(dir, "missing.exe")); got != "" {
+		t.Errorf("missing file: %q", got)
+	}
+	if len(SessionMarker)+len(testSession) != 37 {
+		t.Errorf("trailer is %d bytes, want 37", len(SessionMarker)+len(testSession))
+	}
+}
+
+// With a session, progress goes to the session, the upload carries the ID, and no second tab opens.
+func TestSessionRunReportsProgress(t *testing.T) {
+	var events []map[string]string
+	var uploaded map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/sessions/" + testSession + "/events":
+			var e map[string]string
+			json.NewDecoder(r.Body).Decode(&e)
+			events = append(events, e)
+			w.WriteHeader(http.StatusNoContent)
+		case "/api/devices":
+			json.NewDecoder(r.Body).Decode(&uploaded)
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(`{"device_id":"q3Xk9vT2mB7pLw0cZr1sEa","device_url":"https://leaaf.example/d/q3Xk9vT2mB7pLw0cZr1sEa"}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	var opened []string
+	cfg, out := testConfig(t, srv.URL, &opened)
+	cfg.SessionID = testSession
+	if code := Run(cfg); code != ExitOK {
+		t.Fatalf("exit %d\n%s", code, out)
+	}
+	var steps []string
+	for _, e := range events {
+		if e["type"] != "step" || e["state"] != "running" {
+			t.Errorf("unexpected event %v", e)
+		}
+		steps = append(steps, e["step"])
+	}
+	if strings.Join(steps, ",") != "started,upload" {
+		t.Errorf("steps = %v", steps)
+	}
+	if uploaded["session_id"] != testSession {
+		t.Errorf("upload session_id = %v", uploaded["session_id"])
+	}
+	if len(opened) != 0 {
+		t.Errorf("opened a browser although the session tab is waiting: %v", opened)
+	}
+	saved, _ := os.ReadFile(savedFile(t, cfg.OutDir))
+	if !bytes.Contains(saved, []byte(testSession)) {
+		t.Errorf("saved file lacks the session ID")
+	}
+}
+
+func TestSessionRunReportsUploadFailure(t *testing.T) {
+	var events []map[string]string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/events") {
+			var e map[string]string
+			json.NewDecoder(r.Body).Decode(&e)
+			events = append(events, e)
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		http.Error(w, "down", http.StatusServiceUnavailable)
+	}))
+	defer srv.Close()
+	var opened []string
+	cfg, _ := testConfig(t, srv.URL, &opened)
+	cfg.SessionID = testSession
+	if code := Run(cfg); code != ExitUploadFailed {
+		t.Fatalf("exit %d", code)
+	}
+	last := events[len(events)-1]
+	if last["type"] != "error" || last["code"] != "upload_failed" || last["message"] == "" {
+		t.Errorf("last event = %v", last)
+	}
+}
+
+// Without a session (dev build or plain download) nothing is posted to a session and the payload has no session_id.
+func TestPlainRunHasNoSession(t *testing.T) {
+	var paths []string
+	var uploaded map[string]any
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		paths = append(paths, r.URL.Path)
+		json.NewDecoder(r.Body).Decode(&uploaded)
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte(`{"device_id":"q3Xk9vT2mB7pLw0cZr1sEa","device_url":"https://leaaf.example/d/q3Xk9vT2mB7pLw0cZr1sEa"}`))
+	}))
+	defer srv.Close()
+	var opened []string
+	cfg, _ := testConfig(t, srv.URL, &opened)
+	Run(cfg)
+	if len(paths) != 1 || paths[0] != "/api/devices" {
+		t.Errorf("requests = %v", paths)
+	}
+	if _, ok := uploaded["session_id"]; ok {
+		t.Errorf("payload has session_id without a session")
 	}
 }

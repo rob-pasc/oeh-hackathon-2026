@@ -1,7 +1,7 @@
 # Feature Design: Web app (landing, scan session, results)
 
 - **Feature ID:** `feature-006-web-app`
-- **Design status:** Proposed (not automatically approved with feature scope)
+- **Design status:** Proposed; the scan-session design below was adopted with the user on 2026-11-20
 
 ## Design goals and constraints
 
@@ -39,35 +39,31 @@ Opening the new tab happens inside the click handler (`window.open('', '_blank')
 
 Existing routes (see `shared/src/api.ts`): `GET /api/devices/:id`, `GET /api/devices/:id/report?intended_use=` (Server-Sent Events `assessment`, `report`, `end`, `error`).
 
-**Proposed new routes (not yet agreed with the backend team):**
+**Scan sessions (adopted 2026-11-20 with the user, implemented):** contract in [`shared/src/session.ts`](../../../shared/src/session.ts), server in `server/src/app.ts` and `server/src/sessions/`, scanner in `scanner/internal/run/`.
 
-- `POST /api/sessions` → `{ "session_id": "<22 base64url chars>", "download_url": "/downloads/leaaf-scanner-<session_id>.exe" }`. The ID is generated here, when Scan now is pressed, and is embedded in the download served at `download_url` (for example as a resource string or an appended trailer that the Go scanner reads).
-- `GET /api/sessions/:id/events` (Server-Sent Events), sent by the server as the scanner posts its progress:
-
-```json
-{ "type": "step", "step": "cpu_memory", "state": "running" }
-{ "type": "complete", "device_id": "q3Xk9vT2mB7pLw0cZr1sEa" }
-{ "type": "error", "code": "scanner_failed", "message": "The scanner could not read the battery." }
-```
+- `POST /api/sessions` → `{ "session_id": "<26 Crockford base32 chars>", "download_url": "/downloads/leaaf-scanner.exe?session=<session_id>" }`. The ID is 130 bits from the OS random source and is created when Scan now is pressed.
+- `GET /downloads/leaaf-scanner.exe?session=<id>` sends the unchanged executable followed by the 37-byte trailer `LEAAFSCAN1:<session_id>`. Windows never loads bytes after the last PE section (an overlay, as self-extracting archives use), so the program is unaffected. The scanner reads the last 37 bytes of its own file and accepts the ID only after the exact marker. A build or plain download without the trailer behaves as feature 001 describes: it opens the device page itself. The `1` versions the trailer format.
+- The scanner posts `POST /api/sessions/:id/events` with `step` or `error` events (best effort, 3 s timeout) and puts `session_id` into its upload. The server removes `session_id` from the stored scan and emits `complete` with the device ID. Scanners cannot post `complete`.
+- `GET /api/sessions/:id/events` (Server-Sent Events, event name = `type`) replays the latest event on connect and ends after `complete` or `error`:
 
 `step` is one of `started`, `cpu_memory`, `storage`, `battery`, `upload`; `state` is `running`, `done`, or `skipped`. Error `code` is `scanner_failed`, `upload_failed`, `timeout`, or `unknown`. The TypeScript form is in `web/src/api/types.ts`. The session ID is a separate secret from the device ID and is not returned by any device route.
 
 ## Failure modes and operational considerations
 
-- A scanner that never starts keeps the page waiting; a server-side session timeout that sends `error/timeout` is recommended.
+- A scanner that never starts keeps the page waiting; a server-side session timeout that sends `error/timeout` is recommended but not implemented.
 - The session ID is a bearer secret for progress events only; it grants no access to device data.
-- Server-Sent Events reconnect automatically in the browser; the server should replay the latest event on connect.
+- Server-Sent Events reconnect automatically in the browser; the server replays the latest event on connect (implemented).
 
 ## Alternatives and tradeoffs
 
-- **Scanner opens the browser (feature 001 FR-009):** simpler, but the original tab cannot show progress, and the team asked for the live status page.
+- **Scanner opens the browser (feature 001 FR-009):** simpler, but the original tab cannot show progress, and the team asked for the live status page. It remains the fallback for a download without a session.
+- **Embedding the ID in a PE resource or by re-linking per download:** heavier on the server. The trailer needs no tooling. Consequence: every download has a different hash, so Windows SmartScreen cannot build reputation for the file, and a future Authenticode signature would have to be applied with the trailer in mind.
 - **Generate the session ID in the browser:** avoids one request, but then the server cannot embed it in the download without a second call; the server-generated ID keeps one source of truth.
 - **Routing library:** not worth the dependency for three routes.
 
 ## Open technical decisions
 
-- How the session ID is embedded in the scanner executable (backend/scanner owners; blocks live mode only).
-- Whether the scanner talks to the server directly (HTTP POST of events) or through a local helper (backend owners).
+- ~~How the session ID is embedded~~ and ~~how the scanner reports progress~~: resolved 2026-11-20 (overlay trailer, direct HTTP POST; see above).
 - Adding `gaming` to `INTENDED_USES` and the scoring rubrics (backend owners).
 - A storage fill level in `DeviceScan` if the specs card should show used space (scanner owners).
 

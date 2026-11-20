@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ScanSession.schema.json",
+  "title": "ScanSession",
+  "type": "object",
+  "required": [
+    "session_id",
+    "download_url"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$",
+      "description": "26 Crockford base32 characters encoding 130 random bits"
+    },
+    "download_url": {
+      "type": "string",
+      "description": "Relative URL of the scanner built for this session"
+    }
+  },
+  "additionalProperties": false
+}

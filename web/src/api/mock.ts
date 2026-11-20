@@ -28,12 +28,13 @@ export interface MockOptions {
 }
 
 /** 22-character base64url ID from 128 random bits, the same shape as a device ID (feature 001 FR-008). */
-export function randomId(): string {
-  const bytes = new Uint8Array(16)
+const CROCKFORD = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+
+/** A session ID in the contract's format: 26 Crockford base32 characters (shared/src/session.ts). */
+export function randomSessionId(): string {
+  const bytes = new Uint8Array(26)
   crypto.getRandomValues(bytes)
-  let binary = ''
-  for (const b of bytes) binary += String.fromCharCode(b)
-  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  return Array.from(bytes, (b) => CROCKFORD[b % 32]).join('')
 }
 
 const laptopScan = laptopScanJson as unknown as DeviceScan
@@ -109,7 +110,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     mode: 'mock',
 
     async createScanSession(): Promise<ScanSession> {
-      return { session_id: randomId(), download_url: null }
+      return { session_id: randomSessionId(), download_url: null }
     },
 
     subscribeScanSession(_sessionId, onEvent: (event: ScanSessionEvent) => void) {

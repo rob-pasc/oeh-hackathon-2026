@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from 'vitest'
 import { MAX_UPLOAD_BYTES, type ApiError, type DeviceRecord, type DeviceScan, type UploadResponse } from '@leaaf/shared'
 import { buildApp, type AppOptions } from '../src/app.ts'
 import { createSqliteDeviceStore, newDeviceId } from '../src/devices/store.ts'
+import { createSqliteSessionStore } from '../src/sessions/store.ts'
 
 const fixture = (name: string): DeviceScan =>
   JSON.parse(readFileSync(new URL(`../../shared/fixtures/${name}.json`, import.meta.url), 'utf8')) as DeviceScan
@@ -16,7 +17,10 @@ const desktop = fixture('device-scan.desktop-partial')
 let db: DatabaseSync | undefined
 function app(extra: Partial<AppOptions> = {}) {
   db = new DatabaseSync(':memory:')
-  return buildApp({ devices: createSqliteDeviceStore(db), publicBaseUrl: 'https://leaaf.example', ...extra })
+  return buildApp({
+    devices: createSqliteDeviceStore(db),
+    sessions: createSqliteSessionStore(db),
+    publicBaseUrl: 'https://leaaf.example', ...extra })
 }
 const count = () => (db!.prepare('SELECT COUNT(*) AS n FROM devices').get() as { n: number }).n
 
@@ -118,10 +122,13 @@ describe('GET /api/devices/:id', () => {
       ['POST', '/api/devices'],
       ['GET', '/api/devices/:id'],
       ['GET', '/downloads/leaaf-scanner.exe'],
+      ['POST', '/api/sessions'],
+      ['POST', '/api/sessions/:id/events'],
+      ['GET', '/api/sessions/:id/events'],
     ]
     for (const [method, url] of expected) expect(server.hasRoute({ method, url })).toBe(true)
-    // printRoutes prints one "(METHODS)" entry per registered path; no others may exist.
-    expect(server.printRoutes().match(/\(/g)).toHaveLength(expected.length)
+    // printRoutes prints one "(METHODS)" entry per registered path; no other paths may exist.
+    expect(server.printRoutes().match(/\(/g)).toHaveLength(new Set(expected.map(([, url]) => url)).size)
     for (const url of ['/api/devices', '/api/devices/']) {
       expect((await server.inject({ method: 'GET', url })).statusCode).toBe(404)
     }

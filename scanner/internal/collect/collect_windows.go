@@ -29,6 +29,7 @@ var client = &wmi.Client{PtrNil: true, AllowMissingFields: true}
 
 // Collect reads every source. A failing source leaves its field nil and adds a note; it never
 // aborts the scan (FR-004). Nothing here needs administrator rights; sources that do simply fail.
+// progress receives the scan step IDs of shared/src/session.ts: started, cpu_memory, storage, battery.
 func Collect(progress func(step string)) (scan.Raw, []string) {
 	var raw scan.Raw
 	var notes []string
@@ -38,7 +39,7 @@ func Collect(progress func(step string)) (scan.Raw, []string) {
 		}
 	}
 
-	progress("Reading device identity")
+	progress("started")
 	raw.ComputerSystem = run[scan.ComputerSystem](queries.ComputerSystem, note)
 	raw.Product = run[scan.ComputerSystemProduct](queries.Product, note)
 	raw.Enclosure = run[scan.SystemEnclosure](queries.Enclosure, note)
@@ -49,16 +50,16 @@ func Collect(progress func(step string)) (scan.Raw, []string) {
 	raw.SecureBoot = secureBoot(raw.FirmwareType, note)
 	raw.TPM = run[scan.Tpm](queries.TPM, note)
 
-	progress("Reading CPU and memory")
+	progress("cpu_memory")
 	raw.Processors = run[scan.Processor](queries.Processor, note)
 	raw.Memory = run[scan.PhysicalMemory](queries.Memory, note)
 	raw.MemoryArrays = run[scan.PhysicalMemoryArray](queries.MemoryArray, note)
 	raw.Video = run[scan.VideoController](queries.Video, note)
 
-	progress("Reading storage")
+	progress("storage")
 	raw.Disks = run[scan.PhysicalDisk](queries.Disk, note)
 
-	progress("Reading battery")
+	progress("battery")
 	raw.Batteries = run[scan.Battery](queries.Battery, note)
 	if raw.Batteries == nil || len(*raw.Batteries) > 0 {
 		raw.BatteryStatic = run[scan.BatteryStaticData](queries.BatteryStatic, note)

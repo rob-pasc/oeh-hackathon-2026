@@ -1,6 +1,5 @@
-// Live API client. The device and report routes are the ones in shared/src/api.ts. The scan-session routes
-// (POST /api/sessions, GET /api/sessions/:id/events) are PROPOSED and still to be agreed with the backend
-// team; see docs/features/feature-006-web-app/DESIGN.md.
+// Live API client for the routes in shared/src/api.ts, including the scan-session routes
+// (POST /api/sessions, GET /api/sessions/:id/events; contract in shared/src/session.ts).
 import type { Assessment } from '@leaaf/shared/assessment'
 import { API_ROUTES } from '@leaaf/shared/api'
 import type { IntendedUse } from '@leaaf/shared/common'
@@ -30,13 +29,13 @@ export const liveClient: ApiClient = {
   mode: 'live',
 
   async createScanSession(): Promise<ScanSession> {
-    const response = await fetch('/api/sessions', { method: 'POST' })
+    const response = await fetch(API_ROUTES.createSession, { method: 'POST' })
     if (!response.ok) throw await readError(response)
     return (await response.json()) as ScanSession
   },
 
   subscribeScanSession(sessionId, onEvent) {
-    const source = new EventSource(`/api/sessions/${encodeURIComponent(sessionId)}/events`)
+    const source = new EventSource(API_ROUTES.sessionEvents(encodeURIComponent(sessionId)))
     const forward = (event: Event) => {
       const data = parse<ScanSessionEvent>(event)
       if (data) onEvent(data)

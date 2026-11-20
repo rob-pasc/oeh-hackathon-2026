@@ -3,12 +3,12 @@ import type { DeviceRecord } from '@leaaf/shared/device'
 import type { Report } from '@leaaf/shared/report'
 import type { UseTag } from '../lib/labels'
 
-/**
- * Steps the scanner reports while it runs, in order. PROPOSED contract: the scan-session events are
- * not part of shared/ yet and have to be agreed with the backend team (feature-006 DESIGN.md).
- */
-export type ScanStepId = 'started' | 'cpu_memory' | 'storage' | 'battery' | 'upload'
+import type { ScanSessionEvent, ScanStepId } from '@leaaf/shared/session'
 
+// The session events are part of the shared contract (shared/src/session.ts, adopted 2026-11-20).
+export type { ScanSessionEvent, ScanStepId } from '@leaaf/shared/session'
+
+/** Status line text for each scanner step, in the order the scanner reports them. */
 export const SCAN_STEPS: readonly { id: ScanStepId; running: string }[] = [
   { id: 'started', running: 'Starting the scanner…' },
   { id: 'cpu_memory', running: 'Reading CPU & memory…' },
@@ -16,11 +16,6 @@ export const SCAN_STEPS: readonly { id: ScanStepId; running: string }[] = [
   { id: 'battery', running: 'Reading battery…' },
   { id: 'upload', running: 'Uploading & analysing…' },
 ]
-
-export type ScanSessionEvent =
-  | { type: 'step'; step: ScanStepId; state: 'running' | 'done' | 'skipped' }
-  | { type: 'complete'; device_id: string }
-  | { type: 'error'; code: 'scanner_failed' | 'upload_failed' | 'timeout' | 'unknown'; message: string }
 
 /** Result of creating a scan session; the session ID is baked into the downloaded scanner. */
 export interface ScanSession {
