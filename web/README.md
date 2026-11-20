@@ -24,6 +24,16 @@ npm run build -w web
 
 By default the app runs on the fictional fixtures in [`shared/fixtures/`](../shared/fixtures/) and simulates the scanner, so no backend is needed. The landing page shows a "Sample data" label. To talk to the real API set `VITE_API_MODE=live` (see [`.env.example`](.env.example)) and run `npm start -w server`; the dev server forwards `/api` and `/downloads` to it (`VITE_API_PROXY`, default `http://127.0.0.1:3000`). The scan-session flow is described in the [design](../docs/features/feature-006-web-app/DESIGN.md).
 
+## Container image
+
+`web/Dockerfile` builds the app and serves it with nginx on port 8080 (`web/nginx.conf`). Build it from the repository root; the API mode is fixed at build time:
+
+```sh
+docker build -f web/Dockerfile --build-arg VITE_API_MODE=mock -t leaaf-web .
+```
+
+See [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md).
+
 ## Layout
 
 ```text

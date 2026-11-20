@@ -67,6 +67,10 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 | `LLM_THINKING_FACT_EXTRACTION` | `enabled` | `enabled`, `disabled`, or `omit` (don't send the parameter) |
 | `LLM_THINKING_EXPLANATION` | `disabled` | As above |
 
+## Container image
+
+`server/Dockerfile` (build from the repository root: `docker build -f server/Dockerfile .`) contains the sources, `data/`, the compiled `shared/`, and production dependencies. It runs `node src/main.ts` with `PORT=3000`, `HOST=0.0.0.0`, and `DATABASE_PATH=/data/leaaf.sqlite`, and contains no scanner build. See [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md).
+
 ## Commands
 
 ```sh

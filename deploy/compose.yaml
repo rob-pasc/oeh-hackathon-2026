@@ -1,0 +1,36 @@
+# Example production setup: both images on one host, behind an external Caddy that terminates
+# HTTPS and routes /api/* to the server and everything else to the web app.
+# Both ports are published on loopback only, so nothing is reachable except through Caddy.
+# Usage and the Caddy routes: docs/DEPLOYMENT.md.
+#
+#   cp .env.example .env               # image tag, ports, server secrets
+#   docker compose up -d               # web only
+#   docker compose --profile server up -d   # web and server
+
+name: leaaf
+
+services:
+  web:
+    image: ${LEAAF_REGISTRY:-ghcr.io/rob-pasc}/leaaf-web:${LEAAF_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:8080"
+
+  server:
+    image: ${LEAAF_REGISTRY:-ghcr.io/rob-pasc}/leaaf-server:${LEAAF_TAG:-latest}
+    # Opt-in until the team decides to run the backend in production (feature 005).
+    profiles: [server]
+    restart: unless-stopped
+    # The same .env Compose reads for the tag and ports; the server ignores those extra variables.
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "127.0.0.1:${SERVER_PORT:-3000}:3000"
+    volumes:
+      - server-data:/data
+
+volumes:
+  # SQLite database and caches. Survives container restarts and image updates; back it up
+  # before deleting it (docs/DEPLOYMENT.md).
+  server-data:

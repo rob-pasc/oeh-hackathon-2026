@@ -118,7 +118,7 @@ Not applicable to this feature: release and hosting are owned by feature 005 (`f
 
 Features 002–005 depend on its device schema and device page.
 
-- **FR-009 partly replaced by [feature 006](../feature-006-web-app/PLAN.md#related-and-superseded-features) FR-002 to FR-004** (implemented 2026-11-20 on the branch `feat/device-scan-and-upload`, not yet merged). A scanner downloaded through Scan now carries a session ID. It reports its progress to the browser tab that started it instead of opening the device page itself. A download without a session, including the plain `/downloads/leaaf-scanner.exe` link, keeps FR-009 as written. AC-008 still applies to that case.
+- **FR-009 partly replaced by [feature 006](../feature-006-web-app/PLAN.md#related-and-superseded-features) FR-002 to FR-004** (implemented on the branch `feat/device-scan-and-upload`, merged into `main` 2026-11-20). A scanner downloaded through Scan now carries a session ID. It reports its progress to the browser tab that started it instead of opening the device page itself. A download without a session, including the plain `/downloads/leaaf-scanner.exe` link, keeps FR-009 as written. AC-008 still applies to that case.
 - The payload gained an optional `session_id` (additive, `schema_version` stays 1). The server removes it before storing, so FR-005 and FR-011 are unaffected.
 
 ## References
