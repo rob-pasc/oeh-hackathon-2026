@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "prestart": "npm run build -w @leaaf/shared",
     "start": "node --env-file-if-exists=.env src/main.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",

@@ -6,7 +6,7 @@ The LLM API key is configured only here, through environment variables. It never
 
 ## Device API
 
-`npm start -w server` runs Fastify on `HOST:PORT` (default `127.0.0.1:3000`) with SQLite at `DATABASE_PATH`.
+`npm start -w server` runs Fastify on `HOST:PORT` (default `127.0.0.1:3000`) with SQLite at `DATABASE_PATH`. It first compiles `shared/` (the `prestart` script), because the server imports `@leaaf/shared` from its `dist/` folder.
 
 | Route | Result |
 |---|---|
