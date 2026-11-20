@@ -2,7 +2,7 @@
 // the cache key, so cached facts from an older prompt are not reused.
 import type { DeviceScan, ModelMatch, Passage } from '@leaaf/shared'
 
-export const PROMPT_VERSION = 'facts-v1'
+export const PROMPT_VERSION = 'facts-v2'
 
 export const FACT_EXTRACTION_SYSTEM = `You extract hardware and support facts about one computer from documentation passages. A tool uses the facts to decide whether the computer can be upgraded, repaired, passed on, salvaged for parts, or recycled.
 
@@ -20,7 +20,7 @@ Keys:
 - ram_max_gb: maximum supported memory in GB.
 - ram_type: supported memory type.
 - storage_slots: every internal drive bay or slot, with form factor and interface.
-- battery_user_replaceable: true only when the owner can replace the battery without specialist tools or removing adhesive; false when it is glued, sealed, or service-only.
+- battery_user_replaceable: true only when the owner can replace the battery without specialist tools or removing adhesive; false when it is glued, sealed, or service-only. Removal instructions alone do not establish owner authorization. If the source does not say which battery the owner may replace, or the model has both removable and internal batteries and the scan does not identify which is worn, omit this key.
 - battery_replacement_part_available: true when a replacement battery (for example a part number) is documented as obtainable.
 - windows11_supported_cpu: true when a passage lists this device's CPU as supported; false only when a passage says it is not supported. Never infer it from the CPU being absent from a list.
 - latest_supported_os: newest operating system version a passage says the vendor or Microsoft supports for this device.

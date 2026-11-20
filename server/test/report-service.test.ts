@@ -40,7 +40,8 @@ it('drops unknown and mixed citations and filters figures from every generated s
   Object.assign(paths.upgrade!, {
     summary: 'Saves 250 kg CO₂e.', why: 'Costs EUR50.', next_steps: ['Pay €40.'],
     safety: ['Budget 45 euros.'], assumptions: ['CO2e savings of 250 kg.'], unverified: ['Under €100.'],
-    claims: [supported, { text: 'Unverified', passage_ids: [passage.passage_id, 'unknown'] },
+    claims: [supported, { text: 'Recycling has an emissions estimate in this data but does not avoid a new purchase.', passage_ids: [passage.passage_id] },
+      { text: 'Unverified', passage_ids: [passage.passage_id, 'unknown'] },
       { text: 'Costs 5 EUR', passage_ids: [passage.passage_id] }],
   })
   const report = await explain(scan, input)
@@ -89,4 +90,14 @@ it('returns the assessed paths with an unavailable notice on timeout, and retrie
   const recovered = await explain(scan, input)
   expect(recovered.source).toBe('llm')
   expect(await createReportService(db, null)(scan, input)).toEqual(recovered)
+})
+
+
+it('regenerates output cached before the serviceability prompt correction', async () => {
+  const { db, paths, explain, completeJson } = setup()
+  db.prepare('INSERT INTO explanation_cache VALUES (?, ?, ?, ?)').run(
+    assessment.device_id, assessment.intended_use, JSON.stringify({ paths }), assessment.created_at,
+  )
+  expect((await explain(scan, input)).source).toBe('llm')
+  expect(completeJson).toHaveBeenCalledTimes(1)
 })

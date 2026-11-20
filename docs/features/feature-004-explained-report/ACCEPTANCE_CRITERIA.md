@@ -38,3 +38,13 @@ Completion boundary: locally verified handoff with self-review (see [PLAN.md § 
 2026-11-20: Self-reviewed the T-001 diff against FR-004 at base `021b4e1`. The model response schema derives its fields from the shared path explanation, requires all five paths, and rejects server-owned report fields. The prompt inspection test uses instruction-like text inside a passage. Runtime citation and figure checks remain in T-002.
 
 2026-11-20: Self-reviewed the T-002 diff from `e985069` against FR-005 and FR-010. Rechecked the report service and SSE sequence with 216 passing server tests. Generation failures leave no cached result. The test provider is mocked; live output quality and fallback behavior have separate verification tasks.
+
+### Demo-model review, 2026-11-20
+
+Used synthetic office-use scans and the real curated corpus, assessment service and configured DeepSeek provider. These samples used 4 GB RAM, a 72% battery reading and model-specific CPUs. Each model matched the index. Both fact extraction and explanation generation ran against the provider.
+
+- ThinkPad T480 (i5-8250U). The first report treated a service procedure as owner authorization. Revised the fact and explanation prompts to distinguish the internal and removable batteries. The second report recommended a service quote and cited Lenovo's maintenance manual, table 6, for the difference. Lenovo PSREF describes the HDD and primary M.2 configurations as mutually exclusive. The steps require checking the installed configuration before buying a drive.
+- XPS 13 9360 (i5-7200U). The first report called a conditional repair the strongest option. Reserved cross-path ranking for the deterministic client. The next report described onboard memory against Dell's setup guide and referred battery identification to a provider. The service manual documents disassembly, which by itself establishes no owner-serviceability claim.
+- EliteBook 840 G5 (i5-8350U). Checked the memory slots and maximum against QuickSpecs, and battery part 933321-855 against the service guide. A generated claim cited an Austrian collection policy for a calculator displacement assumption. Added a filter and a regression test for that misattribution, then replayed the reviewed output through the final validator. The unsupported claim was dropped.
+
+All three reviewed outputs satisfied the shared schema and citation invariants after filtering. The final samples contained 10, 10 and 9 cited claims respectively. Passage-ID validation proves that a cited passage was retrieved. Semantic support and applicability to an individual device still require reading the passage.

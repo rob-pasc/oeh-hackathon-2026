@@ -39,6 +39,7 @@ it('sends only structured report inputs and keeps passage text inside JSON data 
   const request = buildExplanationRequest({ ...scan, session_id: 'private-session' }, { assessment, facts, retrieval: sources })
   expect(request.task).toBe('explanation')
   expect(request.schema).toBe(ExplanationOutput)
+  expect(request.system).toContain('Do not infer that an owner can replace a battery from removal instructions')
   expect(request.system).not.toContain(excerpt)
   const input = JSON.parse(request.user)
   expect(Object.keys(input).sort()).toEqual(['baseline', 'facts', 'intended_use', 'passages', 'paths', 'scan'])

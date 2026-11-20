@@ -41,7 +41,7 @@ Rules for callers:
 - Put document passages in `user`, clearly delimited as data.
 - Never put device IDs or personal data into prompts.
 
-The report service adds the SQLite table `explanation_cache` on startup. Repeat requests for the same device and intended use reuse the stored output. Each response filters claims against the retrieved passages and takes citation metadata from retrieval. Concurrent opens share a pending generation in the server process. If no cached result exists, a missing key or typed provider failure produces a template report derived from the assessment. The explanation deadline covers transport retries and JSON repair. A later open can retry generation.
+The report service adds the SQLite table `explanation_cache` on startup. Repeat requests for the same device and intended use reuse the stored output. Each response filters claims against the retrieved passages and takes citation metadata from retrieval. Concurrent opens share a pending generation in the server process. If no cached result exists, a missing key or typed provider failure produces a template report derived from the assessment. The explanation deadline covers transport retries and JSON repair. A later open can retry generation. Older prompt versions regenerate on the next request. There is no device-data migration.
 
 ## Fact extraction
 

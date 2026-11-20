@@ -173,6 +173,22 @@ describe('GET /api/devices/:id/report', () => {
     expect(events[1]!.data).toEqual({ status: 'complete' })
   })
 
+  it('finishes a provider outage with a template report and fallback end status', async () => {
+    const { createReportService } = await import('../src/report/service.ts')
+    const db = new DatabaseSync(':memory:')
+    try {
+      const explain = createReportService(db, fakeLlm({ error: new LlmError('timeout', 'deadline') }).llm)
+      const { app, device } = setup(service(null), explain)
+      const base = await app.listen({ port: 0, host: '127.0.0.1' })
+      const events = await readStream(base + API_ROUTES.reportStream(device.device_id, 'office'))
+      expect(events.map(e => e.name)).toEqual(['assessment', 'report', 'end'])
+      expect(events[1]!.data).toMatchObject({ source: 'template', notice: expect.stringContaining('AI explanation unavailable') })
+      expect(events[2]!.data).toEqual({ status: 'fallback' })
+    } finally {
+      db.close()
+    }
+  })
+
   it('reports an internal error as an error event, without details', async () => {
     const failing: AssessmentService = {
       assessDevice: async () => {
