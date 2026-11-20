@@ -31,7 +31,7 @@ GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.backendURL=https://le
   -o dist/leaaf-scanner.exe ./cmd/leaaf-scanner
 ```
 
-`dist/` is gitignored. The server serves `dist/leaaf-scanner.exe` at `/downloads/leaaf-scanner.exe` by default.
+`dist/` is gitignored. The server serves `dist/leaaf-scanner.exe` at `/downloads/leaaf-scanner.exe` by default. The server image builds its own copy for `https://leaaf.green` (`server/Dockerfile`), and CI runs `go vet` and `go test` on every push.
 
 On other operating systems the scanner builds and runs, but it collects nothing (every value is `null`). That is enough to try the upload flow against a local server: `go run ./cmd/leaaf-scanner -no-wait`.
 

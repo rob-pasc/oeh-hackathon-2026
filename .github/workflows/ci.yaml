@@ -31,9 +31,29 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  scanner:
+    name: Scanner vet and test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: scanner
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: scanner/go.mod
+          cache-dependency-path: scanner/go.sum
+      - run: go vet ./...
+      # The Windows collector only compiles for Windows, so vet that build too.
+      - run: go vet ./...
+        env:
+          GOOS: windows
+      # schema_test.go reads ../shared/schemas, which the checkout provides.
+      - run: go test ./...
+
   images:
     name: Image (${{ matrix.image }})
-    needs: checks
+    needs: [checks, scanner]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -74,6 +94,11 @@ jobs:
           context: .
           file: ${{ matrix.image }}/Dockerfile
           platforms: linux/amd64
+          # Each Dockerfile ignores the argument it does not declare. The scanner version is the
+          # Git tag on releases and sha-<short sha> otherwise.
+          build-args: |
+            VITE_API_MODE=live
+            SCANNER_VERSION=${{ steps.meta.outputs.version }}
           push: ${{ env.PUBLISH == 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
