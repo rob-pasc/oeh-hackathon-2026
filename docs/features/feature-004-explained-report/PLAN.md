@@ -69,7 +69,7 @@ The ranked result from feature 003 becomes a readable report. A highlighted reco
 Not yet adopted; to be confirmed during implementation.
 
 - **Delivery (adopted 2026-11-20, user decision):** Server-Sent Events. `GET /api/devices/:id/report?intended_use=…` first sends an `assessment` event (so the ranking is visible at once), then a `report` event (from the LLM or the template), then `end`, or `error` instead. Cached results are streamed the same way without delay. Contracts are `Report`, `StreamEnd`, and the routes in [`shared/src/report.ts`](../../../shared/src/report.ts) and [`shared/src/api.ts`](../../../shared/src/api.ts). The "Recommended" label uses `recommendedPath` from `shared/src/ranking.ts`.
-- **Backend:** `server/src/report/`. A prompt builder that passes the structured input as data, and a Claude call through the Anthropic API with structured output (`{path, sections: {next_steps, why, assumptions, safety}, claims: [{text, source_passage_ids}]}`). A validator applies FR-005. Cached in SQLite by `(device_id, intended_use)`. Timeout of about 25 s, then the fallback.
+- **Backend:** `server/src/report/`. A prompt builder that passes the structured input as data, and a call through the provider-neutral `LlmClient.completeJson` ([ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md): DeepSeek `deepseek-flash`, JSON mode, thinking disabled by default for latency), validated against the `Report` contract (`{path, sections: {next_steps, why, assumptions, safety}, claims: [{text, source_passage_ids}]}`). A validator applies FR-005. Cached in SQLite by `(device_id, intended_use)`. Timeout of about 25 s, then the fallback.
 - **Template fallback:** Deterministic sentence templates per status and reason type, in the same output shape.
 - **Mode-change explanation:** A pure function comparing the two orders and the per-criterion weighted contributions.
 - **Web:** Report and card components with expandable sections that build on feature 003's ranked view; source links open in a new tab.
@@ -95,7 +95,7 @@ Not applicable to this feature: deployment is owned by feature 005.
 ## Assumptions and open questions
 
 - Assumption: English-only report text.
-- **Open:** Exact LLM model and timeout values. Proposed default: a current Claude model with a timeout of about 25 s.
+- **Resolved (2026-11-20, user decision):** `deepseek-flash` via an OpenAI-compatible adapter, with thinking disabled for explanations and a 25 s default timeout (`LLM_TIMEOUT_MS`). Any `LlmError` (timeout, auth, rate limit, invalid output) triggers the FR-009 fallback ([ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md)).
 - **Open:** Visual style. If shared conventions emerge, record them in `docs/VISUAL_DESIGN.md` during implementation.
 
 ## Scope change log

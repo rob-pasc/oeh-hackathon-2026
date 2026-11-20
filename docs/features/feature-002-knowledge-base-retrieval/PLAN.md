@@ -69,7 +69,7 @@ Not yet adopted; to be confirmed during implementation.
 - **Location:** `corpus/manifest.yaml` plus source files or extracts in `corpus/docs/`; retrieval code in `server/src/retrieval/`.
 - **Ingestion:** A Node script parses Markdown, HTML, and PDF (for example with `pdf-parse`), chunks by heading or page with overlap, and writes passages and embeddings to SQLite.
 - **Search:** Metadata filtering in SQL first, then ranking of the remaining passages. Because the corpus is tiny, a brute-force cosine similarity in process is enough; no separate vector database. Possibly combined with keyword (BM25/FTS5) scoring for exact part names.
-- **Embeddings:** **Open.** Options are a local model through `transformers.js` (no extra API key, works offline) or a hosted embedding API. Anthropic offers no embedding endpoint, so a hosted option means an extra provider. Proposed default: a local model, for offline robustness.
+- **Embeddings:** **Open.** Options are a local model through `transformers.js` (no extra API key, works offline) or a hosted embedding API. The chat LLM provider ([ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md), DeepSeek) is not assumed to offer embeddings, so a hosted option may mean an extra provider. Proposed default: a local model, for offline robustness.
 - **Tests:** Unit tests for manifest validation, normalization and aliases, and deterministic chunking. Integration tests with a small fixture corpus of two fake models, checking cross-model isolation and the `none` case.
 
 ## Dependencies and risks

@@ -24,6 +24,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 ## Progress notes
 
 - 2026-11-20: The report and SSE event contracts and an example report fixture are in `shared/`. T-001 (output schema) is partly covered; the prompt builder is not built yet.
+- 2026-11-20: LLM adapter with timeout, typed `LlmError` (for the T-003 fallback), and JSON validation/repair is in `server/src/llm/`. T-002 can build on it.
 
 ## Lifecycle history
 

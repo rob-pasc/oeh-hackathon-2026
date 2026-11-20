@@ -1,0 +1,25 @@
+{
+  "name": "@leaaf/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "leaaf backend: API, retrieval, assessment, and LLM integration",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "llm:smoke": "node --env-file-if-exists=.env scripts/llm-smoke.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  },
+  "dependencies": {
+    "@leaaf/shared": "*",
+    "openai": "^7.62.0",
+    "typebox": "^1.4.7"
+  }
+}

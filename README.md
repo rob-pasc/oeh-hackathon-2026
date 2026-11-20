@@ -12,7 +12,7 @@
 4. [Explained report](docs/features/feature-004-explained-report/PLAN.md)
 5. [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md)
 
-Proposed stack (not yet adopted): a Go scanner for Windows, a TypeScript/Node backend with SQLite, a React web app, and a cloud LLM via the Anthropic API.
+Stack: a Go scanner for Windows, a TypeScript/Node backend with SQLite, and a React web app (proposed, not yet built). The LLM is reached through an OpenAI-compatible adapter, currently DeepSeek `deepseek-flash` via its official API ([ADR-002](docs/adr/adr-002-llm-openai-compatible-deepseek.md), implemented in `server/src/llm/`).
 
 ## Repository layout
 
@@ -27,7 +27,7 @@ Proposed stack (not yet adopted): a Go scanner for Windows, a TypeScript/Node ba
 | [`demo/`](demo/) | Seeded demo device scans and caches | 005 |
 | [`docs/`](docs/) | Product, workflow, feature specs, ADRs | — |
 
-Apart from `shared/`, the folders contain only README placeholders.
+Apart from `shared/` and the LLM adapter in `server/`, the folders contain only README placeholders.
 
 ## Development
 
@@ -35,12 +35,12 @@ Requires Node.js 24 or later (Go is needed later for `scanner/`). From the repos
 
 ```sh
 npm install
-npm test            # all workspaces
+npm test            # builds shared/, then tests all workspaces
 npm run typecheck
 npm run build
 ```
 
-See [`shared/README.md`](shared/README.md) for the contracts, the mock fixtures, and how to change a contract.
+See [`shared/README.md`](shared/README.md) for the contracts, the mock fixtures, and how to change a contract, and [`server/README.md`](server/README.md) for LLM configuration and the live smoke test.
 
 ## Documentation
 
