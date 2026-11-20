@@ -1,7 +1,7 @@
 # Acceptance Criteria: Public demo deployment
 
 - **Feature ID:** `feature-005-public-demo-deployment`
-- **Verification status:** Not started
+- **Verification status:** In progress
 
 Defines the feature's acceptance criteria and records how each criterion was verified, including results and evidence. Required release checks stay `Not run` or `Blocked` until performed against the live deployment.
 
@@ -37,4 +37,9 @@ Completion boundary: released behavior (see [PLAN.md § Review and integration](
 
 ## Verification notes
 
-Not yet verified.
+- 2026-11-20, local pre-checks for AC-012 to AC-014. These are not passes; the criteria need GitHub Actions and a Docker host. Docker is not installed on the dev machine, so the Dockerfile steps were run by hand:
+  - Web build stage: `npm ci --workspace web --workspace shared` with only the manifests, then `VITE_API_MODE=mock npm run build --workspace web`. Produced `dist/index.html` and hashed assets.
+  - Server stages: the `shared` build (`tsc`) and `npm ci --workspace server --workspace shared --omit=dev` (6 packages). Assembled in the image's runtime layout, the server modules loaded under `NODE_ENV=production`: the impact table read from `data/`, the SQLite fact cache was created, and `@leaaf/shared` resolved from `dist/`.
+  - The CI `checks` job, on a clean copy of the working tree: `npm ci`, `npm run typecheck`, and `npm test` (131 tests in 8 files) passed, and `npm run build` passed.
+  - `actionlint` v1.7.7 reports no problems in `.github/workflows/ci.yaml`. The workflow and Compose YAML parse.
+  - Not checked: the actual `docker build` (base image pulls, `COPY` paths, nginx config syntax), the Compose file under `docker compose`, and publishing to GHCR.
