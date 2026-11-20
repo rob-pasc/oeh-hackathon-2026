@@ -1,13 +1,13 @@
 # Implementation Tasks: Explained report
 
 - **Feature ID:** `feature-004-explained-report`
-- **Status:** Specified
+- **Status:** In progress
 
 This is the **authoritative progress checklist**. Check a task only after its work is actually complete.
 
 ## Tasks
 
-- [ ] **T-001:** Define the explanation output schema and the prompt builder with passages delimited as data, with a prompt inspection test (supports `AC-004`)
+- [x] **T-001:** Define the explanation output schema and the prompt builder with passages delimited as data, with a prompt inspection test (supports `AC-004`)
 - [ ] **T-002:** Implement the LLM call, the citation and figure validator, and caching by device and use, with mocked-LLM tests (supports `AC-005`, `AC-010`)
 - [ ] **T-003:** Implement the template fallback and timeout handling, with tests (supports `AC-009`)
 - [ ] **T-004:** Implement the deterministic mode-change explanation, with tests (supports `AC-008`)
@@ -29,4 +29,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Lifecycle history
 
-No lifecycle events recorded yet.
+- 2026-11-20: Started implementation with T-001 after confirming the shared report contract and assessment inputs.

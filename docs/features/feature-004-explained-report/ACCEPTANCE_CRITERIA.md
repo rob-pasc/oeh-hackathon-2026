@@ -1,7 +1,7 @@
 # Acceptance Criteria: Explained report
 
 - **Feature ID:** `feature-004-explained-report`
-- **Verification status:** Not started
+- **Verification status:** Partial (AC-004 verified)
 
 Defines the feature's acceptance criteria and records how each criterion was verified, including results and evidence.
 
@@ -10,7 +10,7 @@ Defines the feature's acceptance criteria and records how each criterion was ver
 | AC-001 | FR-001 | Given a ranking with at least one viable path, only the top viable path is labelled "Recommended". Given no viable path, no label is shown and the report states that no path is clearly recommended. | Automated web test | Not run | |
 | AC-002 | FR-002 | The impact summary shows the recommended path's cost, extra life, and CO₂e ranges together with the baseline statement, matching the calculator output values. | Automated web test | Not run | |
 | AC-003 | FR-003 | Each of the five cards shows its status, its score (when provided), and a reason. Expanding a card reveals the five named sections, and this can be done with the keyboard. | Automated web test, plus a manual keyboard check | Not run | |
-| AC-004 | FR-004 | The prompt sent to the LLM contains only the listed structured inputs, with passages delimited as data, and no other user content. | Automated test inspecting the built prompt | Not run | |
+| AC-004 | FR-004 | The prompt sent to the LLM contains only the listed structured inputs, with passages delimited as data, and no other user content. | Automated test inspecting the built prompt | Pass | `server/test/report-prompt.test.ts` inspects the explanation request, including JSON-delimited passage text and exclusion of device and session IDs. |
 | AC-005 | FR-005 | Given a mocked LLM output with one claim citing an unknown passage ID and one sentence containing "saves 250 kg CO₂e", the claim is removed and the figure-containing text is rejected or replaced before display. | Automated server test with a mocked LLM | Not run | |
 | AC-006 | FR-006 | Every cited claim's evidence entry shows the document title, section or page, an excerpt, and a working link to the source URL. | Automated web test, plus a manual click-through on one demo report | Not run | |
 | AC-007 | FR-007 | Given a device with `model_evidence: "none"`, the upgrade and repair cards state what could not be verified. | Automated test | Not run | |
@@ -35,4 +35,4 @@ Completion boundary: locally verified handoff with self-review (see [PLAN.md § 
 
 ## Verification notes
 
-Not yet verified.
+2026-11-20: Self-reviewed the T-001 diff against FR-004 at base `021b4e1`. The model response schema derives its fields from the shared path explanation, requires all five paths, and rejects server-owned report fields. The prompt inspection test uses instruction-like text inside a passage. Runtime citation and figure checks remain in T-002.
