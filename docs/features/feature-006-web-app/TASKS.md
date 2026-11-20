@@ -14,19 +14,19 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-005:** Build the session page: skeleton, status line, completion and error states (supports `AC-003`, `AC-004`)
 - [x] **T-006:** Build the result screen: path cards, gauge, specs card, toolbar, not-found states (supports `AC-005` to `AC-011`)
 - [x] **T-007:** Add shared visual conventions in `docs/VISUAL_DESIGN.md`, update `README.md`, `web/README.md`, and the feature index (supports `AC-013`)
-- [ ] **T-008:** Install dependencies and run `npm run typecheck`, `npm test`, and `npm run build -w web`; fix what they report (supports all ACs)
+- [x] **T-008:** Install dependencies and run `npm run typecheck`, `npm test`, and `npm run build -w web`; fix what they report (supports all ACs)
 - [ ] **T-009:** Review the screens in a browser at 1440 × 900 and 1280 × 720 with the team; record the findings (supports `AC-013`)
 - [ ] **T-010:** Agree the session routes and events with the backend team and switch on live mode (supports `AC-014`)
 
 ## Dependencies and blockers
 
-- T-008 needs network access to install packages.
 - T-010 needs the backend team's decision on the session routes, the events, and embedding the session ID in the scanner.
 
 ## Progress notes
 
-The first version was written without network access. Its checks are limited to what ran in that environment; see the verification notes in `ACCEPTANCE_CRITERIA.md`.
+The first version was written without network access. After the merge into `main` (b879a96) the dependencies were installed; the web type-check fix is a846d99. T-008 is done: type check, tests, and build pass (see the verification notes in `ACCEPTANCE_CRITERIA.md`). The browser review (T-009) and live mode (T-010) remain.
 
 ## Lifecycle history
 
 - 2026-11-20: Implemented in a first version on the branch `feat/web-ui`. Required verification (T-008, T-009) is pending, so the feature is not complete.
+- 2026-11-20: Merged into `main` (b879a96). T-008 done; T-009 and T-010 still pending.

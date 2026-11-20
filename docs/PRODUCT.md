@@ -1,6 +1,6 @@
 # Product Context
 
-**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No capabilities are implemented yet; this document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No core journey works end to end yet: the shared contracts, a first web app on sample data, and parts of the server exist (see the [README status](../README.md)), while the scanner and the server API do not. This document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
@@ -30,7 +30,7 @@ Scanning on macOS, Linux, or a bootable USB; user accounts; a fleet dashboard (d
 ## Uncertainty and references
 
 - Domain: `leaaf.green` (registered by the team; nothing is deployed yet).
-- Unresolved: demo laptop models, hosting provider, CO₂e sources. These are tracked in the feature plans.
+- Unresolved: demo laptop models and hosting provider. These are tracked in the feature plans. CO₂e sources were chosen on 2026-11-20 (see [`data/README.md`](../data/README.md)).
 - Source material: the team's `Idea.md` and `Suggestions.md` (outside this repository).
 - Terms: [GLOSSARY.md](GLOSSARY.md). Feature navigation: [features/INDEX.md](features/INDEX.md).
 

@@ -79,11 +79,11 @@ Vite, React 19, and TypeScript, styled with Tailwind CSS v4 through PostCSS. The
 
 - **Backend team:** The session routes and events in `DESIGN.md` are a proposal. Embedding the session ID in the downloaded scanner needs a decision from the scanner and server owners. Until agreed, only mock mode is supported.
 - **Contract gap:** `gaming` is missing in `shared/src/common.ts` (FR-009). Storage fill level is not in `DeviceScan`, so the specs card cannot show "used space".
-- **Tooling:** Dependencies could not be installed while the first version was written, so `npm install`, `vite build`, and the Vitest suite have not been run (see `ACCEPTANCE_CRITERIA.md`).
+- **Tooling (resolved 2026-11-20):** Dependencies could not be installed while the first version was written. They are installed now, and the type check, Vitest suite, and build pass (see `ACCEPTANCE_CRITERIA.md`).
 
 ## Review and integration
 
-The completion boundary is a locally verified handoff with self-review, per the repository default. The change is prepared on the branch `feat/web-ui`; pushing, opening a pull request, and merging are done by the team and are not part of this feature's completion. Required checks once dependencies are installed: `npm run typecheck`, `npm test`, and `npm run build -w web`.
+The completion boundary is a locally verified handoff with self-review, per the repository default. The change was prepared on the branch `feat/web-ui` and has been merged into `main` (b879a96) by the team; merging was not part of this feature's completion. Required checks once dependencies are installed: `npm run typecheck`, `npm test`, and `npm run build -w web`.
 
 ## Assumptions and open questions
 
