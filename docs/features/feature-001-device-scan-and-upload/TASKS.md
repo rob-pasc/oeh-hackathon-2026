@@ -19,6 +19,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-011:** *(amendment)* Implement the FR-013 collectors (RAM slots and type, TPM, Secure Boot, firmware type, battery cycle count, GPU names) with fixture tests, including access-denied cases (supports `AC-013`)
 - [x] **T-012:** *(Added 2026-11-20)* Embed a `requireAdministrator` manifest and version info with `go-winres`, commit the generated `.syso` files, open the browser non-elevated, and add a test for the manifest (supports `AC-001`)
 - [x] **T-013:** *(Added 2026-11-20)* Build the Gio scanner window (start, progress, completion, and error screens; embedded Inter subset; `-H windowsgui`), report run events through a callback instead of opening the browser, keep a console build for other operating systems, with tests for the state model and the run events (supports `AC-005`, `AC-008`, `AC-014`)
+- [ ] **T-014:** *(Amendment 2026-11-20)* Add **Try again** for temporary upload failures (re-upload the saved scan; defer the session error until Close), with tests; add the `gui` build tag for a Linux dev window (supports `AC-015`)
 - [ ] **T-010:** Run all checks, self-review the diff against the plan, record the findings, and update the README and the feature index (supports `AC-012`)
 
 ## Dependencies and blockers
@@ -49,3 +50,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: Implementation started (T-002, shared contracts).
 - 2026-11-20: FR-001 replaced (administrator rights required) and T-012 added; see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
 - 2026-11-20: FR-009 replaced (no automatic browser opening) and FR-014 added (scanner window); T-013 added. See the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
+- 2026-11-20: Scope extended by an amendment (FR-015, AC-015, T-014); see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
