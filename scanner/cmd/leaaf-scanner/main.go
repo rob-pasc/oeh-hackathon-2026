@@ -6,6 +6,11 @@
 //	GOOS=windows GOARCH=amd64 go build -ldflags "-X main.backendURL=https://leaaf.green -X main.version=0.1.0" -o dist/leaaf-scanner.exe ./cmd/leaaf-scanner
 package main
 
+// The Windows resources (manifest requesting administrator rights, version info) live in
+// winres/winres.json. The generated rsrc_windows_amd64.syso is committed so a plain go build
+// links it; rerun go generate after editing the JSON.
+//go:generate go run github.com/tc-hib/go-winres@v0.3.3 make --arch amd64
+
 import (
 	"bufio"
 	"flag"

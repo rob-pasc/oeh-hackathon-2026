@@ -1,20 +1,20 @@
 # scanner
 
-Windows hardware scanner written in Go: a single x64 console executable, no installer, no admin rights. It reads the hardware facts in the `DeviceScan` contract ([`shared/src/device.ts`](../shared/src/device.ts)), saves them as JSON next to the executable, uploads them to the server, and opens the private device link in the default browser.
+Windows hardware scanner written in Go: a single x64 console executable, no installer. It asks for administrator rights on start (UAC prompt), so privileged sources such as the TPM can be read; if the user declines, it does not run. It reads the hardware facts in the `DeviceScan` contract ([`shared/src/device.ts`](../shared/src/device.ts)), saves them as JSON next to the executable, uploads them to the server, and opens the private device link in the default browser.
 
 Owned by [feature 001](../docs/features/feature-001-device-scan-and-upload/PLAN.md). The release build with the public URL is part of [feature 005](../docs/features/feature-005-public-demo-deployment/PLAN.md).
 
 ## Layout
 
 ```text
-cmd/leaaf-scanner/   entry point, browser opener
+cmd/leaaf-scanner/   entry point, browser opener, Windows resources (winres/, generated .syso)
 internal/collect/    WMI queries (queries.go, the privacy allowlist) and the Windows collector
 internal/scan/       raw readings -> payload (pure, fixture-tested), powercfg battery report parser
 internal/payload/    Go structs for DeviceScan v1
 internal/run/        save, upload, open link, exit codes
 ```
 
-Readings come from WMI over COM (`github.com/yusufpapurcu/wmi`), the registry (Windows version, Secure Boot), `GetFirmwareType`, and `powercfg /batteryreport` as a battery fallback. A source that fails or needs admin rights (often `Win32_Tpm` and the `root\WMI` battery classes) becomes `null`, and the scan is `partial`.
+Readings come from WMI over COM (`github.com/yusufpapurcu/wmi`), the registry (Windows version, Secure Boot), `GetFirmwareType`, and `powercfg /batteryreport` as a battery fallback. A source that fails (for example a vendor's missing `root\WMI` battery class) becomes `null`, and the scan is `partial`.
 
 **Privacy:** each WMI query names the properties it selects, and `scan.Raw` has fields for those properties only. `queries_test.go` fails if a query selects a serial number, UUID, host or user name, or network identifier. `normalize_test.go` plants such values in the raw readings and checks that none appear in the payload.
 
@@ -35,6 +35,16 @@ GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.backendURL=https://le
 
 On other operating systems the scanner builds and runs, but it collects nothing (every value is `null`). That is enough to try the upload flow against a local server: `go run ./cmd/leaaf-scanner -no-wait`.
 
+## Administrator rights
+
+`cmd/leaaf-scanner/winres/winres.json` defines a manifest with `requireAdministrator` and the file's version info. [go-winres](https://github.com/tc-hib/go-winres) turns it into `rsrc_windows_amd64.syso`. That file is committed, so a plain `go build` for Windows links it, with no extra tool in CI or the server image. After editing the JSON:
+
+```sh
+go generate ./cmd/leaaf-scanner   # runs go-winres; commit the updated .syso
+```
+
+`TestManifestRequiresAdministrator` fails if the JSON or the `.syso` stops requesting elevation. Because the scanner runs elevated, it opens the device link through `explorer.exe`, which hands the URL to the signed-in user's shell, so the browser does not run as admin. On Windows, `go run ./cmd/leaaf-scanner` from a terminal that is not elevated fails with "requires elevation". Build the exe and start it, or use an elevated terminal.
+
 ## Scan sessions
 
 A copy downloaded through Scan now ends with the 37-byte trailer `LEAAFSCAN1:<session ID>`, appended by the server. Windows ignores bytes after the last PE section. The scanner reads the trailer from its own file (`internal/run/session.go`), posts its progress steps to `/api/sessions/<id>/events`, and adds `session_id` to the upload. The waiting browser tab then shows the result, so the scanner does not open a second one. Without the trailer (dev builds, the plain download) it opens the device page itself.
@@ -51,4 +61,4 @@ The window waits for Enter before closing unless `-no-wait` is passed, so a doub
 
 ## Not verified yet
 
-No run on a real Windows laptop has happened (feature 001 T-009). It is unknown which battery and TPM sources work without admin rights on the demo models.
+No run on a real Windows laptop has happened (feature 001 T-009). Still to be checked there: the elevation prompt (accept and decline), that the browser opens non-elevated, and which battery sources read `null` even when elevated on the demo models.

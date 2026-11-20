@@ -28,7 +28,8 @@ const sourceTimeout = 10 * time.Second
 var client = &wmi.Client{PtrNil: true, AllowMissingFields: true}
 
 // Collect reads every source. A failing source leaves its field nil and adds a note; it never
-// aborts the scan (FR-004). Nothing here needs administrator rights; sources that do simply fail.
+// aborts the scan (FR-004). The release exe runs elevated (FR-001), which privileged sources such
+// as Win32_Tpm need; a dev build started without elevation still works, those sources just fail.
 // progress receives the scan step IDs of shared/src/session.ts: started, cpu_memory, storage, battery.
 func Collect(progress func(step string)) (scan.Raw, []string) {
 	var raw scan.Raw
