@@ -4,8 +4,7 @@
 # Usage and the Caddy routes: docs/DEPLOYMENT.md.
 #
 #   cp .env.example .env               # image tag, ports, server secrets
-#   docker compose up -d               # web only
-#   docker compose --profile server up -d   # web and server
+#   docker compose up -d
 
 name: leaaf
 
@@ -18,8 +17,6 @@ services:
 
   server:
     image: ${LEAAF_REGISTRY:-ghcr.io/rob-pasc}/leaaf-server:${LEAAF_TAG:-latest}
-    # Opt-in until the team decides to run the backend in production (feature 005).
-    profiles: [server]
     restart: unless-stopped
     # The same .env Compose reads for the tag and ports; the server ignores those extra variables.
     env_file:

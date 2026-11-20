@@ -25,13 +25,14 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 ## Dependencies and blockers
 
 - **Blocking:** VPS provider undecided; the host type (VPS with external Caddy) is decided (T-001). Deployment requires explicit user authorization (T-008).
-- The `server` image runs, but has no scanner build to serve (`SCANNER_EXE_PATH`).
+- The published web image calls the report stream, which the server does not have until features 003 and 004 are built.
 - Requires features 001–004 implemented; seeding requires the demo models to be chosen.
 
 ## Progress notes
 
 - 2026-11-20: T-011 to T-013 done. The steps of both image builds and the CI checks were run locally outside Docker, because Docker isn't installed on the dev machine. Details are in the [verification notes](./ACCEPTANCE_CRITERIA.md#verification-notes). No image has been built with Docker yet; the first PR run covers that (T-014). The web part of T-002 is covered by T-011. The production config for the server (data path, port) is prepared but waits for the server's entry point.
 - 2026-11-20: Feature 001's server entry point was merged into `main`. The server image now sets `HOST` and `DATABASE_PATH` for it, the Caddy example routes `/downloads/*` to the server, and both images were built and started with Docker for the first time (see the [verification notes](./ACCEPTANCE_CRITERIA.md#verification-notes)). The Compose profile still keeps the server opt-in.
+- 2026-11-20: T-005 partly done. The server image now builds the Windows scanner for `https://leaaf.green` and serves it as the download; the secret scan of the repository and the binary is still open, so T-005 stays unchecked. CI runs the scanner's Go checks, the web image is built against the real API, and Compose runs the server by default (see the plan's scope change log). Verified locally with Docker (see the [verification notes](./ACCEPTANCE_CRITERIA.md#verification-notes)); not yet on GitHub Actions.
 
 ## Lifecycle history
 

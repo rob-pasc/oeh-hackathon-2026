@@ -26,10 +26,11 @@ By default the app runs on the fictional fixtures in [`shared/fixtures/`](../sha
 
 ## Container image
 
-`web/Dockerfile` builds the app and serves it with nginx on port 8080 (`web/nginx.conf`). Build it from the repository root; the API mode is fixed at build time:
+`web/Dockerfile` builds the app and serves it with nginx on port 8080 (`web/nginx.conf`). Build it from the repository root. The API mode is fixed at build time and defaults to `live`, which is what CI publishes:
 
 ```sh
-docker build -f web/Dockerfile --build-arg VITE_API_MODE=mock -t leaaf-web .
+docker build -f web/Dockerfile -t leaaf-web .
+docker build -f web/Dockerfile --build-arg VITE_API_MODE=mock -t leaaf-web-mock .   # sample data, no backend
 ```
 
 See [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md).

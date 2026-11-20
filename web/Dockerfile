@@ -18,8 +18,9 @@ RUN npm ci --workspace web --workspace shared
 COPY shared shared
 COPY web web
 
-# Baked into the bundle at build time. "mock" serves the fictional fixtures; "live" calls /api.
-ARG VITE_API_MODE=mock
+# Baked into the bundle at build time. "live" (the release) calls /api and /downloads on the same
+# origin; "mock" serves the fictional fixtures without a backend.
+ARG VITE_API_MODE=live
 ENV VITE_API_MODE=$VITE_API_MODE
 RUN npm run build --workspace web
 

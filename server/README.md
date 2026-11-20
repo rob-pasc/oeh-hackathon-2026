@@ -69,7 +69,7 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 
 ## Container image
 
-`server/Dockerfile` (build from the repository root: `docker build -f server/Dockerfile .`) contains the sources, `data/`, the compiled `shared/`, and production dependencies. It runs `node src/main.ts` with `PORT=3000`, `HOST=0.0.0.0`, and `DATABASE_PATH=/data/leaaf.sqlite`, and contains no scanner build. See [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md).
+`server/Dockerfile` (build from the repository root: `docker build -f server/Dockerfile .`) contains the sources, `data/`, the compiled `shared/`, and production dependencies. It runs `node src/main.ts` with `PORT=3000`, `HOST=0.0.0.0`, and `DATABASE_PATH=/data/leaaf.sqlite`. A Go build stage adds the Windows scanner, built for `https://leaaf.green` (build argument `SCANNER_BACKEND_URL`), at `SCANNER_EXE_PATH=/app/scanner/leaaf-scanner.exe`. See [docs/DEPLOYMENT.md](../docs/DEPLOYMENT.md).
 
 ## Commands
 

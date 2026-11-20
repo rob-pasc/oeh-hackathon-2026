@@ -1,7 +1,21 @@
 # syntax=docker/dockerfile:1
 # Build from the repository root: docker build -f server/Dockerfile .
 #
-# Runs server/src/main.ts; its variables are listed in server/.env.example.
+# Runs server/src/main.ts; its variables are listed in server/.env.example. The image also
+# contains the Windows scanner, served at /downloads/leaaf-scanner.exe.
+
+# Windows scanner release build. The backend URL is compiled in; it holds no secrets (feature 005
+# FR-007). Pure Go, so it cross-compiles without cgo.
+FROM golang:1.26 AS scanner
+ARG SCANNER_BACKEND_URL=https://leaaf.green
+ARG SCANNER_VERSION=0.0.0-dev
+WORKDIR /src
+COPY scanner/go.mod scanner/go.sum ./
+RUN go mod download
+COPY scanner .
+RUN CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath \
+      -ldflags "-s -w -X main.backendURL=${SCANNER_BACKEND_URL} -X main.version=${SCANNER_VERSION}" \
+      -o /out/leaaf-scanner.exe ./cmd/leaaf-scanner
 
 FROM node:24-slim AS deps
 WORKDIR /app
@@ -27,7 +41,8 @@ FROM node:24-slim
 ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0 \
-    DATABASE_PATH=/data/leaaf.sqlite
+    DATABASE_PATH=/data/leaaf.sqlite \
+    SCANNER_EXE_PATH=/app/scanner/leaaf-scanner.exe
 WORKDIR /app
 COPY --from=prod-deps /app/node_modules node_modules
 COPY --from=build-shared /app/shared/package.json shared/package.json
@@ -37,6 +52,7 @@ COPY server/package.json server/package.json
 COPY server/src server/src
 # Read at runtime relative to the sources (server/src/impact/table.ts).
 COPY data data
+COPY --from=scanner /out/leaaf-scanner.exe scanner/leaaf-scanner.exe
 RUN mkdir -p /data && chown node:node /data
 USER node
 WORKDIR /app/server
