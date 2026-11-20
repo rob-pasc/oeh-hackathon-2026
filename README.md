@@ -1,6 +1,6 @@
 # leaaf: Lifecycle Evaluation and Action Finder
 
-**Status:** In progress. Five MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The server has the LLM adapter, fact extraction, and the sourced impact table (`data/impact.yaml`); the scanner, web app, and the rest of the server are not built yet.
+**Status:** In progress. Six MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The web app (`web/`, first version on sample data) is written. The server has the LLM adapter, fact extraction, and the sourced impact table (`data/impact.yaml`); the scanner and the rest of the server are not built yet.
 
 ÖH Hackathon 2026 project (theme: AI for Green), planned to run at [leaaf.green](https://leaaf.green) (not deployed yet). A small Windows scanner reads an old laptop's hardware. The platform then ranks five next lives for it (upgrade, repair, pass it on, salvage for parts, recycle) in Environment first or Money first mode, with cited evidence and honest cost and CO₂e ranges.
 
@@ -11,8 +11,9 @@
 3. [Five-path assessment and ranking](docs/features/feature-003-five-path-ranking/PLAN.md)
 4. [Explained report](docs/features/feature-004-explained-report/PLAN.md)
 5. [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md)
+6. [Web app: landing, scan session, results](docs/features/feature-006-web-app/PLAN.md)
 
-Stack: a Go scanner for Windows, a TypeScript/Node backend with SQLite, and a React web app (proposed, not yet built). The LLM is reached through an OpenAI-compatible adapter, currently DeepSeek `deepseek-flash` via its official API ([ADR-002](docs/adr/adr-002-llm-openai-compatible-deepseek.md), implemented in `server/src/llm/`).
+Stack: a Go scanner for Windows, a TypeScript/Node backend with SQLite, and a React web app (Vite, Tailwind). The LLM is reached through an OpenAI-compatible adapter, currently DeepSeek `deepseek-flash` via its official API ([ADR-002](docs/adr/adr-002-llm-openai-compatible-deepseek.md), implemented in `server/src/llm/`).
 
 ## Repository layout
 
@@ -20,14 +21,14 @@ Stack: a Go scanner for Windows, a TypeScript/Node backend with SQLite, and a Re
 |---|---|---|
 | [`scanner/`](scanner/) | Go Windows hardware scanner | 001, 005 (release build) |
 | [`server/`](server/) | TypeScript/Node API, storage, retrieval, assessment, reports | 001–005 |
-| [`web/`](web/) | React web app | 001, 003, 004 |
+| [`web/`](web/) | React web app | 001, 003, 004, 006 |
 | [`shared/`](shared/) | Data contracts (TypeBox → JSON Schema), fixtures, and ranking helpers | 001–004 |
 | [`corpus/`](corpus/) | Curated knowledge base and its manifest | 002 |
 | [`data/`](data/) | Static impact table (CO₂e, prices, useful life) | 003 |
 | [`demo/`](demo/) | Seeded demo device scans and caches | 005 |
 | [`docs/`](docs/) | Product, workflow, feature specs, ADRs | — |
 
-Apart from `shared/` and the LLM adapter in `server/`, the folders contain only README placeholders.
+Apart from `shared/`, `web/`, and the parts of `server/` and `data/` listed in the status above, the folders contain only README placeholders.
 
 ## Development
 

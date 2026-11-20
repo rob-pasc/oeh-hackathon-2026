@@ -1,0 +1,97 @@
+@import 'tailwindcss';
+
+/* Design tokens. The palette and its rationale are documented in docs/VISUAL_DESIGN.md. */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+  --color-page: #f8faf8;
+  --color-ink: #1f2933;
+  --color-muted: #5f6b76;
+
+  --color-leaf: #2f7d4f;
+  --color-leaf-dark: #256640;
+  --color-leaf-deep: #1f5e3a;
+  --color-leaf-tint: #e6f2ea;
+  --color-leaf-soft: #bfe0cb;
+
+  --color-line: #e3e9e4;
+  --color-track: #e8edea;
+
+  --color-amber: #c98a1b;
+  --color-amber-tint: #fbf1dc;
+  --color-amber-ink: #7a4f00;
+  --color-rose-tint: #f8e6e3;
+  --color-rose-ink: #8f2f25;
+
+  --shadow-card: 0 1px 2px rgb(31 41 51 / 0.06), 0 8px 24px rgb(31 41 51 / 0.06);
+  --shadow-lift: 0 1px 2px rgb(31 41 51 / 0.06), 0 14px 34px rgb(31 41 51 / 0.1);
+  --shadow-button: 0 10px 28px rgb(47 125 79 / 0.28);
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+select {
+  font-family: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-leaf-soft);
+  outline-offset: 2px;
+}
+
+/* Skeleton shimmer (loading placeholders) and spinner. */
+.sk {
+  background: linear-gradient(90deg, #e8edea 25%, #f4f7f4 50%, #e8edea 75%);
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+@keyframes sk-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.spinner {
+  width: 1.4rem;
+  height: 1.4rem;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  border: 3px solid #cfe6d8;
+  border-top-color: var(--color-leaf);
+  animation: spinner-turn 0.9s linear infinite;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The needle eases to its new position when another path is selected. */
+.gauge-needle {
+  transition: transform 600ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gauge-needle {
+    transition: none;
+  }
+
+  .sk,
+  .spinner {
+    animation: none;
+  }
+}
