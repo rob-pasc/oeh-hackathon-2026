@@ -10,6 +10,7 @@ import { createFactExtractor, createSqliteFactCache, type FactExtractor } from '
 import { loadImpactTable } from './impact/table.ts'
 import { createOpenAiCompatibleClient, LlmError, loadLlmConfig } from './llm/index.ts'
 import { DEFAULT_CORPUS_INDEX_PATH, IndexError, openRetriever, type Retriever } from './retrieval/index.ts'
+import { createReportService } from './report/service.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
 
 const env = process.env
@@ -38,9 +39,12 @@ try {
   console.warn(`assessments disabled: ${error.message}`)
 }
 
+let explain: ReturnType<typeof createReportService> | undefined
 let extractor: FactExtractor | null = null
 try {
-  extractor = createFactExtractor({ llm: createOpenAiCompatibleClient(loadLlmConfig()), cache: createSqliteFactCache(db) })
+  const llm = createOpenAiCompatibleClient(loadLlmConfig())
+  explain = createReportService(db, llm)
+  extractor = createFactExtractor({ llm, cache: createSqliteFactCache(db) })
 } catch (error) {
   if (!(error instanceof LlmError)) throw error
   console.warn(`fact extraction disabled, paths needing facts will read "cannot verify": ${error.message}`)
@@ -50,6 +54,7 @@ const app = buildApp({
   devices: createSqliteDeviceStore(db),
   sessions: createSqliteSessionStore(db),
   assessments: retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn: (message, details) => app.log.warn(details ?? {}, message) }) : undefined,
+  explain,
   publicBaseUrl,
   scannerExePath,
   logger: {

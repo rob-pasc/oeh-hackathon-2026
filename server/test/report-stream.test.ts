@@ -1,5 +1,4 @@
-// The assessment service and the report stream route (feature 003 T-007). The report event itself
-// is feature 004; until then the stream is `assessment` then `end`.
+// Assessment and explanation events from the device report stream.
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
@@ -15,7 +14,7 @@ import {
   type Fact,
   type IntendedUse,
 } from '@leaaf/shared'
-import { buildApp } from '../src/app.ts'
+import { buildApp, type AppOptions } from '../src/app.ts'
 import { createAssessmentService, loadWeights, type AssessmentService } from '../src/assessment/index.ts'
 import { createSqliteDeviceStore } from '../src/devices/store.ts'
 import { createFactExtractor, createMemoryFactCache } from '../src/facts/index.ts'
@@ -130,10 +129,10 @@ afterEach(async () => {
   await Promise.all(servers.splice(0).map((s) => s.close()))
 })
 
-function setup(assessments?: AssessmentService) {
+function setup(assessments?: AssessmentService, explain?: AppOptions['explain']) {
   const db = new DatabaseSync(':memory:')
   const devices = createSqliteDeviceStore(db)
-  const app = buildApp({ devices, sessions: createSqliteSessionStore(db), assessments, publicBaseUrl: 'https://leaaf.example' })
+  const app = buildApp({ devices, sessions: createSqliteSessionStore(db), assessments, explain, publicBaseUrl: 'https://leaaf.example' })
   servers.push(app)
   return { app, device: devices.create(acmeScan) }
 }
@@ -153,6 +152,15 @@ async function readStream(url: string) {
 }
 
 describe('GET /api/devices/:id/report', () => {
+  it('delivers the generated report between assessment and end', async () => {
+    const sample = JSON.parse(readFileSync(new URL('../../shared/fixtures/report.example-laptop-14.office.json', import.meta.url), 'utf8'))
+    const { app, device } = setup(service(null), async (_scan, { assessment }) => ({ ...sample, device_id: assessment.device_id }))
+    const base = await app.listen({ port: 0, host: '127.0.0.1' })
+    const events = await readStream(base + API_ROUTES.reportStream(device.device_id, 'office'))
+    expect(events.map(e => e.name)).toEqual(['assessment', 'report', 'end'])
+    expect(events[1]!.data).toEqual({ ...sample, device_id: device.device_id })
+  })
+
   it('streams the assessment, then end, and closes', async () => {
     const { app, device } = setup(service(fakeLlm().llm))
     const base = await app.listen({ port: 0, host: '127.0.0.1' })

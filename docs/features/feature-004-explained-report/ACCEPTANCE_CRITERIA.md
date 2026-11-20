@@ -1,7 +1,7 @@
 # Acceptance Criteria: Explained report
 
 - **Feature ID:** `feature-004-explained-report`
-- **Verification status:** Partial (AC-004 verified)
+- **Verification status:** Partial (AC-004, AC-005, and AC-010 verified)
 
 Defines the feature's acceptance criteria and records how each criterion was verified, including results and evidence.
 
@@ -11,12 +11,12 @@ Defines the feature's acceptance criteria and records how each criterion was ver
 | AC-002 | FR-002 | The impact summary shows the recommended path's cost, extra life, and CO₂e ranges together with the baseline statement, matching the calculator output values. | Automated web test | Not run | |
 | AC-003 | FR-003 | Each of the five cards shows its status, its score (when provided), and a reason. Expanding a card reveals the five named sections, and this can be done with the keyboard. | Automated web test, plus a manual keyboard check | Not run | |
 | AC-004 | FR-004 | The prompt sent to the LLM contains only the listed structured inputs, with passages delimited as data, and no other user content. | Automated test inspecting the built prompt | Pass | `server/test/report-prompt.test.ts` inspects the explanation request, including JSON-delimited passage text and exclusion of device and session IDs. |
-| AC-005 | FR-005 | Given a mocked LLM output with one claim citing an unknown passage ID and one sentence containing "saves 250 kg CO₂e", the claim is removed and the figure-containing text is rejected or replaced before display. | Automated server test with a mocked LLM | Not run | |
+| AC-005 | FR-005 | Given a mocked LLM output with one claim citing an unknown passage ID and one sentence containing "saves 250 kg CO₂e", the claim is removed and the figure-containing text is rejected or replaced before display. | Automated server test with a mocked LLM | Pass | `server/test/report-service.test.ts` checks mixed known/unknown citations, trusted passage metadata, removal of euro and CO₂e text across the explanation fields, and preservation of a cited hardware quantity. |
 | AC-006 | FR-006 | Every cited claim's evidence entry shows the document title, section or page, an excerpt, and a working link to the source URL. | Automated web test, plus a manual click-through on one demo report | Not run | |
 | AC-007 | FR-007 | Given a device with `model_evidence: "none"`, the upgrade and repair cards state what could not be verified. | Automated test | Not run | |
 | AC-008 | FR-008 | Given scores where switching modes changes the order, the report names the moved paths and the criteria responsible, with no LLM call. Given no order change, no change message is shown. | Automated unit and web tests | Not run | |
 | AC-009 | FR-009 | Given an LLM call that times out or errors, the report still renders the ranking with template explanations and shows the unavailable notice. | Automated server and web tests with a mocked failure | Not run | |
-| AC-010 | FR-010 | Opening the same report twice and toggling modes results in exactly one LLM call per device and intended use. | Automated server test counting mocked LLM calls | Not run | |
+| AC-010 | FR-010 | Opening the same report twice and toggling modes results in exactly one LLM call per device and intended use. | Automated server test counting mocked LLM calls | Pass | `server/test/report-service.test.ts` counts one explanation call across concurrent opens and SQLite cache reads with both ranking modes. A second use and a second device each make a separate call. |
 | AC-011 | NFR responsiveness | The report journey (choose use, expand card, follow source link) completes in a browser at 360 px width and at laptop width without horizontal scrolling. | Manual browser check | Not run | |
 | AC-012 | Review | The diff and sample demo-model reports are self-reviewed for unsupported claims, with findings recorded below. | Self-review | Not run | |
 
@@ -36,3 +36,5 @@ Completion boundary: locally verified handoff with self-review (see [PLAN.md § 
 ## Verification notes
 
 2026-11-20: Self-reviewed the T-001 diff against FR-004 at base `021b4e1`. The model response schema derives its fields from the shared path explanation, requires all five paths, and rejects server-owned report fields. The prompt inspection test uses instruction-like text inside a passage. Runtime citation and figure checks remain in T-002.
+
+2026-11-20: Self-reviewed the T-002 diff from `e985069` against FR-005 and FR-010. Rechecked the report service and SSE sequence with 216 passing server tests. Generation failures leave no cached result. The test provider is mocked; live output quality and fallback behavior have separate verification tasks.

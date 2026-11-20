@@ -25,6 +25,7 @@ import {
 import type { AssessmentService } from './assessment/service.ts'
 import type { DeviceStore } from './devices/store.ts'
 import { checkScan } from './devices/validate.ts'
+import type { createReportService } from './report/service.ts'
 import type { SessionStore } from './sessions/store.ts'
 
 export interface AppOptions {
@@ -32,6 +33,7 @@ export interface AppOptions {
   sessions: SessionStore
   /** Absent when the server cannot assess (no retrieval index); the report stream then fails. */
   assessments?: AssessmentService | undefined
+  explain?: ReturnType<typeof createReportService> | undefined
   /** Origin of the web app, used to build device page URLs, e.g. https://leaaf.green */
   publicBaseUrl: string
   /** Path of the scanner executable to serve; the download is 404 while it is missing. */
@@ -99,8 +101,6 @@ export function buildApp(options: AppOptions): FastifyInstance {
   })
 
   // Report stream (shared/src/report.ts): the assessment first, then the report, then `end`.
-  // The explained report is feature 004 and not built yet, so the stream currently goes straight
-  // from `assessment` to `end`.
   app.get<{ Params: { id: string }; Querystring: { intended_use?: string } }>(
     '/api/devices/:id/report',
     async (req, reply) => {
@@ -131,13 +131,16 @@ export function buildApp(options: AppOptions): FastifyInstance {
       }
       const heartbeat = setInterval(() => write(': keep-alive\n\n'), HEARTBEAT_MS)
       const send = (event: string, data: unknown) => write(sseFrame(event, data))
+      let stage = 'assessment'
       try {
-        const { assessment } = await assessments.assessDevice(record, use as IntendedUse)
-        send('assessment', assessment)
+        const input = await assessments.assessDevice(record, use as IntendedUse)
+        send('assessment', input.assessment)
+        stage = 'report'
+        if (options.explain) send('report', await options.explain(record.scan, input))
         send('end', { status: 'complete' } satisfies StreamEnd)
       } catch (err) {
-        app.log.error({ err: err instanceof Error ? err.message : String(err) }, 'assessment failed')
-        send('error', apiError('internal', 'the assessment failed'))
+        app.log.error({ err: err instanceof Error ? err.message : String(err) }, `${stage} failed`)
+        send('error', apiError('internal', `the ${stage} failed`))
       } finally {
         clearInterval(heartbeat)
         res.end()
