@@ -160,13 +160,13 @@ describe('OpenAI-compatible client', () => {
 })
 
 describe('loadLlmConfig', () => {
-  it('defaults to DeepSeek with thinking on for extraction and off for explanations', () => {
+  it('defaults to DeepSeek with thinking off for both tasks', () => {
     expect(loadLlmConfig({ LLM_API_KEY: 'k' })).toEqual({
       baseUrl: 'https://api.deepseek.com',
       apiKey: 'k',
       model: 'deepseek-flash',
       timeoutMs: 25000,
-      thinking: { fact_extraction: 'enabled', explanation: 'disabled' },
+      thinking: { fact_extraction: 'disabled', explanation: 'disabled' },
     })
   })
 

@@ -20,8 +20,8 @@ function thinkingMode(env: NodeJS.ProcessEnv, name: string, fallback: ThinkingMo
 
 /**
  * Reads the LLM config. Defaults target DeepSeek's official API with `deepseek-flash`.
- * Thinking is on for fact extraction (accuracy, cached per model) and off for
- * explanations (latency target of feature 004).
+ * Thinking is off for both tasks: on for fact extraction, a cold assessment took 26 s against
+ * feature 003's 20 s target (user decision 2026-11-20; see ADR-002). Set it per task to override.
  */
 export function loadLlmConfig(env: NodeJS.ProcessEnv = process.env): LlmConfig {
   const apiKey = env.LLM_API_KEY?.trim() ?? ''
@@ -45,7 +45,7 @@ export function loadLlmConfig(env: NodeJS.ProcessEnv = process.env): LlmConfig {
     model: env.LLM_MODEL?.trim() || 'deepseek-flash',
     timeoutMs,
     thinking: {
-      fact_extraction: thinkingMode(env, 'LLM_THINKING_FACT_EXTRACTION', 'enabled'),
+      fact_extraction: thinkingMode(env, 'LLM_THINKING_FACT_EXTRACTION', 'disabled'),
       explanation: thinkingMode(env, 'LLM_THINKING_EXPLANATION', 'disabled'),
     },
   }

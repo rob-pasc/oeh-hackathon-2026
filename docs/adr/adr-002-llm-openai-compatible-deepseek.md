@@ -20,6 +20,7 @@ Features 003 and 004 need an LLM that returns JSON, for extracted facts and for 
   - retries once with the validation errors (also on empty content, which DeepSeek documents);
   - then throws `invalid_output`.
 - Thinking mode is set per task through the non-standard `thinking` body field: `enabled` for fact extraction, `disabled` for explanations, or `omit` for providers without it.
+  - **Update 2026-11-20 (user decision):** the fact extraction default is now `disabled` too. With thinking on, the first assessment of a ThinkPad T480 took 26.4 s against feature 003's 20 s target; with it off, 1.8 s, with the same eight extracted facts. The per-task setting and the rest of this decision are unchanged.
 - Configuration comes only from environment variables (`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_MS`, `LLM_THINKING_*`); see `server/.env.example`. The key is never logged, committed, or shipped in the scanner or web app.
 
 ## Alternatives considered

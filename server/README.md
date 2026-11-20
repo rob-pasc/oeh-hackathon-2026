@@ -77,7 +77,7 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 | `LLM_BASE_URL` | `https://api.deepseek.com` | OpenAI-compatible endpoint |
 | `LLM_MODEL` | `deepseek-flash` | Model name |
 | `LLM_TIMEOUT_MS` | `25000` | Per-request timeout |
-| `LLM_THINKING_FACT_EXTRACTION` | `enabled` | `enabled`, `disabled`, or `omit` (don't send the parameter) |
+| `LLM_THINKING_FACT_EXTRACTION` | `disabled` | `enabled`, `disabled`, or `omit` (don't send the parameter) |
 | `LLM_THINKING_EXPLANATION` | `disabled` | As above |
 
 ## Container image
@@ -105,5 +105,6 @@ The smoke test sends one tiny non-personal prompt per thinking setting. It print
 | 2026-11-20 | `https://api.deepseek.com` / `deepseek-flash` | enabled (fact extraction) | Pass: 1 attempt, 1298 ms, 181/78 tokens in/out |
 | 2026-11-20 | `https://api.deepseek.com` / `deepseek-flash` | enabled (`facts:smoke`) | Pass, matches fixture: 1 attempt, 10757 ms, 2176/2063 tokens in/out |
 | 2026-11-20 | `https://api.deepseek.com` / `deepseek-flash` | disabled (`facts:smoke`) | Pass, matches fixture: 1 attempt, 1469 ms, 2151/264 tokens in/out |
+| 2026-11-20 | `https://api.deepseek.com` / `deepseek-flash` | disabled (`facts:smoke`, new default) | Pass, matches fixture: 1 attempt, 1459 ms, 2151/264 tokens in/out |
 
 This confirms that DeepSeek accepts `thinking: { type: "disabled" }`, which its docs did not show explicitly.
