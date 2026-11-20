@@ -36,7 +36,7 @@ func TestManifestRequiresAdministrator(t *testing.T) {
 	}
 }
 
-// The exe, title bar, and taskbar use the "l." monogram (feature 001 FR-014). Gio's window
+// The exe, title bar, and taskbar use the leaf favicon (feature 001 FR-016). Gio's window
 // class loads icon resource 1, so the group must be "#1"; each listed size must exist, and the
 // .syso must contain one image per size (go-winres stores them as PNG).
 func TestIconResource(t *testing.T) {

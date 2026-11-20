@@ -20,7 +20,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-012:** *(Added 2026-11-20)* Embed a `requireAdministrator` manifest and version info with `go-winres`, commit the generated `.syso` files, open the browser non-elevated, and add a test for the manifest (supports `AC-001`)
 - [x] **T-013:** *(Added 2026-11-20)* Build the Gio scanner window (start, progress, completion, and error screens; embedded Inter subset; `-H windowsgui`), report run events through a callback instead of opening the browser, keep a console build for other operating systems, with tests for the state model and the run events (supports `AC-005`, `AC-008`, `AC-014`)
 - [x] **T-014:** *(Amendment 2026-11-20)* Add **Try again** for temporary upload failures (re-upload the saved scan; defer the session error until Close), with tests; add the `gui` build tag for a Linux dev window (supports `AC-015`)
-- [x] **T-015:** *(Amendment 2026-11-20)* Add the "l." monogram icon (`winres/make_icon.py`, PNGs, `RT_GROUP_ICON` `#1`), regenerate the `.syso`, with a resource test (supports `AC-016`)
+- [x] **T-015:** *(Amendment 2026-11-20)* Add the exe icon, the leaf favicon since the revision (`winres/make_icon.py`, PNGs, `RT_GROUP_ICON` `#1`), regenerate the `.syso`, with a resource test (supports `AC-016`)
 - [ ] **T-010:** Run all checks, self-review the diff against the plan, record the findings, and update the README and the feature index (supports `AC-012`)
 
 ## Dependencies and blockers
@@ -51,7 +51,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
   - The Linux `-tags gui` build compiles. It was not opened on screen.
   - The "Upload failed" screen was rendered off screen and checked visually.
 - 2026-11-20: First run on Windows (the user's laptop, Windows 11 26H2): the scanner closed right after **Start scan**. Cause: WMI delivers `Win32_SystemEnclosure.ChassisTypes` (uint16[] in the schema) as int32 elements, and the `wmi` package panics when loading them into `[]uint16`. Fixed: `ChassisTypes` is `[]int32`, and every WMI query runs through `guarded` (`internal/collect/guard.go`), which turns a panic into a failed source, as FR-004 requires. `TestGuardedTurnsPanicIntoError` covers the guard. A non-elevated console run of the collector on the same laptop then read every source except `Win32_Tpm` (access denied without elevation, as expected). The elevated window run is still part of T-009.
-- 2026-11-20: T-015 done. The icon is rendered from the embedded Inter ExtraBold by `make_icon.py` (Pillow, optional; the PNGs and `.syso` are committed). `TestIconResource` passes, and Windows extracts the monogram from the local build. Title bar and taskbar are checked in T-009.
+- 2026-11-20: T-015 done. The icon was first an "l." monogram, rendered from the embedded Inter ExtraBold by `make_icon.py` (Pillow, optional; the PNGs and `.syso` are committed). `TestIconResource` passes, and Windows extracts the monogram from the local build. Title bar and taskbar are checked in T-009.
+- 2026-11-20: At the user's request the icon is now the leaf favicon. `make_icon.py` draws the favicon's two Bézier paths with Pillow (no SVG renderer needed); `TestIconResource` passes and Windows extracts the leaf from the local build.
 - Unverified assumption for T-003/T-011: whether `root\WMI` battery classes and `Win32_Tpm` can be read without admin rights. Test this early on a real laptop; the schema already allows `null`. *(2026-11-20: moot for TPM once T-012 elevates the scanner; whether the battery classes work elevated is still checked in T-009.)*
 
 - 2026-11-20: T-008 done after FR-010 was narrowed to feature 006's specs card fields (user decision). AC-009 and AC-010 pass; see the acceptance criteria.
@@ -65,3 +66,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: Scope extended by an amendment (FR-015, AC-015, T-014); see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
 - 2026-11-20: FR-010 narrowed to feature 006 FR-010 (behavioral replacement); see the [scope change log](./PLAN.md#scope-change-log).
 - 2026-11-20: Scope extended by an amendment (FR-016, AC-016, T-015: exe icon); see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
+- 2026-11-20: FR-016 revised (leaf favicon instead of the monogram); see the [scope change log](./PLAN.md#scope-change-log).
