@@ -25,13 +25,16 @@ leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner
 - Secrets configured only through host environment settings.
 - `docs/DEPLOYMENT.md` covering build, deploy, environment variables, seeding, smoke checks, backup, and rollback.
 - Executing the deployment once the user authorizes it.
+- *(Added 2026-11-20)* Two container images, `web` and `server`, built from the repository.
+- *(Added 2026-11-20)* A GitHub Actions workflow that runs the checks (type check, tests, build) and the image builds on pull requests and on `main`, and pushes the images to the GitHub Container Registry (GHCR) when a Git tag is pushed.
+- *(Added 2026-11-20)* An example production Compose file that runs both images on a host where an external Caddy terminates HTTPS and routes requests to them. The Caddy configuration itself is not part of the Compose file.
 
 ### Out of scope
 
 - A multi-device or fleet dashboard, or a public list of demo devices (deferred). Demo links are kept in the deployment guide or demo script.
 - Custom domain purchase, code signing of the scanner, CDN, or high availability.
 - Monitoring and alerting beyond the host's built-in logs.
-- CI/CD automation (manual deploy is acceptable).
+- Automatic deployment to the host (CD). CI builds and publishes the images; pulling and restarting them on the host stays a manual step. *(Narrowed 2026-11-20; originally all CI/CD automation was out of scope.)*
 
 ## Functional requirements
 
@@ -44,6 +47,9 @@ leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner
 - **FR-007:** The LLM API key and other secrets are set only in host environment configuration. None appear in the repository, the scanner binary, or responses to clients.
 - **FR-008:** Device records and caches persist across application restarts and redeployments.
 - **FR-009:** `docs/DEPLOYMENT.md` documents prerequisites, environment variables (names only), build and deploy steps, seeding, post-deploy smoke checks, backup of the SQLite database, and rollback to the previous release.
+- **FR-010:** *(Added 2026-11-20)* Every pull request and every push to `main` runs the type check, tests, and build for all workspaces, and builds both container images. A failure in any of them fails the workflow.
+- **FR-011:** *(Added 2026-11-20)* Pushing a Git tag runs the same checks and then publishes the `web` and `server` images to GHCR. Each image is tagged with the Git tag name, the short commit SHA, and `latest`, so any earlier release can be redeployed by its tag. Pull requests and pushes to `main` build the images without publishing them.
+- **FR-012:** *(Added 2026-11-20)* An example production Compose file runs the published images. The web container serves the built app with client-side route fallback. Both containers publish their ports only on the host's loopback interface for the external Caddy, and the server keeps its data on a named volume.
 
 ## Non-functional requirements and constraints
 
@@ -62,11 +68,14 @@ leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner
 
 ## Proposed technical approach
 
-Not yet adopted; the host is undecided.
+Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The rest is still a proposal.
 
-- **Packaging:** One Docker image. Node serves the API and the built React assets, SQLite lives on a mounted persistent volume, and the corpus index is built into the image or the volume.
+- **Packaging (decided 2026-11-20, replaces the earlier one-image proposal):** Two images built from the repository root.
+  - `web`: the Vite build served by unprivileged nginx on port 8080, with fallback to `index.html` for client-side routes. `VITE_API_MODE` is a build argument. It defaults to `mock` until the backend routes exist; switching the CI build to `live` is the planned follow-up.
+  - `server`: Node 24 running the TypeScript sources directly, with `shared/` built and production dependencies only, on port 3000, with SQLite on a mounted volume. The server has no HTTP entry point yet (feature 001), so the image is prepared but cannot run until `server/src/main.ts` exists. The example Compose file keeps it behind an opt-in profile until then.
+- **Host type (decided 2026-11-20):** A VPS running Docker Compose behind an external Caddy managed outside this repository. Caddy routes `/api/*` (and later `/downloads/*`) to `server` and everything else to `web`, so the browser sees one origin. The provider and account ownership are still open (T-001).
+- **CI (decided 2026-11-20):** One GitHub Actions workflow, `.github/workflows/ci.yaml`. On a tag push, images are pushed to `ghcr.io/<owner>/leaaf-web` and `ghcr.io/<owner>/leaaf-server` for `linux/amd64`.
 - **Domain (decided 2026-11-20):** `leaaf.green`, already registered by the team, so no domain purchase is needed. The scanner release build points at `https://leaaf.green`. DNS records for the chosen host are set up in T-008.
-- **Host:** **Open.** Candidates are a small VPS with Docker and a reverse proxy (Caddy for automatic HTTPS), or a PaaS with persistent volumes (for example Fly.io, Render, Railway). Chosen with the user before deployment.
 - **Scanner build:** Cross-compile with `GOOS=windows GOARCH=amd64` and inject the public URL with `-ldflags`; the binary is published as a static asset.
 - **Seeding:** `npm run seed` reads `demo/devices/*.json`, fixed demo device IDs, and pre-generated caches stored in `demo/cache/`.
 - **Rate limiting:** In-process per-IP limits (for example `@fastify/rate-limit`); a daily LLM counter in SQLite.
@@ -84,7 +93,7 @@ Not yet adopted; the host is undecided.
 
 - **Completion boundary:** Released behavior, meaning the public deployment is live and the post-deploy checks pass.
 - **Review:** Self-review of the diff, the deployment guide, and the security settings (rate limits, secrets), recorded in `ACCEPTANCE_CRITERIA.md`. Because this exposes a public endpoint that triggers paid API calls, the user is asked to review the security settings before go-live. They may accept the self-review instead.
-- **CI/merge:** No CI. Local tests and type checks must pass. Deploying, pushing, and merging each need explicit user authorization.
+- **CI/merge:** The GitHub Actions workflow (FR-010) must pass, in addition to local tests and type checks. Deploying, pushing, and merging each need explicit user authorization.
 
 ## Release and recovery (when applicable)
 
@@ -110,7 +119,8 @@ Not yet adopted; the host is undecided.
 
 ## Assumptions and open questions
 
-- **Blocking:** Which hosting provider, and who owns the account and credentials?
+- **Blocking:** Which VPS provider, and who owns the account and credentials? (The host type is decided: a VPS with an external Caddy.)
+- **Open:** Whether the GHCR packages are public, or the host logs in with a read-only token. Default: the host logs in (see `docs/DEPLOYMENT.md`).
 - **Open:** Rate limit values and the daily LLM cap. Proposed: 10 uploads per IP per hour, and 200 LLM calls per day.
 - **Open:** Whether to keep the public deployment running after the hackathon. Default: until the user decides otherwise.
 
@@ -119,6 +129,7 @@ Not yet adopted; the host is undecided.
 | Date       | Change                 | User approval                                                                                     |
 | ---------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
 | 2026-11-20 | Initial approved scope | User replied "accept" to the five-feature MVP proposal in the specification conversation, 2026-11-20 |
+| 2026-11-20 | Scope revision before implementation. Adds two images (`web`, `server`), a CI workflow that publishes them to GHCR (FR-010, FR-011), and an example production Compose file for an external Caddy (FR-012). Narrows the CI/CD exclusion to automatic deployment only. Adopts two-image packaging instead of one image, and a VPS with external Caddy as the host type. The server image is prepared but not runnable until feature 001 adds the HTTP entry point. The web image builds in mock mode for now. | User chose "Accept and implement" in the docker/CI conversation, 2026-11-20. They chose "Dockerfile only" for the server ("let's just wait with the backend / server") and asked to publish only when a tag is pushed |
 
 ## Related and superseded features
 

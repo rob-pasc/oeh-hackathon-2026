@@ -17,10 +17,15 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [ ] **T-008:** With user authorization, deploy, seed, and run the post-release smoke checks, recording the version and evidence (supports `AC-001`–`AC-005`, `AC-008`)
 - [ ] **T-009:** Rehearse the rollback and backup restore, recording the outcome (supports `AC-010`)
 - [ ] **T-010:** Update the README status and the feature index with the public deployment state (supports `AC-009`, `AC-011`)
+- [ ] **T-011:** *(Added 2026-11-20)* Add the `web` and `server` Dockerfiles, the nginx config, and `.dockerignore` (supports `AC-012`, `AC-014`; covers the image part of T-002)
+- [ ] **T-012:** *(Added 2026-11-20)* Add `.github/workflows/ci.yaml` with the checks, the image builds, and publishing to GHCR on tag pushes (supports `AC-012`, `AC-013`)
+- [ ] **T-013:** *(Added 2026-11-20)* Add the example production Compose file and document the images, the CI, the Compose setup, and the external Caddy routes in `docs/DEPLOYMENT.md` (supports `AC-014`, `AC-009`)
+- [ ] **T-014:** *(Added 2026-11-20)* Verify on GitHub: a PR run, a tag push that publishes, and the Compose file on a Docker host (supports `AC-012`–`AC-014`)
 
 ## Dependencies and blockers
 
-- **Blocking:** Hosting provider undecided (T-001); deployment requires explicit user authorization (T-008).
+- **Blocking:** VPS provider undecided; the host type (VPS with external Caddy) is decided (T-001). Deployment requires explicit user authorization (T-008).
+- The `server` image cannot run until feature 001 adds the HTTP entry point `server/src/main.ts`.
 - Requires features 001–004 implemented; seeding requires the demo models to be chosen.
 
 ## Progress notes
@@ -29,4 +34,4 @@ None yet.
 
 ## Lifecycle history
 
-No lifecycle events recorded yet.
+- 2026-11-20: Scope revised before implementation (images, CI to GHCR, example Compose file; see the [scope change log](./PLAN.md#scope-change-log)). Implementation of T-011 to T-013 authorized by the user in the same conversation.
