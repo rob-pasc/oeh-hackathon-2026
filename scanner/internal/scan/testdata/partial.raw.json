@@ -1,0 +1,24 @@
+{
+  "Win32_ComputerSystem": [{ "Manufacturer": "Example Laptops Inc.", "Model": "EX 14", "SystemFamily": null, "SystemSKUNumber": "To be filled by O.E.M." }],
+  "Win32_ComputerSystemProduct": [{ "Version": "System Version" }],
+  "Win32_SystemEnclosure": [{ "ChassisTypes": [9] }],
+  "Win32_OperatingSystem": [{ "Caption": "Microsoft Windows 10 Home", "Version": "10.0.19045" }],
+  "Win32_BIOS": [{ "ReleaseDate": "20180301000000.000000+000" }],
+  "Win32_Processor": [{ "Name": "Intel(R) Core(TM) i3-7100U CPU @ 2.40GHz", "NumberOfCores": 2, "NumberOfLogicalProcessors": 4 }],
+  "Win32_PhysicalMemory": [
+    { "Capacity": 4294967296, "SMBIOSMemoryType": 2, "ConfiguredClockSpeed": 0, "Speed": 2133 },
+    { "Capacity": 4294967296, "SMBIOSMemoryType": 26, "ConfiguredClockSpeed": 2133, "Speed": 2400 }
+  ],
+  "Win32_PhysicalMemoryArray": [{ "MemoryDevices": 2, "Use": 3 }],
+  "MSFT_PhysicalDisk": [{ "MediaType": 3, "BusType": 11, "Size": 500107862016, "HealthStatus": 5 }],
+  "Win32_Battery": [{ "BatteryStatus": 1 }],
+  "BatteryStaticData": null,
+  "BatteryFullChargedCapacity": null,
+  "BatteryCycleCount": null,
+  "BatteryReport": null,
+  "Win32_VideoController": [{ "Name": "Intel(R) HD Graphics 620" }],
+  "Win32_Tpm": null,
+  "DisplayVersion": "22H2",
+  "FirmwareType": "uefi",
+  "SecureBoot": null
+}

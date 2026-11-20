@@ -7,16 +7,16 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Tasks
 
-- [ ] **T-001:** Set up the repository layout (`scanner/`, `server/`, `web/`, `shared/`) with build, test, and type-check commands, and document them in the README (supports all ACs)
+- [x] **T-001:** Set up the repository layout (`scanner/`, `server/`, `web/`, `shared/`) with build, test, and type-check commands, and document them in the README (supports all ACs)
 - [x] **T-002:** Define the versioned device JSON schema in `shared/`, including nullable fields and `scan_status` (supports `AC-003`, `AC-006`)
-- [ ] **T-003:** Implement the Go collectors and normalization with fixture-based unit tests, including null handling (supports `AC-002`, `AC-003`)
-- [ ] **T-004:** Implement the payload builder's privacy allowlist with a planted-identifier test (supports `AC-004`)
-- [ ] **T-005:** Implement the local JSON write, HTTPS upload, link output, browser open, and failure exit code (supports `AC-005`, `AC-008`)
+- [x] **T-003:** Implement the Go collectors and normalization with fixture-based unit tests, including null handling (supports `AC-002`, `AC-003`)
+- [x] **T-004:** Implement the payload builder's privacy allowlist with a planted-identifier test (supports `AC-004`)
+- [x] **T-005:** Implement the local JSON write, HTTPS upload, link output, browser open, and failure exit code (supports `AC-005`, `AC-008`)
 - [x] **T-006:** Implement the upload endpoint with schema validation, a size limit, SQLite storage, and secure ID generation, with integration tests (supports `AC-006`, `AC-007`)
 - [x] **T-007:** Implement `GET /api/devices/:id` and the not-found behavior, with tests (supports `AC-010`)
 - [ ] **T-008:** Build the React landing page with the download and data disclosure, and the device page with "Unknown" rendering, with tests (supports `AC-009`, `AC-011`)
 - [ ] **T-009:** Run the scanner manually on a real Windows laptop as a non-admin user and record the evidence (supports `AC-001`, `AC-005`, `AC-008`)
-- [ ] **T-011:** *(amendment)* Implement the FR-013 collectors (RAM slots and type, TPM, Secure Boot, firmware type, battery cycle count, GPU names) with fixture tests, including access-denied cases (supports `AC-013`)
+- [x] **T-011:** *(amendment)* Implement the FR-013 collectors (RAM slots and type, TPM, Secure Boot, firmware type, battery cycle count, GPU names) with fixture tests, including access-denied cases (supports `AC-013`)
 - [ ] **T-010:** Run all checks, self-review the diff against the plan, record the findings, and update the README and the feature index (supports `AC-012`)
 
 ## Dependencies and blockers
@@ -30,6 +30,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: The `server` workspace exists (TypeScript run natively by Node 24, Vitest) but so far contains only the LLM adapter; the HTTP API (T-006, T-007) is not started.
 - 2026-11-20 (later): The `server` workspace now also holds fact extraction and the impact table loader (feature 003), and the `web` workspace exists with test, type-check, and build scripts (feature 006). Only `scanner/` still lacks a module and commands, so T-001 stays open. Feature 006 built a landing page and a result screen at `/d/:id`; T-008 is checked against it when this feature's device page and download are done.
 - 2026-11-20: T-006 and T-007 done: Fastify upload and lookup API with SQLite storage and the scanner download route; 11 tests in `server/test/devices.test.ts`. Live smoke run: a fixture upload returned 201 with a device URL, the lookup returned the record, and the log contained neither the device ID nor a client IP.
+- 2026-11-20: T-001, T-003, T-004, T-005, and T-011 done: the Go module in `scanner/` with `go test`, `go vet`, and the Windows build documented in `scanner/README.md` and the root README. Tests: normalization fixtures (complete laptop, partial, desktop, planted identifiers), a query allowlist check, battery report parsing, the run flow against unreachable, rejecting, and accepting test servers, and a schema check against `shared/schemas/DeviceScan.schema.json`. A Linux build of the scanner uploaded to the local server and received a device link, so the Go payload passes the server's validation. The Windows `.exe` cross-compiles (PE32+, about 6.9 MB). Nothing has run on Windows yet (T-009).
 - Unverified assumption for T-003/T-011: whether `root\WMI` battery classes and `Win32_Tpm` can be read without admin rights. Test this early on a real laptop; the schema already allows `null`.
 
 ## Lifecycle history

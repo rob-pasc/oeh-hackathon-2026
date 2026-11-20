@@ -1,0 +1,26 @@
+{
+  "Win32_ComputerSystem": [{ "Manufacturer": "LENOVO", "Model": "20L5CTO1WW", "SystemFamily": "ThinkPad T480", "SystemSKUNumber": "LENOVO_MT_20L5_BU_Think_FM_ThinkPad T480" }],
+  "Win32_ComputerSystemProduct": [{ "Version": "ThinkPad T480" }],
+  "Win32_SystemEnclosure": [{ "ChassisTypes": [10] }],
+  "Win32_OperatingSystem": [{ "Caption": "Microsoft Windows 11 Pro ", "Version": "10.0.22631" }],
+  "Win32_BIOS": [{ "ReleaseDate": "20230512000000.000000+000" }],
+  "Win32_Processor": [{ "Name": "Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz", "NumberOfCores": 4, "NumberOfLogicalProcessors": 8 }],
+  "Win32_PhysicalMemory": [
+    { "Capacity": 8589934592, "SMBIOSMemoryType": 26, "ConfiguredClockSpeed": 2400, "Speed": 2400 }
+  ],
+  "Win32_PhysicalMemoryArray": [{ "MemoryDevices": 2, "Use": 3 }],
+  "MSFT_PhysicalDisk": [
+    { "MediaType": 4, "BusType": 17, "Size": 256060514304, "HealthStatus": 0 },
+    { "MediaType": 0, "BusType": 7, "Size": 32010928128, "HealthStatus": 0 }
+  ],
+  "Win32_Battery": [{ "BatteryStatus": 2 }],
+  "BatteryStaticData": [{ "DesignedCapacity": 57000 }],
+  "BatteryFullChargedCapacity": [{ "FullChargedCapacity": 41040 }],
+  "BatteryCycleCount": [{ "CycleCount": 0 }],
+  "BatteryReport": { "DesignCapacityMWh": 57000, "FullChargeCapacityMWh": 41040, "CycleCount": 412 },
+  "Win32_VideoController": [{ "Name": "Intel(R) UHD Graphics 620" }, { "Name": "Microsoft Remote Display Adapter" }],
+  "Win32_Tpm": [{ "SpecVersion": "2.0, 0, 1.38" }],
+  "DisplayVersion": "23H2",
+  "FirmwareType": "uefi",
+  "SecureBoot": true
+}
