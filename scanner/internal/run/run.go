@@ -1,5 +1,6 @@
 // Package run is the scanner's end-to-end flow (feature 001 FR-006, FR-007, FR-009): scan,
-// save the payload locally, upload it, and open the device page.
+// save the payload locally, and upload it. It never opens a browser; the caller offers the
+// device link (the window's "Show my results" button, or the printed link in the console build).
 package run
 
 import (
@@ -32,15 +33,40 @@ type Config struct {
 	// OutDir receives the JSON file; the directory of the executable in production.
 	OutDir string
 	// Collect returns raw readings and notes about sources that failed.
-	Collect     func(progress func(string)) (scan.Raw, []string)
-	Now         func() time.Time
-	HTTP        *http.Client
-	OpenBrowser func(url string) error
-	Out         io.Writer
+	Collect func(progress func(string)) (scan.Raw, []string)
+	Now     func() time.Time
+	HTTP    *http.Client
+	// Out receives a plain-text log (the console build); io.Discard for the window.
+	Out io.Writer
+	// OnEvent, if set, receives the progress for the window (FR-014). It is called on Run's
+	// goroutine.
+	OnEvent func(Event)
 	// SessionID comes from the executable's trailer (ReadSessionID); "" for a plain download.
-	// With a session the browser tab is already open and follows the progress, so the scanner
-	// reports progress to it instead of opening a second tab (feature 006 FR-002 to FR-004).
+	// With a session, a browser tab follows the progress, so it is also reported there
+	// (feature 006 FR-002 to FR-004).
 	SessionID string
+}
+
+// EventKind is the kind of a progress Event.
+type EventKind int
+
+const (
+	// EventStep: Step (a scan step ID of shared/src/session.ts) has started.
+	EventStep EventKind = iota
+	// EventDone: the upload succeeded; DeviceURL is an http(s) link, SavedPath the local JSON.
+	EventDone
+	// EventFailed: Message says what went wrong and what to do, Detail is the technical cause,
+	// and SavedPath is the local JSON if it was written.
+	EventFailed
+)
+
+type Event struct {
+	Kind      EventKind
+	Step      string
+	DeviceURL string
+	SavedPath string
+	Message   string
+	Detail    string
 }
 
 var stepLabels = map[string]string{
@@ -71,11 +97,18 @@ func Run(cfg Config) int {
 	fmt.Fprintln(out, "Reads hardware facts only: no serial numbers, names, files, or network addresses.")
 	fmt.Fprintln(out)
 
+	emit := func(e Event) {
+		if cfg.OnEvent != nil {
+			cfg.OnEvent(e)
+		}
+	}
 	step := func(id string) {
 		fmt.Fprintf(out, "  %s...\n", stepLabels[id])
+		emit(Event{Kind: EventStep, Step: id})
 		cfg.report(map[string]string{"type": "step", "step": id, "state": "running"})
 	}
-	fail := func(code, message string) {
+	fail := func(code, message, detail, savedPath string) {
+		emit(Event{Kind: EventFailed, Message: message, Detail: detail, SavedPath: savedPath})
 		cfg.report(map[string]string{"type": "error", "code": code, "message": message})
 	}
 
@@ -94,12 +127,13 @@ func Run(cfg Config) int {
 	body, err := json.MarshalIndent(device, "", "  ")
 	if err != nil {
 		fmt.Fprintf(out, "Error: could not encode the scan: %v\n", err)
+		fail("scanner_failed", "The scanner could not prepare its results. Run it again.", err.Error(), "")
 		return ExitSaveFailed
 	}
 	path := filepath.Join(cfg.OutDir, "leaaf-scan-"+cfg.Now().UTC().Format("20060102-150405")+".json")
 	if err := os.WriteFile(path, body, 0o644); err != nil {
 		fmt.Fprintf(out, "Error: could not save the scan to %s: %v\n", path, err)
-		fail("scanner_failed", "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again.")
+		fail("scanner_failed", "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again.", err.Error(), "")
 		return ExitSaveFailed
 	}
 	fmt.Fprintf(out, "Saved the scan to %s\n", path)
@@ -108,7 +142,7 @@ func Run(cfg Config) int {
 	res, err := upload(cfg, body)
 	if err != nil {
 		fmt.Fprintf(out, "\nUpload failed: %v\n", err)
-		fail("upload_failed", "The scanner could not upload its results. Check the internet connection and run it again.")
+		fail("upload_failed", "The scanner could not upload its results. Check the internet connection and run it again.", err.Error(), path)
 		fmt.Fprintf(out, "Your scan is saved at %s. Run the scanner again when you are online.\n", path)
 		return ExitUploadFailed
 	}
@@ -117,9 +151,8 @@ func Run(cfg Config) int {
 	fmt.Fprintln(out, "Keep this link private: anyone with it can see this scan.")
 	if cfg.SessionID != "" {
 		fmt.Fprintln(out, "Your results are now shown in the browser tab that started this scan.")
-	} else if err := cfg.OpenBrowser(res.DeviceURL); err != nil {
-		fmt.Fprintf(out, "Could not open the browser (%v). Open the link above yourself.\n", err)
 	}
+	emit(Event{Kind: EventDone, DeviceURL: res.DeviceURL, SavedPath: path})
 	return ExitOK
 }
 

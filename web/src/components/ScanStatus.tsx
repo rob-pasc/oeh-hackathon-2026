@@ -10,7 +10,7 @@ export type ScanProgress =
 export function progressLabel(progress: ScanProgress): string {
   switch (progress.phase) {
     case 'waiting':
-      return 'Waiting for the scanner… run the downloaded file to start.'
+      return 'Waiting for the scanner… open the downloaded file and press Start scan.'
     case 'running':
       return SCAN_STEPS.find((s) => s.id === progress.step)?.running ?? 'Scanning…'
     case 'done':

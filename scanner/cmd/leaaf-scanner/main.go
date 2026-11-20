@@ -1,9 +1,11 @@
 // Command leaaf-scanner reads an old Windows laptop's hardware facts, saves them next to the
-// executable, uploads them to leaaf, and opens the private device page (feature 001).
+// executable, and uploads them to leaaf (feature 001). On Windows it is a small window
+// (main_windows.go, FR-014); elsewhere a console program for development (main_other.go).
 //
-// Build for Windows from any OS (the backend URL is fixed at build time, FR-007):
+// Build for Windows from any OS (the backend URL is fixed at build time, FR-007; -H windowsgui
+// stops a console window from opening behind the scanner window):
 //
-//	GOOS=windows GOARCH=amd64 go build -ldflags "-X main.backendURL=https://leaaf.green -X main.version=0.1.0" -o dist/leaaf-scanner.exe ./cmd/leaaf-scanner
+//	GOOS=windows GOARCH=amd64 go build -ldflags "-H windowsgui -X main.backendURL=https://leaaf.green -X main.version=0.1.0" -o dist/leaaf-scanner.exe ./cmd/leaaf-scanner
 package main
 
 // The Windows resources (manifest requesting administrator rights, version info) live in
@@ -12,8 +14,7 @@ package main
 //go:generate go run github.com/tc-hib/go-winres@v0.3.3 make --arch amd64
 
 import (
-	"bufio"
-	"flag"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -29,30 +30,22 @@ var (
 	version    = "0.1.0-dev"
 )
 
-func main() {
-	noWait := flag.Bool("no-wait", false, "exit without waiting for Enter")
-	flag.Parse()
-
+// config is the scan configuration shared by the window and the console build. The JSON is
+// saved next to the executable, and a session ID is read from its trailer (feature 006).
+func config(out io.Writer) run.Config {
 	outDir, sessionID := ".", ""
 	if exe, err := os.Executable(); err == nil {
 		outDir = filepath.Dir(exe)
 		sessionID = run.ReadSessionID(exe)
 	}
-	code := run.Run(run.Config{
+	return run.Config{
 		BackendURL:     backendURL,
 		ScannerVersion: version,
 		OutDir:         outDir,
 		Collect:        collect.Collect,
 		Now:            time.Now,
 		HTTP:           &http.Client{Timeout: 30 * time.Second},
-		OpenBrowser:    openBrowser,
-		Out:            os.Stdout,
+		Out:            out,
 		SessionID:      sessionID,
-	})
-	// A double-clicked console window closes on exit; keep it open so the link or error stays readable.
-	if !*noWait {
-		os.Stdout.WriteString("\nPress Enter to close.")
-		bufio.NewReader(os.Stdin).ReadString('\n')
 	}
-	os.Exit(code)
 }

@@ -5,7 +5,8 @@
 # contains the Windows scanner, served at /downloads/leaaf-scanner.exe.
 
 # Windows scanner release build. The backend URL is compiled in; it holds no secrets (feature 005
-# FR-007). Pure Go, so it cross-compiles without cgo.
+# FR-007). Pure Go, so it cross-compiles without cgo. -H windowsgui: the scanner is a window
+# (feature 001 FR-014), so no console window may open behind it.
 FROM golang:1.26 AS scanner
 ARG SCANNER_BACKEND_URL=https://leaaf.green
 ARG SCANNER_VERSION=0.0.0-dev
@@ -14,7 +15,7 @@ COPY scanner/go.mod scanner/go.sum ./
 RUN go mod download
 COPY scanner .
 RUN CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath \
-      -ldflags "-s -w -X main.backendURL=${SCANNER_BACKEND_URL} -X main.version=${SCANNER_VERSION}" \
+      -ldflags "-s -w -H windowsgui -X main.backendURL=${SCANNER_BACKEND_URL} -X main.version=${SCANNER_VERSION}" \
       -o /out/leaaf-scanner.exe ./cmd/leaaf-scanner
 
 FROM node:24-slim AS deps

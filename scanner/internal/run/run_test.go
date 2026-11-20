@@ -16,7 +16,9 @@ import (
 	"leaaf.green/scanner/internal/scan"
 )
 
-func testConfig(t *testing.T, backend string, opened *[]string) (Config, *bytes.Buffer) {
+// testConfig records the run's progress events in *events. Config has no way to open a browser
+// (FR-009: only the window's button does), so no test has to check that one stayed closed.
+func testConfig(t *testing.T, backend string, events *[]Event) (Config, *bytes.Buffer) {
 	t.Helper()
 	out := &bytes.Buffer{}
 	model := "20L5CTO1WW"
@@ -28,14 +30,19 @@ func testConfig(t *testing.T, backend string, opened *[]string) (Config, *bytes.
 			progress("started")
 			return scan.Raw{ComputerSystem: &[]scan.ComputerSystem{{Model: &model}}}, []string{"Win32_Tpm: access denied"}
 		},
-		Now:  func() time.Time { return time.Date(2026, 11, 20, 9, 30, 0, 0, time.UTC) },
-		HTTP: &http.Client{Timeout: 5 * time.Second},
-		OpenBrowser: func(url string) error {
-			*opened = append(*opened, url)
-			return nil
-		},
-		Out: out,
+		Now:     func() time.Time { return time.Date(2026, 11, 20, 9, 30, 0, 0, time.UTC) },
+		HTTP:    &http.Client{Timeout: 5 * time.Second},
+		Out:     out,
+		OnEvent: func(e Event) { *events = append(*events, e) },
 	}, out
+}
+
+func last(t *testing.T, events []Event) Event {
+	t.Helper()
+	if len(events) == 0 {
+		t.Fatal("no events")
+	}
+	return events[len(events)-1]
 }
 
 func savedFile(t *testing.T, dir string) string {
@@ -48,7 +55,7 @@ func savedFile(t *testing.T, dir string) string {
 }
 
 // AC-005: with the backend unreachable, the JSON is saved next to the exe, its path and a
-// readable error are printed, and the exit code is non-zero.
+// readable error are printed and reported to the window, and the exit code is non-zero.
 func TestUnreachableBackend(t *testing.T) {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -57,8 +64,8 @@ func TestUnreachableBackend(t *testing.T) {
 	addr := l.Addr().String()
 	l.Close() // nothing listens here now
 
-	var opened []string
-	cfg, out := testConfig(t, "http://"+addr, &opened)
+	var events []Event
+	cfg, out := testConfig(t, "http://"+addr, &events)
 	code := Run(cfg)
 	if code == ExitOK {
 		t.Fatalf("exit code = 0, want non-zero")
@@ -74,13 +81,15 @@ func TestUnreachableBackend(t *testing.T) {
 			t.Errorf("output lacks %q:\n%s", want, text)
 		}
 	}
-	if len(opened) != 0 {
-		t.Errorf("browser opened after a failed upload: %v", opened)
+	e := last(t, events)
+	if e.Kind != EventFailed || e.SavedPath != path || e.Message == "" || !strings.Contains(e.Detail, "could not reach") {
+		t.Errorf("last event = %+v", e)
 	}
 }
 
-// FR-009: after a successful upload the device URL is printed and opened.
-func TestSuccessfulUploadOpensDevicePage(t *testing.T) {
+// FR-009, FR-014: the window sees each step, then the device URL and the saved file; the URL is
+// printed for the console build.
+func TestSuccessfulUploadReportsDevicePage(t *testing.T) {
 	var got []byte
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost || r.URL.Path != "/api/devices" || r.Header.Get("Content-Type") != "application/json" {
@@ -93,18 +102,29 @@ func TestSuccessfulUploadOpensDevicePage(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	var opened []string
-	cfg, out := testConfig(t, srv.URL, &opened)
+	var events []Event
+	cfg, out := testConfig(t, srv.URL, &events)
 	if code := Run(cfg); code != ExitOK {
 		t.Fatalf("exit code = %d\n%s", code, out)
 	}
-	saved, _ := os.ReadFile(savedFile(t, cfg.OutDir))
+	path := savedFile(t, cfg.OutDir)
+	saved, _ := os.ReadFile(path)
 	if !bytes.Equal(got, saved) {
 		t.Errorf("uploaded body differs from the saved file")
 	}
 	const url = "https://leaaf.example/d/q3Xk9vT2mB7pLw0cZr1sEa"
-	if len(opened) != 1 || opened[0] != url {
-		t.Errorf("opened = %v", opened)
+	want := []Event{
+		{Kind: EventStep, Step: "started"},
+		{Kind: EventStep, Step: "upload"},
+		{Kind: EventDone, DeviceURL: url, SavedPath: path},
+	}
+	if len(events) != len(want) {
+		t.Fatalf("events = %+v", events)
+	}
+	for i := range want {
+		if events[i] != want[i] {
+			t.Errorf("event %d = %+v, want %+v", i, events[i], want[i])
+		}
 	}
 	if !strings.Contains(out.String(), url) {
 		t.Errorf("device URL not printed:\n%s", out)
@@ -117,13 +137,16 @@ func TestRejectedUploadNamesFields(t *testing.T) {
 		w.Write([]byte(`{"error":"invalid_payload","message":"the device scan does not match the schema","fields":[{"path":"/memory/total_gb","message":"must be number"}]}`))
 	}))
 	defer srv.Close()
-	var opened []string
-	cfg, out := testConfig(t, srv.URL, &opened)
+	var events []Event
+	cfg, out := testConfig(t, srv.URL, &events)
 	if code := Run(cfg); code != ExitUploadFailed {
 		t.Fatalf("exit code = %d", code)
 	}
 	if !strings.Contains(out.String(), "/memory/total_gb: must be number") {
 		t.Errorf("field error not shown:\n%s", out)
+	}
+	if e := last(t, events); e.Kind != EventFailed || !strings.Contains(e.Detail, "/memory/total_gb: must be number") {
+		t.Errorf("last event = %+v", e)
 	}
 }
 
@@ -133,10 +156,10 @@ func TestRefusesNonWebDeviceLink(t *testing.T) {
 		w.Write([]byte(`{"device_id":"q3Xk9vT2mB7pLw0cZr1sEa","device_url":"file:///C:/Windows/System32/calc.exe"}`))
 	}))
 	defer srv.Close()
-	var opened []string
-	cfg, _ := testConfig(t, srv.URL, &opened)
-	if code := Run(cfg); code == ExitOK || len(opened) != 0 {
-		t.Errorf("code %d, opened %v: a non-http link must not be opened", code, opened)
+	var events []Event
+	cfg, _ := testConfig(t, srv.URL, &events)
+	if code := Run(cfg); code == ExitOK || last(t, events).Kind != EventFailed {
+		t.Errorf("code %d, events %+v: a non-http link must never reach the window's button", code, events)
 	}
 }
 
@@ -173,7 +196,7 @@ func TestReadSessionID(t *testing.T) {
 	}
 }
 
-// With a session, progress goes to the session, the upload carries the ID, and no second tab opens.
+// With a session, progress goes to the session and the upload carries the ID.
 func TestSessionRunReportsProgress(t *testing.T) {
 	var events []map[string]string
 	var uploaded map[string]any
@@ -194,8 +217,8 @@ func TestSessionRunReportsProgress(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	var opened []string
-	cfg, out := testConfig(t, srv.URL, &opened)
+	var local []Event
+	cfg, out := testConfig(t, srv.URL, &local)
 	cfg.SessionID = testSession
 	if code := Run(cfg); code != ExitOK {
 		t.Fatalf("exit %d\n%s", code, out)
@@ -213,8 +236,8 @@ func TestSessionRunReportsProgress(t *testing.T) {
 	if uploaded["session_id"] != testSession {
 		t.Errorf("upload session_id = %v", uploaded["session_id"])
 	}
-	if len(opened) != 0 {
-		t.Errorf("opened a browser although the session tab is waiting: %v", opened)
+	if e := last(t, local); e.Kind != EventDone {
+		t.Errorf("window not told the scan is done: %+v", e)
 	}
 	saved, _ := os.ReadFile(savedFile(t, cfg.OutDir))
 	if !bytes.Contains(saved, []byte(testSession)) {
@@ -235,8 +258,8 @@ func TestSessionRunReportsUploadFailure(t *testing.T) {
 		http.Error(w, "down", http.StatusServiceUnavailable)
 	}))
 	defer srv.Close()
-	var opened []string
-	cfg, _ := testConfig(t, srv.URL, &opened)
+	var local []Event
+	cfg, _ := testConfig(t, srv.URL, &local)
 	cfg.SessionID = testSession
 	if code := Run(cfg); code != ExitUploadFailed {
 		t.Fatalf("exit %d", code)
@@ -258,8 +281,8 @@ func TestPlainRunHasNoSession(t *testing.T) {
 		w.Write([]byte(`{"device_id":"q3Xk9vT2mB7pLw0cZr1sEa","device_url":"https://leaaf.example/d/q3Xk9vT2mB7pLw0cZr1sEa"}`))
 	}))
 	defer srv.Close()
-	var opened []string
-	cfg, _ := testConfig(t, srv.URL, &opened)
+	var events []Event
+	cfg, _ := testConfig(t, srv.URL, &events)
 	Run(cfg)
 	if len(paths) != 1 || paths[0] != "/api/devices" {
 		t.Errorf("requests = %v", paths)
