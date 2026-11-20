@@ -1,22 +1,32 @@
 import { useEffect, useState } from 'react'
+import type { DetectedPart } from '../api/types'
 import { useApi } from '../api'
 import { navigate } from '../app/router'
 import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
+import { PartsCard } from '../components/PartsCard'
 import { ResultSkeleton, ToolbarSkeleton } from '../components/ResultSkeleton'
 import { ScanStatus, type ScanProgress } from '../components/ScanStatus'
 import { ErrorCard } from '../components/ui'
+import { STEP_KINDS, upsertPart } from '../lib/parts'
 
-/** Opened in a new tab by "Scan now": skeleton plus live status until the scanner reports completion. */
+/**
+ * Opened in a new tab by "Scan now": live status, the parts the scanner finds, and the result skeleton until the
+ * scanner reports completion.
+ */
 export function ScanSession({ sessionId }: { sessionId: string }) {
   const api = useApi()
   const [progress, setProgress] = useState<ScanProgress>({ phase: 'waiting' })
+  const [parts, setParts] = useState<DetectedPart[]>([])
 
   useEffect(() => {
     return api.subscribeScanSession(sessionId, (event) => {
       switch (event.type) {
         case 'step':
           if (event.state === 'running') setProgress({ phase: 'running', step: event.step })
+          break
+        case 'part':
+          setParts((current) => upsertPart(current, event.part))
           break
         case 'complete':
           setProgress({ phase: 'done' })
@@ -43,7 +53,9 @@ export function ScanSession({ sessionId }: { sessionId: string }) {
           <>
             <ScanStatus progress={progress} />
             <ToolbarSkeleton />
-            <ResultSkeleton />
+            <ResultSkeleton
+              side={<PartsCard parts={parts} active={progress.phase === 'running' ? STEP_KINDS[progress.step] : []} />}
+            />
           </>
         )}
       </main>

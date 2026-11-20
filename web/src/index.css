@@ -85,9 +85,41 @@ select {
   transition: transform 600ms ease;
 }
 
+/* Content that replaces a placeholder or opens up fades in and rises a few pixels. */
+.fade-up {
+  animation: fade-up 320ms ease-out both;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Zone of the laptop view that the scanner is reading right now. */
+.zone-active {
+  animation: zone-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes zone-pulse {
+  50% {
+    opacity: 0.45;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gauge-needle {
     transition: none;
+  }
+
+  .fade-up,
+  .zone-active {
+    animation: none;
   }
 
   .sk,

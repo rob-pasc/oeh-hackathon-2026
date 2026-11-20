@@ -95,7 +95,7 @@ export function Landing() {
               type="button"
               onClick={startScan}
               disabled={busy}
-              className={`${PRIMARY_BUTTON} mb-[5px] py-6 text-[26px] font-bold disabled:cursor-wait disabled:opacity-80`}
+              className={`${PRIMARY_BUTTON} mb-[15px] py-6 text-[26px] font-bold disabled:cursor-wait disabled:opacity-80`}
             >
               Download and Scan now
               <span aria-hidden="true">→</span>

@@ -41,6 +41,8 @@ export const liveClient: ApiClient = {
       if (data) onEvent(data)
     }
     source.addEventListener('step', forward)
+    // Proposed event (not agreed yet): { "type": "part", "part": DetectedPart }.
+    source.addEventListener('part', forward)
     source.addEventListener('complete', (event) => {
       forward(event)
       source.close()

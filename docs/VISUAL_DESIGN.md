@@ -21,7 +21,7 @@ Calm, light, and friendly: mostly white and off-white surfaces with one fresh gr
 | Conditional / warning | `amber-tint`, `amber-ink` | used sparingly |
 | Not suitable / error | `rose-tint`, `rose-ink` | used sparingly |
 
-- **Type:** Inter (Google Fonts), weights 400–800. Wordmark and headings use heavy weights with tight tracking.
+- **Type:** Inter (Google Fonts), weights 400–800. Wordmark and headings use heavy weights with tight tracking. The logo is the wordmark "leaaf" followed by a smaller green ".green", without icon or animation.
 - **Shape:** Cards 20 px radius, buttons and toggles fully rounded (pill), icon tiles 14–18 px radius.
 - **Layout:** Content width up to 1312 px, 64 px side padding. The result screen is a flexible left column and a 400 px right column with 28 px gap.
 
@@ -53,3 +53,7 @@ Calm, light, and friendly: mostly white and off-white surfaces with one fresh gr
 
 - Tokens: [`web/src/index.css`](../web/src/index.css)
 - Feature design: [`feature-006 DESIGN.md`](features/feature-006-web-app/DESIGN.md)
+
+## Motion
+
+Motion explains a change, it is never decoration on its own: ranked cards slide to their new places, numbers count to their values, the active tag highlight slides, and new content fades in and rises a few pixels (about 0.3–0.7 s, ease-out). Cards lift 2 px on hover. The scan's laptop view pulses the zone being read. Everything stops when the system asks for reduced motion.

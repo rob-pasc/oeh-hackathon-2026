@@ -1,5 +1,6 @@
 import { GAUGE, TRACK_PATH, arcPath, needleAngle, polar } from '../lib/gauge'
 import type { GaugeValue } from '../lib/impact'
+import { AnimatedText } from './AnimatedText'
 
 interface Props {
   value: GaugeValue | null
@@ -64,7 +65,7 @@ export function Gauge({ value, pathTitle }: Props) {
         </text>
       </svg>
       <div className="-mt-1 text-center">
-        <div className="text-5xl leading-none font-extrabold tracking-tight">{value ? `${mid}%` : '—'}</div>
+        <div className="text-5xl leading-none font-extrabold tracking-tight">{value ? <AnimatedText text={`${mid}%`} /> : '—'}</div>
         <div className="mt-1.5 text-sm text-muted">
           {value ? `of a new laptop’s production CO₂e avoided` : 'No CO₂e figure for this path'}
         </div>

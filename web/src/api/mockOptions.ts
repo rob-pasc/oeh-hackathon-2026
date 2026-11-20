@@ -42,8 +42,9 @@ function option(
   steps: string[],
   why: string | null,
   unverified: string[] = [],
+  changes: PathOption['changes'] = [],
 ): PathOption {
-  return { option_id, path, title, status, summary, impact: figures ? impact(figures) : null, steps, why, unverified }
+  return { option_id, path, title, status, summary, impact: figures ? impact(figures) : null, steps, why, unverified, changes }
 }
 
 export const LAPTOP_OPTIONS: PathOption[] = [
@@ -57,6 +58,8 @@ export const LAPTOP_OPTIONS: PathOption[] = [
     { cost: [40, 70], life: [1.5, 2.5], added: [5, 12], avoided: [110, 215], assumption: 'Sample price and production CO₂e of a 500 GB SSD.' },
     ['Buy a 500 GB M.2 2280 NVMe SSD.', 'Back up your data, then install the SSD and clone the old drive.'],
     'The old drive is a slow hard disk. An SSD makes the laptop feel new for office work.',
+    [],
+    [{ label: 'Storage', before: '500 GB HDD · SATA', after: '500 GB SSD · NVMe' }],
   ),
   option(
     'upgrade',
@@ -67,6 +70,8 @@ export const LAPTOP_OPTIONS: PathOption[] = [
     { cost: [20, 40], life: [0.5, 1], added: [3, 8], avoided: [40, 95], assumption: 'Sample price and production CO₂e of an 8 GB DDR4 module.' },
     ['Buy an 8 GB DDR4 SO-DIMM (2400 MT/s or faster).', 'Insert the module into the free slot.'],
     '8 GB gets tight with many browser tabs. A second module doubles it.',
+    [],
+    [{ label: 'Memory', before: '8 GB DDR4 · 1/2 slots', after: '16 GB DDR4 · 2/2 slots' }],
   ),
   option(
     'upgrade',
@@ -99,6 +104,8 @@ export const LAPTOP_OPTIONS: PathOption[] = [
     { cost: [30, 50], life: [2, 3], added: [4, 9], avoided: [190, 340], assumption: 'Sample price and production CO₂e of a replacement battery.' },
     ['Order replacement battery EX-BAT-57.', 'Remove the two battery screws and swap the pack.'],
     'A fresh battery brings back all-day use and costs far less than a new laptop.',
+    [],
+    [{ label: 'Battery health', before: '72%', after: '100% (new pack)' }],
   ),
   option(
     'repair',
