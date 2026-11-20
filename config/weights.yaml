@@ -1,0 +1,17 @@
+# Criterion weights per ranking mode, in percent (feature 003 FR-011).
+#
+# These are ILLUSTRATIVE defaults chosen by the team, not a scientific weighting. Each mode must
+# sum to 100; the server refuses to start otherwise. The criteria and how each is scored are
+# described in docs/features/feature-003-five-path-ranking/DESIGN.md.
+
+environment_first:
+  environment: 45
+  useful_life: 25
+  economic: 10
+  feasibility: 20
+
+money_first:
+  environment: 15
+  useful_life: 20
+  economic: 45
+  feasibility: 20

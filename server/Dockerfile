@@ -50,8 +50,9 @@ COPY --from=build-shared /app/shared/dist shared/dist
 COPY shared/schemas shared/schemas
 COPY server/package.json server/package.json
 COPY server/src server/src
-# Read at runtime relative to the sources (server/src/impact/table.ts).
+# Read at runtime relative to the sources (server/src/impact/table.ts, server/src/assessment/weights.ts).
 COPY data data
+COPY config config
 COPY --from=scanner /out/leaaf-scanner.exe scanner/leaaf-scanner.exe
 RUN mkdir -p /data && chown node:node /data
 USER node
