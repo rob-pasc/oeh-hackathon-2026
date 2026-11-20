@@ -12,7 +12,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "llm:smoke": "node --env-file-if-exists=.env scripts/llm-smoke.ts",
-    "facts:smoke": "node --env-file-if-exists=.env scripts/facts-smoke.ts"
+    "facts:smoke": "node --env-file-if-exists=.env scripts/facts-smoke.ts",
+    "corpus:ingest": "node --env-file-if-exists=.env scripts/corpus-ingest.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
