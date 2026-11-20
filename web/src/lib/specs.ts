@@ -80,7 +80,7 @@ export function summarizeScan(scan: DeviceScan): SpecsSummary {
   // Memory
   const ramParts = [
     memory.total_gb !== null ? `${memory.total_gb} GB` : null,
-    memory.type && memory.type !== 'unknown' ? memory.type.toUpperCase() : null,
+    memory.type ? memory.type.toUpperCase() : null,
   ].filter(Boolean)
   const slots =
     memory.slots_total !== null && memory.slots_used !== null ? ` · ${memory.slots_used}/${memory.slots_total} slots used` : ''
