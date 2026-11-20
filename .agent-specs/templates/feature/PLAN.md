@@ -1,0 +1,85 @@
+# Feature NNN: [Feature title]
+
+- **Feature ID:** `feature-NNN-kebab-case`
+- **Scope status:** Approved by user
+- **Scope approval date:** [YYYY-MM-DD]
+
+> Replace bracketed prompts with specifics from the approved discussion. This file records _scope and intent_, not a claim that a technical design has been accepted. Track progress in `TASKS.md`, not here.
+
+## Summary
+
+[One or two paragraphs explaining what this feature does and why it matters.]
+
+## Problem and desired outcome
+
+- **Problem:** [What is difficult or impossible today?]
+- **Desired outcome:** [What should be different for users?]
+- **Target users / stakeholders:** [Who benefits?]
+
+## Approved scope
+
+### In scope
+
+- [Behavior or capability explicitly agreed with the user]
+
+### Out of scope
+
+- [Explicit exclusion or intentionally deferred capability]
+
+## Functional requirements
+
+- **FR-001:** [Observable behavior, with important edge cases where relevant]
+- **FR-002:** [Additional requirement, if needed]
+
+## Non-functional requirements and constraints
+
+[Performance, accessibility, security, privacy, compatibility, operational or design constraints _actually relevant_ to this feature. State 'None identified' if appropriate.]
+
+## User journeys and edge cases
+
+[Key flows, empty/error states, permissions, failure modes, or representative examples.]
+
+## Proposed technical approach
+
+[Initial implementation direction based on repository inspection. Clearly mark unresolved choices and significant tradeoffs. The user approved feature scope, not automatically this approach.]
+
+## Dependencies and risks
+
+- [Dependency, prerequisite, migration risk, or 'None identified']
+
+## Review and integration
+
+[State the completion boundary: locally verified handoff, reviewed change, merged change, or released behavior. Follow the user request and existing contributing/review policy; absent another requirement, use locally verified handoff with self-review.]
+
+[Identify required review, reviewer/owner (or unassigned), relevant risks, and required CI/merge checks. Link existing policy. Put required outcomes in acceptance criteria and execution/finding-resolution work in tasks. State deferred review, merge, or release work with its owner and prerequisites. Do not infer authorization to push, merge, or release.]
+
+## Release and recovery (when applicable)
+
+[Omit this section when there are no feature-specific release considerations. Otherwise link to the existing deployment/publishing guide and record only this feature's rollout order, compatibility constraints, data migrations, and recovery considerations. Identify irreversible steps, rollback limits, and the supported recovery or forward-fix approach; do not assume reverting code restores data.]
+
+[Define observable post-release checks and stop/recovery conditions. State whether release execution and live verification are in the approved scope or a later handoff. Map required checks to acceptance IDs and release work to tasks. Record prerequisites, authorization needed, and who owns deferred work; do not invent approvals or claim untested recovery works.]
+
+## Assumptions and open questions
+
+- [Question or assumption; mark **Blocking** when implementation cannot responsibly proceed without an answer]
+
+## Scope change log
+
+| Date         | Change                 | User approval                                |
+| ------------ | ---------------------- | -------------------------------------------- |
+| [YYYY-MM-DD] | Initial approved scope | [Explicit approval reference / conversation] |
+
+For amendments, append the bounded scope and approval reference above before implementation; preserve existing requirements and exclusions and append new IDs. Lifecycle events belong in `TASKS.md`, and historical and current verification evidence in `ACCEPTANCE_CRITERIA.md`.
+
+## Related and superseded features
+
+[State 'None' if unrelated to earlier features. Otherwise link the relevant feature plans and identify the affected requirement and acceptance IDs, the behavior being replaced or extended, and what remains unchanged. Qualify IDs with their feature because IDs are local to each feature. Distinguish planned replacement from implemented supersession; approval alone does not replace existing behavior.]
+
+[When replacement is implemented, record its date and implementation reference here and add a reciprocal note to the earlier plan. Preserve the earlier scope and verification history; follow the supersession rules in docs/WORKFLOW.md.]
+
+## References
+
+- Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
+- Implementation tasks: [`TASKS.md`](./TASKS.md)
+- Related ADRs: [Links added only after decisions are adopted]
+- Optional detailed design/research: [Link to `DESIGN.md` and/or `RESEARCH.md` only when created]
