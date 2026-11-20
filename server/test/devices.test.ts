@@ -121,6 +121,7 @@ describe('GET /api/devices/:id', () => {
     const expected: [string, string][] = [
       ['POST', '/api/devices'],
       ['GET', '/api/devices/:id'],
+      ['GET', '/api/devices/:id/report'],
       ['GET', '/downloads/leaaf-scanner.exe'],
       ['POST', '/api/sessions'],
       ['POST', '/api/sessions/:id/events'],

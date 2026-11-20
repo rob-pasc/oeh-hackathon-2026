@@ -1,5 +1,5 @@
-// HTTP API: device upload, lookup, and the scanner download (feature 001), and scan sessions
-// (feature 006 FR-002 to FR-004).
+// HTTP API: device upload, lookup, and the scanner download (feature 001), scan sessions
+// (feature 006 FR-002 to FR-004), and the assessment and report stream (features 003 and 004).
 // Routes and bodies follow shared/src/api.ts; every non-2xx JSON response is an ApiError.
 //
 // There is deliberately no route that lists devices (FR-011): the unguessable device ID is the
@@ -11,6 +11,8 @@ import {
   API_ROUTES,
   checkDeviceScan,
   createValidator,
+  INTENDED_USES,
+  IntendedUse,
   MAX_UPLOAD_BYTES,
   SCANNER_SESSION_MARKER,
   ScannerEvent,
@@ -18,7 +20,9 @@ import {
   type ApiError,
   type ScanSession,
   type ScanSessionEvent,
+  type StreamEnd,
 } from '@leaaf/shared'
+import type { AssessmentService } from './assessment/service.ts'
 import type { DeviceStore } from './devices/store.ts'
 import { checkScan } from './devices/validate.ts'
 import type { SessionStore } from './sessions/store.ts'
@@ -26,6 +30,8 @@ import type { SessionStore } from './sessions/store.ts'
 export interface AppOptions {
   devices: DeviceStore
   sessions: SessionStore
+  /** Absent when the server cannot assess (no retrieval index); the report stream then fails. */
+  assessments?: AssessmentService | undefined
   /** Origin of the web app, used to build device page URLs, e.g. https://leaaf.green */
   publicBaseUrl: string
   /** Path of the scanner executable to serve; the download is 404 while it is missing. */
@@ -39,6 +45,9 @@ const apiError = (error: ApiError['error'], message: string, fields?: ApiError['
 const NOT_FOUND = apiError('not_found', 'device not found')
 const SESSION_NOT_FOUND = apiError('not_found', 'scan session not found')
 const isScannerEvent = createValidator(ScannerEvent)
+const isIntendedUse = createValidator(IntendedUse)
+
+const sseFrame = (event: string, data: unknown) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
 
 /** Keeps idle event streams open through proxies. */
 const HEARTBEAT_MS = 15_000
@@ -88,6 +97,53 @@ export function buildApp(options: AppOptions): FastifyInstance {
     const record = options.devices.get(req.params.id)
     return record ? reply.send(record) : reply.code(404).send(NOT_FOUND)
   })
+
+  // Report stream (shared/src/report.ts): the assessment first, then the report, then `end`.
+  // The explained report is feature 004 and not built yet, so the stream currently goes straight
+  // from `assessment` to `end`.
+  app.get<{ Params: { id: string }; Querystring: { intended_use?: string } }>(
+    '/api/devices/:id/report',
+    async (req, reply) => {
+      const use = req.query.intended_use
+      if (!isIntendedUse(use).ok)
+        return reply.code(400).send(
+          apiError('invalid_payload', 'unknown intended use', [
+            { path: '/intended_use', message: `must be one of ${INTENDED_USES.join(', ')}` },
+          ]),
+        )
+      const record = options.devices.get(req.params.id)
+      if (!record) return reply.code(404).send(NOT_FOUND)
+      const assessments = options.assessments
+      if (!assessments) return reply.code(500).send(apiError('internal', 'assessments are not available'))
+
+      reply.hijack()
+      const res = reply.raw
+      res.writeHead(200, {
+        'content-type': 'text/event-stream; charset=utf-8',
+        'cache-control': 'no-store',
+        connection: 'keep-alive',
+      })
+      res.write(': connected\n\n')
+      // Fact extraction can take several seconds on a cold cache; keep proxies from timing out.
+      // The page may leave while the assessment runs; writes after that are skipped.
+      const write = (chunk: string) => {
+        if (!res.destroyed) res.write(chunk)
+      }
+      const heartbeat = setInterval(() => write(': keep-alive\n\n'), HEARTBEAT_MS)
+      const send = (event: string, data: unknown) => write(sseFrame(event, data))
+      try {
+        const { assessment } = await assessments.assessDevice(record, use as IntendedUse)
+        send('assessment', assessment)
+        send('end', { status: 'complete' } satisfies StreamEnd)
+      } catch (err) {
+        app.log.error({ err: err instanceof Error ? err.message : String(err) }, 'assessment failed')
+        send('error', apiError('internal', 'the assessment failed'))
+      } finally {
+        clearInterval(heartbeat)
+        res.end()
+      }
+    },
+  )
 
   app.get<{ Querystring: { session?: string } }>(API_ROUTES.scannerDownload, async (req, reply) => {
     const path = options.scannerExePath
@@ -142,7 +198,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
     })
     // Sends the headers at once, so the page knows the stream is open before the first event.
     res.write(': connected\n\n')
-    const send = (event: ScanSessionEvent) => res.write(`event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+    const send = (event: ScanSessionEvent) => res.write(sseFrame(event.type, event))
     // Replay the latest state so a reconnecting or late page does not miss progress.
     if (state.last_event) send(state.last_event)
     const unsubscribe = options.sessions.subscribe(id, (event) => {

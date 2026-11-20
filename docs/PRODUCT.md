@@ -1,6 +1,6 @@
 # Product Context
 
-**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No core journey works end to end yet: the shared contracts, the web app, the Windows scanner, the server's device and scan session API, retrieval over the curated corpus, fact extraction, and the impact table exist (see the [README status](../README.md)), while the ranking API and reports do not. The scanner has not yet run on a real Windows laptop. This document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. No core journey works end to end yet: the shared contracts, the web app, the Windows scanner, the server's device and scan session API, retrieval over the curated corpus, fact extraction, the impact table, and the assessment stream exist (see the [README status](../README.md)), while the explained reports do not. The scanner has not yet run on a real Windows laptop. This document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
@@ -9,7 +9,7 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 - **Primary user:** an individual owner of an old Windows laptop or PC.
 - **Other stakeholders:** hackathon judges and demo audience. IT departments and refurbishers are possible future users and are not targeted by the MVP.
 
-## Core journeys (approved; journey 1 built but not yet verified on Windows, journeys 2–3 not yet implemented)
+## Core journeys (approved; journey 1 built but not yet verified on Windows, journey 2 built for the four contract uses, journey 3 not yet implemented)
 
 1. Download and run the scanner, then open the private device link. See [feature 001](features/feature-001-device-scan-and-upload/PLAN.md).
 2. Choose an intended use, see five assessed and ranked paths, and switch between Environment first and Money first. See [feature 003](features/feature-003-five-path-ranking/PLAN.md).
