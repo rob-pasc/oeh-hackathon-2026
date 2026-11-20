@@ -3,7 +3,7 @@
 //
 // POST /api/devices                        body DeviceScan     -> 201 UploadResponse | 400/413/429 ApiError
 // GET  /api/devices/:id                                        -> 200 DeviceRecord   | 404 ApiError
-// GET  /api/devices/:id/report?intended_use=<IntendedUse>      -> text/event-stream (see report.ts) | 400/404 ApiError
+// GET  /api/devices/:id/report?intended_use=<IntendedUse>      -> text/event-stream (see report.ts) | 400/404/429 ApiError
 // GET  /downloads/leaaf-scanner.exe[?session=<SessionId>]       -> the scanner executable, with the session appended
 // POST /api/sessions                                           -> 201 ScanSession (session.ts)
 // POST /api/sessions/:id/events            body ScannerEvent   -> 204 | 400/404 ApiError

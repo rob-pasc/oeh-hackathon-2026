@@ -9,7 +9,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 - [ ] **T-001:** Get the user's choice of hosting provider and account ownership, and record it in the plan (supports `AC-001`)
 - [ ] **T-002:** Add the Dockerfile and production config (static web assets, persistent volume path, environment variables) (supports `AC-001`, `AC-008`)
-- [ ] **T-003:** Implement the size limits, per-client rate limits, and daily LLM cap with fallback, with tests (supports `AC-005`, `AC-006`)
+- [x] **T-003:** Implement the size limits, per-client rate limits, and daily LLM cap with fallback, with tests (supports `AC-005`, `AC-006`)
 - [ ] **T-004:** Implement the idempotent seed command and the demo device and cache files, with tests including an LLM-disabled render (supports `AC-003`, `AC-004`)
 - [ ] **T-005:** Add the scanner release build with the public URL and serve it as the download; run a secret scan of the repository and the binary (supports `AC-002`, `AC-007`)
 - [ ] **T-006:** Write `docs/DEPLOYMENT.md` (deploy, seed, smoke checks, backup, rollback) (supports `AC-009`)
@@ -25,8 +25,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 ## Dependencies and blockers
 
 - **Blocking:** VPS provider undecided; the host type (VPS with external Caddy) is decided (T-001). Deployment requires explicit user authorization (T-008).
-- The published web image calls the report stream, which the server does not have until features 003 and 004 are built.
-- Requires features 001–004 implemented; seeding requires the demo models to be chosen.
+- The live web app uses the implemented assessment and explanation stream. Local request-limit verification is recorded in the acceptance criteria. Public verification awaits deployment.
+- Seeding awaits real scans for the three selected demo models and the seed implementation.
 
 ## Progress notes
 

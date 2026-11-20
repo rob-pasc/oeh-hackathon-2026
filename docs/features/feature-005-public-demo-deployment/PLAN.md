@@ -78,14 +78,14 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 - **Domain (decided 2026-11-20):** `leaaf.green`, already registered by the team, so no domain purchase is needed. The scanner release build points at `https://leaaf.green`. DNS records for the chosen host are set up in T-008.
 - **Scanner build (adopted 2026-11-20):** A Go stage in `server/Dockerfile` cross-compiles with `GOOS=windows GOARCH=amd64` and injects the public URL and the release version with `-ldflags`. The server serves the binary at `/downloads/leaaf-scanner.exe`, appending the session trailer when asked.
 - **Seeding:** `npm run seed` reads `demo/devices/*.json`, fixed demo device IDs, and pre-generated caches stored in `demo/cache/`.
-- **Rate limiting:** In-process per-IP limits (for example `@fastify/rate-limit`); a daily LLM counter in SQLite.
+- **Rate limiting:** Independent in-process hourly windows for uploads and reports. The API trusts forwarded client addresses only from the configured Caddy peer. An additive SQLite table atomically reserves each outgoing provider attempt against the UTC day. Cached results and the existing template fallback remain available at the cap.
 - **Tests:** Automated tests for the size limit, 429 behavior, seed idempotency, cached render with the LLM disabled, and the daily cap fallback; a secret scan of the repository and the scanner binary; manual smoke checks on the public URL.
 
 ## Dependencies and risks
 
 - **Dependency:** Features 001–004 implemented.
 - **Blocking:** Hosting provider not chosen; deployment requires explicit user authorization and host credentials, which the user provides.
-- **Blocking for seeding:** Demo models chosen and scanned (feature 002, T-006).
+- **Blocking for seeding:** The three models are selected. Seeding still needs real scans (feature 002, T-006).
 - **Risk:** An unsigned exe downloaded from a new domain triggers browser and SmartScreen warnings. Mitigation: guidance on the landing page; the demo laptop is prepared in advance.
 - **Risk:** SQLite on ephemeral PaaS storage loses data. Mitigation: a persistent volume is required (FR-008), with backup documented.
 
@@ -121,7 +121,7 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 
 - **Blocking:** Which VPS provider, and who owns the account and credentials? (The host type is decided: a VPS with an external Caddy.)
 - **Open:** Whether the GHCR packages are public, or the host logs in with a read-only token. Default: the host logs in (see `docs/DEPLOYMENT.md`).
-- **Open:** Rate limit values and the daily LLM cap. Proposed: 10 uploads per IP per hour, and 200 LLM calls per day.
+- **Decided 2026-11-20:** Configurable defaults are 10 uploads and 60 report requests per client per hour, and 200 provider attempts per UTC day. The upload ceiling defaults to 32 KiB. See the [server configuration](../../../server/README.md#request-limits).
 - **Open:** Whether to keep the public deployment running after the hackathon. Default: until the user decides otherwise.
 
 ## Scope change log

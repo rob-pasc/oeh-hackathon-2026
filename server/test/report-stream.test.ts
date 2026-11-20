@@ -2,7 +2,7 @@
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   API_ROUTES,
   Assessment,
@@ -19,7 +19,9 @@ import { createAssessmentService, loadWeights, type AssessmentService } from '..
 import { createSqliteDeviceStore } from '../src/devices/store.ts'
 import { createFactExtractor, createMemoryFactCache } from '../src/facts/index.ts'
 import { loadImpactTable } from '../src/impact/table.ts'
-import { LlmError, type LlmClient } from '../src/llm/index.ts'
+import { budgetedFetch } from '../src/limits.ts'
+import { createReportService } from '../src/report/service.ts'
+import { createOpenAiCompatibleClient, loadLlmConfig, LlmError, type LlmClient } from '../src/llm/index.ts'
 import { createRetriever, readCorpus, writeIndex, type Retriever } from '../src/retrieval/index.ts'
 import { createSqliteSessionStore } from '../src/sessions/store.ts'
 
@@ -184,6 +186,25 @@ describe('GET /api/devices/:id/report', () => {
       expect(events.map(e => e.name)).toEqual(['assessment', 'report', 'end'])
       expect(events[1]!.data).toMatchObject({ source: 'template', notice: expect.stringContaining('AI explanation unavailable') })
       expect(events[2]!.data).toEqual({ status: 'fallback' })
+    } finally {
+      db.close()
+    }
+  })
+
+  it('streams a fresh assessment and fallback notice with zero provider requests at the daily cap', async () => {
+    const db = new DatabaseSync(':memory:')
+    const transport = vi.fn<typeof fetch>()
+    const llm = createOpenAiCompatibleClient(loadLlmConfig({ LLM_API_KEY: 'test' }), {
+      fetch: budgetedFetch(db, 0, transport),
+    })
+    try {
+      const { app, device } = setup(service(llm), createReportService(db, llm))
+      const base = await app.listen({ port: 0, host: '127.0.0.1' })
+      const events = await readStream(base + API_ROUTES.reportStream(device.device_id, 'office'))
+      expect(events.map(e => e.name)).toEqual(['assessment', 'report', 'end'])
+      expect(events[1]!.data).toMatchObject({ source: 'template', notice: expect.stringContaining('AI explanation unavailable') })
+      expect(events[2]!.data.status).toBe('fallback')
+      expect(transport).not.toHaveBeenCalled()
     } finally {
       db.close()
     }

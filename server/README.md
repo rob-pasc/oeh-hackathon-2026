@@ -10,15 +10,29 @@ The LLM API key is configured only here, through environment variables. It never
 
 | Route | Result |
 |---|---|
-| `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above 32 KiB |
+| `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above the configured ceiling (default 32 KiB), or `429 rate_limited` |
 | `GET /api/devices/:id` | `200 DeviceRecord`; unknown and malformed IDs both get the same `404 not_found` |
-| `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `assessment` (the ranked `Assessment`), then `report` (generated or template), then `end` with `{"status":"complete"}`. Templates end with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `500` when the server has no retrieval index |
+| `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `assessment` (the ranked `Assessment`), then `report` (generated or template), then `end` with `{"status":"complete"}`. Templates end with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `429 rate_limited` before opening the stream, or `500` when the server has no retrieval index |
 | `GET /downloads/leaaf-scanner.exe` | The file at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
 | `POST /api/sessions` | `201 ScanSession`: a new 26-character session ID and its download URL (feature 006) |
 | `POST /api/sessions/:id/events` | The scanner's `step` or `error` event; `204`, `400` if invalid, `404` if unknown |
 | `GET /api/sessions/:id/events` | Server-Sent Events: the latest event first, then live ones; ends after `complete` or `error` |
 
 No route lists devices: the device ID (16 random bytes, base64url) is the only access control. An upload carrying `session_id` completes that session; the ID is removed before the scan is stored, so device routes never return it. Request logs record the method and route pattern only, never the URL or the client IP.
+
+## Request limits
+
+Each server process allows 10 upload attempts and 60 report requests per client IP in separate one-hour windows starting with the first request. A 429 includes `Retry-After` in seconds. Direct connections use the socket IP. Configure the immediate Caddy peer for the deployed topology as described in the [deployment guide](../docs/DEPLOYMENT.md#client-ip-configuration).
+
+| Environment variable | Default | Allowed value |
+|---|---:|---|
+| `UPLOAD_MAX_BYTES` | 32768 | 1–32768 bytes |
+| `UPLOADS_PER_HOUR` | 10 | Positive integer |
+| `REPORTS_PER_HOUR` | 60 | Positive integer |
+| `LLM_DAILY_CALLS` | 200 | Nonnegative integer. Zero prevents all fresh provider calls. |
+| `TRUSTED_PROXY_IP` | Empty | One IPv4 or IPv6 address |
+
+The running API shares one SQLite counter per UTC day across extraction and explanation. It reserves a call before each provider attempt, including failed requests, transport retries and JSON repairs. Cache hits consume no allowance. After exhaustion, fresh assessments can use cached facts, and uncached explanations use the template with its unavailable notice.
 
 ## LLM adapter
 

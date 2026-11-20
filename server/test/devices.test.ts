@@ -2,8 +2,9 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MAX_UPLOAD_BYTES, type ApiError, type DeviceRecord, type DeviceScan, type UploadResponse } from '@leaaf/shared'
+import { loadLimits } from '../src/limits.ts'
 import { buildApp, type AppOptions } from '../src/app.ts'
 import { createSqliteDeviceStore, newDeviceId } from '../src/devices/store.ts'
 import { createSqliteSessionStore } from '../src/sessions/store.ts'
@@ -91,6 +92,43 @@ describe('POST /api/devices', () => {
     expect(big.statusCode).toBe(413)
     expect(big.json<ApiError>().error).toBe('payload_too_large')
     expect(count()).toBe(0)
+  })
+})
+
+describe('deployment request limits', () => {
+  it('limits uploads and reports independently before parsing or assessing, then reopens the window', async () => {
+    const server = app({ limits: loadLimits({ UPLOADS_PER_HOUR: '1', REPORTS_PER_HOUR: '1', UPLOAD_MAX_BYTES: '100' }) })
+    const upload = { method: 'POST', url: '/api/devices', payload: laptop } as const
+    const report = '/api/devices/unknown/report?intended_use=office'
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(1000)
+    try {
+      expect((await server.inject(upload)).statusCode).toBe(413)
+      const limited = await server.inject({ ...upload, headers: { 'x-forwarded-for': '192.0.2.5' } })
+      expect(limited.statusCode).toBe(429)
+      expect(limited.headers['retry-after']).toBe('3600')
+      expect(limited.json().error).toBe('rate_limited')
+      expect((await server.inject(report)).statusCode).toBe(404)
+      expect((await server.inject(report)).statusCode).toBe(429)
+      expect((await server.inject({ ...upload, remoteAddress: '192.0.2.6' })).statusCode).toBe(413)
+      clock.mockReturnValue(3601000)
+      expect((await server.inject(report)).statusCode).toBe(404)
+    } finally {
+      clock.mockRestore()
+      await server.close()
+    }
+  })
+
+  it('uses forwarded client addresses only behind the configured peer', async () => {
+    const server = app({ limits: loadLimits({ TRUSTED_PROXY_IP: '192.0.2.1', UPLOADS_PER_HOUR: '1' }) })
+    const upload = (remoteAddress: string, forwarded: string) => server.inject({
+      remoteAddress, headers: { 'x-forwarded-for': forwarded }, method: 'POST', url: '/api/devices', payload: laptop,
+    })
+    expect((await upload('192.0.2.1', '198.51.100.1')).statusCode).toBe(201)
+    expect((await upload('192.0.2.1', '198.51.100.2')).statusCode).toBe(201)
+    expect((await upload('192.0.2.1', '198.51.100.9, 198.51.100.1')).statusCode).toBe(429)
+    expect((await upload('192.0.2.2', '198.51.100.3')).statusCode).toBe(201)
+    expect((await upload('192.0.2.2', '198.51.100.4')).statusCode).toBe(429)
+    await server.close()
   })
 })
 

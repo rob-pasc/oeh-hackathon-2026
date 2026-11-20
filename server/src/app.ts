@@ -12,8 +12,8 @@ import {
   checkDeviceScan,
   createValidator,
   INTENDED_USES,
-  IntendedUse,
   MAX_UPLOAD_BYTES,
+  IntendedUse,
   SCANNER_SESSION_MARKER,
   ScannerEvent,
   WEB_ROUTES,
@@ -22,6 +22,7 @@ import {
   type ScanSessionEvent,
   type StreamEnd,
 } from '@leaaf/shared'
+import { hourlyLimit, loadLimits } from './limits.ts'
 import type { AssessmentService } from './assessment/service.ts'
 import type { DeviceStore } from './devices/store.ts'
 import { checkScan } from './devices/validate.ts'
@@ -29,6 +30,7 @@ import type { createReportService } from './report/service.ts'
 import type { SessionStore } from './sessions/store.ts'
 
 export interface AppOptions {
+  limits?: ReturnType<typeof loadLimits>
   devices: DeviceStore
   sessions: SessionStore
   /** Absent when the server cannot assess (no retrieval index); the report stream then fails. */
@@ -55,14 +57,16 @@ const sseFrame = (event: string, data: unknown) => `event: ${event}\ndata: ${JSO
 const HEARTBEAT_MS = 15_000
 
 export function buildApp(options: AppOptions): FastifyInstance {
+  const limits = options.limits ?? loadLimits()
   const app = Fastify({
+    trustProxy: limits.trustedProxy,
     bodyLimit: MAX_UPLOAD_BYTES,
     logger: options.logger ?? false,
   })
 
   app.setErrorHandler((err: { statusCode?: number; code?: string }, _req, reply) => {
     if (err.code === 'FST_ERR_CTP_BODY_TOO_LARGE')
-      return reply.code(413).send(apiError('payload_too_large', `upload must not exceed ${MAX_UPLOAD_BYTES} bytes`))
+      return reply.code(413).send(apiError('payload_too_large', 'request body exceeds its size limit'))
     if (err.statusCode && err.statusCode >= 400 && err.statusCode < 500)
       return reply.code(400).send(apiError('invalid_payload', 'request body is not valid JSON'))
     app.log.error({ code: err.code }, 'unhandled error')
@@ -71,7 +75,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send(apiError('not_found', 'not found')))
 
-  app.post(API_ROUTES.uploadDevice, async (req, reply) => {
+  app.post(API_ROUTES.uploadDevice, { bodyLimit: limits.uploadBytes, onRequest: hourlyLimit(limits.uploadsPerHour) }, async (req, reply) => {
     const checked = checkScan(req.body)
     if (!checked.ok)
       return reply
@@ -103,6 +107,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
   // Report stream (shared/src/report.ts): the assessment first, then the report, then `end`.
   app.get<{ Params: { id: string }; Querystring: { intended_use?: string } }>(
     '/api/devices/:id/report',
+    { onRequest: hourlyLimit(limits.reportsPerHour) },
     async (req, reply) => {
       const use = req.query.intended_use
       if (!isIntendedUse(use).ok)

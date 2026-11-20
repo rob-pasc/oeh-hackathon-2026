@@ -1,3 +1,5 @@
+import { DatabaseSync } from 'node:sqlite'
+import { budgetedFetch, loadLimits } from '../src/limits.ts'
 import { Type } from 'typebox'
 import { describe, expect, it } from 'vitest'
 import { createOpenAiCompatibleClient, LlmError, loadLlmConfig, type LlmConfig } from '../src/llm/index.ts'
@@ -51,6 +53,35 @@ const ask = (client: ReturnType<typeof fakeProvider>['client'], task: 'fact_extr
   client.completeJson({ task, system: 'Count things.', user: 'Count to 3.', schema: Answer })
 
 describe('OpenAI-compatible client', () => {
+  it.each(['repair', 'transport retry'])('charges every %s against the shared daily allowance', async (kind) => {
+    const db = new DatabaseSync(':memory:')
+    let attempts = 0
+    const transport: typeof fetch = async () => {
+      attempts++
+      if (kind === 'transport retry') return new Response('', { status: 503, headers: { 'retry-after-ms': '1' } })
+      return Response.json({ choices: [{ message: { content: 'invalid' } }] })
+    }
+    let day = '2026-11-20T23:59:59Z'
+    const client = () => createOpenAiCompatibleClient(config, { fetch: budgetedFetch(db, 1, transport, () => new Date(day)) })
+    try {
+      await expect(ask(client(), 'fact_extraction')).rejects.toMatchObject({ kind: 'rate_limited' })
+      await expect(ask(client())).rejects.toMatchObject({ kind: 'rate_limited' })
+      expect(attempts).toBe(1)
+      day = '2026-11-21T00:00:00Z'
+      await expect(ask(client())).rejects.toMatchObject({ kind: 'rate_limited' })
+      expect(attempts).toBe(2)
+    } finally {
+      db.close()
+    }
+  })
+
+  it.each([
+    { UPLOAD_MAX_BYTES: '32769' }, { UPLOADS_PER_HOUR: '-1' }, { REPORTS_PER_HOUR: '1.5' },
+    { LLM_DAILY_CALLS: '' }, { TRUSTED_PROXY_IP: '0.0.0.0/0' },
+  ])('rejects invalid deployment limits %j', (env) => {
+    expect(() => loadLimits(env)).toThrow()
+  })
+
   it('returns the validated value with metadata', async () => {
     const { client, urls } = fakeProvider({ content: '{"status":"ok","count":3}' })
     const result = await ask(client)

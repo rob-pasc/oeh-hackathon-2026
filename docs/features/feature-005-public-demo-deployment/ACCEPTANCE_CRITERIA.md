@@ -11,8 +11,8 @@ Defines the feature's acceptance criteria and records how each criterion was ver
 | AC-002 | FR-002 | The scanner downloaded from the public site, run on a Windows laptop, creates a device record on the public deployment and opens its public report URL. | Manual check against the live deployment | Not run | |
 | AC-003 | FR-003 | Running the seed twice yields the same demo device IDs and record count. | Automated test, plus a live check | Not run | |
 | AC-004 | FR-004 | With the LLM API key unset or the provider blocked, each seeded demo report renders its ranking, explanations, evidence, and mode toggle. | Automated test locally, plus a live check with the LLM disabled | Not run | |
-| AC-005 | FR-005 | An upload over the size limit is rejected, and exceeding the per-client rate limit returns HTTP 429. | Automated tests, plus a live check | Not run | |
-| AC-006 | FR-006 | After the daily LLM cap is reached, a new assessment returns template explanations with the unavailable notice and makes no LLM call. | Automated test with a mocked counter | Not run | |
+| AC-005 | FR-005 | An upload over the size limit is rejected, and exceeding the per-client rate limit returns HTTP 429. | Automated tests, plus a live check | Blocked | Local HTTP check passed for 413 and independent upload/report 429 responses. Route tests verify client separation, configured proxy trust, window expiry and Retry-After. Public Caddy check awaits deployment. |
+| AC-006 | FR-006 | After the daily LLM cap is reached, a new assessment returns template explanations with the unavailable notice and makes no LLM call. | Automated test with a mocked counter | Pass | Local API with a one-call SQLite allowance and a fake provider returned the template and fallback end event. Restarting the process against the same database still made zero additional provider calls. Automated tests cover the unavailable notice, UTC rollover, JSON repair and transport retries. |
 | AC-007 | FR-007 | A secret scan of the repository and the scanner binary finds no API key, and API responses contain no secret values. | Automated secret scan, plus a `strings` check of the binary | Not run | |
 | AC-008 | FR-008 | A device uploaded before a restart and redeploy is still retrievable afterwards. | Live check | Not run | |
 | AC-009 | FR-009 | `docs/DEPLOYMENT.md` exists and a team member can follow it to deploy, seed, and run the smoke checks without additional help. | Review of the guide, plus a walkthrough during deployment | Not run | |
@@ -36,6 +36,9 @@ If the user approves changing or waiving a criterion, update the approved scope 
 Completion boundary: released behavior (see [PLAN.md § Review and integration](./PLAN.md#review-and-integration)). Live checks are blocked until a host is chosen and deployment is authorized. Not yet reviewed.
 
 ## Verification notes
+
+- 2026-11-20, T-003, self-review of the limits diff based on `336e343`. Checked that both routes enforce the limit before handlers, reject spoofed forwarding from direct clients, and share one provider budget across extraction, explanation and SDK retries. Used an atomic reservation before transport so concurrent requests cannot overspend the last call. Workspace tests passed (68 shared, 229 server, 47 web), along with type checks and the live web build. User security review for release remains open.
+- The [GitHub main push run for 021b4e1](https://github.com/rob-pasc/oeh-hackathon-2026/actions/runs/44800150298) passed. PR and tag verification remain open.
 
 - 2026-11-20, local pre-checks for AC-012 to AC-014. These are not passes; the criteria need GitHub Actions and a Docker host. Docker is not installed on the dev machine, so the Dockerfile steps were run by hand:
   - Web build stage: `npm ci --workspace web --workspace shared` with only the manifests, then `VITE_API_MODE=mock npm run build --workspace web`. Produced `dist/index.html` and hashed assets.

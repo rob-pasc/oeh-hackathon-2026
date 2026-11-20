@@ -2,6 +2,7 @@
 import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
+import { budgetedFetch, loadLimits } from './limits.ts'
 import { buildApp } from './app.ts'
 import { createAssessmentService } from './assessment/service.ts'
 import { loadWeights } from './assessment/weights.ts'
@@ -14,6 +15,7 @@ import { createReportService } from './report/service.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
 
 const env = process.env
+const limits = loadLimits(env)
 const port = Number(env.PORT ?? 3000)
 const host = env.HOST ?? '127.0.0.1'
 const databasePath = resolve(env.DATABASE_PATH ?? 'data/leaaf.sqlite')
@@ -42,7 +44,7 @@ try {
 let llm: ReturnType<typeof createOpenAiCompatibleClient> | null = null
 let extractor: FactExtractor | null = null
 try {
-  llm = createOpenAiCompatibleClient(loadLlmConfig())
+  llm = createOpenAiCompatibleClient(loadLlmConfig(), { fetch: budgetedFetch(db, limits.dailyCalls) })
   extractor = createFactExtractor({ llm, cache: createSqliteFactCache(db) })
 } catch (error) {
   if (!(error instanceof LlmError)) throw error
@@ -50,6 +52,7 @@ try {
 }
 
 const app = buildApp({
+  limits,
   devices: createSqliteDeviceStore(db),
   sessions: createSqliteSessionStore(db),
   assessments: retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn: (message, details) => app.log.warn(details ?? {}, message) }) : undefined,
