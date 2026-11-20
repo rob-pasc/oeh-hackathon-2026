@@ -109,6 +109,7 @@ Not applicable to this feature: release and hosting are owned by feature 005 (`f
 - **Open:** Exact WMI sources for battery and disk health on the demo models; decided during implementation and recorded here.
 - **Decided 2026-11-20:** The scanner shows a minimal GUI (FR-014), built with Gio. It was chosen over Wails (needs the WebView2 runtime, which old or unpatched Windows 10 machines may lack) and native Win32 controls (cannot match the web design). *(Originally open, with the console UI as the default.)*
 - **Development (2026-11-20):** `go run -tags gui ./cmd/leaaf-scanner` opens the same window on Linux. It needs cgo and the X11/Wayland development libraries. Without the tag, other operating systems get the console build, so CI needs neither.
+- **Deferred (2026-11-20):** Scanning on macOS and Linux (collectors, per-OS builds and downloads, elevation, signing) was discussed and deferred until after the hackathon at the user's request. It would be a new feature and would change the product's Windows-only decision. Gio already covers the window on all three systems.
 - Demo model choice (blocking for feature 002, not for this feature).
 
 ## Scope change log
