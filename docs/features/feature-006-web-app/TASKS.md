@@ -47,6 +47,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 The first version was written without network access. After the merge into `main` (b879a96) the dependencies were installed; the web type-check fix is a846d99. T-008 is done: type check, tests, and build pass (see the verification notes in `ACCEPTANCE_CRITERIA.md`). The browser review (T-009) remains.
 
+2026-11-20: The server's report stream exists (feature 003 T-007) and sends `assessment`, then `end`, with no report until feature 004. The result screen now treats `end` as "no report coming" and shows "No steps available" instead of placeholders (test "stops waiting for the report when the stream ends without one"). In live mode the default `general` tag and `gaming` still get `400` until they are added to the contract.
+
 2026-11-20: T-010 done. The session routes, events, and executable trailer were decided with the user, then implemented in `shared/src/session.ts`, the server, and the scanner. The web client now takes the session types from `shared/`, routes `/s/` only for 26-character Crockford IDs, and proxies `/api` and `/downloads` in `npm run dev`. The browser journey against the real backend (AC-014) still needs a Windows run of the scanner.
 
 ## Lifecycle history

@@ -30,6 +30,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const [report, setReport] = useState<Report | null>(null)
   const [options, setOptions] = useState<PathOption[]>([])
   const [streamError, setStreamError] = useState<ApiClientError | null>(null)
+  const [streamEnded, setStreamEnded] = useState(false)
   const [pathTab, setPathTab] = useState<PathTab>('overview')
   const [selected, setSelected] = useState<string | null>(null)
   const [open, setOpen] = useState<string | null>(null)
@@ -58,11 +59,12 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     setReport(null)
     setOptions([])
     setStreamError(null)
+    setStreamEnded(false)
     return api.streamReport(deviceId, use, {
       onAssessment: setAssessment,
       onReport: setReport,
       onOptions: setOptions,
-      onEnd: () => {},
+      onEnd: () => setStreamEnded(true),
       onError: setStreamError,
     })
   }, [api, deviceId, use])
@@ -75,7 +77,9 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const tabView = pathTab === 'overview' ? null : (views.find((v) => v.id === pathTab) ?? null)
   const selectedView =
     tabView ?? views.find((v) => v.id === selected) ?? views.find((v) => v.id === recommendedId) ?? null
-  const reportPending = report === null && streamError === null
+  // A stream can end without a report (the server sends none until feature 004 exists); the cards then
+  // say that no steps are available instead of showing placeholders forever.
+  const reportPending = report === null && streamError === null && !streamEnded
 
   // Options of the selected path tag; the gauge follows the option the user last clicked.
   const optionViews = useMemo(

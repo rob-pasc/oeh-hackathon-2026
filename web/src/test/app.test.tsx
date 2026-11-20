@@ -1,9 +1,12 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
+import type { Assessment } from '@leaaf/shared/assessment'
+import { rankPaths } from '@leaaf/shared/ranking'
 import { ApiContext } from '../api'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
 import { ResultsView } from '../components/ResultsView'
+import { PATH_TITLES } from '../lib/labels'
 import { Landing } from '../pages/Landing'
 import { ScanSession } from '../pages/ScanSession'
 
@@ -102,6 +105,46 @@ describe('ResultsView', () => {
     expect(screen.getByRole('button', { name: 'Environment first' })).toHaveAttribute('aria-pressed', 'false')
   })
 
+  it('reorders by the Money first weights without a new request (feature 003 AC-012)', async () => {
+    let assessment: Assessment | null = null
+    let streams = 0
+    const counting = {
+      ...fast,
+      streamReport: (deviceId, use, handlers) => {
+        streams++
+        return fast.streamReport(deviceId, use, {
+          ...handlers,
+          onAssessment: (a) => {
+            assessment = a
+            handlers.onAssessment(a)
+          },
+        })
+      },
+    } satisfies typeof fast
+    const fetchSpy = vi.spyOn(globalThis, 'fetch')
+    render(
+      <ApiContext.Provider value={counting}>
+        <ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />
+      </ApiContext.Provider>,
+    )
+    await screen.findByRole('region', { name: 'Upgrade' })
+    const cardOrder = () =>
+      screen
+        .getAllByRole('region')
+        .map((r) => r.getAttribute('aria-label') ?? r.querySelector('h2,h3')?.textContent ?? '')
+        .filter((name) => (Object.values(PATH_TITLES) as string[]).includes(name))
+
+    await userEvent.click(screen.getByRole('button', { name: 'Money first' }))
+
+    const a = assessment as Assessment | null
+    if (!a) throw new Error('no assessment arrived')
+    const expected = rankPaths(a.paths, a.weights.money_first).map(({ path }) => PATH_TITLES[path.path])
+    await waitFor(() => expect(cardOrder()).toEqual(expected))
+    expect(streams).toBe(1)
+    expect(fetchSpy).not.toHaveBeenCalled()
+    fetchSpy.mockRestore()
+  })
+
   it('offers the overview and the five paths as tags next to the use dropdown', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
     const group = await screen.findByRole('group', { name: 'Show steps for' })
@@ -151,6 +194,27 @@ describe('ResultsView', () => {
     await screen.findByRole('region', { name: 'Upgrade' })
     await userEvent.click(within(group).getByRole('button', { name: 'Repair' }))
     expect(await screen.findByText('No steps available for this path.')).toBeInTheDocument()
+  })
+
+  it('stops waiting for the report when the stream ends without one', async () => {
+    // Like the live server before feature 004: the assessment, then `end`, and no report.
+    const noReport = {
+      ...fast,
+      streamReport: (deviceId, use, handlers) =>
+        fast.streamReport(deviceId, use, {
+          ...handlers,
+          onReport: () => {},
+          onOptions: () => {},
+        }),
+    } satisfies typeof fast
+    render(
+      <ApiContext.Provider value={noReport}>
+        <ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />
+      </ApiContext.Provider>,
+    )
+    const upgrade = await screen.findByRole('region', { name: 'Upgrade' })
+    await userEvent.click(within(upgrade).getByRole('button'))
+    expect(await within(upgrade).findByText('No steps available.')).toBeInTheDocument()
   })
 
   it('explains an unknown device instead of failing silently', async () => {
