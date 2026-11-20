@@ -8,7 +8,8 @@ export type Route =
   | { name: 'landing' }
   | { name: 'session'; id: string }
   | { name: 'device'; id: string }
-  | { name: 'not_found' }
+  // `device`: the path looked like a device link (/d/...) but the ID is malformed (feature 001 FR-011).
+  | { name: 'not_found'; device?: true }
 
 // Device IDs are 22 base64url characters (128 bits); session IDs are 26 Crockford base32 characters
 // (130 bits, shared/src/session.ts). Anything else is not a valid link.
@@ -22,6 +23,7 @@ export function parseRoute(pathname: string): Route {
   if (device) return { name: 'device', id: device[1] as string }
   const session = SESSION_ROUTE.exec(clean)
   if (session) return { name: 'session', id: session[1] as string }
+  if (clean.startsWith('/d/')) return { name: 'not_found', device: true }
   return { name: 'not_found' }
 }
 

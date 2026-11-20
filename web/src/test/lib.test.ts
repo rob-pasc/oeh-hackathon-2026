@@ -33,10 +33,10 @@ describe('router', () => {
     expect(parseRoute(`/d/${id}/`)).toEqual({ name: 'device', id })
   })
   it('rejects malformed ids and unknown paths', () => {
-    expect(parseRoute('/d/short')).toEqual({ name: 'not_found' })
+    expect(parseRoute('/d/short')).toEqual({ name: 'not_found', device: true })
     // Each route accepts only its own ID format.
     expect(parseRoute(`/s/${id}`)).toEqual({ name: 'not_found' })
-    expect(parseRoute(`/d/${session}`)).toEqual({ name: 'not_found' })
+    expect(parseRoute(`/d/${session}`)).toEqual({ name: 'not_found', device: true })
     expect(parseRoute('/s/0123456789ABCDEFGHJKMNPQRI')).toEqual({ name: 'not_found' })
     expect(parseRoute('/x')).toEqual({ name: 'not_found' })
   })

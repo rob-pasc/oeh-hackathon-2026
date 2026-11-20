@@ -15,6 +15,6 @@ export function App() {
     case 'device':
       return <DevicePage key={route.id} deviceId={route.id} />
     default:
-      return <NotFound />
+      return <NotFound device={route.name === 'not_found' && route.device === true} />
   }
 }

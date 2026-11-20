@@ -7,6 +7,7 @@ import fixture from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
 import sampleReport from '@leaaf/fixtures/report.example-laptop-14.office.json'
 import { rankPaths } from '@leaaf/shared/ranking'
 import { ApiContext } from '../api'
+import { App } from '../app/App'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
 import { ResultsView } from '../components/ResultsView'
 import { PATH_TITLES } from '../lib/labels'
@@ -280,5 +281,19 @@ describe('ResultsView', () => {
   it('explains an unknown device instead of failing silently', async () => {
     render(withApi(<ResultsView deviceId="bbbbbbbbbbbbbbbbbbbbbb" />))
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not find this scan/i)
+  })
+})
+
+describe('App routes (feature 001 AC-010)', () => {
+  it('says the scan was not found for a malformed device link, and "page not found" elsewhere', () => {
+    window.history.replaceState(null, '', '/d/short')
+    const { unmount } = render(withApi(<App />))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('We could not find this scan')
+    unmount()
+
+    window.history.replaceState(null, '', '/nowhere')
+    render(withApi(<App />))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Page not found')
+    window.history.replaceState(null, '', '/')
   })
 })
