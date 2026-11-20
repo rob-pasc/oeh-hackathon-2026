@@ -8,6 +8,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "start": "node --env-file-if-exists=.env src/main.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "llm:smoke": "node --env-file-if-exists=.env scripts/llm-smoke.ts",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@leaaf/shared": "*",
+    "fastify": "^5.12.8",
     "openai": "^7.62.0",
     "typebox": "^1.4.7",
     "yaml": "^2.9.1"

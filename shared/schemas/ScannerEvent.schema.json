@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ScannerEvent.schema.json",
+  "title": "ScannerEvent",
+  "anyOf": [
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "step",
+        "state"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "step"
+        },
+        "step": {
+          "enum": [
+            "started",
+            "cpu_memory",
+            "storage",
+            "battery",
+            "upload"
+          ]
+        },
+        "state": {
+          "enum": [
+            "running",
+            "done",
+            "skipped"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "type",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "error"
+        },
+        "code": {
+          "enum": [
+            "scanner_failed",
+            "upload_failed",
+            "timeout",
+            "unknown"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 500
+        }
+      },
+      "additionalProperties": false
+    }
+  ]
+}

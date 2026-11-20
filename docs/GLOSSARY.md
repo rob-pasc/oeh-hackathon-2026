@@ -14,4 +14,5 @@
 | Impact table | The curated static file of CO₂e ranges, sample prices, and useful-life ranges, each entry with its source. | No live prices. |
 | Mode | The weight set used for ranking: **Environment first** or **Money first**. | Contract keys: `environment_first`, `money_first`. Weights are illustrative defaults. |
 | Device link | The unguessable URL to a device's page and report; it is the only access control. | No accounts |
+| Scan session | The link between one press of Scan now and one scanner run: its random ID is appended to the downloaded scanner, which reports progress to the waiting browser tab. | Feature 006; `shared/src/session.ts`. A bearer secret for progress only, separate from the device ID. |
 | Demo device | A pre-scanned device seeded on the public deployment, with cached results. | Feature 005 |

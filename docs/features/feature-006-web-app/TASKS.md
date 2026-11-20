@@ -14,9 +14,9 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-005:** Build the session page: skeleton, status line, completion and error states (supports `AC-003`, `AC-004`)
 - [x] **T-006:** Build the result screen: path cards, gauge, specs card, toolbar, not-found states (supports `AC-005` to `AC-011`)
 - [x] **T-007:** Add shared visual conventions in `docs/VISUAL_DESIGN.md`, update `README.md`, `web/README.md`, and the feature index (supports `AC-013`)
-- [ ] **T-008:** Install dependencies and run `npm run typecheck`, `npm test`, and `npm run build -w web`; fix what they report (supports all ACs)
+- [x] **T-008:** Install dependencies and run `npm run typecheck`, `npm test`, and `npm run build -w web`; fix what they report (supports all ACs)
 - [ ] **T-009:** Review the screens in a browser at 1440 × 900 and 1280 × 720 with the team; record the findings (supports `AC-013`)
-- [ ] **T-010:** Agree the session routes and events with the backend team and switch on live mode (supports `AC-014`)
+- [x] **T-010:** Agree the session routes and events with the backend team and switch on live mode (supports `AC-014`)
 - [x] **T-011:** Fix the gauge arc flag and add regression tests (supports `AC-017`)
 - [x] **T-012:** Rename the landing button to "Download and Scan now" (supports `AC-015`)
 - [x] **T-013:** Add the path tags to the toolbar and the steps view with step blocks, with tests (supports `AC-016`)
@@ -31,13 +31,13 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Dependencies and blockers
 
-- T-008 needs network access to install packages.
 - T-016 needs the backend team's decision on the option payload and on what avoided CO₂e means for a single action.
-- T-010 needs the backend team's decision on the session routes, the events, and embedding the session ID in the scanner.
 
 ## Progress notes
 
-The first version was written without network access. Its checks are limited to what ran in that environment; see the verification notes in `ACCEPTANCE_CRITERIA.md`.
+The first version was written without network access. After the merge into `main` (b879a96) the dependencies were installed; the web type-check fix is a846d99. T-008 is done: type check, tests, and build pass (see the verification notes in `ACCEPTANCE_CRITERIA.md`). The browser review (T-009) remains.
+
+2026-11-20: T-010 done. The session routes, events, and executable trailer were decided with the user, then implemented in `shared/src/session.ts`, the server, and the scanner. The web client now takes the session types from `shared/`, routes `/s/` only for 26-character Crockford IDs, and proxies `/api` and `/downloads` in `npm run dev`. The browser journey against the real backend (AC-014) still needs a Windows run of the scanner.
 
 ## Lifecycle history
 
@@ -47,3 +47,5 @@ The first version was written without network access. Its checks are limited to 
 - 2026-11-20: Third scope extension by amendment (FR-019, AC-021, T-017); see the plan's scope change log. Implemented the same day; verification pending.
 - 2026-11-20: Fourth scope extension by amendment (FR-020 to FR-022, AC-022 to AC-024, T-018 to T-020); see the plan's scope change log. Implemented the same day; verification pending.
 - 2026-11-20: Fifth scope extension by amendment (FR-023, AC-025, T-021); see the plan's scope change log. Implemented the same day; verification pending.
+- 2026-11-20: Merged into `main` (b879a96). T-008 done; T-009 and T-010 still pending.
+- 2026-11-20: Branch `feat/device-scan-and-upload` (T-010, session routes and live mode) merged into `main` together with the amendments above. T-009 and T-016 remain open.

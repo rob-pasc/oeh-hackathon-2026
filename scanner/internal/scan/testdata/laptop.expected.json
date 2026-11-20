@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "scanner_version": "0.1.0-test",
+  "scanned_at": "2026-11-20T09:30:00Z",
+  "scan_status": "complete",
+  "identity": {
+    "manufacturer": "LENOVO",
+    "model": "20L5CTO1WW",
+    "product_version": "ThinkPad T480",
+    "system_family": "ThinkPad T480",
+    "system_sku": "LENOVO_MT_20L5_BU_Think_FM_ThinkPad T480",
+    "form_factor": "laptop"
+  },
+  "os": { "caption": "Microsoft Windows 11 Pro", "build": "10.0.22631", "display_version": "23H2" },
+  "firmware": { "bios_release_date": "2023-05-12", "firmware_type": "uefi", "secure_boot_enabled": true },
+  "tpm": { "present": true, "spec_version": "2.0" },
+  "cpu": { "name": "Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz", "cores": 4, "threads": 8 },
+  "memory": { "total_gb": 8, "type": "ddr4", "speed_mts": 2400, "slots_total": 2, "slots_used": 1 },
+  "storage": [{ "media": "ssd", "bus": "nvme", "capacity_gb": 256, "health": "healthy" }],
+  "battery": {
+    "present": true,
+    "design_capacity_mwh": 57000,
+    "full_charge_capacity_mwh": 41040,
+    "health_percent": 72,
+    "cycle_count": 412
+  },
+  "gpus": ["Intel(R) UHD Graphics 620"]
+}

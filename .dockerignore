@@ -1,0 +1,14 @@
+# Both images build from the repository root (they need the root lockfile and shared/).
+# The Dockerfiles copy only what they need; this keeps the context small and secrets out of it.
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.example
+.git
+.github
+.agent-specs
+docs
+scanner
+demo

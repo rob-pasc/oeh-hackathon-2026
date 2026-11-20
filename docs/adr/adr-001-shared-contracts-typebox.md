@@ -42,6 +42,7 @@ The contracts are defined once in `shared/src/` with [TypeBox](https://github.co
 ## Implementation / validation references
 
 - `shared/src/*.ts` (contracts), `shared/scripts/export-schemas.ts`, and `shared/test/` (61 passing tests on 2026-11-20, including the strict Ajv check)
+- `scanner/internal/scan/schema_test.go`: the Go contract test from the consequences above, validating scanner output against `DeviceScan.schema.json` with `santhosh-tekuri/jsonschema` (test-only dependency, 2026-11-20)
 - Decisions taken with the user on 2026-11-20 when the contracts were defined together
 
 ## Supersession notes (if applicable)

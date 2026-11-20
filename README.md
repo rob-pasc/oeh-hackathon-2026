@@ -1,6 +1,6 @@
 # leaaf: Lifecycle Evaluation and Action Finder
 
-**Status:** In progress. Six MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The web app (`web/`, first version on sample data) is written. The server has the LLM adapter, fact extraction, and the sourced impact table (`data/impact.yaml`); the scanner and the rest of the server are not built yet.
+**Status:** In progress. Six MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The web app (`web/`, first version on sample data) passes its automated checks; the browser review is pending. The Windows scanner (`scanner/`) and the server's device upload API are built and tested on recorded readings, but have not yet run on a real Windows laptop. The server also has the LLM adapter, fact extraction, and the sourced impact table (`data/impact.yaml`). Retrieval, ranking, and reports are not built yet. Container images for `web` and `server` are built by CI and published to GHCR on tag pushes ([deployment guide](docs/DEPLOYMENT.md)).
 
 ÖH Hackathon 2026 project (theme: AI for Green), planned to run at [leaaf.green](https://leaaf.green) (not deployed yet). A small Windows scanner reads an old laptop's hardware. The platform then ranks five next lives for it (upgrade, repair, pass it on, salvage for parts, recycle) in Environment first or Money first mode, with cited evidence and honest cost and CO₂e ranges.
 
@@ -26,28 +26,34 @@ Stack: a Go scanner for Windows, a TypeScript/Node backend with SQLite, and a Re
 | [`corpus/`](corpus/) | Curated knowledge base and its manifest | 002 |
 | [`data/`](data/) | Static impact table (CO₂e, prices, useful life) | 003 |
 | [`demo/`](demo/) | Seeded demo device scans and caches | 005 |
+| [`deploy/`](deploy/) | Example production Compose file and env templates | 005 |
 | [`docs/`](docs/) | Product, workflow, feature specs, ADRs | — |
 
-Apart from `shared/`, `web/`, and the parts of `server/` and `data/` listed in the status above, the folders contain only README placeholders.
+`corpus/` and `demo/` contain only README placeholders so far.
 
 ## Development
 
-Requires Node.js 24 or later (Go is needed later for `scanner/`). From the repository root:
+Requires Node.js 24 or later, and Go 1.26 for `scanner/`. From the repository root:
 
 ```sh
 npm install
 npm test            # builds shared/, then tests all workspaces
 npm run typecheck
 npm run build
+npm start -w server  # device API on http://127.0.0.1:3000
+(cd scanner && go test ./...)
 ```
 
-See [`shared/README.md`](shared/README.md) for the contracts, the mock fixtures, and how to change a contract, and [`server/README.md`](server/README.md) for LLM configuration and the live smoke test.
+CI ([`.github/workflows/ci.yaml`](.github/workflows/ci.yaml)) runs the same checks on every pull request and push to `main`, and also builds both container images.
+
+See [`shared/README.md`](shared/README.md) for the contracts, the mock fixtures, and how to change a contract, [`server/README.md`](server/README.md) for the API, configuration, and the live LLM smoke test, and [`scanner/README.md`](scanner/README.md) for the Windows build.
 
 ## Documentation
 
 - Product context: [docs/PRODUCT.md](docs/PRODUCT.md)
 - Glossary: [docs/GLOSSARY.md](docs/GLOSSARY.md)
 - Feature index: [docs/features/INDEX.md](docs/features/INDEX.md)
+- Deployment (images, CI, Compose, Caddy): [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 - Architecture decisions: [docs/adr/](docs/adr/)
 - Workflow for agents and contributors: [AGENTS.md](AGENTS.md), [docs/WORKFLOW.md](docs/WORKFLOW.md)
 

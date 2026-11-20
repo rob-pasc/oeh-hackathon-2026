@@ -1,0 +1,21 @@
+{
+  "Win32_ComputerSystem": [{ "Manufacturer": "System manufacturer", "Model": "System Product Name", "SystemFamily": "To be filled by O.E.M.", "SystemSKUNumber": "SKU" }],
+  "Win32_ComputerSystemProduct": [{ "Version": "System Version" }],
+  "Win32_SystemEnclosure": [{ "ChassisTypes": [3] }],
+  "Win32_OperatingSystem": [{ "Caption": "Microsoft Windows 10 Home", "Version": "10.0.19045" }],
+  "Win32_BIOS": [{ "ReleaseDate": "20160701000000.000000+000" }],
+  "Win32_Processor": [{ "Name": "Intel(R) Core(TM) i3-6100 CPU @ 3.70GHz", "NumberOfCores": 2, "NumberOfLogicalProcessors": 4 }],
+  "Win32_PhysicalMemory": [{ "Capacity": 4294967296, "SMBIOSMemoryType": 26, "ConfiguredClockSpeed": 2133 }],
+  "Win32_PhysicalMemoryArray": [{ "MemoryDevices": 4, "Use": 3 }],
+  "MSFT_PhysicalDisk": [{ "MediaType": 3, "BusType": 11, "Size": 1000204886016, "HealthStatus": 1 }],
+  "Win32_Battery": [],
+  "BatteryStaticData": null,
+  "BatteryFullChargedCapacity": null,
+  "BatteryCycleCount": null,
+  "BatteryReport": null,
+  "Win32_VideoController": null,
+  "Win32_Tpm": null,
+  "DisplayVersion": "22H2",
+  "FirmwareType": "legacy_bios",
+  "SecureBoot": false
+}

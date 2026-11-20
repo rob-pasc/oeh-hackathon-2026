@@ -32,7 +32,7 @@ describe('Landing', () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window)
     render(withApi(<Landing />))
     await userEvent.click(screen.getByRole('button', { name: /download and scan now/i }))
-    await waitFor(() => expect(tab.location.href).toMatch(/^\/s\/[A-Za-z0-9_-]{22}$/))
+    await waitFor(() => expect(tab.location.href).toMatch(/^\/s\/[0-9A-HJKMNP-TV-Z]{26}$/))
     expect(open).toHaveBeenCalledWith('', '_blank')
     open.mockRestore()
   })
