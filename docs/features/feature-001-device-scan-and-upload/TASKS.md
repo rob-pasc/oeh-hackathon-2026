@@ -15,8 +15,9 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-006:** Implement the upload endpoint with schema validation, a size limit, SQLite storage, and secure ID generation, with integration tests (supports `AC-006`, `AC-007`)
 - [x] **T-007:** Implement `GET /api/devices/:id` and the not-found behavior, with tests (supports `AC-010`)
 - [ ] **T-008:** Build the React landing page with the download and data disclosure, and the device page with "Unknown" rendering, with tests (supports `AC-009`, `AC-011`)
-- [ ] **T-009:** Run the scanner manually on a real Windows laptop as a non-admin user and record the evidence (supports `AC-001`, `AC-005`, `AC-008`)
+- [ ] **T-009:** Run the scanner manually on a real Windows laptop, accepting and declining the elevation prompt, and record the evidence, including which sources still read `null` when elevated (supports `AC-001`, `AC-005`, `AC-008`). *(Revised 2026-11-20; originally run as a non-admin user.)*
 - [x] **T-011:** *(amendment)* Implement the FR-013 collectors (RAM slots and type, TPM, Secure Boot, firmware type, battery cycle count, GPU names) with fixture tests, including access-denied cases (supports `AC-013`)
+- [ ] **T-012:** *(Added 2026-11-20)* Embed a `requireAdministrator` manifest and version info with `go-winres`, commit the generated `.syso` files, open the browser non-elevated, and add a test for the manifest (supports `AC-001`)
 - [ ] **T-010:** Run all checks, self-review the diff against the plan, record the findings, and update the README and the feature index (supports `AC-012`)
 
 ## Dependencies and blockers
@@ -32,9 +33,10 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: T-006 and T-007 done: Fastify upload and lookup API with SQLite storage and the scanner download route; 11 tests in `server/test/devices.test.ts`. Live smoke run: a fixture upload returned 201 with a device URL, the lookup returned the record, and the log contained neither the device ID nor a client IP.
 - 2026-11-20: T-001, T-003, T-004, T-005, and T-011 done: the Go module in `scanner/` with `go test`, `go vet`, and the Windows build documented in `scanner/README.md` and the root README. Tests: normalization fixtures (complete laptop, partial, desktop, planted identifiers), a query allowlist check, battery report parsing, the run flow against unreachable, rejecting, and accepting test servers, and a schema check against `shared/schemas/DeviceScan.schema.json`. A Linux build of the scanner uploaded to the local server and received a device link, so the Go payload passes the server's validation. The Windows `.exe` cross-compiles (PE32+, about 6.9 MB). Nothing has run on Windows yet (T-009).
 - 2026-11-20: For feature 006 T-010, the scanner reads a session ID from a `LEAAFSCAN1:` trailer appended to its downloaded file, reports its progress to that session, and sends `session_id` with the upload. Without a trailer it behaves as before. See the [feature 006 design](../feature-006-web-app/DESIGN.md).
-- Unverified assumption for T-003/T-011: whether `root\WMI` battery classes and `Win32_Tpm` can be read without admin rights. Test this early on a real laptop; the schema already allows `null`.
+- Unverified assumption for T-003/T-011: whether `root\WMI` battery classes and `Win32_Tpm` can be read without admin rights. Test this early on a real laptop; the schema already allows `null`. *(2026-11-20: moot for TPM once T-012 elevates the scanner; whether the battery classes work elevated is still checked in T-009.)*
 
 ## Lifecycle history
 
 - 2026-11-20: Scope extended by an amendment (FR-013, AC-013, T-011); see the [scope change log](./PLAN.md#scope-change-log).
 - 2026-11-20: Implementation started (T-002, shared contracts).
+- 2026-11-20: FR-001 replaced (administrator rights required) and T-012 added; see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
