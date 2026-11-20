@@ -6,8 +6,30 @@
 import type { DeviceScan, Fact, IntendedUse, Path, Suitability } from '@leaaf/shared'
 import { lookupFacts, reason, type FactLookup, type Reason } from './facts.ts'
 
-/** RAM the intended use needs, in GiB. Development builds and runs containers, so it needs more. */
-export const RAM_TARGET_GB: Record<IntendedUse, number> = { office: 8, study: 8, development: 16, pass_on: 8 }
+/**
+ * RAM the intended use needs, in GiB. Development builds and runs containers, and current games
+ * commonly list 16 GB, so both need more. General use has the same needs as office use (FR-016).
+ */
+export const RAM_TARGET_GB: Record<IntendedUse, number> = { office: 8, study: 8, development: 16, pass_on: 8, general: 8, gaming: 16 }
+
+export type GraphicsClass = 'dedicated' | 'integrated' | null
+
+// Matched against Win32_VideoController names. Only the class matters here; how fast a graphics
+// card is stays out of scope (feature 003 exclusions).
+const DEDICATED_GPU = [/\bnvidia\b/i, /\bgeforce\b/i, /\bquadro\b/i, /\bradeon\b.*\b(rx|pro)\b/i, /\bfirepro\b/i, /\barc\b.*\ba\d{3}/i]
+const INTEGRATED_GPU = [/\bintel\b.*\b(u?hd|iris)\b/i, /\bintel\b.*\barc\b.*\bgraphics\b/i, /\bradeon\b(\(tm\))?\s*(graphics|vega)\b/i, /\bintegrated\b/i]
+
+/**
+ * dedicated if any adapter is a dedicated graphics card; integrated if every adapter is recognized
+ * as integrated; null when the names are missing or unrecognized (for example a basic display
+ * driver), which the gates treat as "cannot verify".
+ */
+export function graphicsClass(gpus: readonly string[] | null): GraphicsClass {
+  if (!gpus || gpus.length === 0) return null
+  if (gpus.some((name) => DEDICATED_GPU.some((re) => re.test(name)))) return 'dedicated'
+  if (gpus.every((name) => INTEGRATED_GPU.some((re) => re.test(name)))) return 'integrated'
+  return null
+}
 
 /** Below this share of its design capacity a battery counts as worn (a common replacement threshold). */
 export const BATTERY_WORN_PERCENT = 80
@@ -49,6 +71,27 @@ const USE_LABEL: Record<IntendedUse, string> = {
   study: 'school or university',
   development: 'programming',
   pass_on: 'passing it on',
+  general: 'everyday use',
+  gaming: 'gaming',
+}
+
+/**
+ * Gaming needs a dedicated graphics card (FR-017), which neither an upgrade nor a battery repair
+ * adds. Returns whether the use's needs stay unmet (`shortfall`) or cannot be verified.
+ */
+function graphicsGate(scan: DeviceScan, use: IntendedUse, path: 'upgrade' | 'repair', reasons: Reason[]) {
+  if (use !== 'gaming') return { shortfall: false, unverified: false }
+  const cls = graphicsClass(scan.gpus)
+  if (cls === 'dedicated') return { shortfall: false, unverified: false }
+  const action = path === 'upgrade' ? 'an SSD or RAM upgrade' : 'a battery repair'
+  if (cls === 'integrated') {
+    reasons.push(
+      reason('integrated_graphics', `This computer has integrated graphics only (${scan.gpus!.join(', ')}), which cannot meet gaming needs; ${action} does not change that.`),
+    )
+    return { shortfall: true, unverified: false }
+  }
+  reasons.push(reason('cannot_verify_graphics', 'We cannot verify the graphics, so we cannot tell whether this computer meets gaming needs.'))
+  return { shortfall: false, unverified: true }
 }
 
 /** Caps a status: `conditional` turns viable into conditional, never the other way. */
@@ -149,21 +192,21 @@ function gateUpgrade({ scan, use }: GateInput, facts: FactLookup): GateResult {
     }
   }
 
-  const shortfall = ramAfter !== null && ramAfter < target
-  if (shortfall)
+  const ramShort = ramAfter !== null && ramAfter < target
+  if (ramShort)
     reasons.push(reason('ram_below_use', `The RAM stays at ${ramAfter} GB, below the ${target} GB ${USE_LABEL[use]} needs.`))
 
   if (!ssd && !ram) {
-    if (blocked > 0) return { path: 'upgrade', status: 'not_suitable', reasons, plan: null, shortfall }
-    return {
-      path: 'upgrade',
-      status: 'not_suitable',
-      reasons: [reason('no_upgrade_needed', `It already has an SSD and enough RAM for ${USE_LABEL[use]}, so no upgrade is needed.`)],
-      plan: null,
-      shortfall: false,
-    }
+    if (blocked > 0) return { path: 'upgrade', status: 'not_suitable', reasons, plan: null, shortfall: ramShort }
+    const done = reason('no_upgrade_needed', `It already has an SSD and enough RAM for ${USE_LABEL[use]}, so no SSD or RAM upgrade is needed.`)
+    // The graphics reason explains why that still does not make it fit for gaming.
+    const graphicsReasons: Reason[] = []
+    graphicsGate(scan, use, 'upgrade', graphicsReasons)
+    return { path: 'upgrade', status: 'not_suitable', reasons: [done, ...graphicsReasons], plan: null, shortfall: false }
   }
-  let status: Suitability = unverified || shortfall ? 'conditional' : 'viable'
+  const graphics = graphicsGate(scan, use, 'upgrade', reasons)
+  const shortfall = ramShort || graphics.shortfall
+  let status: Suitability = unverified || graphics.unverified || shortfall ? 'conditional' : 'viable'
   status = atMost(status, osCapForOwnUse(facts, reasons))
   return { path: 'upgrade', status, reasons, plan: { path: 'upgrade', ssd, ram, ram_after_gb: ramAfter }, shortfall }
 }
@@ -218,11 +261,15 @@ function gateRepair({ scan, use }: GateInput, facts: FactLookup): GateResult {
   // not change the status, because the repair itself is still sound.
   const total = scan.memory.total_gb
   const target = RAM_TARGET_GB[use]
-  const shortfall = total !== null && total < target
-  if (shortfall)
+  const ramShort = total !== null && total < target
+  if (ramShort)
     reasons.push(reason('ram_below_use', `The RAM stays at ${total} GB, below the ${target} GB ${USE_LABEL[use]} needs; consider an upgrade as well.`))
+  // Unlike the RAM shortfall, no upgrade can fix missing gaming graphics, so it makes the repair
+  // conditional for gaming (FR-017).
+  const graphics = graphicsGate(scan, use, 'repair', reasons)
+  const shortfall = ramShort || graphics.shortfall
 
-  let status: Suitability = unverified || battery === 'professional' ? 'conditional' : 'viable'
+  let status: Suitability = unverified || graphics.unverified || graphics.shortfall || battery === 'professional' ? 'conditional' : 'viable'
   status = atMost(status, osCapForOwnUse(facts, reasons))
   return { path: 'repair', status, reasons, plan: { path: 'repair', battery }, shortfall }
 }

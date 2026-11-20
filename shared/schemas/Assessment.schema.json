@@ -23,9 +23,11 @@
         "office",
         "study",
         "development",
-        "pass_on"
+        "pass_on",
+        "general",
+        "gaming"
       ],
-      "description": "office = office/browsing, study = school/university, development = programming, pass_on = pass to someone else"
+      "description": "office = office/browsing, study = school/university, development = programming, pass_on = pass to someone else, general = everyday use without a specific purpose, gaming = games"
     },
     "created_at": {
       "type": "string",

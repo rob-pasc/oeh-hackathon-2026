@@ -15,10 +15,11 @@ export const PATHS = ['upgrade', 'repair', 'pass_on', 'salvage', 'recycle'] as c
 export const Path = Type.Enum(PATHS, { description: 'One of the five next lives for a device' })
 export type Path = Static<typeof Path>
 
-export const INTENDED_USES = ['office', 'study', 'development', 'pass_on'] as const
+// general and gaming were added on 2026-11-20 (feature 003 FR-015); appended, so earlier values keep their order.
+export const INTENDED_USES = ['office', 'study', 'development', 'pass_on', 'general', 'gaming'] as const
 export const IntendedUse = Type.Enum(INTENDED_USES, {
   description:
-    'office = office/browsing, study = school/university, development = programming, pass_on = pass to someone else',
+    'office = office/browsing, study = school/university, development = programming, pass_on = pass to someone else, general = everyday use without a specific purpose, gaming = games',
 })
 export type IntendedUse = Static<typeof IntendedUse>
 

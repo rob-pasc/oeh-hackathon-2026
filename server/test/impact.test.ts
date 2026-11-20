@@ -1,3 +1,4 @@
+import { PATHS } from '@leaaf/shared'
 import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { checkImpactTable, coverageProblems, loadImpactTable, parseImpactTable, type ImpactTable } from '../src/impact/table.ts'
@@ -12,6 +13,12 @@ describe('data/impact.yaml', () => {
   it('is valid: every entry has low <= high, a unit, a status, and known sources with access dates (AC-007)', () => {
     expect(checkImpactTable(real)).toEqual([])
     for (const e of real.entries) if (e.status !== 'placeholder') expect(e.sources.length).toBeGreaterThan(0)
+  })
+
+  it('requires a life entry for every path with the general and gaming uses (AC-019)', () => {
+    const without = { ...real, entries: real.entries.filter((e) => !/^life_extra\.\w+\.(general|gaming)$/.test(e.id)) }
+    const missing = coverageProblems(without)
+    for (const path of PATHS) for (const use of ['general', 'gaming']) expect(missing).toContain(`life_extra.${path}.${use}: missing`)
   })
 
   it('flags exactly the remaining placeholders in the coverage check (AC-007)', () => {

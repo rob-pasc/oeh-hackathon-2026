@@ -108,6 +108,8 @@ export function confidence({ gate, impact, scan, modelEvidence, impactIndex }: C
     const entries = [...new Set(impact.assumptions.flatMap((a) => a.impact_refs))].map((id) => impactIndex.entry(id))
     const placeholders = entries.filter((e) => e.status === 'placeholder')
     if (placeholders.length > 0) flag(`Uses an estimate without a source yet: ${placeholders.map((e) => e.description).join('; ')}`)
+    const estimates = entries.filter((e) => e.status === 'estimate')
+    if (estimates.length > 0) flag(`Uses an estimate the sources do not cover: ${estimates.map((e) => e.description).join('; ')}`)
     const wide = entries.filter((e) => e.low > 0 && e.high >= WIDE_RANGE_FACTOR * e.low)
     if (wide.length > 0) flag(`Wide range in: ${wide.map((e) => e.description).join('; ')}`)
     if (impact.displacement === 'conditional')

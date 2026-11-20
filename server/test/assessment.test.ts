@@ -17,6 +17,7 @@ import {
   assess,
   avoided,
   baselineFor,
+  graphicsClass,
   indexImpactTable,
   loadWeights,
   parseWeights,
@@ -316,5 +317,103 @@ describe('weights (AC-010)', () => {
     ['an unknown criterion', 'environment_first: {environment: 45, useful_life: 25, economic: 10, feasibility: 20, fun: 0}\nmoney_first: {environment: 15, useful_life: 20, economic: 45, feasibility: 20}', 'invalid weights'],
   ])('rejects %s', (_name, yaml, message) => {
     expect(() => parseWeights(yaml)).toThrow(message)
+  })
+})
+
+describe('general and gaming uses (feature 003 amendment)', () => {
+  const withGpus = (gpus: string[] | null) => ({ ...laptop, gpus })
+  const LEVEL = { high: 0, medium: 1, low: 2 } as const
+
+  it('classifies graphics adapters from their Windows names', () => {
+    expect(graphicsClass(['Intel(R) UHD Graphics 620'])).toBe('integrated')
+    expect(graphicsClass(['Intel(R) Iris(R) Xe Graphics'])).toBe('integrated')
+    expect(graphicsClass(['Intel(R) Arc(TM) Graphics'])).toBe('integrated')
+    expect(graphicsClass(['AMD Radeon(TM) Graphics'])).toBe('integrated')
+    expect(graphicsClass(['AMD Radeon Vega 8 Graphics'])).toBe('integrated')
+    // A laptop with switchable graphics lists both adapters.
+    expect(graphicsClass(['Intel(R) UHD Graphics 620', 'NVIDIA GeForce MX150'])).toBe('dedicated')
+    expect(graphicsClass(['AMD Radeon RX 580'])).toBe('dedicated')
+    expect(graphicsClass(['Intel(R) Arc(TM) A370M Graphics'])).toBe('dedicated')
+    expect(graphicsClass(['Microsoft Basic Display Adapter'])).toBeNull()
+    expect(graphicsClass([])).toBeNull()
+    expect(graphicsClass(null)).toBeNull()
+  })
+
+  it('assesses general use exactly like office use (AC-017)', () => {
+    const office = run({ use: 'office' })
+    const general = run({ use: 'general' })
+    expect(general.intended_use).toBe('general')
+    const comparable = (a: typeof office) =>
+      a.paths.map((p) => ({
+        path: p.path,
+        status: p.status,
+        reasons: p.reasons,
+        scores: p.scores,
+        ranges: p.impact && { cost: p.impact.cost_eur, life: p.impact.useful_life_years, co2e: p.impact.co2e_kg },
+        confidence: p.confidence.level,
+      }))
+    expect(comparable(general)).toEqual(comparable(office))
+  })
+
+  it('says which office entry every general life entry reuses (AC-017)', () => {
+    for (const path of PATHS) {
+      const entry = impactIndex.entry(`life_extra.${path}.general`)
+      const office = impactIndex.entry(`life_extra.${path}.office`)
+      expect([entry.low, entry.high]).toEqual([office.low, office.high])
+      if (office.high > 0) expect(entry.derivation).toContain(`life_extra.${path}.office`)
+    }
+  })
+
+  it('makes upgrade and repair conditional for gaming with integrated graphics only (AC-018)', () => {
+    const a = run({ use: 'gaming', scan: withGpus(['Intel(R) UHD Graphics 620']) })
+    for (const path of ['upgrade', 'repair'] as const) {
+      expect(pathOf(a, path).status).toBe('conditional')
+      expect(pathOf(a, path).reasons.map((r) => r.code)).toContain('integrated_graphics')
+    }
+    // The unmet need also halves the useful-life score, like a RAM shortfall.
+    const dedicated = run({ use: 'gaming', scan: withGpus(['NVIDIA GeForce GTX 1050']) })
+    expect(pathOf(a, 'upgrade').scores!.useful_life).toBeLessThan(pathOf(dedicated, 'upgrade').scores!.useful_life)
+  })
+
+  it('adds no graphics reason for gaming with a dedicated graphics card (AC-018)', () => {
+    const a = run({ use: 'gaming', scan: withGpus(['Intel(R) UHD Graphics 620', 'NVIDIA GeForce GTX 1050']) })
+    for (const path of ['upgrade', 'repair'] as const) {
+      const codes = pathOf(a, path).reasons.map((r) => r.code)
+      expect(codes).not.toContain('integrated_graphics')
+      expect(codes).not.toContain('cannot_verify_graphics')
+    }
+    expect(pathOf(a, 'repair').status).toBe(pathOf(run({ use: 'office' }), 'repair').status)
+  })
+
+  it('cannot verify the graphics for gaming when the scan has no GPU names (AC-018)', () => {
+    const a = run({ use: 'gaming', scan: withGpus(null) })
+    for (const path of ['upgrade', 'repair'] as const) {
+      expect(pathOf(a, path).status).toBe('conditional')
+      expect(pathOf(a, path).reasons.map((r) => r.code)).toContain('cannot_verify_graphics')
+    }
+  })
+
+  it('assesses pass it on, salvage, and recycle for gaming as for office (AC-018)', () => {
+    const scan = withGpus(['Intel(R) UHD Graphics 620'])
+    const gaming = run({ use: 'gaming', scan })
+    const office = run({ use: 'office', scan })
+    for (const path of ['pass_on', 'salvage', 'recycle'] as const) {
+      expect(pathOf(gaming, path).status).toBe(pathOf(office, path).status)
+      expect(pathOf(gaming, path).confidence).toEqual(pathOf(office, path).confidence)
+    }
+  })
+
+  it('marks the gaming upgrade and repair life entries as estimates and lowers their confidence (AC-019)', () => {
+    for (const path of ['upgrade', 'repair'] as const) expect(impactIndex.entry(`life_extra.${path}.gaming`).status).toBe('estimate')
+    for (const path of ['pass_on', 'salvage', 'recycle'] as const) expect(impactIndex.entry(`life_extra.${path}.gaming`).status).toBe('assumption')
+
+    const scan = withGpus(['NVIDIA GeForce GTX 1050'])
+    const gaming = run({ use: 'gaming', scan })
+    const office = run({ use: 'office', scan })
+    for (const path of ['upgrade', 'repair'] as const) {
+      const g = pathOf(gaming, path).confidence
+      expect(LEVEL[g.level]).toBeGreaterThan(LEVEL[pathOf(office, path).confidence.level])
+      expect(g.reasons).toContainEqual(expect.stringContaining('estimate the sources do not cover'))
+    }
   })
 })

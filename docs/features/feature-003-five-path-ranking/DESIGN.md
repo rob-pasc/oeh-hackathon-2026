@@ -17,12 +17,14 @@ This document explains the gate rules, the calculator, the scoring rubrics, and 
 
 **Model evidence.** Without model-specific evidence, hardware facts (`ram_*`, `storage_slots`, `battery_*`) are ignored, even if extraction returned them, so they count as unverified (FR-004). Software support facts come from generic sources such as Microsoft's CPU list and stay usable.
 
-**RAM the use needs:** office 8 GB, study 8 GB, development 16 GB, pass on 8 GB.
+**RAM the use needs:** office 8 GB, study 8 GB, development 16 GB, pass on 8 GB, general 8 GB, gaming 16 GB. General use follows the office rules everywhere (FR-016).
+
+**Gaming graphics (FR-017).** `graphicsClass` reads the scan's GPU names: *dedicated* if any adapter is a dedicated card (NVIDIA, GeForce, Quadro, Radeon RX or Pro, FirePro, Intel Arc A-series), *integrated* if every adapter is recognized as integrated (Intel HD, UHD, Iris, or Arc Graphics; AMD Radeon Graphics or Vega; names containing "integrated"), and unknown otherwise, including missing names or a basic display driver. For gaming, integrated graphics make upgrade and repair conditional, because neither adds a graphics card. This counts as a shortfall, so the useful-life score is halved. Unknown graphics make them conditional with "cannot verify the graphics". The other paths ignore the graphics. How fast a card is, and adding one to a desktop, are out of scope.
 
 | Path | Not suitable when | Conditional when | Otherwise |
 | --- | --- | --- | --- |
-| Upgrade | Nothing needs upgrading (SSD present, enough RAM), or every needed part is ruled out by a fact (`ram_soldered: all`, `ram_max_gb` below target, no SSD slot) | A needed part cannot be verified (no `storage_slots` or `ram_soldered` fact); RAM stays below the use's target; the CPU is not supported by Windows 11 | Viable |
-| Repair (battery) | No battery (or a desktop); battery at or above 80% of design capacity; no replacement part documented | Battery presence or wear unreadable; battery not user-replaceable **or replaceability unknown**: then a professional does the repair; part availability unknown; CPU not supported by Windows 11 | Viable, DIY |
+| Upgrade | Nothing needs upgrading (SSD present, enough RAM), or every needed part is ruled out by a fact (`ram_soldered: all`, `ram_max_gb` below target, no SSD slot) | A needed part cannot be verified (no `storage_slots` or `ram_soldered` fact); RAM stays below the use's target; the CPU is not supported by Windows 11; gaming without verified dedicated graphics | Viable |
+| Repair (battery) | No battery (or a desktop); battery at or above 80% of design capacity; no replacement part documented | Battery presence or wear unreadable; battery not user-replaceable **or replaceability unknown**: then a professional does the repair; part availability unknown; CPU not supported by Windows 11; gaming without verified dedicated graphics | Viable, DIY |
 | Pass it on | The CPU is not supported by Windows 11 (no security updates for the next owner) | Windows 11 support unknown; a drive reports unhealthy | Viable |
 | Salvage | No reusable part identified (no healthy SSD, all RAM soldered) | Reusable parts cannot be verified (laptop without a `ram_soldered` fact); the device can still be used whole (pass it on is not ruled out) | Viable |
 | Recycle | Never | Any of upgrade, repair, or pass it on is still possible (reuse comes before recycling) | Viable |
@@ -66,6 +68,7 @@ Each path starts at high and loses one level per finding (two for missing model 
 - Unreadable scan fields the path depends on (for example RAM slots for upgrade, battery wear for repair).
 - A battery reporting exactly 100% (some firmware reports this regardless of wear).
 - A placeholder impact entry is used.
+- An `estimate` impact entry is used, one the cited sources do not cover (the gaming useful-life figures for upgrade and repair).
 - An impact entry with a wide range (high ≥ 3 × low), for example battery prices.
 - Conditional displacement (the saving depends on the recipient).
 

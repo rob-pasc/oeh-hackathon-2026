@@ -324,6 +324,15 @@ entries:
   - { <<: *life, id: life_extra.pass_on.study, description: "Extra useful life with a new owner (any current use)" }
   - { <<: *life, id: life_extra.pass_on.development, description: "Extra useful life with a new owner (any current use)" }
   - { <<: *life, id: life_extra.pass_on.pass_on, description: "Extra useful life with a new owner (any current use)" }
+  # General use reuses the office values (feature 003 FR-016). Gaming: no cited source gives
+  # gaming figures, so upgrade and repair are estimates set below development use, because games'
+  # hardware needs rise faster; the other paths do not depend on the current use.
+  - { <<: *life, id: life_extra.upgrade.general, description: "Extra useful life after an SSD/RAM upgrade, general use", derivation: "Same as life_extra.upgrade.office: general use has the same needs as office use." }
+  - { <<: *life, id: life_extra.repair.general, description: "Extra useful life after a battery repair, general use", high: 3, derivation: "Same as life_extra.repair.office: general use has the same needs as office use." }
+  - { <<: *life, id: life_extra.pass_on.general, description: "Extra useful life with a new owner (any current use)", derivation: "Same as life_extra.pass_on.office: the new owner's use does not depend on the current one." }
+  - { <<: *life, id: life_extra.upgrade.gaming, description: "Extra useful life after an SSD/RAM upgrade, gaming use", low: 1, high: 2, status: estimate, derivation: "Estimate: the cited reuse sources have no gaming figures. Set below development use (1-3 years), because the hardware needs of games rise faster than those of office work and programming." }
+  - { <<: *life, id: life_extra.repair.gaming, description: "Extra useful life after a battery repair, gaming use", low: 1, high: 2, status: estimate, derivation: "Estimate: the cited reuse sources have no gaming figures. Set below development use (1-3 years), because the hardware needs of games rise faster than those of office work and programming." }
+  - { <<: *life, id: life_extra.pass_on.gaming, description: "Extra useful life with a new owner (any current use)", derivation: "Same as life_extra.pass_on.office: the new owner's use does not depend on the current one." }
   - &ends
     id: life_extra.salvage.office
     description: Extra useful life of the device when salvaged for parts (the device leaves service)
@@ -340,3 +349,7 @@ entries:
   - { <<: *ends, id: life_extra.recycle.study, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }
   - { <<: *ends, id: life_extra.recycle.development, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }
   - { <<: *ends, id: life_extra.recycle.pass_on, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }
+  - { <<: *ends, id: life_extra.salvage.general }
+  - { <<: *ends, id: life_extra.salvage.gaming }
+  - { <<: *ends, id: life_extra.recycle.general, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }
+  - { <<: *ends, id: life_extra.recycle.gaming, description: "Extra useful life of the device when recycled (the device leaves service)", derivation: "The device is taken out of service." }

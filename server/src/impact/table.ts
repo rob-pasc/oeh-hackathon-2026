@@ -24,8 +24,11 @@ export const ImpactEntry = Type.Object(
     low: Type.Number(),
     high: Type.Number(),
     unit: Type.Enum(['kg_co2e', 'eur', 'years']),
-    /** sourced: derived from sources; assumption: informed by sources; placeholder: unsourced, fails coverage. */
-    status: Type.Enum(['sourced', 'assumption', 'placeholder']),
+    /**
+     * sourced: derived from sources; assumption: informed by sources; estimate: the sources do not
+     * cover the case, so it lowers confidence; placeholder: unsourced, fails coverage.
+     */
+    status: Type.Enum(['sourced', 'assumption', 'estimate', 'placeholder']),
     sources: Type.Array(Type.String({ minLength: 1 })),
     derivation: Type.Optional(Type.String({ minLength: 1 })),
     notes: Type.Optional(Type.String({ minLength: 1 })),

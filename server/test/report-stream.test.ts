@@ -178,7 +178,17 @@ describe('GET /api/devices/:id/report', () => {
     expect(events).toEqual([{ name: 'error', data: { error: 'internal', message: 'the assessment failed' } }])
   })
 
-  it.each([undefined, 'gaming', 'OFFICE'])('rejects the intended use %s with 400', async (use) => {
+  it.each(['general', 'gaming'] as const)('streams an assessment for the %s use (AC-016)', async (use) => {
+    const { app, device } = setup(service(null))
+    const base = await app.listen({ port: 0, host: '127.0.0.1' })
+    const events = await readStream(base + API_ROUTES.reportStream(device.device_id, use))
+
+    expect(events.map((e) => e.name)).toEqual(['assessment', 'end'])
+    expect(isAssessment(events[0]!.data).ok).toBe(true)
+    expect(events[0]!.data.intended_use).toBe(use)
+  })
+
+  it.each([undefined, 'work', 'OFFICE'])('rejects the intended use %s with 400', async (use) => {
     const { app, device } = setup(service(null))
     const query = use === undefined ? '' : `?intended_use=${use}`
     const res = await app.inject({ method: 'GET', url: `/api/devices/${device.device_id}/report${query}` })
