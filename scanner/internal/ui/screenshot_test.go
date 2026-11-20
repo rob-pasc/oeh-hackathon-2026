@@ -42,6 +42,8 @@ func TestScreenshots(t *testing.T) {
 		"1-start":   {},
 		"2-running": running,
 		"3-done":    {Phase: PhaseDone, DeviceURL: "https://leaaf.green/d/q3Xk9vT2mB7pLw0cZr1sEa", SavedPath: `C:\Users\Example\Downloads\leaaf-scan-20261120-093000.json`, Session: true},
+		"5-retry": {Phase: PhaseFailed, Retryable: true, Message: "The scanner could not reach leaaf to upload its results. Your scan is saved, so check the internet connection and try again.",
+			Detail: "could not reach https://leaaf.green (connection refused)", SavedPath: `C:\Users\Example\Downloads\leaaf-scan-20261120-093000.json`},
 		"4-failed": {Phase: PhaseFailed, Message: "The scanner could not upload its results. Check the internet connection and run it again.",
 			Detail: "could not reach https://leaaf.green (no such host)", SavedPath: `C:\Users\Example\Downloads\leaaf-scan-20261120-093000.json`},
 	}

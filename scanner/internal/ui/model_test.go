@@ -47,6 +47,26 @@ func TestStateFlow(t *testing.T) {
 	}
 }
 
+// AC-015: Try again only after a temporary failure, and it returns to the upload step.
+func TestRetry(t *testing.T) {
+	running := State{}.Start()
+	final := running.Apply(run.Event{Kind: run.EventFailed, Message: "rejected"})
+	if got := final.Retry(); got != final {
+		t.Errorf("Retry after a final failure changed the state: %+v", got)
+	}
+	temp := running.Apply(run.Event{Kind: run.EventFailed, Message: "offline", Retryable: true, SavedPath: `C:\scan.json`})
+	if !temp.Retryable {
+		t.Fatalf("failure not marked retryable: %+v", temp)
+	}
+	again := temp.Retry()
+	if again.Phase != PhaseRunning || again.Step != "upload" || again.StepNumber() != 5 || again.Message != "" || again.SavedPath != `C:\scan.json` {
+		t.Errorf("after Retry: %+v", again)
+	}
+	if done := again.Apply(run.Event{Kind: run.EventDone, DeviceURL: "https://leaaf.green/d/x"}); done.Phase != PhaseDone {
+		t.Errorf("retry did not complete: %+v", done)
+	}
+}
+
 // The window and the browser's session tab must name the same steps in the same order with the
 // same labels (shared/src/session.ts SCAN_STEP_IDS, web/src/api/types.ts SCAN_STEPS).
 func TestStepsMatchSharedAndWeb(t *testing.T) {

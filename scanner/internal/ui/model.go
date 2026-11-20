@@ -34,6 +34,8 @@ type State struct {
 	SavedPath string
 	Message   string
 	Detail    string
+	// Retryable: the upload failed temporarily and Try again is offered (FR-015).
+	Retryable bool
 	// Session is true when a browser tab follows this scan (the exe carries a session ID).
 	Session bool
 }
@@ -45,6 +47,16 @@ func (s State) Start() State {
 	}
 	s.Phase = PhaseRunning
 	s.Step = Steps[0].ID
+	return s
+}
+
+// Retry is the transition for Try again: back to the upload step, keeping the saved file.
+func (s State) Retry() State {
+	if s.Phase != PhaseFailed || !s.Retryable {
+		return s
+	}
+	s.Phase, s.Step = PhaseRunning, "upload"
+	s.Message, s.Detail, s.Retryable = "", "", false
 	return s
 }
 
@@ -61,7 +73,7 @@ func (s State) Apply(e run.Event) State {
 		s.DeviceURL, s.SavedPath = e.DeviceURL, e.SavedPath
 	case run.EventFailed:
 		s.Phase = PhaseFailed
-		s.Message, s.Detail, s.SavedPath = e.Message, e.Detail, e.SavedPath
+		s.Message, s.Detail, s.SavedPath, s.Retryable = e.Message, e.Detail, e.SavedPath, e.Retryable
 	}
 	return s
 }

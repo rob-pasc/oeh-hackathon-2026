@@ -36,13 +36,20 @@ GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -H windowsgui -X main.backend
 
 `-H windowsgui` keeps a console window from opening behind the scanner window. The release exe is about 12 MB.
 
-On other operating systems the scanner is a console program without a window, and it collects nothing (every value is `null`). That is enough to try the upload and session flow against a local server: `go run ./cmd/leaaf-scanner`. It prints the device link and exits with the codes below.
+On other operating systems the scanner collects nothing (every value is `null`), which is enough to try the upload and session flow against a local server (`npm start -w server`):
+
+```sh
+go run -tags gui ./cmd/leaaf-scanner   # the real window (needs cgo and the X11/Wayland dev libraries, see gioui.org/doc/install)
+go run ./cmd/leaaf-scanner             # console: prints the device link and exits with the codes below
+```
+
+The window does not need the server to start or to scan. Only the upload at the end does.
 
 ## Window
 
-The window (`internal/ui`, feature 001 FR-014) is drawn with [Gio](https://gioui.org). It is pure Go on Windows: no cgo, no WebView2 or other runtime, and it cross-compiles like the rest. Old or unpatched Windows 10 machines were the reason to avoid WebView-based options. It has four screens: start (**Start scan**), progress (step label, bar, "Step n of 5"), completion (**Show my results**), and error (**Close**). The colours and step labels come from the web app: `model_test.go` fails if the labels drift from `web/src/api/types.ts` or the step IDs from `shared/src/session.ts`. Text uses Inter, subset to Latin (about 50 KB per weight), in `internal/ui/fonts/` with its OFL licence.
+The window (`internal/ui`, feature 001 FR-014) is drawn with [Gio](https://gioui.org). It is pure Go on Windows: no cgo, no WebView2 or other runtime, and it cross-compiles like the rest. Old or unpatched Windows 10 machines were the reason to avoid WebView-based options. It has four screens: start (**Start scan**), progress (step label, bar, "Step n of 5"), completion (**Show my results**), and error (**Close**). When the upload fails temporarily (no connection, timeout, 429 or 5xx), the error screen is "Upload failed" with **Try again**. That uploads the saved scan again without rescanning (`run.Runner`, FR-015). Such a failure is reported to the waiting session only when the window is closed, so a later retry can still complete the browser tab. A rejected scan is final. The colours and step labels come from the web app: `model_test.go` fails if the labels drift from `web/src/api/types.ts` or the step IDs from `shared/src/session.ts`. Text uses Inter, subset to Latin (about 50 KB per weight), in `internal/ui/fonts/` with its OFL licence.
 
-`model.go` holds the state, tested on every platform. `view.go` draws the screens and has no platform code. `window_windows.go` is the event loop. To look at the screens without Windows, render them to PNGs. This needs cgo and an EGL/OpenGL ES driver, so it isn't part of CI:
+`model.go` holds the state, tested on every platform. `view.go` draws the screens and has no platform code. `window.go` is the event loop, built on Windows or with `-tags gui`. To look at the screens without Windows, render them to PNGs. This needs cgo and an EGL/OpenGL ES driver, so it isn't part of CI:
 
 ```sh
 SCREENSHOT_DIR=/tmp/shots go test -tags screenshot -run TestScreenshots ./internal/ui

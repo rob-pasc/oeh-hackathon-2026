@@ -98,8 +98,9 @@ type window struct {
 	mu     sync.Mutex
 	state  State
 	events []run.Event // from the scan goroutine, applied on the next frame
+	runner *run.Runner // set by Start scan; kept for Try again and the report on close
 
-	start, results, close widget.Clickable
+	start, results, retry, close widget.Clickable
 	// openFailed shows the device link as text when the browser could not be started.
 	openFailed bool
 }
@@ -190,12 +191,23 @@ func (w *window) screen(gtx layout.Context) layout.Dimensions {
 		}
 	case PhaseFailed:
 		title, titleColor = "Scan failed", colRoseInk
+		actions := w.button(&w.close, "Close")
+		if s.Retryable {
+			title = "Upload failed"
+			actions = func(gtx layout.Context) layout.Dimensions {
+				return layout.Flex{Alignment: layout.Middle}.Layout(gtx,
+					layout.Rigid(w.button(&w.retry, "Try again")),
+					layout.Rigid(layout.Spacer{Width: unit.Dp(12)}.Layout),
+					layout.Rigid(w.secondaryButton(&w.close, "Close")),
+				)
+			}
+		}
 		body = []layout.FlexChild{
 			layout.Rigid(w.label(14, regular, colInk, s.Message)),
 			space(8),
 			layout.Rigid(w.lines(12, colMuted, s.Detail, 3)),
 			space(16),
-			layout.Rigid(w.button(&w.close, "Close")),
+			layout.Rigid(actions),
 			space(12),
 			layout.Rigid(w.path(s.SavedPath)),
 		}
@@ -273,5 +285,16 @@ func (w *window) button(c *widget.Clickable, txt string) layout.Widget {
 		b.CornerRadius = 24
 		b.Inset = layout.Inset{Top: 12, Bottom: 12, Left: 28, Right: 28}
 		return b.Layout(gtx)
+	}
+}
+
+// secondaryButton is the web app's quiet text button: leaf-green text without a fill.
+func (w *window) secondaryButton(c *widget.Clickable, txt string) layout.Widget {
+	return func(gtx layout.Context) layout.Dimensions {
+		gtx.Constraints.Min.X = 0
+		b := material.ButtonLayoutStyle{Background: colPage, CornerRadius: 24, Button: c}
+		return b.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			return layout.Inset{Top: 12, Bottom: 12, Left: 20, Right: 20}.Layout(gtx, w.label(15, semiBold, colLeaf, txt))
+		})
 	}
 }

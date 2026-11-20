@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"leaaf.green/scanner/internal/scan"
@@ -56,7 +57,8 @@ const (
 	// EventDone: the upload succeeded; DeviceURL is an http(s) link, SavedPath the local JSON.
 	EventDone
 	// EventFailed: Message says what went wrong and what to do, Detail is the technical cause,
-	// and SavedPath is the local JSON if it was written.
+	// and SavedPath is the local JSON if it was written. Retryable marks a temporary upload
+	// failure: Runner.Upload may be called again (FR-015).
 	EventFailed
 )
 
@@ -67,6 +69,7 @@ type Event struct {
 	SavedPath string
 	Message   string
 	Detail    string
+	Retryable bool
 }
 
 var stepLabels = map[string]string{
@@ -90,29 +93,60 @@ type apiError struct {
 	} `json:"fields"`
 }
 
-// Run performs one scan and returns the process exit code.
+// Run performs one scan and upload and returns the process exit code (the console build). A
+// failed upload is final here, so it is reported to the session at once.
 func Run(cfg Config) int {
-	out := cfg.Out
+	r := NewRunner(cfg)
+	if code := r.Scan(); code != ExitOK {
+		return code
+	}
+	code := r.Upload()
+	r.Finish()
+	return code
+}
+
+// Runner keeps the saved scan, so the window can upload it again after a temporary failure
+// (FR-015) without scanning again. Scan runs once; Upload may run several times; Finish reports
+// a failure that is still pending to the session.
+type Runner struct {
+	cfg  Config
+	body []byte
+	path string
+
+	mu sync.Mutex
+	// pending is a temporary upload failure that the session has not been told about, because
+	// the user may still retry.
+	pending bool
+}
+
+func NewRunner(cfg Config) *Runner { return &Runner{cfg: cfg} }
+
+func (r *Runner) emit(e Event) {
+	if r.cfg.OnEvent != nil {
+		r.cfg.OnEvent(e)
+	}
+}
+
+func (r *Runner) step(id string) {
+	fmt.Fprintf(r.cfg.Out, "  %s...\n", stepLabels[id])
+	r.emit(Event{Kind: EventStep, Step: id})
+	r.cfg.report(map[string]string{"type": "step", "step": id, "state": "running"})
+}
+
+// fail reports a final failure to the window and the session.
+func (r *Runner) fail(code, message, detail string) {
+	r.emit(Event{Kind: EventFailed, Message: message, Detail: detail, SavedPath: r.path})
+	r.cfg.report(map[string]string{"type": "error", "code": code, "message": message})
+}
+
+// Scan reads the hardware and saves the payload next to the executable.
+func (r *Runner) Scan() int {
+	cfg, out := r.cfg, r.cfg.Out
 	fmt.Fprintln(out, "leaaf scanner "+cfg.ScannerVersion)
 	fmt.Fprintln(out, "Reads hardware facts only: no serial numbers, names, files, or network addresses.")
 	fmt.Fprintln(out)
 
-	emit := func(e Event) {
-		if cfg.OnEvent != nil {
-			cfg.OnEvent(e)
-		}
-	}
-	step := func(id string) {
-		fmt.Fprintf(out, "  %s...\n", stepLabels[id])
-		emit(Event{Kind: EventStep, Step: id})
-		cfg.report(map[string]string{"type": "step", "step": id, "state": "running"})
-	}
-	fail := func(code, message, detail, savedPath string) {
-		emit(Event{Kind: EventFailed, Message: message, Detail: detail, SavedPath: savedPath})
-		cfg.report(map[string]string{"type": "error", "code": code, "message": message})
-	}
-
-	raw, notes := cfg.Collect(step)
+	raw, notes := cfg.Collect(r.step)
 	device := scan.Normalize(raw, scan.Meta{ScannerVersion: cfg.ScannerVersion, ScannedAt: cfg.Now()})
 	if cfg.SessionID != "" {
 		device.SessionID = &cfg.SessionID
@@ -127,33 +161,65 @@ func Run(cfg Config) int {
 	body, err := json.MarshalIndent(device, "", "  ")
 	if err != nil {
 		fmt.Fprintf(out, "Error: could not encode the scan: %v\n", err)
-		fail("scanner_failed", "The scanner could not prepare its results. Run it again.", err.Error(), "")
+		r.fail("scanner_failed", "The scanner could not prepare its results. Run it again.", err.Error())
 		return ExitSaveFailed
 	}
 	path := filepath.Join(cfg.OutDir, "leaaf-scan-"+cfg.Now().UTC().Format("20060102-150405")+".json")
 	if err := os.WriteFile(path, body, 0o644); err != nil {
 		fmt.Fprintf(out, "Error: could not save the scan to %s: %v\n", path, err)
-		fail("scanner_failed", "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again.", err.Error(), "")
+		r.fail("scanner_failed", "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again.", err.Error())
 		return ExitSaveFailed
 	}
 	fmt.Fprintf(out, "Saved the scan to %s\n", path)
+	r.body, r.path = body, path
+	return ExitOK
+}
 
-	step("upload")
-	res, err := upload(cfg, body)
+// Upload sends the saved scan. After a temporary failure it can be called again.
+func (r *Runner) Upload() int {
+	out := r.cfg.Out
+	r.mu.Lock()
+	r.pending = false
+	r.mu.Unlock()
+
+	r.step("upload")
+	res, err := upload(r.cfg, r.body)
 	if err != nil {
 		fmt.Fprintf(out, "\nUpload failed: %v\n", err)
-		fail("upload_failed", "The scanner could not upload its results. Check the internet connection and run it again.", err.Error(), path)
-		fmt.Fprintf(out, "Your scan is saved at %s. Run the scanner again when you are online.\n", path)
+		fmt.Fprintf(out, "Your scan is saved at %s. Run the scanner again when you are online.\n", r.path)
+		var uerr *uploadError
+		if errors.As(err, &uerr) && uerr.retryable {
+			r.mu.Lock()
+			r.pending = true
+			r.mu.Unlock()
+			r.emit(Event{Kind: EventFailed, Retryable: true, SavedPath: r.path, Detail: err.Error(),
+				Message: "The scanner could not reach leaaf to upload its results. Your scan is saved, so check the internet connection and try again."})
+		} else {
+			r.fail("upload_failed", "The server did not accept the scan. Run the scanner again; if this keeps happening, the saved file shows what was sent.", err.Error())
+		}
 		return ExitUploadFailed
 	}
 
 	fmt.Fprintf(out, "\nDone. Your device page:\n  %s\n", res.DeviceURL)
 	fmt.Fprintln(out, "Keep this link private: anyone with it can see this scan.")
-	if cfg.SessionID != "" {
+	if r.cfg.SessionID != "" {
 		fmt.Fprintln(out, "Your results are now shown in the browser tab that started this scan.")
 	}
-	emit(Event{Kind: EventDone, DeviceURL: res.DeviceURL, SavedPath: path})
+	r.emit(Event{Kind: EventDone, DeviceURL: res.DeviceURL, SavedPath: r.path})
 	return ExitOK
+}
+
+// Finish tells the session about a temporary failure the user did not retry (the window was
+// closed). Best effort, like all session reports.
+func (r *Runner) Finish() {
+	r.mu.Lock()
+	pending := r.pending
+	r.pending = false
+	r.mu.Unlock()
+	if pending {
+		r.cfg.report(map[string]string{"type": "error", "code": "upload_failed",
+			"message": "The scanner could not upload its results. Check the internet connection and run it again."})
+	}
 }
 
 // report posts a progress event to the scan session. It is best effort: the scan and upload
@@ -174,6 +240,16 @@ func (cfg Config) report(event map[string]string) {
 	}
 }
 
+// uploadError is an upload failure. retryable marks failures that may pass on a later attempt
+// with the same body: no connection, a timeout, 429, or 5xx (FR-015). Rejections and invalid
+// answers would fail again.
+type uploadError struct {
+	msg       string
+	retryable bool
+}
+
+func (e *uploadError) Error() string { return e.msg }
+
 func upload(cfg Config, body []byte) (*uploadResponse, error) {
 	endpoint, err := url.JoinPath(cfg.BackendURL, "/api/devices")
 	if err != nil {
@@ -181,10 +257,13 @@ func upload(cfg Config, body []byte) (*uploadResponse, error) {
 	}
 	resp, err := cfg.HTTP.Post(endpoint, "application/json", bytes.NewReader(body))
 	if err != nil {
-		return nil, fmt.Errorf("could not reach %s (%v)", cfg.BackendURL, rootCause(err))
+		return nil, &uploadError{fmt.Sprintf("could not reach %s (%v)", cfg.BackendURL, rootCause(err)), true}
 	}
 	defer resp.Body.Close()
 	data, _ := io.ReadAll(io.LimitReader(resp.Body, 64<<10))
+	if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
+		return nil, &uploadError{fmt.Sprintf("the server answered HTTP %d", resp.StatusCode), true}
+	}
 	if resp.StatusCode != http.StatusCreated {
 		var e apiError
 		if json.Unmarshal(data, &e) == nil && e.Message != "" {

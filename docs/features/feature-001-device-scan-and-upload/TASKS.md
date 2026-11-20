@@ -19,7 +19,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-011:** *(amendment)* Implement the FR-013 collectors (RAM slots and type, TPM, Secure Boot, firmware type, battery cycle count, GPU names) with fixture tests, including access-denied cases (supports `AC-013`)
 - [x] **T-012:** *(Added 2026-11-20)* Embed a `requireAdministrator` manifest and version info with `go-winres`, commit the generated `.syso` files, open the browser non-elevated, and add a test for the manifest (supports `AC-001`)
 - [x] **T-013:** *(Added 2026-11-20)* Build the Gio scanner window (start, progress, completion, and error screens; embedded Inter subset; `-H windowsgui`), report run events through a callback instead of opening the browser, keep a console build for other operating systems, with tests for the state model and the run events (supports `AC-005`, `AC-008`, `AC-014`)
-- [ ] **T-014:** *(Amendment 2026-11-20)* Add **Try again** for temporary upload failures (re-upload the saved scan; defer the session error until Close), with tests; add the `gui` build tag for a Linux dev window (supports `AC-015`)
+- [x] **T-014:** *(Amendment 2026-11-20)* Add **Try again** for temporary upload failures (re-upload the saved scan; defer the session error until Close), with tests; add the `gui` build tag for a Linux dev window (supports `AC-015`)
 - [ ] **T-010:** Run all checks, self-review the diff against the plan, record the findings, and update the README and the feature index (supports `AC-012`)
 
 ## Dependencies and blockers
@@ -42,6 +42,11 @@ This is the **authoritative progress checklist**. Check a task only after its wo
   - The release exe cross-compiles as a PE32+ GUI binary of about 12.1 MB (7.7 MB before).
   - All four screens were rendered off screen with `go test -tags screenshot` and checked visually.
   - Nothing has run on Windows yet (T-009).
+- 2026-11-20: T-014 done. `run.Runner` splits the flow into Scan, Upload (repeatable), and Finish (sends a pending temporary failure to the session). Failures are classified as retryable (no connection, timeout, 429, 5xx) or final. The window's failed screen shows **Try again** and a text **Close** button. The window also builds on Linux with `-tags gui`. Checks:
+  - New tests: `TestRetryAfterTemporaryFailure` (same body uploaded again, one scan, session not ended), `TestFinishReportsPendingFailure`, `TestRejectionIsFinal`, `TestUnreachableIsRetryable`, and `TestRetry` (state). They pass, also with `-race`.
+  - `go vet` passes for Linux, `GOOS=windows`, `-tags gui`, and `-tags screenshot`.
+  - The Linux `-tags gui` build compiles. It was not opened on screen.
+  - The "Upload failed" screen was rendered off screen and checked visually.
 - Unverified assumption for T-003/T-011: whether `root\WMI` battery classes and `Win32_Tpm` can be read without admin rights. Test this early on a real laptop; the schema already allows `null`. *(2026-11-20: moot for TPM once T-012 elevates the scanner; whether the battery classes work elevated is still checked in T-009.)*
 
 ## Lifecycle history

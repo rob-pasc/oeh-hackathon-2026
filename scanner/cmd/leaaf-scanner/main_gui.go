@@ -1,3 +1,6 @@
+//go:build windows || gui
+
+// The window: always on Windows; on other systems with -tags gui for development.
 package main
 
 import (

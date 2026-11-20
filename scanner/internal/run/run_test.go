@@ -291,3 +291,138 @@ func TestPlainRunHasNoSession(t *testing.T) {
 		t.Errorf("payload has session_id without a session")
 	}
 }
+
+// fakeServer answers uploads with the given statuses in turn (the last one repeats) and records
+// uploaded bodies and session events.
+type fakeServer struct {
+	statuses []int
+	uploads  [][]byte
+	events   []map[string]string
+}
+
+func (f *fakeServer) handler(w http.ResponseWriter, r *http.Request) {
+	if strings.HasSuffix(r.URL.Path, "/events") {
+		var e map[string]string
+		json.NewDecoder(r.Body).Decode(&e)
+		f.events = append(f.events, e)
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	body, _ := io.ReadAll(r.Body)
+	f.uploads = append(f.uploads, body)
+	status := f.statuses[min(len(f.uploads), len(f.statuses))-1]
+	w.WriteHeader(status)
+	if status == http.StatusCreated {
+		w.Write([]byte(`{"device_id":"q3Xk9vT2mB7pLw0cZr1sEa","device_url":"https://leaaf.example/d/q3Xk9vT2mB7pLw0cZr1sEa"}`))
+	} else if status == http.StatusBadRequest {
+		w.Write([]byte(`{"error":"invalid_payload","message":"the device scan does not match the schema"}`))
+	}
+}
+
+func (f *fakeServer) eventTypes() string {
+	var types []string
+	for _, e := range f.events {
+		types = append(types, e["type"]+":"+e["step"]+e["code"])
+	}
+	return strings.Join(types, ",")
+}
+
+// AC-015: a temporary failure offers a retry, keeps the session open, and the retry uploads the
+// same saved scan without scanning again.
+func TestRetryAfterTemporaryFailure(t *testing.T) {
+	f := &fakeServer{statuses: []int{http.StatusServiceUnavailable, http.StatusCreated}}
+	srv := httptest.NewServer(http.HandlerFunc(f.handler))
+	defer srv.Close()
+	var events []Event
+	cfg, _ := testConfig(t, srv.URL, &events)
+	cfg.SessionID = testSession
+	scans := 0
+	collect := cfg.Collect
+	cfg.Collect = func(p func(string)) (scan.Raw, []string) { scans++; return collect(p) }
+
+	r := NewRunner(cfg)
+	if code := r.Scan(); code != ExitOK {
+		t.Fatalf("scan: %d", code)
+	}
+	if code := r.Upload(); code != ExitUploadFailed {
+		t.Fatalf("first upload: %d", code)
+	}
+	if e := last(t, events); e.Kind != EventFailed || !e.Retryable || e.SavedPath == "" {
+		t.Errorf("after 503: %+v", e)
+	}
+	if got := f.eventTypes(); got != "step:started,step:upload" {
+		t.Errorf("session got %s; a temporary failure must not end it", got)
+	}
+
+	if code := r.Upload(); code != ExitOK {
+		t.Fatalf("retry: %d", code)
+	}
+	if e := last(t, events); e.Kind != EventDone {
+		t.Errorf("after retry: %+v", e)
+	}
+	r.Finish() // nothing pending after success
+	if scans != 1 || len(f.uploads) != 2 || !bytes.Equal(f.uploads[0], f.uploads[1]) {
+		t.Errorf("scans %d, uploads %d, same body %v", scans, len(f.uploads), len(f.uploads) == 2 && bytes.Equal(f.uploads[0], f.uploads[1]))
+	}
+	if got := f.eventTypes(); got != "step:started,step:upload,step:upload" {
+		t.Errorf("session events %s", got)
+	}
+}
+
+// Closing the window after a temporary failure tells the session once.
+func TestFinishReportsPendingFailure(t *testing.T) {
+	f := &fakeServer{statuses: []int{http.StatusBadGateway}}
+	srv := httptest.NewServer(http.HandlerFunc(f.handler))
+	defer srv.Close()
+	var events []Event
+	cfg, _ := testConfig(t, srv.URL, &events)
+	cfg.SessionID = testSession
+	r := NewRunner(cfg)
+	r.Scan()
+	r.Upload()
+	r.Finish()
+	r.Finish()
+	if got := f.eventTypes(); got != "step:started,step:upload,error:upload_failed" {
+		t.Errorf("session events %s", got)
+	}
+}
+
+// A rejection would fail again, so it is final: no retry, and the session is told at once.
+func TestRejectionIsFinal(t *testing.T) {
+	f := &fakeServer{statuses: []int{http.StatusBadRequest}}
+	srv := httptest.NewServer(http.HandlerFunc(f.handler))
+	defer srv.Close()
+	var events []Event
+	cfg, _ := testConfig(t, srv.URL, &events)
+	cfg.SessionID = testSession
+	r := NewRunner(cfg)
+	r.Scan()
+	r.Upload()
+	if e := last(t, events); e.Kind != EventFailed || e.Retryable {
+		t.Errorf("after 400: %+v", e)
+	}
+	if got := f.eventTypes(); got != "step:started,step:upload,error:upload_failed" {
+		t.Errorf("session events %s", got)
+	}
+	r.Finish()
+	if n := len(f.events); n != 3 {
+		t.Errorf("Finish sent another event: %d events", n)
+	}
+}
+
+func TestUnreachableIsRetryable(t *testing.T) {
+	l, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := l.Addr().String()
+	l.Close()
+	var events []Event
+	cfg, _ := testConfig(t, "http://"+addr, &events)
+	r := NewRunner(cfg)
+	r.Scan()
+	r.Upload()
+	if e := last(t, events); !e.Retryable {
+		t.Errorf("unreachable server should be retryable: %+v", e)
+	}
+}

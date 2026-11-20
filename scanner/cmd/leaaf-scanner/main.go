@@ -1,6 +1,7 @@
 // Command leaaf-scanner reads an old Windows laptop's hardware facts, saves them next to the
 // executable, and uploads them to leaaf (feature 001). On Windows it is a small window
-// (main_windows.go, FR-014); elsewhere a console program for development (main_other.go).
+// (main_gui.go, FR-014). Elsewhere it is a console program for development (main_other.go), or
+// the same window with -tags gui.
 //
 // Build for Windows from any OS (the backend URL is fixed at build time, FR-007; -H windowsgui
 // stops a console window from opening behind the scanner window):

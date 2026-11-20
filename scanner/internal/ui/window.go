@@ -1,4 +1,7 @@
-//go:build windows
+//go:build windows || gui
+
+// The event loop. It is built on Windows and, with -tags gui, on Linux and macOS for development
+// (that needs cgo and the platform's windowing libraries).
 
 package ui
 
@@ -9,13 +12,12 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
-	"golang.org/x/sys/windows"
 
 	"leaaf.green/scanner/internal/run"
 )
 
 // Run shows the window and exits the process when it is closed. It must be called from main:
-// Gio's event loop needs the main goroutine, and app.Main never returns on Windows.
+// Gio's event loop needs the main goroutine, and app.Main never returns on desktop platforms.
 func Run(opts Options) {
 	th, err := theme()
 	if err != nil {
@@ -38,19 +40,19 @@ func Run(opts Options) {
 	app.Main()
 }
 
-// fatal reports a window failure in a message box, since the release build has no console.
-func fatal(err error) {
-	title, _ := windows.UTF16PtrFromString("leaaf scanner")
-	msg, _ := windows.UTF16PtrFromString("The scanner window could not be shown:\n" + err.Error())
-	windows.MessageBox(0, msg, title, windows.MB_OK|windows.MB_ICONERROR)
-	os.Exit(1)
-}
-
 func (w *window) loop(win *app.Window) error {
 	var ops op.Ops
 	for {
 		switch e := win.Event().(type) {
 		case app.DestroyEvent:
+			// Closed with Close or the title bar: a temporary upload failure the user did not
+			// retry is now final, so tell the waiting session (FR-015).
+			w.mu.Lock()
+			runner := w.runner
+			w.mu.Unlock()
+			if runner != nil {
+				runner.Finish()
+			}
 			return e.Err
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
@@ -79,7 +81,17 @@ func (w *window) update(gtx layout.Context, win *app.Window) {
 			w.mu.Unlock()
 			win.Invalidate()
 		}
-		go run.Run(cfg)
+		w.runner = run.NewRunner(cfg)
+		go func(r *run.Runner) {
+			if r.Scan() == run.ExitOK {
+				r.Upload()
+			}
+		}(w.runner)
+	}
+	if w.retry.Clicked(gtx) && w.state.Phase == PhaseFailed && w.state.Retryable {
+		// Uploads the saved scan again; the scan itself is not repeated.
+		w.state = w.state.Retry()
+		go w.runner.Upload()
 	}
 	if w.results.Clicked(gtx) && w.state.DeviceURL != "" {
 		// run only reports http(s) device links, so this cannot launch another URL scheme.
