@@ -48,10 +48,11 @@ This is the first slice of the leaaf (Lifecycle Evaluation and Action Finder) MV
 - **FR-006:** The scanner writes the payload to a local JSON file next to the executable before uploading, and tells the user where that file is.
 - **FR-007:** The scanner uploads the payload over HTTPS to a backend URL fixed at build time. The backend accepts payloads that match the versioned device schema and rejects others with an error message naming the invalid fields.
 - **FR-008:** For each accepted upload, the backend stores one device record. It returns a device ID made from at least 128 bits of cryptographically secure randomness, together with the device page URL.
-- **FR-009:** After a successful upload, the scanner shows the device page URL and opens it in the default browser. If the upload fails, it shows a readable error and the local JSON path, and exits with a non-zero code.
+- **FR-009** *(revised 2026-11-20)*: After a successful upload, the scanner window says that the scan is complete and offers a **Show my results** button. The button opens the device page in the default browser as the signed-in user, not elevated. The scanner never opens the browser by itself. If the upload fails, the window shows a readable error and the local JSON path. *(Originally: the scanner printed the URL and opened it in the browser automatically, and exited non-zero on failure. The exit codes remain only in the console build for other operating systems, which is used for development.)*
 - **FR-010:** The device page at the device URL shows all scanned fields in plain language. Fields that are `null` appear as "Unknown".
 - **FR-011:** Requesting a device URL with an unknown or malformed ID shows a "device not found" page. No endpoint lists or enumerates devices.
 - **FR-012:** The website landing page explains what the scanner does and what data it collects, and offers the scanner executable for download.
+- **FR-014** *(added 2026-11-20)*: On Windows the scanner is a small fixed-size window in the web app's visual style (colours, Inter font, the `leaaf.green` wordmark on the right). It opens on a start screen that says what is collected, with a **Start scan** button. Nothing is read or sent before the button is pressed. During the scan the window shows the current step (the same step labels as the web app), a progress bar, and "Step n of 5". It ends on the completion screen (FR-009) or an error screen with a **Close** button. The window needs no WebView or other runtime beyond Windows 10 or 11 itself. Progress reporting to a scan session is unchanged (feature 006 FR-003): the same step and error events, sent only after **Start scan**.
 - **FR-013** *(amendment 2026-11-20)*: When available, the scanner also collects: RAM type, configured speed, and total and used slot counts; Windows 11 readiness indicators (TPM presence and spec version, Secure Boot state, and firmware type UEFI or legacy BIOS); the battery cycle count; and the names of the graphics adapters. Unreadable values are `null`, as in FR-004. The field list and its Windows data sources are defined in [`shared/src/device.ts`](../../../shared/src/device.ts).
 
 ## Non-functional requirements and constraints
@@ -64,7 +65,7 @@ This is the first slice of the leaaf (Lifecycle Evaluation and Action Finder) MV
 
 ## User journeys and edge cases
 
-1. **Happy path:** The owner opens the website, reads what is collected, downloads the exe, and runs it. Windows asks for administrator rights, then a console window shows progress and the link, and the browser opens the device page.
+1. **Happy path:** The owner opens the website, reads what is collected, downloads the exe, and runs it. Windows asks for administrator rights. The scanner window opens; the owner presses **Start scan**, watches the steps, and on the completion screen presses **Show my results**, which opens the device page in the browser. *(Revised 2026-11-20; originally a console window showed progress and the browser opened by itself.)*
 2. **Partial scan:** On a desktop PC there is no battery, so battery fields are `null`, `scan_status` is `partial`, and the page shows "Unknown" for battery.
 3. **Offline / backend down:** The upload fails. The scanner prints the error and the path of the saved JSON and exits non-zero; the owner can rerun it later.
 4. **Rescan:** Running the scanner again creates a new record and a new link; the old link keeps working.
@@ -105,7 +106,7 @@ Not applicable to this feature: release and hosting are owned by feature 005 (`f
 
 - The scanner only needs to support x64 Windows 10/11; ARM Windows is out of scope.
 - **Open:** Exact WMI sources for battery and disk health on the demo models; decided during implementation and recorded here.
-- **Open:** Whether the scanner shows a console UI only or a minimal GUI. Default: console UI.
+- **Decided 2026-11-20:** The scanner shows a minimal GUI (FR-014), built with Gio. It was chosen over Wails (needs the WebView2 runtime, which old or unpatched Windows 10 machines may lack) and native Win32 controls (cannot match the web design). *(Originally open, with the console UI as the default.)*
 - Demo model choice (blocking for feature 002, not for this feature).
 
 ## Scope change log
@@ -114,13 +115,14 @@ Not applicable to this feature: release and hosting are owned by feature 005 (`f
 | ---------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
 | 2026-11-20 | Initial approved scope | User replied "accept" to the five-feature MVP proposal in the specification conversation, 2026-11-20 |
 | 2026-11-20 | Amendment: added FR-013 (extra scan fields: RAM slots and type, Windows 11 readiness, battery cycle count, GPU names), AC-013, and T-011. Existing requirements and exclusions are unchanged. | The user selected these fields when the shared contracts were defined together, 2026-11-20 |
+| 2026-11-20 | Behavioral replacement before verification: FR-009 no longer opens the browser automatically; a **Show my results** button on a completion screen does. FR-014 adds the scanner window (start screen, step progress, completion and error screens) and resolves the console-or-GUI question. AC-005 and AC-008 are revised, AC-014 and T-013 are added. FR-009 had not been verified on Windows (AC-008 Not run); AC-005's automated evidence describes the console flow and is kept as history. | User chose "Accept and implement" in the scanner conversation, 2026-11-20, and chose Gio after comparing it with Wails and native Win32 |
 | 2026-11-20 | Behavioral replacement before verification: FR-001 now requires administrator rights (UAC prompt on start) instead of running without them. The compatibility constraint and AC-001 change accordingly, and T-012 is added. The browser is opened non-elevated. FR-001 had not been verified yet (AC-001 Not run), so there was no earlier evidence to preserve. | User chose "Accept and implement" in the scanner conversation, 2026-11-20, and chose to commit the generated `.syso` files |
 
 ## Related and superseded features
 
 Features 002–005 depend on its device schema and device page.
 
-- **FR-009 partly replaced by [feature 006](../feature-006-web-app/PLAN.md#related-and-superseded-features) FR-002 to FR-004** (implemented on the branch `feat/device-scan-and-upload`, merged into `main` 2026-11-20). A scanner downloaded through Scan now carries a session ID. It reports its progress to the browser tab that started it instead of opening the device page itself. A download without a session, including the plain `/downloads/leaaf-scanner.exe` link, keeps FR-009 as written. AC-008 still applies to that case.
+- **FR-009 partly replaced by [feature 006](../feature-006-web-app/PLAN.md#related-and-superseded-features) FR-002 to FR-004** (implemented on the branch `feat/device-scan-and-upload`, merged into `main` 2026-11-20). A scanner downloaded through Scan now carries a session ID. It reports its progress to the browser tab that started it instead of opening the device page itself. A download without a session, including the plain `/downloads/leaaf-scanner.exe` link, keeps FR-009 as written. AC-008 still applies to that case. *(2026-11-20: FR-009 itself was revised so that no download opens the browser automatically. A session tab still updates by itself, and the window's **Show my results** button works with and without a session.)*
 - The payload gained an optional `session_id` (additive, `schema_version` stays 1). The server removes it before storing, so FR-005 and FR-011 are unaffected.
 
 ## References

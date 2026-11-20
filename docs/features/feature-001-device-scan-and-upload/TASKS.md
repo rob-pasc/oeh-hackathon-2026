@@ -18,6 +18,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [ ] **T-009:** Run the scanner manually on a real Windows laptop, accepting and declining the elevation prompt, and record the evidence, including which sources still read `null` when elevated (supports `AC-001`, `AC-005`, `AC-008`). *(Revised 2026-11-20; originally run as a non-admin user.)*
 - [x] **T-011:** *(amendment)* Implement the FR-013 collectors (RAM slots and type, TPM, Secure Boot, firmware type, battery cycle count, GPU names) with fixture tests, including access-denied cases (supports `AC-013`)
 - [x] **T-012:** *(Added 2026-11-20)* Embed a `requireAdministrator` manifest and version info with `go-winres`, commit the generated `.syso` files, open the browser non-elevated, and add a test for the manifest (supports `AC-001`)
+- [ ] **T-013:** *(Added 2026-11-20)* Build the Gio scanner window (start, progress, completion, and error screens; embedded Inter subset; `-H windowsgui`), report run events through a callback instead of opening the browser, keep a console build for other operating systems, with tests for the state model and the run events (supports `AC-005`, `AC-008`, `AC-014`)
 - [ ] **T-010:** Run all checks, self-review the diff against the plan, record the findings, and update the README and the feature index (supports `AC-012`)
 
 ## Dependencies and blockers
@@ -41,3 +42,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: Scope extended by an amendment (FR-013, AC-013, T-011); see the [scope change log](./PLAN.md#scope-change-log).
 - 2026-11-20: Implementation started (T-002, shared contracts).
 - 2026-11-20: FR-001 replaced (administrator rights required) and T-012 added; see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
+- 2026-11-20: FR-009 replaced (no automatic browser opening) and FR-014 added (scanner window); T-013 added. See the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
