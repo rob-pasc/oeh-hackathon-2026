@@ -111,7 +111,7 @@ The factors are fixed constants in `web/src/lib/equivalents.ts`, from the Umwelt
 ## Open technical decisions
 
 - ~~How the session ID is embedded~~ and ~~how the scanner reports progress~~: resolved 2026-11-20 (overlay trailer, direct HTTP POST; see above).
-- Adding `gaming` and `general` to `INTENDED_USES` and the scoring rubrics (backend owners).
+- ~~Adding `gaming` and `general` to `INTENDED_USES` and the scoring rubrics (backend owners).~~ Done 2026-11-20 (feature 003 FR-015 to FR-018).
 - The `part` event and how the parts list (Excel) and the AI part search are combined (backend owners).
 - A storage fill level in `DeviceScan` if the specs card should show used space (scanner owners).
 

@@ -2,7 +2,6 @@
 // (POST /api/sessions, GET /api/sessions/:id/events; contract in shared/src/session.ts).
 import type { Assessment } from '@leaaf/shared/assessment'
 import { API_ROUTES } from '@leaaf/shared/api'
-import type { IntendedUse } from '@leaaf/shared/common'
 import type { DeviceRecord } from '@leaaf/shared/device'
 import type { Report } from '@leaaf/shared/report'
 import { ApiClientError, type ApiClient, type PathOption, type ScanSession, type ScanSessionEvent } from './types'
@@ -64,8 +63,7 @@ export const liveClient: ApiClient = {
   },
 
   streamReport(deviceId, use, handlers) {
-    // `gaming` is not in the contract's IntendedUse yet; the cast keeps the request shape identical.
-    const source = new EventSource(API_ROUTES.reportStream(deviceId, use as IntendedUse))
+    const source = new EventSource(API_ROUTES.reportStream(deviceId, use))
     source.addEventListener('assessment', (event) => {
       const data = parse<Assessment>(event)
       if (data) handlers.onAssessment(data)

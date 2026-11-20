@@ -125,7 +125,7 @@ Not applicable to this feature: deployment is owned by feature 005.
 
 ## Related and superseded features
 
-FR-001's list of four options is replaced by FR-015 here together with feature 006 FR-008, FR-009, FR-021, and FR-023 (six options, `general` as the default, ranking shown at once for the default). This is a planned replacement until T-011 to T-014 are implemented; the rest of FR-001 (changing the use recomputes the ranking) stays in force. Depends on [feature 001](../feature-001-device-scan-and-upload/PLAN.md) and [feature 002](../feature-002-knowledge-base-retrieval/PLAN.md). Its result view is extended by [feature 004](../feature-004-explained-report/PLAN.md).
+FR-001's list of four options is replaced by FR-015 here together with feature 006 FR-008, FR-009, FR-021, and FR-023 (six options, `general` as the default, ranking shown at once for the default). Effective since 2026-11-20, when T-011 to T-014 were implemented on `main`; the rest of FR-001 (changing the use recomputes the ranking) stays in force. Depends on [feature 001](../feature-001-device-scan-and-upload/PLAN.md) and [feature 002](../feature-002-knowledge-base-retrieval/PLAN.md). Its result view is extended by [feature 004](../feature-004-explained-report/PLAN.md).
 
 ## References
 

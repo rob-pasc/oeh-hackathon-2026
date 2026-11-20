@@ -5,7 +5,10 @@ import assessmentJson from '@leaaf/fixtures/assessment.example-laptop-14.office.
 import scanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
 import reportJson from '@leaaf/fixtures/report.example-laptop-14.office.json'
-import { describe, expect, it } from 'vitest'
+import { INTENDED_USES } from '@leaaf/shared/common'
+import { describe, expect, it, vi } from 'vitest'
+import { liveClient } from '../api/live'
+import { USE_TAGS } from '../lib/labels'
 import { parseRoute } from '../app/router'
 import { GAUGE, TRACK_PATH, arcPath, needleAngle, polar } from '../lib/gauge'
 import { formatEur, formatYears, gaugeValue } from '../lib/impact'
@@ -198,5 +201,31 @@ describe('detected parts', () => {
     const updated = upsertPart(parts, { ...parts[0]!, lookup: 'catalog', detail: 'Soldered.' })
     expect(updated).toHaveLength(parts.length)
     expect(updated[0]!.lookup).toBe('catalog')
+  })
+})
+
+describe('use tags in live mode (feature 003 AC-020)', () => {
+  it('offers exactly the contract intended uses', () => {
+    expect([...USE_TAGS].sort()).toEqual([...INTENDED_USES].sort())
+  })
+
+  it('requests the report stream with each tag unchanged', () => {
+    const urls: string[] = []
+    class FakeEventSource {
+      constructor(url: string) {
+        urls.push(url)
+      }
+      addEventListener() {}
+      close() {}
+    }
+    vi.stubGlobal('EventSource', FakeEventSource)
+    try {
+      const noop = () => {}
+      for (const use of USE_TAGS)
+        liveClient.streamReport('q3Xk9vT2mB7pLw0cZr1sEa', use, { onAssessment: noop, onReport: noop, onEnd: noop, onError: noop })()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+    expect(urls).toEqual(USE_TAGS.map((use) => `/api/devices/q3Xk9vT2mB7pLw0cZr1sEa/report?intended_use=${use}`))
   })
 })
