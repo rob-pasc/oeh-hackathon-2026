@@ -80,7 +80,7 @@ func run[T any](q query, note func(string, error)) *[]T {
 	done := make(chan result, 1)
 	go func() {
 		var rows []T
-		err := client.Query(q.wql, &rows, nil, q.namespace)
+		err := guarded(func() error { return client.Query(q.wql, &rows, nil, q.namespace) })
 		var mismatch *wmi.ErrFieldMismatch
 		if errors.As(err, &mismatch) {
 			err = nil // a property type we cannot read stays nil; the rest is usable

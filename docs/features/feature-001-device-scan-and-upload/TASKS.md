@@ -49,6 +49,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
   - `go vet` passes for Linux, `GOOS=windows`, `-tags gui`, and `-tags screenshot`.
   - The Linux `-tags gui` build compiles. It was not opened on screen.
   - The "Upload failed" screen was rendered off screen and checked visually.
+- 2026-11-20: First run on Windows (the user's laptop, Windows 11 26H2): the scanner closed right after **Start scan**. Cause: WMI delivers `Win32_SystemEnclosure.ChassisTypes` (uint16[] in the schema) as int32 elements, and the `wmi` package panics when loading them into `[]uint16`. Fixed: `ChassisTypes` is `[]int32`, and every WMI query runs through `guarded` (`internal/collect/guard.go`), which turns a panic into a failed source, as FR-004 requires. `TestGuardedTurnsPanicIntoError` covers the guard. A non-elevated console run of the collector on the same laptop then read every source except `Win32_Tpm` (access denied without elevation, as expected). The elevated window run is still part of T-009.
 - Unverified assumption for T-003/T-011: whether `root\WMI` battery classes and `Win32_Tpm` can be read without admin rights. Test this early on a real laptop; the schema already allows `null`. *(2026-11-20: moot for TPM once T-012 elevates the scanner; whether the battery classes work elevated is still checked in T-009.)*
 
 - 2026-11-20: T-008 done after FR-010 was narrowed to feature 006's specs card fields (user decision). AC-009 and AC-010 pass; see the acceptance criteria.

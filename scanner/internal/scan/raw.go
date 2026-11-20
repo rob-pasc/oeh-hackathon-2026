@@ -50,7 +50,9 @@ type ComputerSystemProduct struct {
 }
 
 type SystemEnclosure struct {
-	ChassisTypes []uint16
+	// uint16[] in the WMI schema, but WMI's scripting interface delivers the elements as VT_I4
+	// (int32). The wmi package panics when it loads those into an unsigned slice.
+	ChassisTypes []int32
 }
 
 type OperatingSystem struct {

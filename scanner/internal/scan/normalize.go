@@ -86,11 +86,11 @@ func identity(raw Raw) payload.Identity {
 
 // SMBIOS chassis types (DMTF DSP0134, table 17).
 var (
-	laptopChassis  = map[uint16]bool{8: true, 9: true, 10: true, 11: true, 12: true, 14: true, 18: true, 21: true, 30: true, 31: true, 32: true}
-	desktopChassis = map[uint16]bool{3: true, 4: true, 5: true, 6: true, 7: true, 13: true, 15: true, 16: true, 24: true, 35: true, 36: true}
+	laptopChassis  = map[int32]bool{8: true, 9: true, 10: true, 11: true, 12: true, 14: true, 18: true, 21: true, 30: true, 31: true, 32: true}
+	desktopChassis = map[int32]bool{3: true, 4: true, 5: true, 6: true, 7: true, 13: true, 15: true, 16: true, 24: true, 35: true, 36: true}
 )
 
-func formFactor(types []uint16) *string {
+func formFactor(types []int32) *string {
 	for _, t := range types {
 		switch {
 		case laptopChassis[t]:
