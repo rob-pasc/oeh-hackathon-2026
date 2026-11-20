@@ -1,6 +1,6 @@
 # server
 
-The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), and the **impact table loader** (`src/impact/`, T-003). Retrieval (002), the rest of the assessment (003), and reports (004) come next.
+The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), and the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights). Retrieval (002), the assessment API (003 T-007), and reports (004) come next.
 
 The LLM API key is configured only here, through environment variables. It never ships in the scanner or the web app.
 
@@ -47,6 +47,10 @@ Rules for callers:
 ## Impact table
 
 `loadImpactTable()` (`src/impact/table.ts`) reads and validates [`data/impact.yaml`](../data/impact.yaml) and throws on any problem. `coverageProblems(table)` lists required entries that are missing or still placeholders. See [`data/README.md`](../data/README.md).
+
+## Assessment
+
+`assess({ deviceId, scan, use, modelEvidence, facts, impactTable, weights })` (`src/assessment/`) returns the shared `Assessment`: a status, reasons, impact ranges, four criterion scores, and a confidence level per path. It is a pure function; no route calls it yet. `loadWeights()` reads [`config/weights.yaml`](../config/weights.yaml). `main.ts` loads the weights and the impact table at startup, so an invalid file stops the server. The gate rules and scoring rubrics are documented in the [feature 003 design](../docs/features/feature-003-five-path-ranking/DESIGN.md).
 
 ## Configuration
 
