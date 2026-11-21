@@ -85,7 +85,7 @@ data: { "type": "part", "part": { "part_id": "cpu", "kind": "cpu", "label": "Pro
   "detail": "Soldered to the board. Cannot be replaced.", "source": null } }
 ```
 
-`kind` is `cpu`, `memory`, `gpu`, `storage`, or `battery`; `lookup` is `pending`, `catalog` (found in the team's parts list, the Excel file), `ai` (found by the AI web search; `source` should then name the page), or `not_found`. The page keeps the order of first arrival and replaces an entry when the same `part_id` comes again. Suggested server flow: scanner posts a part → server sends `pending` → looks the part up in the parts list → if missing, runs the AI search → sends the result. The TypeScript form is `DetectedPart` in `web/src/api/types.ts`. Without these events the card stays at "Parts appear here as the scanner finds them." and everything else works.
+`kind` is `cpu`, `memory`, `gpu`, `storage`, or `battery`; `lookup` is `pending`, `catalog` (found in the team's parts list, the Excel file), `ai` (found by the AI web search; `source` should then name the page), or `not_found`. The page keeps the order of first arrival and replaces an entry when the same `part_id` comes again. Suggested server flow: scanner posts a part → server sends `pending` → looks the part up in the parts list → if missing, runs the AI search → sends the result. The TypeScript form is `DetectedPart` in `web/src/api/types.ts`. Without these events the card stays at "Parts appear here as the scanner finds them." and everything else works. The laptop view does not depend on them: its zones turn green or amber from the step events (FR-041), which the page plays back through `src/lib/scanPlayback.ts` at one zone per 700 ms (FR-042).
 
 ### Proposed `changes` on options
 

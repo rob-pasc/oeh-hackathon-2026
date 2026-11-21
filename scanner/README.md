@@ -69,7 +69,7 @@ The JSON also holds the icon (FR-016): `RT_GROUP_ICON` `#1`, which Gio also uses
 
 ## Scan sessions
 
-A copy downloaded through Scan now ends with the 37-byte trailer `LEAAFSCAN1:<session ID>`, appended by the server. Windows ignores bytes after the last PE section. The scanner reads the trailer from its own file (`internal/run/session.go`), posts its progress steps to `/api/sessions/<id>/events`, and adds `session_id` to the upload. The waiting browser tab then shows the result by itself. With or without a trailer, the window's **Show my results** button opens the device page. The scanner sends events only after **Start scan** is pressed.
+A copy downloaded through Scan now ends with the 37-byte trailer `LEAAFSCAN1:<session ID>`, appended by the server. Windows ignores bytes after the last PE section. The scanner reads the trailer from its own file (`internal/run/session.go`), posts its progress steps to `/api/sessions/<id>/events` (each step as `running` when it starts, and the reading steps as `done` or `skipped` when they end, per `scan.StepState`), and adds `session_id` to the upload. The waiting browser tab then shows the result by itself. With or without a trailer, the window's **Show my results** button opens the device page. The scanner sends events only after **Start scan** is pressed.
 
 ## Exit codes
 

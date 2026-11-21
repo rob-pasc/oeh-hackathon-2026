@@ -3,10 +3,13 @@
 import type { DeviceScan } from '@leaaf/shared/device'
 import type { DetectedPart, PartKind, ScanStepId } from '../api/types'
 
-/** Parts the scanner reads during each step; used to highlight the active zones in the laptop view. */
+/**
+ * Parts the scanner reads during each step, in the order the laptop view lights them (left to right, feature
+ * 006 FR-042).
+ */
 export const STEP_KINDS: Record<ScanStepId, readonly PartKind[]> = {
   started: [],
-  cpu_memory: ['cpu', 'memory', 'gpu'],
+  cpu_memory: ['cpu', 'gpu', 'memory'],
   storage: ['storage'],
   battery: ['battery'],
   upload: [],

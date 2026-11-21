@@ -14,6 +14,7 @@ import { ReportDetails } from '../components/ReportDetails'
 import { ResultsView } from '../components/ResultsView'
 import { SpecsCard } from '../components/SpecsCard'
 import type { DeviceScan } from '@leaaf/shared/device'
+import type { ApiClient, ScanSessionEvent } from '../api/types'
 import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import { PATH_TITLES } from '../lib/labels'
 import { Landing } from '../pages/Landing'
@@ -91,6 +92,53 @@ describe('ScanSession', () => {
     expect(await within(card).findByText('Matched')).toBeInTheDocument()
     await userEvent.click(within(card).getByRole('button', { name: 'Hide laptop view' }))
     expect(within(card).queryByRole('img', { name: /Laptop view/ })).toBeNull()
+    window.localStorage.clear()
+  })
+
+  // AC-043, AC-044 (FR-041). Tests run without motion, so the page shows the events unpaced.
+  function renderWithSteps(events: ScanSessionEvent[]) {
+    window.localStorage.clear()
+    const client: ApiClient = {
+      ...fast,
+      subscribeScanSession: (_id, onEvent) => {
+        events.forEach((event) => onEvent(event))
+        return () => {}
+      },
+    }
+    render(
+      <ApiContext.Provider value={client}>
+        <ScanSession sessionId="DDDDDDDDDDDDDDDDDDDDDDDDDD" />
+      </ApiContext.Provider>,
+    )
+    const view = screen.getByRole('img', { name: /Laptop view/ })
+    const state = (kind: string) => view.querySelector(`[data-zone="${kind}"]`)?.getAttribute('data-state')
+    return { view, state }
+  }
+
+  it('lights the laptop view from step events alone', () => {
+    const { view, state } = renderWithSteps([
+      { type: 'step', step: 'cpu_memory', state: 'running' },
+      { type: 'step', step: 'cpu_memory', state: 'done' },
+      { type: 'step', step: 'storage', state: 'running' },
+      { type: 'step', step: 'storage', state: 'done' },
+      { type: 'step', step: 'battery', state: 'running' },
+      { type: 'step', step: 'battery', state: 'done' },
+    ])
+    expect(['cpu', 'gpu', 'memory', 'storage', 'battery'].map(state)).toEqual(['found', 'found', 'found', 'found', 'found'])
+    expect(view).toHaveAccessibleName('Laptop view: 5 of 5 areas found')
+  })
+
+  it('marks a skipped step in the laptop view and lights steps an older scanner only started', () => {
+    const { view, state } = renderWithSteps([
+      { type: 'step', step: 'cpu_memory', state: 'running' },
+      { type: 'step', step: 'storage', state: 'running' },
+      { type: 'step', step: 'battery', state: 'running' },
+      { type: 'step', step: 'battery', state: 'skipped' },
+    ])
+    expect(state('cpu')).toBe('found')
+    expect(state('storage')).toBe('found')
+    expect(state('battery')).toBe('skipped')
+    expect(view).toHaveAccessibleName('Laptop view: 4 of 5 areas found, 1 could not be read')
     window.localStorage.clear()
   })
 })

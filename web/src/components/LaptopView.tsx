@@ -1,4 +1,5 @@
-import type { DetectedPart, PartKind } from '../api/types'
+import type { PartKind } from '../api/types'
+import type { ZoneOutcome } from '../lib/scanPlayback'
 
 interface Zone {
   kind: PartKind
@@ -19,22 +20,36 @@ const ZONES: readonly Zone[] = [
 ]
 
 interface Props {
-  parts: readonly DetectedPart[]
+  /** How each zone ended (feature 006 FR-041): green when found, amber outline when nothing could be read. */
+  zones: Partial<Record<PartKind, ZoneOutcome>>
   /** Kinds the scanner is reading right now; they pulse. */
   active: readonly PartKind[]
 }
 
-/** Small schematic laptop whose zones turn green as the scanner finds the parts. Optional, shown on request. */
-export function LaptopView({ parts, active }: Props) {
-  const found = new Set(parts.map((p) => p.kind))
+export function laptopViewLabel(zones: Partial<Record<PartKind, ZoneOutcome>>): string {
+  const outcomes = ZONES.map((zone) => zones[zone.kind])
+  const found = outcomes.filter((o) => o === 'found').length
+  const skipped = outcomes.filter((o) => o === 'skipped').length
+  return `Laptop view: ${found} of ${ZONES.length} areas found${skipped > 0 ? `, ${skipped} could not be read` : ''}`
+}
+
+/** Small schematic laptop whose zones turn green as the scanner finds the parts. */
+export function LaptopView({ zones, active }: Props) {
   return (
-    <svg viewBox="0 0 320 136" role="img" aria-label={`Laptop view: ${found.size} of ${ZONES.length} areas found`} className="fade-up w-full">
+    <svg viewBox="0 0 320 136" role="img" aria-label={laptopViewLabel(zones)} className="fade-up w-full">
       <rect x="18" y="8" width="284" height="120" rx="16" fill="var(--color-page)" stroke="var(--color-line)" strokeWidth="2" />
       {ZONES.map((zone) => {
-        const isFound = found.has(zone.kind)
+        const isFound = zones[zone.kind] === 'found'
+        const isSkipped = zones[zone.kind] === 'skipped'
         const isActive = active.includes(zone.kind)
+        const stroke = isFound || isActive ? 'var(--color-leaf)' : isSkipped ? 'var(--color-amber)' : 'var(--color-line)'
         return (
-          <g key={zone.kind} className={isActive ? 'zone-active' : undefined}>
+          <g
+            key={zone.kind}
+            data-zone={zone.kind}
+            data-state={zones[zone.kind] ?? (isActive ? 'active' : 'waiting')}
+            className={isActive ? 'zone-active' : undefined}
+          >
             <rect
               x={zone.x}
               y={zone.y}
@@ -42,9 +57,9 @@ export function LaptopView({ parts, active }: Props) {
               height={zone.h}
               rx="8"
               fill={isFound ? 'var(--color-leaf-tint)' : 'white'}
-              stroke={isFound || isActive ? 'var(--color-leaf)' : 'var(--color-line)'}
+              stroke={stroke}
               strokeWidth="2"
-              strokeDasharray={isFound ? undefined : '4 4'}
+              strokeDasharray={isFound || isSkipped ? undefined : '4 4'}
               style={{ transition: 'fill 300ms ease, stroke 300ms ease' }}
             />
             <text
@@ -53,7 +68,7 @@ export function LaptopView({ parts, active }: Props) {
               fontSize="11"
               fontWeight="700"
               textAnchor="middle"
-              fill={isFound ? 'var(--color-leaf-deep)' : 'var(--color-muted)'}
+              fill={isFound ? 'var(--color-leaf-deep)' : isSkipped ? 'var(--color-amber-ink)' : 'var(--color-muted)'}
             >
               {zone.label}
             </text>

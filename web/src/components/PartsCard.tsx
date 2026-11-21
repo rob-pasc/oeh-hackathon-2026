@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { DetectedPart, PartKind, PartLookup } from '../api/types'
+import type { ZoneOutcome } from '../lib/scanPlayback'
 import { LaptopView } from './LaptopView'
 
 const CHIP: Record<Exclude<PartLookup, 'pending'>, { label: string; className: string }> = {
@@ -43,12 +44,14 @@ function LookupChip({ lookup }: { lookup: PartLookup }) {
 
 interface Props {
   parts: readonly DetectedPart[]
+  /** How each zone of the laptop view ended, from the scanner's step events. */
+  zones: Partial<Record<PartKind, ZoneOutcome>>
   /** Kinds the scanner is reading right now (for the laptop view). */
   active: readonly PartKind[]
 }
 
 /** Live list of what the scanner found, with what the parts list or the AI search says about each part. */
-export function PartsCard({ parts, active }: Props) {
+export function PartsCard({ parts, zones, active }: Props) {
   const [showLaptop, setShowLaptop] = useState(readShowLaptop)
 
   return (
@@ -68,7 +71,7 @@ export function PartsCard({ parts, active }: Props) {
         </button>
       </div>
 
-      {showLaptop ? <LaptopView parts={parts} active={active} /> : null}
+      {showLaptop ? <LaptopView zones={zones} active={active} /> : null}
 
       {parts.length === 0 ? (
         <p className="m-0 text-sm text-muted">Parts appear here as the scanner finds them.</p>
