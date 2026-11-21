@@ -70,3 +70,8 @@ export const IsoDate = Type.String({ format: 'date' })
 
 /** Timestamp in UTC, RFC 3339. */
 export const IsoDateTime = Type.String({ format: 'date-time' })
+
+/** Operating system family the scan ran on (feature 007 FR-010). */
+export const OS_FAMILIES = ['windows', 'macos', 'linux'] as const
+export const OsFamily = Type.Enum(OS_FAMILIES)
+export type OsFamily = Static<typeof OsFamily>

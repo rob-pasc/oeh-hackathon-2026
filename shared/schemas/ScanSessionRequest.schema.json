@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ScanSessionRequest.schema.json",
+  "title": "ScanSessionRequest",
+  "type": "object",
+  "properties": {
+    "os": {
+      "enum": [
+        "windows",
+        "macos",
+        "linux"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

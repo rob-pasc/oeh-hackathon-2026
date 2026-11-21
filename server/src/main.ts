@@ -20,7 +20,11 @@ const port = Number(env.PORT ?? 3000)
 const host = env.HOST ?? '127.0.0.1'
 const databasePath = resolve(env.DATABASE_PATH ?? 'data/leaaf.sqlite')
 const publicBaseUrl = env.PUBLIC_BASE_URL ?? 'http://localhost:5173'
-const scannerExePath = resolve(env.SCANNER_EXE_PATH ?? '../scanner/dist/leaaf-scanner.exe')
+const scannerPaths = {
+  windows: resolve(env.SCANNER_EXE_PATH ?? '../scanner/dist/leaaf-scanner.exe'),
+  linux: resolve(env.SCANNER_LINUX_PATH ?? '../scanner/dist/leaaf-scanner-linux'),
+  macos: resolve(env.SCANNER_MACOS_PATH ?? '../scanner/dist/leaaf-scanner-macos.zip'),
+}
 const corpusIndexPath = resolve(env.CORPUS_INDEX_PATH ?? DEFAULT_CORPUS_INDEX_PATH)
 
 // Fail at startup, not on the first request, when the ranking config or impact table is invalid
@@ -58,7 +62,7 @@ const app = buildApp({
   assessments: retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn: (message, details) => app.log.warn(details ?? {}, message) }) : undefined,
   explain: createReportService(db, llm),
   publicBaseUrl,
-  scannerExePath,
+  scannerPaths,
   logger: {
     // Log the route pattern, never the raw URL or the client IP, so full device IDs are never
     // logged together with request IPs (feature 001 privacy requirement).

@@ -7,7 +7,7 @@
 // the server then emits `complete` with the device ID. The session ID is a bearer secret for
 // progress only: it grants no access to device data and no device route returns it.
 import { Type, type Static } from 'typebox'
-import { DeviceId } from './common.ts'
+import { DeviceId, OsFamily } from './common.ts'
 
 /** 26 Crockford base32 characters from a CSPRNG (130 bits). */
 export const SessionId = Type.String({
@@ -18,6 +18,10 @@ export type SessionId = Static<typeof SessionId>
 
 /** Appended to the downloaded executable, followed by the session ID (37 bytes in total). */
 export const SCANNER_SESSION_MARKER = 'LEAAFSCAN1:'
+
+/** Optional body of POST /api/sessions: the system to download the scanner for (feature 007 FR-012). Without it, Windows. */
+export const ScanSessionRequest = Type.Object({ os: Type.Optional(OsFamily) }, { additionalProperties: false })
+export type ScanSessionRequest = Static<typeof ScanSessionRequest>
 
 /** Response of POST /api/sessions. */
 export const ScanSession = Type.Object(

@@ -9,7 +9,7 @@
 // scanner team is expected to use; they are guidance, not part of the contract. The macOS and
 // Linux sources are listed in docs/features/feature-007-macos-linux-scanner/RESEARCH.md.
 import { Type, type Static } from 'typebox'
-import { DeviceId, IsoDate, IsoDateTime, MemoryType, Nullable } from './common.ts'
+import { DeviceId, IsoDate, IsoDateTime, MemoryType, Nullable, OsFamily } from './common.ts'
 import { SessionId } from './session.ts'
 
 export const DEVICE_SCAN_SCHEMA_VERSION = 1 as const
@@ -45,11 +45,6 @@ export const Identity = Type.Object(
       'Raw identity strings as reported by firmware. Placeholder text such as "To be filled by O.E.M." must be reported as null. Model matching and aliases are feature 002.',
   },
 )
-
-/** Operating system family the scan ran on (feature 007 FR-010). */
-export const OS_FAMILIES = ['windows', 'macos', 'linux'] as const
-export const OsFamily = Type.Enum(OS_FAMILIES)
-export type OsFamily = Static<typeof OsFamily>
 
 export const Os = Type.Object(
   {

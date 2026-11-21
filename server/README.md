@@ -13,8 +13,10 @@ The LLM API key is configured only here, through environment variables. It never
 | `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above the configured ceiling (default 32 KiB), or `429 rate_limited` |
 | `GET /api/devices/:id` | `200 DeviceRecord`; unknown and malformed IDs both get the same `404 not_found` |
 | `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `assessment` (the ranked `Assessment`), then `report` (generated or template), then `end` with `{"status":"complete"}`. Templates end with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `429 rate_limited` before opening the stream, or `500` when the server has no retrieval index |
-| `GET /downloads/leaaf-scanner.exe` | The file at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
-| `POST /api/sessions` | `201 ScanSession`: a new 26-character session ID and its download URL (feature 006) |
+| `GET /downloads/leaaf-scanner.exe` | The Windows scanner at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
+| `GET /downloads/leaaf-scanner-linux` | The Linux scanner at `SCANNER_LINUX_PATH`, with the same trailer for a session (feature 007) |
+| `GET /downloads/leaaf-scanner-macos.zip` | The zipped macOS app at `SCANNER_MACOS_PATH`. For a session, the bundle inside is renamed from `leaaf-scanner.app` to `leaaf-scanner-<id>.app`, which keeps its signature valid (feature 007) |
+| `POST /api/sessions` | Optional body `{"os": "windows" \| "macos" \| "linux"}` (default Windows). `201 ScanSession`: a new 26-character session ID and the download URL for that system (features 006 and 007); `400` for another body |
 | `POST /api/sessions/:id/events` | The scanner's `step` or `error` event; `204`, `400` if invalid, `404` if unknown |
 | `GET /api/sessions/:id/events` | Server-Sent Events: the latest event first, then live ones; ends after `complete` or `error` |
 
@@ -86,7 +88,9 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 | `PORT`, `HOST` | `3000`, `127.0.0.1` | API listen address |
 | `DATABASE_PATH` | `data/leaaf.sqlite` | SQLite file (gitignored `server/data/`) |
 | `PUBLIC_BASE_URL` | `http://localhost:5173` | Web origin used to build device URLs |
-| `SCANNER_EXE_PATH` | `../scanner/dist/leaaf-scanner.exe` | Executable served as the download |
+| `SCANNER_EXE_PATH` | `../scanner/dist/leaaf-scanner.exe` | Windows scanner served as the download |
+| `SCANNER_LINUX_PATH` | `../scanner/dist/leaaf-scanner-linux` | Linux scanner |
+| `SCANNER_MACOS_PATH` | `../scanner/dist/leaaf-scanner-macos.zip` | Zipped macOS app (built on a Mac by `scanner/packaging/macos/build.sh`) |
 | `CORPUS_INDEX_PATH` | `data/corpus.sqlite` | Retrieval index built by `corpus:ingest` |
 | `CORPUS_DIR` | `../corpus` | Corpus read by `corpus:ingest` |
 | `LLM_API_KEY` | (required for LLM features) | Provider API key; without it the server starts and assesses without facts |
