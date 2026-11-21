@@ -26,8 +26,8 @@ func testConfig(t *testing.T, backend string, events *[]Event) (Config, *bytes.B
 		BackendURL:     backend,
 		ScannerVersion: "0.1.0-test",
 		OutDir:         t.TempDir(),
-		Collect: func(progress func(string)) (scan.Raw, []string) {
-			progress("started")
+		Collect: func(progress func(string, string)) (scan.Raw, []string) {
+			progress("started", scan.StepRunning)
 			return scan.Raw{ComputerSystem: &[]scan.ComputerSystem{{Model: &model}}}, []string{"Win32_Tpm: access denied"}
 		},
 		Now:     func() time.Time { return time.Date(2026, 11, 20, 9, 30, 0, 0, time.UTC) },
@@ -338,7 +338,7 @@ func TestRetryAfterTemporaryFailure(t *testing.T) {
 	cfg.SessionID = testSession
 	scans := 0
 	collect := cfg.Collect
-	cfg.Collect = func(p func(string)) (scan.Raw, []string) { scans++; return collect(p) }
+	cfg.Collect = func(p func(string, string)) (scan.Raw, []string) { scans++; return collect(p) }
 
 	r := NewRunner(cfg)
 	if code := r.Scan(); code != ExitOK {
@@ -424,5 +424,60 @@ func TestUnreachableIsRetryable(t *testing.T) {
 	r.Upload()
 	if e := last(t, events); !e.Retryable {
 		t.Errorf("unreachable server should be retryable: %+v", e)
+	}
+}
+
+// AC-017 (feature 001 FR-017): the session receives each reading step's outcome after its start,
+// in step order; the window and the console still show only the starting steps.
+func TestSessionReceivesStepOutcomes(t *testing.T) {
+	var events []string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/sessions/" + testSession + "/events":
+			var e map[string]string
+			json.NewDecoder(r.Body).Decode(&e)
+			events = append(events, e["step"]+":"+e["state"])
+			w.WriteHeader(http.StatusNoContent)
+		case "/api/devices":
+			w.WriteHeader(http.StatusCreated)
+			w.Write([]byte(`{"device_id":"q3Xk9vT2mB7pLw0cZr1sEa","device_url":"https://leaaf.example/d/q3Xk9vT2mB7pLw0cZr1sEa"}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+
+	var local []Event
+	cfg, out := testConfig(t, srv.URL, &local)
+	cfg.SessionID = testSession
+	// The order the Windows collector reports in, on readings with CPU, memory and a disk but
+	// no battery (a desktop).
+	raw := scan.Raw{Processors: &[]scan.Processor{{}}, Memory: &[]scan.PhysicalMemory{{}}, Disks: &[]scan.PhysicalDisk{{}}, Batteries: &[]scan.Battery{}}
+	cfg.Collect = func(progress func(string, string)) (scan.Raw, []string) {
+		progress("started", scan.StepRunning)
+		for _, step := range []string{"cpu_memory", "storage", "battery"} {
+			progress(step, scan.StepRunning)
+			progress(step, scan.StepState(step, raw))
+		}
+		return raw, nil
+	}
+	if code := Run(cfg); code != ExitOK {
+		t.Fatalf("exit %d\n%s", code, out)
+	}
+	want := "started:running,cpu_memory:running,cpu_memory:done,storage:running,storage:done,battery:running,battery:skipped,upload:running"
+	if got := strings.Join(events, ","); got != want {
+		t.Errorf("session events\n got %s\nwant %s", got, want)
+	}
+	var windowSteps []string
+	for _, e := range local {
+		if e.Kind == EventStep {
+			windowSteps = append(windowSteps, e.Step)
+		}
+	}
+	if got := strings.Join(windowSteps, ","); got != "started,cpu_memory,storage,battery,upload" {
+		t.Errorf("window steps = %s", got)
+	}
+	if n := strings.Count(out.String(), "Reading storage"); n != 1 {
+		t.Errorf("console logs storage %d times, want once", n)
 	}
 }

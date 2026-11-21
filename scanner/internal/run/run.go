@@ -33,8 +33,10 @@ type Config struct {
 	ScannerVersion string
 	// OutDir receives the JSON file; the directory of the executable in production.
 	OutDir string
-	// Collect returns raw readings and notes about sources that failed.
-	Collect func(progress func(string)) (scan.Raw, []string)
+	// Collect returns raw readings and notes about sources that failed. It calls progress with
+	// a step ID and "running" when a step starts, and with "done" or "skipped" when a step that
+	// reads parts ends (feature 001 FR-017).
+	Collect func(progress func(step, state string)) (scan.Raw, []string)
 	Now     func() time.Time
 	HTTP    *http.Client
 	// Out receives a plain-text log (the console build); io.Discard for the window.
@@ -127,10 +129,15 @@ func (r *Runner) emit(e Event) {
 	}
 }
 
-func (r *Runner) step(id string) {
-	fmt.Fprintf(r.cfg.Out, "  %s...\n", stepLabels[id])
-	r.emit(Event{Kind: EventStep, Step: id})
-	r.cfg.report(map[string]string{"type": "step", "step": id, "state": "running"})
+// step reports a step's state. The console log and the window show only starting steps; the
+// session also gets each step's outcome, which the web app's laptop view uses (feature 006
+// FR-041).
+func (r *Runner) step(id, state string) {
+	if state == scan.StepRunning {
+		fmt.Fprintf(r.cfg.Out, "  %s...\n", stepLabels[id])
+		r.emit(Event{Kind: EventStep, Step: id})
+	}
+	r.cfg.report(map[string]string{"type": "step", "step": id, "state": state})
 }
 
 // fail reports a final failure to the window and the session.
@@ -182,7 +189,7 @@ func (r *Runner) Upload() int {
 	r.pending = false
 	r.mu.Unlock()
 
-	r.step("upload")
+	r.step("upload", scan.StepRunning)
 	res, err := upload(r.cfg, r.body)
 	if err != nil {
 		fmt.Fprintf(out, "\nUpload failed: %v\n", err)

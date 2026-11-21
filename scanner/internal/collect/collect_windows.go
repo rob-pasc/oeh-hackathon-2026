@@ -30,8 +30,10 @@ var client = &wmi.Client{PtrNil: true, AllowMissingFields: true}
 // Collect reads every source. A failing source leaves its field nil and adds a note; it never
 // aborts the scan (FR-004). The release exe runs elevated (FR-001), which privileged sources such
 // as Win32_Tpm need; a dev build started without elevation still works, those sources just fail.
-// progress receives the scan step IDs of shared/src/session.ts: started, cpu_memory, storage, battery.
-func Collect(progress func(step string)) (scan.Raw, []string) {
+// progress receives the scan step IDs of shared/src/session.ts (started, cpu_memory, storage,
+// battery) with the state "running" when a step starts, and, for the steps that read parts, its
+// outcome (scan.StepState: "done" or "skipped") when it ends (feature 001 FR-017).
+func Collect(progress func(step, state string)) (scan.Raw, []string) {
 	var raw scan.Raw
 	var notes []string
 	note := func(source string, err error) {
@@ -40,7 +42,10 @@ func Collect(progress func(step string)) (scan.Raw, []string) {
 		}
 	}
 
-	progress("started")
+	start := func(step string) { progress(step, scan.StepRunning) }
+	finish := func(step string) { progress(step, scan.StepState(step, raw)) }
+
+	start("started")
 	raw.ComputerSystem = run[scan.ComputerSystem](queries.ComputerSystem, note)
 	raw.Product = run[scan.ComputerSystemProduct](queries.Product, note)
 	raw.Enclosure = run[scan.SystemEnclosure](queries.Enclosure, note)
@@ -51,16 +56,18 @@ func Collect(progress func(step string)) (scan.Raw, []string) {
 	raw.SecureBoot = secureBoot(raw.FirmwareType, note)
 	raw.TPM = run[scan.Tpm](queries.TPM, note)
 
-	progress("cpu_memory")
+	start("cpu_memory")
 	raw.Processors = run[scan.Processor](queries.Processor, note)
 	raw.Memory = run[scan.PhysicalMemory](queries.Memory, note)
 	raw.MemoryArrays = run[scan.PhysicalMemoryArray](queries.MemoryArray, note)
 	raw.Video = run[scan.VideoController](queries.Video, note)
+	finish("cpu_memory")
 
-	progress("storage")
+	start("storage")
 	raw.Disks = run[scan.PhysicalDisk](queries.Disk, note)
+	finish("storage")
 
-	progress("battery")
+	start("battery")
 	raw.Batteries = run[scan.Battery](queries.Battery, note)
 	if raw.Batteries == nil || len(*raw.Batteries) > 0 {
 		raw.BatteryStatic = run[scan.BatteryStaticData](queries.BatteryStatic, note)
@@ -68,6 +75,7 @@ func Collect(progress func(step string)) (scan.Raw, []string) {
 		raw.BatteryCycles = run[scan.BatteryCycleCount](queries.BatteryCycles, note)
 		raw.BatteryReport = batteryReport(note)
 	}
+	finish("battery")
 	return raw, notes
 }
 
