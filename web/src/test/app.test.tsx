@@ -142,6 +142,24 @@ describe('Landing', () => {
     expect(screen.getByText('Scanner for Windows. Opens a new tab and downloads a small scanner.')).toBeInTheDocument()
   })
 
+  it('puts "What does the scanner collect?" below the download button and the run-steps card (feature 006 FR-049)', () => {
+    useAgent(UA.windows)
+    render(withApi(<Landing />))
+    const button = screen.getByRole('button', { name: /download and scan now/i })
+    const steps = screen.getByRole('region', { name: 'How to run the scanner on Windows' })
+    const collect = screen.getByText('What does the scanner collect?')
+    expect(button.compareDocumentPosition(collect) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(steps.compareDocumentPosition(collect) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows the system switch as three equal segments with a symbol each (feature 006 FR-050)', () => {
+    useAgent(UA.windows)
+    render(withApi(<Landing />))
+    const tabs = within(screen.getByRole('tablist', { name: 'Show the steps for' })).getAllByRole('tab')
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Windows', 'Mac', 'Linux'])
+    for (const tab of tabs) expect(tab.querySelector('svg')).not.toBeNull()
+  })
+
   it('offers all three downloads on a phone', async () => {
     useAgent(UA.phone)
     render(withApi(<Landing />))
@@ -160,6 +178,12 @@ describe('ScanSession', () => {
     expect(screen.getByTestId('result-skeleton')).toBeInTheDocument()
     expect(screen.getByRole('status')).toBeInTheDocument()
     await waitFor(() => expect(window.location.pathname).toBe(`/d/${MOCK_DEVICE_IDS.laptop}`))
+  })
+
+  it('shows what the name stands for next to the logo while waiting (feature 006 FR-049)', () => {
+    window.history.pushState(null, '', '/s/aaaaaaaaaaaaaaaaaaaaaa')
+    render(withApi(<ScanSession sessionId="aaaaaaaaaaaaaaaaaaaaaa" />))
+    expect(screen.getByRole('banner')).toHaveTextContent('Lifecycle Evaluation and Action Finder')
   })
 
   it('lists the parts the scanner finds and shows the laptop view unless it is hidden', async () => {
@@ -470,6 +494,15 @@ describe('App routes (feature 001 AC-010)', () => {
     render(withApi(<App />))
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Page not found')
     window.history.replaceState(null, '', '/')
+  })
+})
+
+describe('Result screen header (feature 006 FR-049)', () => {
+  it('shows what the name stands for next to the logo on the device page', async () => {
+    window.history.replaceState(null, '', `/d/${MOCK_DEVICE_IDS.laptop}`)
+    render(withApi(<App />))
+    expect(screen.getByRole('banner')).toHaveTextContent('Lifecycle Evaluation and Action Finder')
+    await screen.findByRole('group', { name: 'Show options for' })
   })
 })
 

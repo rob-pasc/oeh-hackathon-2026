@@ -52,6 +52,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-043:** Restyle the downloads for the other systems as small buttons and the run steps as a numbered card (supports `AC-057`)
 - [x] **T-044:** Add the system switch to the run-steps card so the steps can be read before downloading (supports `AC-058`)
 - [x] **T-045:** Show "None" for a CO₂e avoided range that credits nothing, with the hover text and the summary wording, plus tests (supports `AC-059`)
+- [x] **T-046:** Show the name explanation in the loading and result headers, restyle the system switch as a segmented control with symbols, and move "What does the scanner collect?" below the run-steps card (supports `AC-060`, `AC-061`, `AC-062`)
+- [x] **T-047:** Make the category tab row scroll without scrollbar, with edge fades and rounded ends (supports `AC-063`)
 
 ## Dependencies and blockers
 
@@ -90,4 +92,5 @@ The first version was written without network access. After the merge into `main
 - 2026-11-21: Sixteenth scope extension by amendment (FR-047, AC-057, T-043: small download buttons and run-steps card on the landing page); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
 - 2026-11-21: Seventeenth scope extension by amendment (FR-048, AC-058, T-044: system switch in the run-steps card); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
 - 2026-11-21: Eighteenth scope extension by amendment (FR-049, AC-059, T-045: "None" instead of a negative CO₂e avoided range); see the plan's scope change log. Status set from `Implemented (verification pending)` to `In progress` for the implementation.
+- 2026-11-21: Nineteenth scope extension by amendment (FR-050 to FR-053, AC-060 to AC-063, T-046, T-047: name in the loading and result headers, segmented system switch, scanner disclosure moved down, category tab row without scrollbar); see the plan's scope change log. Implemented the same day; verification by the team pending.
 - 2026-11-21: T-045 implemented and verified (AC-059 passes; see the acceptance criteria). Status back to `Implemented (verification pending)`: the team browser review (T-009) and T-016 remain.

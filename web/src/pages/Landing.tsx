@@ -61,6 +61,21 @@ function DownloadIcon() {
   )
 }
 
+// Plain symbols for the three systems (not the vendors' logos): a window grid, a command key, a terminal prompt.
+const OS_ICONS: Record<OsFamily, string> = {
+  windows: 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+  macos: 'M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3',
+  linux: 'M3 5h18v14H3zM7 10l3 2-3 2M12 15h5',
+}
+
+function OsIcon({ os }: { os: OsFamily }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-4 w-4 shrink-0">
+      <path d={OS_ICONS[os]} />
+    </svg>
+  )
+}
+
 export function Landing() {
   const api = useApi()
   const [detected] = useState<OsFamily | null>(() => (typeof navigator === 'undefined' ? null : detectOs(navigator)))
@@ -139,16 +154,6 @@ export function Landing() {
           </ol>
 
           <div className="flex flex-col items-center gap-3">
-            {platform ? (
-              <details className="max-w-[580px] text-left text-sm text-muted">
-                <summary className="cursor-pointer text-center font-semibold text-ink">What does the scanner collect?</summary>
-                <p className="mt-3">{platform.reads}</p>
-                <p className="mt-2">
-                  {platform.saves} and uploads it to leaaf for your report. The scan excludes personal files, user and
-                  computer names, serial numbers, device UUIDs, and network addresses.
-                </p>
-              </details>
-            ) : null}
             {detected ? (
               <>
                 <button
@@ -198,7 +203,7 @@ export function Landing() {
                 className="mt-2 w-full max-w-[580px] rounded-2xl bg-white p-5 text-left shadow-card sm:p-6"
               >
                 {/* Choosing a system here only changes what is shown; nothing is downloaded. */}
-                <div role="tablist" aria-label="Show the steps for" className="mb-4 inline-flex gap-1 rounded-full bg-track p-1">
+                <div role="tablist" aria-label="Show the steps for" className="mb-5 grid grid-cols-3 gap-1 rounded-2xl bg-track p-1">
                   {PLATFORM_ORDER.map((os) => (
                     <button
                       key={os}
@@ -207,10 +212,11 @@ export function Landing() {
                       aria-selected={shown === os}
                       aria-controls="run-steps"
                       onClick={() => setShown(os)}
-                      className={`cursor-pointer rounded-full border-0 px-4 py-1.5 text-sm font-semibold transition-colors ${
-                        shown === os ? 'bg-leaf text-white' : 'bg-transparent text-muted hover:text-ink'
+                      className={`flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 px-1 py-2.5 text-[13px] font-semibold transition-colors sm:gap-2 sm:px-2 sm:text-sm ${
+                        shown === os ? 'bg-leaf text-white shadow-sm' : 'bg-transparent text-muted hover:bg-white hover:text-ink'
                       }`}
                     >
+                      <OsIcon os={os} />
                       {PLATFORMS[os].label}
                     </button>
                   ))}
@@ -239,6 +245,16 @@ export function Landing() {
                   ))}
                 </ol>
               </section>
+            ) : null}
+            {platform ? (
+              <details className="mt-3 w-full max-w-[580px] text-left text-sm text-muted">
+                <summary className="cursor-pointer text-center font-semibold text-ink">What does the scanner collect?</summary>
+                <p className="mt-3">{platform.reads}</p>
+                <p className="mt-2">
+                  {platform.saves} and uploads it to leaaf for your report. The scan excludes personal files, user and
+                  computer names, serial numbers, device UUIDs, and network addresses.
+                </p>
+              </details>
             ) : null}
             {error ? (
               <span role="alert" className="text-sm font-semibold text-rose-ink">

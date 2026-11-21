@@ -1,10 +1,58 @@
 import type { Mode } from '@leaaf/shared/common'
-import { useLayoutEffect, useState } from 'react'
+import type { ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { MODE_LABELS, MODE_ORDER, USE_LABELS, USE_TAGS, isUseTag, type ResultTab, type UseTag } from '../lib/labels'
 
 export interface TabItem {
   id: ResultTab
   label: string
+}
+
+/**
+ * Scroll area for the category tabs. With many tabs the row scrolls sideways; instead of a native scrollbar
+ * (which cut into the rounded ends of the pill) the edge that still has content fades out, and the
+ * chosen tab is scrolled into view.
+ */
+function FadingScroller({ activeIndex, children }: { activeIndex: number; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [edges, setEdges] = useState({ left: false, right: false })
+
+  const update = useCallback(() => {
+    const el = ref.current
+    if (!el) return
+    setEdges({ left: el.scrollLeft > 2, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 2 })
+  }, [])
+
+  useEffect(() => {
+    update()
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    if (el.firstElementChild) observer.observe(el.firstElementChild)
+    return () => observer.disconnect()
+  }, [update])
+
+  useEffect(() => {
+    const el = ref.current
+    const tab = el?.querySelectorAll('button')[activeIndex]
+    if (el && tab && typeof tab.scrollIntoView === 'function') {
+      tab.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' })
+    }
+  }, [activeIndex])
+
+  const fade = 28
+  const mask = `linear-gradient(to right, ${edges.left ? 'transparent' : '#000'} 0, #000 ${edges.left ? fade : 0}px, #000 calc(100% - ${edges.right ? fade : 0}px), ${edges.right ? 'transparent' : '#000'} 100%)`
+  return (
+    <div
+      ref={ref}
+      onScroll={update}
+      className="flex min-w-0 flex-1 overflow-x-auto rounded-full [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={edges.left || edges.right ? { maskImage: mask, WebkitMaskImage: mask } : undefined}
+    >
+      {children}
+    </div>
+  )
 }
 
 interface Props {
@@ -113,7 +161,8 @@ export function Toolbar({ use, mode, tabs: items, tab: activeTab, onUseChange, o
       <div aria-hidden="true" className="hidden xl:block" />
 
       {/* Category tabs get their own row above the cards: AI labels are longer than the old path names. */}
-      <div role="group" aria-label="Show options for" className="flex min-w-0 overflow-x-auto rounded-full bg-white p-1 shadow-card">
+      <div role="group" aria-label="Show options for" className="flex min-w-0 rounded-full bg-white p-1 shadow-card">
+        <FadingScroller activeIndex={items.findIndex((t) => t.id === activeTab)}>
         <div ref={setTabs} className="relative flex min-w-max flex-1 gap-1">
         <MeasuredHighlight key={items.map((t) => t.id).join('|')} container={tabs} index={items.findIndex((t) => t.id === activeTab)} className="bg-leaf-tint" />
         {items.map((tab) => {
@@ -134,6 +183,7 @@ export function Toolbar({ use, mode, tabs: items, tab: activeTab, onUseChange, o
           )
         })}
         </div>
+        </FadingScroller>
       </div>
 
       <div role="group" aria-label="Ranking priority" className="flex rounded-full bg-white p-1 shadow-card">
