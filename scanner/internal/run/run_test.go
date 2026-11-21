@@ -26,7 +26,7 @@ func testConfig(t *testing.T, backend string, events *[]Event) (Config, *bytes.B
 		BackendURL:     backend,
 		ScannerVersion: "0.1.0-test",
 		OutDir:         t.TempDir(),
-		Collect: func(progress func(string)) (scan.Raw, []string) {
+		Collect: func(progress func(string)) (scan.Reading, []string) {
 			progress("started")
 			return scan.Raw{ComputerSystem: &[]scan.ComputerSystem{{Model: &model}}}, []string{"Win32_Tpm: access denied"}
 		},
@@ -338,7 +338,7 @@ func TestRetryAfterTemporaryFailure(t *testing.T) {
 	cfg.SessionID = testSession
 	scans := 0
 	collect := cfg.Collect
-	cfg.Collect = func(p func(string)) (scan.Raw, []string) { scans++; return collect(p) }
+	cfg.Collect = func(p func(string)) (scan.Reading, []string) { scans++; return collect(p) }
 
 	r := NewRunner(cfg)
 	if code := r.Scan(); code != ExitOK {

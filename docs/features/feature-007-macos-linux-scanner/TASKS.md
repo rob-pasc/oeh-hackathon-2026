@@ -17,8 +17,8 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 
 - [x] **T-001:** Add the optional `os.family` field and the `apple` firmware value to `shared/src/device.ts`, update field descriptions with per-system sources, add the not-applicable rule to `checkDeviceScan` and the Go normalizer, regenerate the JSON Schema, and have the Windows scanner report `windows`. (supports `AC-015`, `AC-024`)
 - [ ] **T-002:** On a real Mac, decide the session-ID mechanism (zip with a session file in the bundle, or the appended trailer) and the local save location; record the decision in `PLAN.md`. (supports `AC-016`, `AC-017`)
-- [ ] **T-003:** Linux collector without root: sysfs/procfs readers, `scan.RawLinux`, pure normalization, fixtures from a real laptop with planted identifiers and external drives, and schema tests. (supports `AC-007`, `AC-011`, `AC-012`, `AC-014`)
-- [ ] **T-004:** Linux root helper: `--privileged-helper` mode (SMBIOS types 16/17, drive health), `pkexec` launch from the window process, allowlist decoding, cancel and missing-`pkexec` paths, and tests. (supports `AC-009`, `AC-010`, `AC-012`)
+- [x] **T-003:** Linux collector without root: sysfs/procfs readers, `scan.RawLinux`, pure normalization, fixtures from a real laptop with planted identifiers and external drives, and schema tests. (supports `AC-007`, `AC-011`, `AC-012`, `AC-014`)
+- [x] **T-004:** Linux root helper: `--privileged-helper` mode (SMBIOS types 16/17, drive health), `pkexec` launch from the window process, allowlist decoding, cancel and missing-`pkexec` paths, and tests. (supports `AC-009`, `AC-010`, `AC-012`)
 - [ ] **T-005:** macOS collector: `system_profiler`, `ioreg`, `sw_vers` and `sysctl` readers, `scan.RawDarwin`, pure normalization, fixtures from Intel and Apple Silicon output with planted identifiers and external drives, and schema tests. (supports `AC-005`, `AC-011`, `AC-012`, `AC-014`)
 - [ ] **T-006:** Window on macOS and Linux: enable the Gio build for both, open the browser as the user, save the JSON to the platform location, readable terminal error when the Linux window cannot open, and the leaf icon (macOS `.app` bundle with `Info.plist`). (supports `AC-003`, `AC-004`, `AC-016`)
 - [ ] **T-007:** Server: download routes and path settings per system, session creation with the system and matching `download_url`, session ID in each artifact type, and tests; Windows route unchanged. (supports `AC-017`)
@@ -37,7 +37,9 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 
 ## Progress notes
 
-No implementation yet.
+- 2026-11-21: Collection returns a `scan.Reading` per system (`Raw` on Windows, `RawLinux` on Linux), so the run flow is unchanged. The Linux reader works on an `fs.FS`, so tests run on recorded trees (`internal/scan/testdata/linux/*.txt`, a small text format with symlinks) on every platform.
+- 2026-11-21: Without root, total RAM is the online memory blocks (else `MemTotal`) rounded up to whole GiB; the root helper's SMBIOS module sizes replace it when granted.
+- 2026-11-21: The development machine runs VS Code as a Flatpak. Its sandbox hides `/sys/firmware` and `pkexec` and reports the Flatpak runtime as the OS, so real Linux checks (T-011) must run on the host outside the sandbox.
 
 ## Lifecycle history
 

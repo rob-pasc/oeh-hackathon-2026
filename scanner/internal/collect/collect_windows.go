@@ -31,7 +31,7 @@ var client = &wmi.Client{PtrNil: true, AllowMissingFields: true}
 // aborts the scan (FR-004). The release exe runs elevated (FR-001), which privileged sources such
 // as Win32_Tpm need; a dev build started without elevation still works, those sources just fail.
 // progress receives the scan step IDs of shared/src/session.ts: started, cpu_memory, storage, battery.
-func Collect(progress func(step string)) (scan.Raw, []string) {
+func Collect(progress func(step string)) (scan.Reading, []string) {
 	var raw scan.Raw
 	var notes []string
 	note := func(source string, err error) {

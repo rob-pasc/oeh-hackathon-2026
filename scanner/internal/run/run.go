@@ -33,8 +33,8 @@ type Config struct {
 	ScannerVersion string
 	// OutDir receives the JSON file; the directory of the executable in production.
 	OutDir string
-	// Collect returns raw readings and notes about sources that failed.
-	Collect func(progress func(string)) (scan.Raw, []string)
+	// Collect returns the system's raw readings and notes about sources that failed.
+	Collect func(progress func(string)) (scan.Reading, []string)
 	Now     func() time.Time
 	HTTP    *http.Client
 	// Out receives a plain-text log (the console build); io.Discard for the window.
@@ -147,7 +147,7 @@ func (r *Runner) Scan() int {
 	fmt.Fprintln(out)
 
 	raw, notes := cfg.Collect(r.step)
-	device := scan.Normalize(raw, scan.Meta{ScannerVersion: cfg.ScannerVersion, ScannedAt: cfg.Now()})
+	device := raw.Payload(scan.Meta{ScannerVersion: cfg.ScannerVersion, ScannedAt: cfg.Now()})
 	if cfg.SessionID != "" {
 		device.SessionID = &cfg.SessionID
 	}
