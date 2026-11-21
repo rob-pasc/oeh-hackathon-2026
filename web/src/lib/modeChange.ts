@@ -3,8 +3,14 @@ import type { Mode } from '@leaaf/shared/common'
 import { rankPaths } from '@leaaf/shared/ranking'
 import { PATH_TITLES } from './labels'
 
-const names = { environment: 'environmental impact', useful_life: 'extra useful life', economic: 'economic value', feasibility: 'feasibility' }
+// How each criterion is named in the one-line explanation.
+const names = { environment: 'environmental impact', useful_life: 'extra life', economic: 'cost', feasibility: 'feasibility' }
 
+/**
+ * One short line per pair of paths that swapped places after a priority change, e.g.
+ * "Repair moved above Upgrade because cost now counts more." Only criteria that gained weight and in which the
+ * path that moved up is ahead are named; the exact weights stay in the assessment.
+ */
 export function explainModeChange(assessment: Assessment, previous: Mode, current: Mode): string[] {
   const from = assessment.weights[previous]
   const to = assessment.weights[current]
@@ -16,8 +22,9 @@ export function explainModeChange(assessment: Assessment, previous: Mode, curren
       if (oldOrder.indexOf(ahead.path) < oldOrder.indexOf(behind.path) || !ahead.scores || !behind.scores) continue
       const a = ahead.scores
       const b = behind.scores
-      const drivers = CRITERIA.filter(c => (a[c] - b[c]) * (to[c] - from[c]) > 0)
-      changes.push(`${PATH_TITLES[ahead.path]} moved above ${PATH_TITLES[behind.path]}. Weight changes favouring this move: ${drivers.map(c => `${names[c]} (${from[c]}% → ${to[c]}%)`).join(', ')}.`)
+      const drivers = CRITERIA.filter(c => to[c] > from[c] && a[c] > b[c]).map(c => names[c])
+      const reason = drivers.length > 0 ? `${drivers.join(' and ')} now ${drivers.length > 1 ? 'count' : 'counts'} more` : 'the priorities changed'
+      changes.push(`${PATH_TITLES[ahead.path]} moved above ${PATH_TITLES[behind.path]} because ${reason}.`)
     }
   }
   return changes

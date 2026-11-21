@@ -3,8 +3,8 @@ import type { DetectedPart, PartKind, PartLookup } from '../api/types'
 import { LaptopView } from './LaptopView'
 
 const CHIP: Record<Exclude<PartLookup, 'pending'>, { label: string; className: string }> = {
-  catalog: { label: 'Parts list', className: 'bg-leaf-tint text-leaf-deep' },
-  ai: { label: 'AI search · check', className: 'bg-amber-tint text-amber-ink' },
+  catalog: { label: 'Matched', className: 'bg-leaf-tint text-leaf-deep' },
+  ai: { label: 'AI estimate · check', className: 'bg-amber-tint text-amber-ink' },
   not_found: { label: 'No match', className: 'bg-track text-muted' },
 }
 

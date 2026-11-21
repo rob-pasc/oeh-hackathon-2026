@@ -1,14 +1,16 @@
 import type { Report, PathExplanation } from '@leaaf/shared/report'
 
+/** Evidence, assumptions and safety notes of a path. Sections without content are left out; with none, nothing shows. */
 export function ReportDetails({ explanation, passages }: { explanation: PathExplanation | undefined; passages: Report['passages'] }) {
   if (!explanation) return null
+  const { claims, assumptions, safety } = explanation
+  if (claims.length === 0 && assumptions.length === 0 && safety.length === 0) return null
   const sources = new Map(passages.map(p => [p.passage_id, p]))
   return (
     <details className="col-span-full border-t border-line pt-3 text-sm">
       <summary className="cursor-pointer font-semibold text-leaf">Evidence, assumptions and safety</summary>
-      <h4 className="mt-3 font-bold">Evidence</h4>
-      {explanation.claims.length === 0 && <p>No cited passages for this path.</p>}
-      {explanation.claims.map((claim, i) => (
+      {claims.length > 0 && <h4 className="mt-3 font-bold">Evidence</h4>}
+      {claims.map((claim, i) => (
         <div key={i} className="mt-2">
           <p>{claim.text}</p>
           {claim.passage_ids.map(id => {
@@ -23,10 +25,10 @@ export function ReportDetails({ explanation, passages }: { explanation: PathExpl
           })}
         </div>
       ))}
-      <h4 className="mt-3 font-bold">Assumptions</h4>
-      {explanation.assumptions.length ? explanation.assumptions.map((t,i) => <p key={i}>{t}</p>) : <p>None listed.</p>}
-      <h4 className="mt-3 font-bold">Safety and feasibility</h4>
-      {explanation.safety.length ? explanation.safety.map((t,i) => <p key={i}>{t}</p>) : <p>No additional notes.</p>}
+      {assumptions.length > 0 && <h4 className="mt-3 font-bold">Assumptions</h4>}
+      {assumptions.map((t, i) => <p key={i}>{t}</p>)}
+      {safety.length > 0 && <h4 className="mt-3 font-bold">Safety and feasibility</h4>}
+      {safety.map((t, i) => <p key={i}>{t}</p>)}
     </details>
   )
 }

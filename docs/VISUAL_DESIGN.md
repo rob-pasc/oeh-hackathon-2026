@@ -21,14 +21,14 @@ Calm, light, and friendly: mostly white and off-white surfaces with one fresh gr
 | Conditional / warning | `amber-tint`, `amber-ink` | used sparingly |
 | Not suitable / error | `rose-tint`, `rose-ink` | used sparingly |
 
-- **Type:** Inter (Google Fonts), weights 400–800. Wordmark and headings use heavy weights with tight tracking. The logo is the wordmark "leaaf" followed by a smaller green ".green", without icon or animation.
+- **Type:** Inter (Google Fonts), weights 400–800. Wordmark and headings use heavy weights with tight tracking. The logo is the wordmark "leaaf" followed by a smaller green ".green", without icon or animation. On the landing page a line of small letter-spaced capitals under it spells out "Lifecycle Evaluation and Action Finder" with the initials in green.
 - **Shape:** Cards 20 px radius, buttons and toggles fully rounded (pill), icon tiles 14–18 px radius.
 - **Layout:** Content width up to 1312 px, 64 px side padding. The result screen is a flexible left column and a 400 px right column with 28 px gap.
 
 ## Components and states
 
 - **Primary button:** green pill, white text, soft green shadow; hover darkens; disabled lowers opacity.
-- **Path card:** white card, 2 px green border when selected, status badge (Viable green, Conditional amber, Not suitable red), "Recommended" green pill on the first viable path, chevron for expand.
+- **Path card:** white card, 2 px green border when selected, status badge (Good fit green, Depends amber, Not a fit red), "Recommended" green pill on the first viable path, chevron for expand.
 - **Tags:** white pill group with soft shadow; the active tag has a light-green fill with dark-green text (path tags) or a solid green fill with white text (priority toggle).
 - **Toolbar:** a two-column grid like the result screen: Use dropdown and path tags in the left column (the tag bar fills the rest of the column), the priority toggle in the right column. The Use dropdown is a pill with its own chevron, not the browser's default arrow.
 - **Path summary block:** a flat light-green block without shadow or chevron that heads a path tab. It is not clickable and must not look like a card; the white icon tile sits on the tint.

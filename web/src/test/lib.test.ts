@@ -235,7 +235,7 @@ describe('mode change explanations', () => {
   it('explains reversals using the changed weighted score differences', () => {
     const a = assessmentJson as Assessment
     const changes = explainModeChange(a, 'environment_first', 'money_first')
-    expect(changes.join(' ')).toContain('economic value (10% → 45%)')
+    expect(changes.join(' ')).toContain('because cost now counts more')
     expect(changes.join(' ')).toContain('moved above')
     const unchanged = { ...a, weights: { ...a.weights, money_first: a.weights.environment_first } }
     expect(explainModeChange(unchanged, 'environment_first', 'money_first')).toEqual([])

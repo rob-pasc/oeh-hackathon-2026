@@ -15,7 +15,7 @@ export const USE_LABELS: Record<UseTag, string> = {
   office: 'Office',
   study: 'Study',
   development: 'Development',
-  pass_on: 'Give to a friend',
+  pass_on: 'Hand down',
   gaming: 'Gaming',
 }
 
@@ -28,9 +28,9 @@ export const PATH_TITLES: Record<Path, string> = {
 }
 
 export const STATUS_LABELS: Record<Suitability, string> = {
-  viable: 'Viable',
-  conditional: 'Conditional',
-  not_suitable: 'Not suitable',
+  viable: 'Good fit',
+  conditional: 'Depends',
+  not_suitable: 'Not a fit',
 }
 
 export const MODE_LABELS: Record<Mode, string> = {

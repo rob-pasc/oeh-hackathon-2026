@@ -9,6 +9,7 @@ import { rankPaths } from '@leaaf/shared/ranking'
 import { ApiContext } from '../api'
 import { App } from '../app/App'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
+import { ReportDetails } from '../components/ReportDetails'
 import { ResultsView } from '../components/ResultsView'
 import { SpecsCard } from '../components/SpecsCard'
 import type { DeviceScan } from '@leaaf/shared/device'
@@ -37,6 +38,15 @@ describe('Landing', () => {
     await userEvent.click(screen.getByText('What does the scanner collect?'))
     expect(screen.getByText(/Windows asks for administrator access/)).toHaveTextContent(/device model.*processor.*battery health.*Secure Boot/)
     expect(screen.getByText(/uploads it to leaaf/)).toHaveTextContent(/personal files.*serial numbers.*network addresses/)
+  })
+
+  it('shows what the name stands for, with the initials spelling leaaf', () => {
+    render(withApi(<Landing />))
+    const first = screen.getByText('L', { selector: 'span' })
+    const line = first.parentElement as HTMLElement
+    expect(line).toHaveTextContent('Lifecycle Evaluation and Action Finder')
+    expect(Array.from(line.children).map((c) => c.textContent).join('')).toBe('LEAAF')
+    expect(screen.getByRole('contentinfo')).toHaveTextContent('leaaf = Lifecycle Evaluation and Action Finder')
   })
 
   it('shows the contact address as a mailto link', () => {
@@ -76,7 +86,7 @@ describe('ScanSession', () => {
     const card = screen.getByRole('region', { name: 'Found in your device' })
     expect(within(card).getByRole('img', { name: /Laptop view/ })).toBeInTheDocument()
     expect(await within(card).findByText('Processor')).toBeInTheDocument()
-    expect(await within(card).findByText('Parts list')).toBeInTheDocument()
+    expect(await within(card).findByText('Matched')).toBeInTheDocument()
     await userEvent.click(within(card).getByRole('button', { name: 'Hide laptop view' }))
     expect(within(card).queryByRole('img', { name: /Laptop view/ })).toBeNull()
     window.localStorage.clear()
@@ -157,6 +167,8 @@ describe('ResultsView', () => {
     const select = (await screen.findByRole('combobox')) as HTMLSelectElement
     expect(select.value).toBe('general')
     expect(Array.from(select.options).map((o) => o.value)).toEqual(['general', 'office', 'study', 'development', 'pass_on', 'gaming'])
+    expect(Array.from(select.options).map((o) => o.textContent)).toEqual(['General', 'Office', 'Study', 'Development', 'Hand down', 'Gaming'])
+    expect(screen.getByText('Intended use')).toBeInTheDocument()
   })
 
   it('switches the priority toggle', async () => {
@@ -203,10 +215,23 @@ describe('ResultsView', () => {
     if (!a) throw new Error('no assessment arrived')
     const expected = rankPaths(a.paths, a.weights.money_first).map(({ path }) => PATH_TITLES[path.path])
     await waitFor(() => expect(cardOrder()).toEqual(expected))
-    expect(screen.getByRole('status')).toHaveTextContent(/moved above.*economic value/i)
+    expect(screen.getByRole('status')).toHaveTextContent(/moved above.*because cost now counts more/i)
     expect(streams).toBe(1)
     expect(fetchSpy).not.toHaveBeenCalled()
     fetchSpy.mockRestore()
+  })
+
+  it('leaves out evidence, assumptions and safety sections that are empty', () => {
+    const explanation = sampleReport.paths.find((p) => p.path === 'upgrade')!
+    const empty = { ...explanation, claims: [], assumptions: [], safety: [] }
+    const { container, rerender } = render(<ReportDetails explanation={empty} passages={sampleReport.passages} />)
+    expect(container).toBeEmptyDOMElement()
+    rerender(<ReportDetails explanation={{ ...empty, assumptions: ['The battery is replaceable.'] }} passages={sampleReport.passages} />)
+    expect(container.querySelector('details')).not.toBeNull()
+    expect(screen.getByText('Assumptions')).toBeInTheDocument()
+    expect(screen.queryByText('Evidence')).toBeNull()
+    expect(screen.queryByText('Safety and feasibility')).toBeNull()
+    expect(screen.queryByText('None listed.')).toBeNull()
   })
 
   it('offers the overview and the five paths as tags next to the use dropdown', async () => {
@@ -233,7 +258,7 @@ describe('ResultsView', () => {
     for (const name of ['RAM upgrade', 'CPU upgrade', 'Graphics upgrade']) {
       expect(screen.getByRole('region', { name })).toBeInTheDocument()
     }
-    expect(within(screen.getByRole('region', { name: 'CPU upgrade' })).getByText('Not suitable')).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'CPU upgrade' })).getByText('Not a fit')).toBeInTheDocument()
 
     // Opening an option looks like opening a card in the overview and shows its steps; the gauge follows it.
     await userEvent.click(within(ssd).getByRole('button'))

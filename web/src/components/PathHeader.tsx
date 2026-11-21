@@ -39,7 +39,7 @@ export function PathHeader({ view, onTint = false }: { view: CardView; onTint?: 
         <span className="text-sm leading-snug text-muted">{view.summary}</span>
         <div className="flex flex-wrap gap-x-[18px] text-[13px]">
           {view.metrics.map((metric) => (
-            <span key={metric.label}>
+            <span key={metric.label} title={metric.hint} className={metric.hint ? 'cursor-help' : undefined}>
               <span className="text-muted">{metric.label} </span>
               <strong>
                 <AnimatedText text={metric.value} />

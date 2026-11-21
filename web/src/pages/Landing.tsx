@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useApi } from '../api'
 import { navigate } from '../app/router'
 import { Footer } from '../components/Footer'
-import { Logo } from '../components/Logo'
+import { Acronym, Logo } from '../components/Logo'
 import { PRIMARY_BUTTON } from '../components/ui'
 
 const STEPS = [
@@ -60,7 +60,10 @@ export function Landing() {
       <main className="flex flex-1 flex-col items-center justify-center px-16 py-12">
         <div className="flex w-full max-w-[1100px] flex-col items-center gap-14 text-center">
           <div className="flex flex-col items-center gap-5">
-            <Logo variant="hero" />
+            <div className="flex flex-col items-center gap-2">
+              <Logo variant="hero" />
+              <Acronym />
+            </div>
             <p className="m-0 max-w-[560px] text-[22px] leading-snug text-muted">
               Is your old computer ready for the bin? Find out what it can still do.
             </p>
@@ -94,7 +97,7 @@ export function Landing() {
             <details className="max-w-[580px] text-left text-sm text-muted">
               <summary className="cursor-pointer text-center font-semibold text-ink">What does the scanner collect?</summary>
               <p className="mt-3">
-                Windows asks for administrator access. When you press Start scan, leaaf reads your device model,
+                Windows asks for administrator access because the scanner needs it to read battery and firmware data. When you press Start scan, leaaf reads your device model,
                 processor, graphics, memory, internal drives, battery health, Windows version, and firmware settings
                 including TPM and Secure Boot.
               </p>
@@ -112,7 +115,7 @@ export function Landing() {
               Download and Scan now
               <span aria-hidden="true">→</span>
             </button>
-            <span className="text-sm text-muted">Windows laptops and PCs. Opens a new tab and downloads a small scanner.</span>
+            <span className="text-sm text-muted">For Windows laptops and PCs. Downloads a small scanner and opens your results in a new tab.</span>
             {error ? (
               <span role="alert" className="text-sm font-semibold text-rose-ink">
                 {error}

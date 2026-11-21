@@ -90,8 +90,7 @@ export function PathCard({ view, selected, open, reportPending, onToggle, childr
             <div className="col-span-full flex flex-col gap-2" data-testid="before-after">
               <span className={SECTION_LABEL}>Before → after</span>
               <div className="grid grid-cols-[auto_auto_auto_1fr] items-center gap-x-3 gap-y-1.5 rounded-[12px] bg-page px-4 py-3 text-sm">
-                {children}
-          {view.changes.map((change) => (
+                {view.changes.map((change) => (
                   <div key={change.label} className="contents">
                     <span className="text-muted">{change.label}</span>
                     <span className="text-muted">{change.before}</span>

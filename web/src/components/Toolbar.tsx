@@ -46,7 +46,7 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] items-center gap-7">
       <div className="flex min-w-0 flex-col items-stretch gap-4 md:flex-row md:items-center">
         <label className="flex flex-none items-center gap-3 text-sm font-semibold">
-          <span className="text-muted">Use</span>
+          <span className="text-muted">Intended use</span>
           <span className="relative inline-flex">
             <select
               value={use}

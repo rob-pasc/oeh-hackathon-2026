@@ -16,6 +16,8 @@ export interface SourceRef {
 export interface CardMetric {
   label: string
   value: string
+  /** Short explanation shown on hover. */
+  hint?: string
 }
 
 /** What a card needs to draw itself; shared by path cards and option cards. */
@@ -88,7 +90,11 @@ export function buildPathViews(assessment: Assessment, report: Report | null, mo
       metrics: [
         { label: 'Cost', value: cost },
         { label: 'Extra life', value: life },
-        { label: 'Score', value: total === null ? '—' : String(Math.round(total)) },
+        {
+          label: 'Score',
+          value: total === null ? '—' : String(Math.round(total)),
+          hint: '0–100. Higher is better for your priority.',
+        },
       ],
       summary: evidenceNote && !summary.includes(evidenceNote) ? `${summary} ${evidenceNote}` : summary,
       summaryFromAssessment: explanation === null,

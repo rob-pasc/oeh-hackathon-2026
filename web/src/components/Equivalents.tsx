@@ -1,6 +1,7 @@
 import type { Range } from '@leaaf/shared/common'
 import { EQUIVALENTS_SOURCE, equivalents, type Equivalent } from '../lib/equivalents'
 import { AnimatedText } from './AnimatedText'
+import { Co2e } from './ui'
 
 function Icon({ kind }: { kind: Equivalent['kind'] }) {
   return (
@@ -24,7 +25,7 @@ export function Equivalents({ avoided, conditional }: { avoided: Range | null; c
   if (!items) return null
   return (
     <div className="fade-up mt-5 flex flex-col gap-2.5 border-t border-line pt-4" data-testid="equivalents">
-      <span className="text-xs font-bold tracking-wider text-leaf uppercase">That’s about as much CO₂e as</span>
+      <span className="text-xs font-bold tracking-wider text-leaf uppercase">That’s about as much <Co2e /> as</span>
       {items.map((item) => (
         <div key={item.kind} className="flex items-center gap-3">
           <span className="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] bg-leaf-tint text-leaf">
