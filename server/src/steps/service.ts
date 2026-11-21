@@ -19,6 +19,9 @@ import {
   type Path,
   type Step,
   type StepPlan,
+  MAX_PLAN_STEPS,
+  PLAN_STEPS_ID,
+  type PlanStepList,
 } from '@leaaf/shared'
 import type { Static } from 'typebox'
 import type { AssessmentService, DeviceAssessment } from '../assessment/service.ts'
@@ -26,11 +29,12 @@ import { KIND_PATH } from '../categories/options.ts'
 import { LlmError, type LlmClient } from '../llm/types.ts'
 import { hasNoFigure, windows11 } from '../report/text.ts'
 import type { OptionQuery, Retriever } from '../retrieval/retrieve.ts'
-import { buildStepRequest, optionContext, STEP_PROMPT_HASH, StepsOutput } from './prompt.ts'
+import { buildPlanStepRequest, buildStepRequest, optionContext, PLAN_STEP_PROMPT_HASH, PlanStepsOutput, STEP_PROMPT_HASH, StepsOutput } from './prompt.ts'
 import { PROFESSIONAL_SENTENCE, STEPS_UNAVAILABLE, templateSteps } from './templates.ts'
 
 type Output = Static<typeof StepsOutput>
 const validateOutput = createValidator(StepsOutput)
+const validatePlanOutput = createValidator(PlanStepsOutput)
 
 /** Shown instead of a warning the AI left out on a caution step (FR-004). */
 export const DEFAULT_WARNING = 'Take care: a mistake in this step can damage the computer or hurt you.'
@@ -90,7 +94,7 @@ function cleanRange(minutes: Step['minutes']): Step['minutes'] {
  * figure rejects the whole answer. Unknown citations are removed, then every technical step left
  * without one. On a Mac or Linux device, steps about Windows 11 are removed (feature 007 FR-015).
  */
-export function checkSteps(output: Output, passages: readonly Passage[], scan: DeviceScan): { steps: Step[]; cited: Passage[] } {
+export function checkSteps(output: Pick<Output, 'steps'>, passages: readonly Passage[], scan: DeviceScan): { steps: Step[]; cited: Passage[] } {
   for (const s of output.steps) {
     const texts = [s.title, s.detail, s.warning ?? '', ...s.tools, ...s.parts]
     if (!texts.every(hasNoFigure)) throw new UnusableSteps('a step contains a euro or CO2e figure')
@@ -143,7 +147,7 @@ export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps:
    * The step plan for one option, or null when the device's shown categories have no such option.
    * Makes at most one step call per device, intended use and option (FR-001).
    */
-  return async function steps(record: DeviceRecord, use: IntendedUse, optionId: string): Promise<StepPlan | null> {
+  async function steps(record: DeviceRecord, use: IntendedUse, optionId: string): Promise<StepPlan | null> {
     const { scan } = record
     const input = await deps.assessments.assessDevice(record, use)
     const categories = deps.shownCategories(scan, input)
@@ -212,6 +216,101 @@ export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps:
       throw error
     }
   }
+
+  /**
+   * One step list for the shown plan (feature 014), or null when the shown categories have no plan.
+   * Makes at most one plan step call per device, intended use and plan (FR-001); the plan's options
+   * and order are part of the cache key, so a changed plan is asked again.
+   */
+  async function planSteps(record: DeviceRecord, use: IntendedUse): Promise<PlanStepList | null> {
+    const { scan } = record
+    const input = await deps.assessments.assessDevice(record, use)
+    const categories = deps.shownCategories(scan, input)
+    const plan = categories.plan
+    if (!plan) return null
+    const optionOf = (s: (typeof plan.steps)[number]) =>
+      categories.categories.find((c) => c.category_id === s.category_id)?.options.find((o) => o.option_id === s.option_id)
+    // In the fallback, one upgrade option stands for its SSD and RAM steps; each step keeps its own kind and title.
+    const options = plan.steps.map((s) => ({ ...optionOf(s)!, kind: s.kind, title: s.title }))
+    const byId = new Map<string, Passage>()
+    for (const option of options) for (const p of stepPassages(deps.retriever, scan, option, categories)) if (!byId.has(p.passage_id)) byId.set(p.passage_id, p)
+    const passages = [...byId.values()]
+    const base = { device_id: record.device_id, intended_use: use, option_id: PLAN_STEPS_ID as typeof PLAN_STEPS_ID }
+
+    const template = (reason: string | null, details: Record<string, unknown> = {}): PlanStepList => {
+      if (reason) deps.warn?.(`plan step call unavailable, showing the template plans: ${reason}`, details)
+      const planSteps = joinedTemplates(options.map((o) => o.kind), passages)
+      const cited = new Set(planSteps.flatMap((s) => s.passage_ids))
+      return { ...base, generated_at: now(), source: 'template', notice: STEPS_UNAVAILABLE, steps: planSteps, passages: passages.filter((p) => cited.has(p.passage_id)) }
+    }
+    const fromOutput = (output: Pick<Output, 'steps'>, generated_at: string): PlanStepList => {
+      const { steps: checked, cited } = checkSteps(output, passages, scan)
+      return { ...base, generated_at, source: 'llm', notice: null, steps: checked, passages: cited }
+    }
+
+    // The fallback plan comes from the rules, so it gets the joined templates without an AI call (FR-006).
+    if (categories.source === 'template') return template(null)
+
+    const key = createHash('sha256')
+      .update(PLAN_STEP_PROMPT_HASH)
+      .update('\0')
+      .update(JSON.stringify([plan.summary, options.map(optionContext)]))
+      .digest('hex')
+      .slice(0, 16)
+    const row = read.get(record.device_id, use, PLAN_STEPS_ID, key)
+    if (row) {
+      const checked = validatePlanOutput(JSON.parse(String(row.output)))
+      if (checked.ok) {
+        try {
+          return fromOutput(checked.value, String(row.generated_at))
+        } catch (error) {
+          if (!(error instanceof UnusableSteps)) throw error
+        }
+      }
+    }
+
+    if (!llm) return template('no LLM configured')
+    const pendingKey = JSON.stringify([record.device_id, use, PLAN_STEPS_ID, key])
+    let generation = pending.get(pendingKey)
+    if (!generation) {
+      generation = llm
+        .completeJson(buildPlanStepRequest(scan, input, plan.summary, options, passages))
+        .then(({ value }) => {
+          const generated_at = now()
+          checkSteps(value, passages, scan)
+          write.run(record.device_id, use, PLAN_STEPS_ID, key, JSON.stringify(value), generated_at)
+          return { output: value as Output, generated_at }
+        })
+        .finally(() => pending.delete(pendingKey))
+      pending.set(pendingKey, generation)
+    }
+    try {
+      const { output, generated_at } = await generation
+      return fromOutput(output, generated_at)
+    } catch (error) {
+      if (error instanceof LlmError) return template(error.message, { kind: error.kind })
+      if (error instanceof UnusableSteps) return template(error.message)
+      throw error
+    }
+  }
+
+  return Object.assign(steps, { planSteps })
+}
+
+/**
+ * The template plans of the plan's steps one after another (feature 014 FR-006): a step whose title
+ * repeats an earlier one (say "Back up your files") is left out, and the list stops at 16 steps.
+ */
+export function joinedTemplates(kinds: readonly OptionKind[], passages: readonly Passage[]): Step[] {
+  const seen = new Set<string>()
+  const joined: Step[] = []
+  for (const kind of kinds)
+    for (const step of templateSteps(kind, passages)) {
+      if (seen.has(step.title)) continue
+      seen.add(step.title)
+      joined.push(step)
+    }
+  return joined.slice(0, MAX_PLAN_STEPS)
 }
 
 export type StepService = ReturnType<typeof createStepService>

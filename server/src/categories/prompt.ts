@@ -8,6 +8,7 @@ import {
   Claim,
   Difficulty,
   OptionKind,
+  PLAN_MAX_STEPS,
   Range,
   Slug,
   Suitability,
@@ -18,7 +19,7 @@ import { passageContext } from '../facts/prompt.ts'
 import { retrievedPassages } from '../facts/extract.ts'
 import type { JsonRequest } from '../llm/types.ts'
 
-export const CATEGORY_PROMPT_VERSION = 'categories-v1'
+export const CATEGORY_PROMPT_VERSION = 'categories-v2'
 
 const strict = { additionalProperties: false } as const
 
@@ -63,6 +64,17 @@ export const CategoryOutput = Type.Object(
       ),
       { minItems: 3, maxItems: 6 },
     ),
+    // Feature 013 FR-001: the best combination of the options above, or null.
+    plan: Type.Union([
+      Type.Object(
+        {
+          summary: Type.String({ minLength: 1 }),
+          option_ids: Type.Array(Slug, { minItems: 2, maxItems: PLAN_MAX_STEPS }),
+        },
+        strict,
+      ),
+      Type.Null(),
+    ]),
   },
   strict,
 )
@@ -94,7 +106,9 @@ ${SAFETY_RULES.map((rule) => `- ${rule}`).join('\n')}
 Never include numeric euro or CO2e figures in any text field; figures belong only in estimate. Hardware quantities such as "8 GB" are fine.
 Keep calculator estimates and displacement assumptions out of claims.
 When scan.os.family is "macos" or "linux", do not mention Windows 11 or Microsoft's processor list.
-IDs are lowercase letters, digits, "_" or "-", unique within their list.`
+IDs are lowercase letters, digits, "_" or "-", unique within their list.
+
+Finally return plan: the best combination of your options for this computer and use, or null. A plan has a one-sentence summary and option_ids: 2 to ${PLAN_MAX_STEPS} IDs of your "viable" options, in the order the owner should do them, for example adding RAM, then swapping the drive, then reinstalling the system. Use only options that keep the computer in use (kinds "ssd", "ram", "battery" and "other" options that keep it in use). You may end with one "hand_down" option when handing the computer on after the other steps makes sense. Never include "salvage" or "recycle" options. Return null when fewer than two viable options combine sensibly.`
 
 /** Part of the cache key: a changed prompt never reuses an older answer (FR-014). */
 export const CATEGORY_PROMPT_HASH = createHash('sha256')

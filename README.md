@@ -10,7 +10,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 
 ## Status
 
-**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011). The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. The latest release images (`v0.2.0`) are published to GHCR. The public site at [leaaf.green](https://leaaf.green) is not deployed yet.
+**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). On the branch `feat/combined-plan`, a "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. The latest release images (`v0.2.0`) are published to GHCR. The public site at [leaaf.green](https://leaaf.green) is not deployed yet.
 
 | # | Feature | Status |
 |---|---|---|
@@ -25,7 +25,9 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 009 | [Concrete step plans](docs/features/feature-009-concrete-step-plans/PLAN.md) | Complete |
 | 010 | [Step-level knowledge base](docs/features/feature-010-step-level-knowledge-base/PLAN.md) | Implemented, awaiting its review (ingestion and corpus tests pass on `main`) |
 | 011 | [Gauge follows the tab, capped option statuses](docs/features/feature-011-tab-gauge-and-capped-option-status/PLAN.md) | Complete |
-| 012 | [Processor check for gaming](docs/features/feature-012-gaming-cpu-check/PLAN.md) | Specified: the threshold and its source are still open |
+| 012 | [Processor check for gaming](docs/features/feature-012-gaming-cpu-check/PLAN.md) | Complete |
+| 013 | [“Your plan” card](docs/features/feature-013-combined-plan-card/PLAN.md) | Complete, on branch `feat/combined-plan` |
+| 014 | [One step list for the plan](docs/features/feature-014-plan-step-list/PLAN.md) | Complete, on branch `feat/combined-plan` |
 
 The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP EliteBook 840 G5.
 

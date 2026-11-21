@@ -35,7 +35,7 @@ Two corrections to the result screen of feature 008, both found when the team te
 
 - **FR-001:** Selecting a category tab moves the gauge to that category's best option (the option that decides the category's status and score), unless an option of that category was opened while this tab was selected; then it shows that option.
 - **FR-002:** Opening an option moves the gauge to that option, as before.
-- **FR-003:** Selecting Overview moves the gauge to the option last opened on the Overview, or, when none was opened there, to the best option of the first category.
+- **FR-003:** Selecting Overview moves the gauge to the option last opened on the Overview, or, when none was opened there, to the best option of the first category. *(2026-11-21: when the result has a plan, replaced by [feature 013](../feature-013-combined-plan-card/PLAN.md) FR-008: the Overview gauge shows the plan.)*
 - **FR-004:** For an option of kind `ssd` or `ram`, the server sets the status to the worse of the AI's status and the `upgrade` gate's status (`viable` better than `conditional` better than `not_suitable`); for kind `battery`, the same with the `repair` gate.
 - **FR-005:** When FR-004 lowers an option's status, its reason is replaced by the first limiting reason of the gate that caused it (a reason that is not about what the plan does, such as "the RAM can be upgraded"; the gate's first reason when none is limiting), so the card does not say "Good fit" in words while showing "Depends". When the status becomes `not_suitable`, the option has no figures and no score (feature 008 FR-002).
 - **FR-006:** The cap applies equally to fresh and cached category answers, without a new AI call.
@@ -91,6 +91,8 @@ Replacements, implemented 2026-11-21 on `main` (server cap in 3d3dd74, gauge in 
 - [ADR-003](../../adr/adr-003-ai-chosen-options.md): the decision "The server does not re-check options against the feature 003 gates" is partly superseded for the three part kinds by [ADR-007](../../adr/adr-007-gate-cap-for-ai-part-options.md).
 
 Unchanged: feature 008 FR-001 to FR-010 and FR-013 to FR-015; feature 003 gates and rubrics.
+
+Later replacement: [feature 013](../feature-013-combined-plan-card/PLAN.md) FR-008 replaces FR-003 here when a plan exists (implemented 2026-11-21 on `feat/combined-plan`). AC-004 stays as historical evidence; its test was updated to the plan default.
 
 ## References
 

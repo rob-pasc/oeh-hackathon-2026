@@ -93,11 +93,11 @@ describe('category answers (AC-001, AC-002)', () => {
   it('makes repeated IDs unique instead of rejecting the answer', () => {
     const output = answer()
     output.categories[1].category_id = 'faster-storage'
-    output.categories[0].options[1].option_id = 'ssd-swap'
+    output.categories[0].options.find((o: { option_id: string }) => o.option_id === 'clean-install').option_id = 'ssd-swap'
     const result = build(output)
     valid(result)
     expect(result.categories.map((c) => c.category_id).slice(0, 2)).toEqual(['faster-storage', 'faster-storage-2'])
-    expect(result.categories[0]!.options.map((o) => o.option_id)).toEqual(['ssd-swap', 'ssd-swap-2'])
+    expect(result.categories[0]!.options.map((o) => o.option_id)).toEqual(['ssd-swap', 'copy-system', 'ssd-swap-2'])
   })
 })
 
@@ -145,7 +145,7 @@ describe('figures (AC-003, AC-004)', () => {
     ['a negative CO₂e', { co2e_kg: { low: -10, high: 0 } }],
   ])('drops the figures and score of an AI estimate with %s, leaving the other options alone', (_name, change) => {
     const output = answer()
-    Object.assign(output.categories[0].options[1].estimate, change)
+    Object.assign(output.categories[0].options.find((o: { option_id: string }) => o.option_id === 'clean-install').estimate, change)
     const result = build(output)
     valid(result)
     expect(option(result, 'clean-install')).toMatchObject({ impact: null, impact_source: null, scores: null })
@@ -218,6 +218,128 @@ describe('statuses capped by the gates (feature 011 AC-005 to AC-009)', () => {
   })
 })
 
+describe('the plan (feature 013)', () => {
+  const index = indexImpactTable(impactTable)
+  const gates = runGates({ scan, use: 'office', modelEvidence: assessment.model_evidence, facts: facts.facts })
+  const upgradePlan = gates.find((g) => g.path === 'upgrade')!.plan as { path: 'upgrade'; ssd: 'nvme' | 'sata' | null; ram: { module_gb: 8 | 16; kind: 'add' | 'replace' } | null }
+  const calc = (plan: any, use: 'office' | 'pass_on' = 'office') => calculateImpact({ plan, use, scan, baseline: assessment.baseline, impact: index })
+  const withPlan = (option_ids: string[] | null, change?: (o: any) => void) => {
+    const output = answer()
+    change?.(output)
+    output.plan = option_ids && { summary: 'Do these in order.', option_ids }
+    return build(output)
+  }
+  const optionById = (o: any, id: string) => o.categories.flatMap((c: any) => c.options).find((x: any) => x.option_id === id)
+
+  it('keeps a plan of Good fit options in the AI’s order (AC-001)', () => {
+    const result = build()
+    valid(result)
+    expect(result.plan!.steps.map((s) => [s.category_id, s.option_id, s.kind])).toEqual([
+      ['memory', 'ram-add', 'ram'],
+      ['faster-storage', 'copy-system', 'other'],
+      ['faster-storage', 'ssd-swap', 'ssd'],
+    ])
+    expect(result.plan!.steps[0]!.title).toBe(option(result, 'ram-add').title)
+  })
+
+  it.each([
+    ['a Depends step', ['ssd-swap', 'clean-install']],
+    ['an unknown option', ['ssd-swap', 'gpu-upgrade']],
+    ['a repeated option', ['ssd-swap', 'ssd-swap']],
+    ['a single step', ['ssd-swap']],
+    ['a Not a fit step', ['ssd-swap', 'gpu-add']],
+  ])('drops a plan with %s and keeps the categories (AC-001)', (_name, ids) => {
+    const result = withPlan(ids)
+    valid(result)
+    expect(result.plan).toBeUndefined()
+    expect(result.categories).toEqual(withPlan(null).categories)
+  })
+
+  it('has no plan when the AI returns none (AC-001)', () => {
+    expect('plan' in withPlan(null)).toBe(false)
+  })
+
+  it.each([
+    ['a recycle step', ['ssd-swap', 'recycle']],
+    ['two hand_down steps', ['ssd-swap', 'donate', 'recycle'], (o: any) => (optionById(o, 'recycle').kind = 'hand_down')],
+    ['hand_down before the last step', ['donate', 'ssd-swap']],
+    ['a salvage step', ['ssd-swap', 'recycle'], (o: any) => (optionById(o, 'recycle').kind = 'salvage')],
+  ])('drops a plan with %s (AC-002)', (_name, ids, change?: (o: any) => void) => {
+    expect(withPlan(ids as string[], change).plan).toBeUndefined()
+  })
+
+  it('keeps upgrade steps followed by handing the computer down (AC-002)', () => {
+    const result = withPlan(['ssd-swap', 'ram-add', 'donate'])
+    valid(result)
+    expect(result.plan!.steps.map((s) => s.kind)).toEqual(['ssd', 'ram', 'hand_down'])
+  })
+
+  it('prices SSD and RAM steps exactly like the combined upgrade plan (AC-003)', () => {
+    const plan = withPlan(['ssd-swap', 'ram-add']).plan!
+    const combined = calc({ path: 'upgrade', ssd: upgradePlan.ssd ?? 'nvme', ram: upgradePlan.ram ?? { module_gb: 8, kind: 'add' }, ram_after_gb: null })
+    expect(plan.impact.cost_eur).toEqual(combined.cost_eur)
+    expect(plan.impact.co2e_kg).toEqual(combined.co2e_kg)
+    expect(plan.impact.useful_life_years).toEqual(combined.useful_life_years)
+    expect(plan.impact_source).toBe('calculator')
+  })
+
+  it('adds a battery repair and credits the baseline once, with the longest extra life (AC-003)', () => {
+    const plan = withPlan(['ssd-swap', 'battery-swap']).plan!
+    const ssd = calc({ path: 'upgrade', ssd: upgradePlan.ssd ?? 'nvme', ram: null, ram_after_gb: null })
+    const battery = option(build(), 'battery-swap').impact!
+    expect(plan.impact.cost_eur).toEqual({ low: ssd.cost_eur.low + battery.cost_eur.low, high: ssd.cost_eur.high + battery.cost_eur.high })
+    const own = { low: ssd.co2e_kg.path.low + battery.co2e_kg.path.low, high: ssd.co2e_kg.path.high + battery.co2e_kg.path.high }
+    expect(plan.impact.co2e_kg.path).toEqual(own)
+    const b = assessment.baseline.co2e_kg
+    expect(plan.impact.co2e_kg.avoided_vs_baseline).toEqual({ low: b.low - own.high, high: b.high - own.low })
+    expect(plan.impact.useful_life_years).toEqual({
+      low: Math.max(ssd.useful_life_years.low, battery.useful_life_years.low),
+      high: Math.max(ssd.useful_life_years.high, battery.useful_life_years.high),
+    })
+  })
+
+  it('prices a plan ending in hand_down like an upgrade for passing it on, credited only via the recipient (AC-004)', () => {
+    const plan = withPlan(['ssd-swap', 'donate']).plan!
+    expect(plan.impact.displacement).toBe('conditional')
+    const ssd = calc({ path: 'upgrade', ssd: upgradePlan.ssd ?? 'nvme', ram: null, ram_after_gb: null }, 'pass_on')
+    const handover = calc({ path: 'pass_on' })
+    expect(plan.impact.co2e_kg.path).toEqual({ low: ssd.co2e_kg.path.low + handover.co2e_kg.path.low, high: ssd.co2e_kg.path.high + handover.co2e_kg.path.high })
+    expect(plan.impact.co2e_kg.avoided_vs_baseline.low).toBe(-plan.impact.co2e_kg.path.high)
+    expect(plan.impact.assumptions.map((a) => a.text)).toContainEqual(expect.stringContaining('the person it is handed to'))
+  })
+
+  it('adds an AI-estimated step’s ranges and marks the plan as an AI estimate (AC-005)', () => {
+    const plan = build().plan!
+    const parts = withPlan(['ram-add', 'ssd-swap']).plan!
+    const estimate = optionById(answer(), 'copy-system').estimate
+    expect(plan.impact_source).toBe('ai_estimate')
+    expect(plan.impact.cost_eur).toEqual({ low: parts.impact.cost_eur.low + estimate.cost_eur.low, high: parts.impact.cost_eur.high + estimate.cost_eur.high })
+    expect(plan.impact.co2e_kg.path).toEqual({
+      low: parts.impact.co2e_kg.path.low + estimate.co2e_kg.low,
+      high: parts.impact.co2e_kg.path.high + estimate.co2e_kg.high,
+    })
+  })
+
+  it('builds the fallback plan from the gates in the fixed order, or none with fewer than two steps (AC-008)', async () => {
+    const db = new DatabaseSync(':memory:')
+    databases.push(db)
+    const result = await createCategoryService(db, null, { impactTable })(scan, input)
+    expect(result.source).toBe('template')
+    valid(result)
+    // The fixture laptop has a hard disk, enough RAM for office use, and a worn battery.
+    expect(result.plan!.steps.map((s) => [s.kind, s.title])).toEqual([
+      ['ssd', 'Install a 500 GB NVMe M.2 SSD'],
+      ['battery', expect.stringMatching(/battery/)],
+    ])
+    expect(result.plan!.impact_source).toBe('calculator')
+
+    // Without the battery repair only the upgrade's own steps are left.
+    const noRepair = { ...input, assessment: { ...assessment, paths: assessment.paths.map((p) => (p.path === 'repair' ? { ...p, status: 'not_suitable' as const } : p)) } }
+    const fewer = await createCategoryService(new DatabaseSync(':memory:'), null, { impactTable })(scan, noRepair)
+    expect(fewer.plan).toBeUndefined()
+  })
+})
+
 describe('scores and confidence (AC-005)', () => {
   it('scores an option with the rubrics and its difficulty', () => {
     const ram = option(build(), 'ram-add')
@@ -261,6 +383,13 @@ describe('the category call (AC-012)', () => {
     expect(SAFETY_RULES).toHaveLength(4)
     for (const rule of SAFETY_RULES) expect(request.system).toContain(rule)
     expect(request.system).toBe(CATEGORY_SYSTEM)
+  })
+
+  it('asks for an optional plan of Good fit options without salvage or recycle (feature 013 FR-001)', () => {
+    expect(CATEGORY_SYSTEM).toContain('Finally return plan')
+    expect(CATEGORY_SYSTEM).toContain('Never include "salvage" or "recycle" options')
+    expect(Object.keys(prompt.CategoryOutput.properties)).toContain('plan')
+    expect(prompt.CATEGORY_PROMPT_VERSION).toBe('categories-v2')
   })
 
   it('removes claims citing unknown passages and claims with figures', () => {

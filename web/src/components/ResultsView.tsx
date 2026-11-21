@@ -9,9 +9,11 @@ import { DEFAULT_USE, type ResultTab, type UseTag } from '../lib/labels'
 import { useFlip } from '../lib/motion'
 import { useStepPlans } from '../lib/useStepPlans'
 import { buildPathViews, type CardView } from '../lib/pathView'
+import { buildPlanView, PLAN_TITLE } from '../lib/planView'
 import { explainCategoryModeChange, explainModeChange } from '../lib/modeChange'
 import { avoidsNothing, formatAvoided, formatEur, formatYears } from '../lib/impact'
 import { CategoryTabView } from './CategoryTabView'
+import { PlanCard } from './PlanCard'
 import { Equivalents } from './Equivalents'
 import { Gauge } from './Gauge'
 import { PathCard } from './PathCard'
@@ -41,6 +43,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   /** Key of the option last opened in each category tab; the gauge follows it (feature 011 FR-001, FR-002). */
   const [openedInTab, setOpenedInTab] = useState<Record<string, string>>({})
   const [openOption, setOpenOption] = useState<string | null>(null)
+  const [planOpen, setPlanOpen] = useState(false)
   const plans = useStepPlans(deviceId, use)
 
   // Scan data: loaded once per device.
@@ -65,6 +68,8 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     setCategories(null)
     setStreamError(null)
     setStreamEnded(false)
+    // A new use has its own plan and step list, so the plan card starts closed again (feature 014).
+    setPlanOpen(false)
     return api.streamReport(deviceId, use, {
       onAssessment: value => { setAssessment(value); setChange([]) },
       onCategories: value => { setCategories(value); setChange([]) },
@@ -78,6 +83,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     [categories, assessment, mode],
   )
   const pathViews = useMemo(() => (assessment && !categories ? buildPathViews(assessment, mode) : []), [assessment, categories, mode])
+  const planView = useMemo(() => (categories && assessment ? buildPlanView(categories, assessment.baseline) : null), [categories, assessment])
   const categoriesPending = categories === null && streamError === null && !streamEnded
 
   // A category tab that no longer exists (new use, new categories) falls back to the Overview.
@@ -88,17 +94,20 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const allOptions = categoryViews.flatMap(c => c.options)
   const recommended = categoryViews.find(c => c.isRecommended) ?? null
   // The gauge follows the selected tab (feature 011, replacing 008 FR-011): in a category tab the option last
-  // opened there, else the category's best option; on the Overview, whose cards only switch tabs, the best
-  // option of the first category.
+  // opened there, else the category's best option. On the Overview, whose cards only switch tabs, it shows the
+  // plan when there is one (feature 013 FR-008), else the best option of the first category.
   const selectedOption = activeCategory ? (openedInTab[activeCategory.id] ?? null) : null
   const tabOption = activeCategory ? (activeCategory.options.find(o => o.key === selectedOption) ?? activeCategory.best) : null
-  const gaugeOption: OptionView | null = tabOption ?? categoryViews[0]?.best ?? null
+  const overviewPlan = activeCategory ? null : planView
+  const gaugeOption: OptionView | null = tabOption ?? (overviewPlan ? null : (categoryViews[0]?.best ?? null))
   const gaugeCategory = gaugeOption ? categoryViews.find(c => c.options.includes(gaugeOption)) : undefined
-  const gaugeItem: CardView | null = gaugeOption ?? pathViews.find(v => v.isRecommended) ?? pathViews[0] ?? null
+  const gaugeItem: CardView | null = overviewPlan ?? gaugeOption ?? pathViews.find(v => v.isRecommended) ?? pathViews[0] ?? null
   // "Category · option", or just the name when a fallback category and its only option share it.
-  const gaugeTitle = gaugeOption && gaugeCategory
-    ? gaugeOption.title !== gaugeCategory.title ? `${gaugeCategory.title} · ${gaugeOption.title}` : gaugeOption.title
-    : (gaugeItem?.title ?? '')
+  const gaugeTitle = overviewPlan
+    ? PLAN_TITLE
+    : gaugeOption && gaugeCategory
+      ? gaugeOption.title !== gaugeCategory.title ? `${gaugeCategory.title} · ${gaugeOption.title}` : gaugeOption.title
+      : (gaugeItem?.title ?? '')
 
   // Cards slide to their new places when the ranking changes (priority toggle or use tag).
   const registerCard = useFlip((categories ? categoryViews : pathViews).map(v => v.key))
@@ -169,6 +178,19 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
               />
             ) : categories ? (
               <>
+                {planView ? (
+                  <PlanCard
+                    view={planView}
+                    selected={overviewPlan !== null}
+                    open={planOpen}
+                    steps={plans.getPlan()}
+                    onToggle={() => {
+                      // Opening the card for the first time requests the plan's step list (feature 014 FR-001).
+                      if (!planOpen) plans.requestPlan()
+                      setPlanOpen(!planOpen)
+                    }}
+                  />
+                ) : null}
                 <RecommendationSummary recommended={recommended} baseline={assessment.baseline.description} />
                 {categoryViews.map(view => (
                   <div key={view.key} ref={registerCard(view.key)}>

@@ -15,12 +15,33 @@ import { LlmError, type LlmClient } from '../llm/types.ts'
 import { calculatorClaim, hasNoFigure, windows11 } from '../report/text.ts'
 import { fallbackCategories } from './fallback.ts'
 import { finishOption, type OptionContext } from './options.ts'
+import { fallbackPlan, finishPlan, resolvePlanSteps } from './plan.ts'
 import { buildCategoryRequest, CATEGORY_PROMPT_HASH, CategoryOutput } from './prompt.ts'
 
 type Output = Static<typeof CategoryOutput>
 const validateOutput = createValidator(CategoryOutput)
 
 const NEUTRAL = 'See the status and figures of this option.'
+const NEUTRAL_PLAN = 'These steps work well together for this computer.'
+
+/** What option figures and plans are computed from: the device's gates and the impact table. */
+export function optionContext(scan: DeviceScan, { assessment, facts }: DeviceAssessment, impactTable: ImpactTable): OptionContext {
+  return {
+    scan,
+    use: assessment.intended_use,
+    baseline: assessment.baseline,
+    modelEvidence: assessment.model_evidence,
+    gates: runGates({ scan, use: assessment.intended_use, modelEvidence: assessment.model_evidence, facts: facts.facts }),
+    impactIndex: indexImpactTable(impactTable),
+  }
+}
+
+/** The five-path fallback with its rule-based plan (feature 008 FR-013, feature 013 FR-009). */
+export function fallbackWithPlan(scan: DeviceScan, input: DeviceAssessment, impactTable: ImpactTable): CategoryResult {
+  const result = fallbackCategories(input)
+  const plan = fallbackPlan(result.categories, optionContext(scan, input, impactTable))
+  return plan ? { ...result, plan } : result
+}
 
 /** Replacement label when the AI's label fails the text checks, named after the first option's kind. */
 const KIND_LABEL: Record<OptionKind, string> = {
@@ -54,18 +75,11 @@ function uniqueIds<T>(items: readonly T[], get: (item: T) => string, set: (item:
  * replaced by neutral text, and on a Mac or Linux device options about Windows 11 are dropped.
  */
 export function buildResult(scan: DeviceScan, input: DeviceAssessment, output: Output, generated_at: string, impactTable: ImpactTable): CategoryResult {
-  const { assessment, facts, retrieval } = input
+  const { assessment, retrieval } = input
   const sources = new Map(retrievedPassages(retrieval).map((p) => [p.passage_id, p]))
   const windows = usesWindowsRules(scan)
   const allowed = (text: string) => hasNoFigure(text) && (windows || !windows11.test(text))
-  const ctx: OptionContext = {
-    scan,
-    use: assessment.intended_use,
-    baseline: assessment.baseline,
-    modelEvidence: assessment.model_evidence,
-    gates: runGates({ scan, use: assessment.intended_use, modelEvidence: assessment.model_evidence, facts: facts.facts }),
-    impactIndex: indexImpactTable(impactTable),
-  }
+  const ctx = optionContext(scan, input, impactTable)
 
   const cited = new Set<string>()
   const categories: Category[] = []
@@ -101,6 +115,11 @@ export function buildResult(scan: DeviceScan, input: DeviceAssessment, output: O
     })
   }
   if (categories.length < 3) throw new UnusableAnswer(`only ${categories.length} categories left after the server checks`)
+  const finalCategories = uniqueIds(categories, (c) => c.category_id, (c, category_id) => ({ ...c, category_id }))
+
+  // An invalid plan is dropped on its own; the categories stay (feature 013 FR-002).
+  const steps = output.plan ? resolvePlanSteps(output.plan.option_ids, finalCategories) : null
+  const plan = steps && output.plan ? finishPlan(allowed(output.plan.summary) ? output.plan.summary : NEUTRAL_PLAN, steps, ctx) : null
 
   return {
     device_id: assessment.device_id,
@@ -108,8 +127,9 @@ export function buildResult(scan: DeviceScan, input: DeviceAssessment, output: O
     generated_at,
     source: 'llm',
     notice: null,
-    categories: uniqueIds(categories, (c) => c.category_id, (c, category_id) => ({ ...c, category_id })),
+    categories: finalCategories,
     passages: [...sources.values()].filter((p) => cited.has(p.passage_id)),
+    ...(plan ? { plan } : {}),
   }
 }
 
@@ -152,7 +172,7 @@ export function createCategoryService(db: DatabaseSync, llm: LlmClient | null, d
     const { device_id, intended_use } = input.assessment
     const fallback = (reason: string, details: Record<string, unknown> = {}) => {
       deps.warn?.(`category call unavailable, showing the five paths: ${reason}`, details)
-      return fallbackCategories(input)
+      return fallbackWithPlan(scan, input, deps.impactTable)
     }
 
     const hit = cached(scan, input)
@@ -190,7 +210,7 @@ export function createCategoryService(db: DatabaseSync, llm: LlmClient | null, d
    * this to find an opened option, so opening a card never starts a category call.
    */
   function shown(scan: DeviceScan, input: DeviceAssessment): CategoryResult {
-    return cached(scan, input) ?? fallbackCategories(input)
+    return cached(scan, input) ?? fallbackWithPlan(scan, input, deps.impactTable)
   }
 
   return Object.assign(categorize, { shown })

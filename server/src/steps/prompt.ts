@@ -4,6 +4,7 @@
 import { createHash } from 'node:crypto'
 import { Type } from 'typebox'
 import {
+  MAX_PLAN_STEPS,
   MAX_STEPS,
   PassageId,
   Range,
@@ -68,6 +69,30 @@ When the option's status is "not_suitable", return one or two general steps sayi
 Never include numeric euro or CO2e figures in any text field. Hardware quantities such as "8 GB" are fine.
 Follow scan.os.family: give instructions for that operating system, and when it is "macos" or "linux", do not mention Windows 11.`
 
+/** 1 to 16 steps for a combined plan's single list (feature 014 FR-002). */
+export const PlanStepsOutput = Type.Object(
+  { steps: Type.Array(StepOutput, { minItems: 1, maxItems: MAX_PLAN_STEPS }) },
+  strict,
+)
+
+/** Asked of every plan list (feature 014 FR-003); tests check that the prompt contains it. */
+export const SHARED_STEPS_RULE =
+  'Name steps the options share only once: back up once at the start, open the device once before the first internal part, and close it once after the last.'
+
+/**
+ * The plan step call (feature 014): the same rules as for one option, for a list that covers every
+ * option of the plan in its order.
+ */
+export const PLAN_STEP_SYSTEM = STEP_SYSTEM.replace(
+  'You write a step-by-step plan for one option an owner chose for their old computer, using only the supplied JSON data.',
+  `You write one step-by-step list for a plan of several options an owner will carry out on their old computer, in the plan's order, using only the supplied JSON data. ${SHARED_STEPS_RULE}`,
+)
+  .replace(`Return 1 to ${MAX_STEPS} steps in the order the owner does them.`, `Return 1 to ${MAX_PLAN_STEPS} steps in the order the owner does them, following the order of plan.options.`)
+  .replace(
+    'When the option\'s status is "not_suitable", return one or two general steps saying which other option to consider instead, by name and without part specifications.\n',
+    'When the last option hands the computer on, end with erasing personal data and resetting the computer before handing it over.\n',
+  )
+
 /** Part of the cache key: a changed prompt never reuses an older plan (FR-001). */
 export const STEP_PROMPT_HASH = createHash('sha256')
   .update(STEP_PROMPT_VERSION)
@@ -75,6 +100,16 @@ export const STEP_PROMPT_HASH = createHash('sha256')
   .update(STEP_SYSTEM)
   .update('\0')
   .update(JSON.stringify(StepsOutput))
+  .digest('hex')
+  .slice(0, 16)
+
+/** Part of the plan list's cache key (feature 014 FR-001). */
+export const PLAN_STEP_PROMPT_HASH = createHash('sha256')
+  .update(STEP_PROMPT_VERSION)
+  .update('\0')
+  .update(PLAN_STEP_SYSTEM)
+  .update('\0')
+  .update(JSON.stringify(PlanStepsOutput))
   .digest('hex')
   .slice(0, 16)
 
@@ -100,6 +135,30 @@ export function buildStepRequest(
       scan: { manufacturer, model, product_version, form_factor, os, firmware, tpm, cpu, memory, storage, battery, gpus },
       intended_use: assessment.intended_use,
       option: optionContext(option),
+      facts: facts.facts,
+      passages: passageContext(passages),
+    }),
+  }
+}
+
+/** The plan step call (feature 014 FR-003): the plan's options in order, with the passages of all of them. */
+export function buildPlanStepRequest(
+  scan: DeviceScan,
+  { assessment, facts }: DeviceAssessment,
+  summary: string,
+  options: readonly CategoryOption[],
+  passages: readonly Passage[],
+): JsonRequest<typeof PlanStepsOutput> {
+  const { manufacturer, model, product_version, form_factor } = scan.identity
+  const { os, firmware, tpm, cpu, memory, storage, battery, gpus } = scan
+  return {
+    task: 'steps',
+    schema: PlanStepsOutput,
+    system: PLAN_STEP_SYSTEM,
+    user: JSON.stringify({
+      scan: { manufacturer, model, product_version, form_factor, os, firmware, tpm, cpu, memory, storage, battery, gpus },
+      intended_use: assessment.intended_use,
+      plan: { summary, options: options.map(optionContext) },
       facts: facts.facts,
       passages: passageContext(passages),
     }),

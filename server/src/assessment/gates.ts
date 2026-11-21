@@ -94,6 +94,49 @@ function graphicsGate(scan: DeviceScan, use: IntendedUse, path: 'upgrade' | 'rep
   return { shortfall: false, unverified: true }
 }
 
+/**
+ * Gaming processor floor (feature 012), from the minimum requirements of two widely played games:
+ * Counter-Strike 2 needs 4 hardware threads, and Fortnite's slowest supported processor is the Core
+ * i3-3225, a dual-core at 3.3 GHz without turbo. Sources and limits: feature 012 RESEARCH.md.
+ */
+export const GAMING_MIN_THREADS = 4
+export const GAMING_DUAL_CORE_MIN_GHZ = 3.3
+
+/** The clock in a processor name, usually the base clock on Intel ("… CPU @ 2.00GHz"); null when absent. */
+export function clockFromName(name: string | null): number | null {
+  const match = name ? /@\s*(\d+(?:\.\d+)?)\s*GHz/i.exec(name) : null
+  return match ? Number(match[1]) : null
+}
+
+/**
+ * Why the processor is too weak for gaming, or null when it is not, or cannot be judged (FR-002):
+ * fewer than 4 threads, or at most 2 cores with a clock below 3.3 GHz.
+ */
+export function gamingCpuShortfall(cpu: DeviceScan['cpu']): string | null {
+  const label = cpu.name ? `The processor (${cpu.name})` : 'The processor'
+  if (cpu.threads !== null && cpu.threads < GAMING_MIN_THREADS)
+    return `${label} runs ${cpu.threads} ${cpu.threads === 1 ? 'thread' : 'threads'}, fewer than the ${GAMING_MIN_THREADS} that games such as Counter-Strike 2 need at minimum`
+  const ghz = clockFromName(cpu.name)
+  if (cpu.cores !== null && cpu.cores <= 2 && ghz !== null && ghz < GAMING_DUAL_CORE_MIN_GHZ)
+    return `${label} has ${cpu.cores} ${cpu.cores === 1 ? 'core' : 'cores'} at ${ghz} GHz, below the slowest processor Fortnite supports (a dual-core at ${GAMING_DUAL_CORE_MIN_GHZ} GHz)`
+  return null
+}
+
+/**
+ * For gaming, a processor below the floor makes upgrade and repair not suitable: neither changes the
+ * processor (feature 012 FR-001). The reason comes first, as it decides the status.
+ */
+function gamingCpuGate(gate: GateResult, scan: DeviceScan, use: IntendedUse): GateResult {
+  if (use !== 'gaming' || (gate.path !== 'upgrade' && gate.path !== 'repair')) return gate
+  const why = gamingCpuShortfall(scan.cpu)
+  if (!why) return gate
+  // Already ruled out for another reason (say, no battery): keep that reason first and only add this one.
+  if (gate.status === 'not_suitable') return { ...gate, reasons: [...gate.reasons, reason('cpu_below_gaming', `${why}.`)] }
+  const action = gate.path === 'upgrade' ? 'an SSD or RAM upgrade' : 'a battery repair'
+  const cpuReason = reason('cpu_below_gaming', `${why}; ${action} does not change that.`)
+  return { path: gate.path, status: 'not_suitable', reasons: [cpuReason, ...gate.reasons], plan: null, shortfall: true }
+}
+
 /** Caps a status: `conditional` turns viable into conditional, never the other way. */
 export const atMost = (status: Suitability, cap: Suitability): Suitability =>
   status === 'not_suitable' || cap === 'not_suitable' ? 'not_suitable' : status === 'conditional' ? status : cap
@@ -376,5 +419,9 @@ export function runGates(input: GateInput): GateResult[] {
   const upgrade = gateUpgrade(input, facts)
   const repair = gateRepair(input, facts)
   const passOn = gatePassOn(input, facts)
-  return [upgrade, repair, passOn, gateSalvage(input, facts, passOn), gateRecycle([upgrade, repair, passOn])]
+  // Recycling asks whether anyone can still use the computer, not whether it suits gaming, so it
+  // sees the gates before the gaming processor check (feature 012 FR-003).
+  const recycle = gateRecycle([upgrade, repair, passOn])
+  const { scan, use } = input
+  return [gamingCpuGate(upgrade, scan, use), gamingCpuGate(repair, scan, use), passOn, gateSalvage(input, facts, passOn), recycle]
 }

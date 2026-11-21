@@ -4,7 +4,7 @@
 // steps (shared/fixtures/steps.templates.json), with the notice the server sends with them.
 import type { CategoryResult, OptionKind } from '@leaaf/shared/categories'
 import type { IntendedUse } from '@leaaf/shared/common'
-import type { Step, StepPlan } from '@leaaf/shared/steps'
+import { MAX_PLAN_STEPS, PLAN_STEPS_ID, type PlanStepList, type Step, type StepPlan } from '@leaaf/shared/steps'
 import laptopSsdJson from '@leaaf/fixtures/steps.example-laptop-14.office.json'
 import templatesJson from '@leaaf/fixtures/steps.templates.json'
 import { LAPTOP_CATEGORIES } from './mockCategories'
@@ -41,6 +41,20 @@ const ERASE = step({
 
 /** Steps of the laptop's sample options other than the SSD swap, which comes from the shared fixture. */
 const LAPTOP_STEPS: Record<string, Step[]> = {
+  'copy-system': [
+    BACK_UP,
+    step({
+      title: 'Connect the new SSD with a USB adapter',
+      detail: 'Put the new SSD into a USB-to-M.2 adapter and plug it into the laptop while the old disk is still inside.',
+      tools: ['USB-to-M.2 NVMe adapter'],
+      minutes: { low: 5, high: 10 },
+    }),
+    step({
+      title: 'Copy the old disk to the SSD',
+      detail: 'Use free cloning software to copy the whole old disk to the SSD, then shut the laptop down before swapping the drives.',
+      minutes: { low: 60, high: 120 },
+    }),
+  ],
   'clean-install': [
     BACK_UP,
     step({
@@ -152,6 +166,36 @@ export function laptopPlan(deviceId: string, use: IntendedUse, optionId: string)
     notice: null,
     steps: structuredClone(steps),
     passages: LAPTOP_CATEGORIES.passages.filter((p) => cited.has(p.passage_id)),
+  }
+}
+
+/**
+ * The sample step list of the laptop's plan (feature 014 FR-007): the sample plans of its steps in the
+ * plan's order, with repeated steps (such as backing up) named once, as the server asks the AI to.
+ */
+export function laptopPlanSteps(deviceId: string, use: IntendedUse): PlanStepList | null {
+  const plan = LAPTOP_CATEGORIES.plan
+  if (!plan) return null
+  const seen = new Set<string>()
+  const steps: Step[] = []
+  for (const { option_id } of plan.steps)
+    for (const s of laptopPlan(deviceId, use, option_id)?.steps ?? [])
+      if (!seen.has(s.title)) {
+        seen.add(s.title)
+        steps.push(s)
+      }
+  const listed = steps.slice(0, MAX_PLAN_STEPS)
+  const cited = new Set(listed.flatMap((s) => s.passage_ids))
+  const passages = [...LAPTOP_CATEGORIES.passages, ...((laptopSsdJson as unknown as StepPlan).passages)]
+  return {
+    device_id: deviceId,
+    intended_use: use,
+    option_id: PLAN_STEPS_ID,
+    generated_at: generatedAt,
+    source: 'llm',
+    notice: null,
+    steps: listed,
+    passages: passages.filter((p, i) => cited.has(p.passage_id) && passages.findIndex((q) => q.passage_id === p.passage_id) === i),
   }
 }
 

@@ -14,6 +14,10 @@ const strict = { additionalProperties: false } as const
 
 /** At most 12 steps per plan (FR-002). */
 export const MAX_STEPS = 12
+/** A combined plan's single step list may have up to 16 steps (feature 014 FR-002). */
+export const MAX_PLAN_STEPS = 16
+/** The `option_id` of a plan's step list; not a valid option Slug, so it never names an option. */
+export const PLAN_STEPS_ID = '#plan'
 /** Step titles fit one line of the card (FR-002). */
 export const STEP_TITLE_MAX = 80
 
@@ -62,3 +66,21 @@ export const StepPlan = Type.Object(
   strict,
 )
 export type StepPlan = Static<typeof StepPlan>
+
+/**
+ * One step list for the whole combined plan (feature 014):
+ * GET /api/devices/:id/plan/steps?intended_use=<use>  -> 200 PlanStepList (JSON)
+ * The same shape as a StepPlan, with option_id "#plan" and up to 16 steps.
+ */
+export const PlanStepList = Type.Object(
+  {
+    ...StepPlan.properties,
+    option_id: Type.Literal(PLAN_STEPS_ID),
+    steps: Type.Array(Step, {
+      maxItems: MAX_PLAN_STEPS,
+      description: 'Empty when the server removed every step (feature 009 FR-006 applies)',
+    }),
+  },
+  strict,
+)
+export type PlanStepList = Static<typeof PlanStepList>
