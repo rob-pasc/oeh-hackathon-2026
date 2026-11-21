@@ -15,7 +15,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-006:** Build the result screen: path cards, gauge, specs card, toolbar, not-found states (supports `AC-005` to `AC-011`)
 - [x] **T-007:** Add shared visual conventions in `docs/VISUAL_DESIGN.md`, update `README.md`, `web/README.md`, and the feature index (supports `AC-013`)
 - [x] **T-008:** Install dependencies and run `npm run typecheck`, `npm test`, and `npm run build -w web`; fix what they report (supports all ACs)
-- [ ] **T-009:** Review the screens in a browser at 1440 × 900 and 1280 × 720 with the team; record the findings (supports `AC-013`)
+- [x] **T-009:** Review the screens in a browser at 1440 × 900 and 1280 × 720 with the team; record the findings (supports `AC-013`) *(2026-11-21: user report, "they look good"; no findings.)*
 - [x] **T-010:** Agree the session routes and events with the backend team and switch on live mode (supports `AC-014`)
 - [x] **T-011:** Fix the gauge arc flag and add regression tests (supports `AC-017`)
 - [x] **T-012:** Rename the landing button to "Download and Scan now" (supports `AC-015`)
@@ -96,3 +96,4 @@ The first version was written without network access. After the merge into `main
 - 2026-11-21: T-045 implemented and verified (AC-059 passes; see the acceptance criteria). Status back to `Implemented (verification pending)`: the team browser review (T-009) and T-016 remain.
 - 2026-11-21: T-016 closed as replaced by feature 008 (FR-017). Remaining: the team browser review (T-009) and the legal follow-ups T-041 and T-042.
 - 2026-11-21: The 30-day scan deletion promised by FR-046 is implemented as a fix (it restores the stated contract): `server/src/retention.ts`, run at start and hourly, with `server/test/retention.test.ts`. The user confirmed the rules: devices with their caches and fallback entries, and sessions, after 30 days; the model fact cache is kept. T-042 waits only for the host's log retention.
+- 2026-11-21: T-009 done on the user's report that the screens look good. Remaining: T-041 and T-042.
