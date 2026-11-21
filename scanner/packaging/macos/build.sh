@@ -49,6 +49,9 @@ codesign --force --deep --sign - "$app"
 codesign --verify --deep --strict "$app"
 
 mkdir -p "$out"
+# Absolute, because ditto below runs inside $work, where a relative path would land in the
+# temporary folder that the EXIT trap deletes.
+out=$(cd "$out" && pwd)
 rm -f "$out/leaaf-scanner-macos.zip"
 (cd "$work" && ditto -c -k --keepParent leaaf-scanner.app "$out/leaaf-scanner-macos.zip")
 echo "wrote $out/leaaf-scanner-macos.zip"
