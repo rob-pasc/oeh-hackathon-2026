@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "AdminScanPage.schema.json",
+  "title": "AdminScanPage",
+  "type": "object",
+  "required": [
+    "total",
+    "page",
+    "page_size",
+    "scans"
+  ],
+  "properties": {
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "page": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "page_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "device_id",
+          "created_at",
+          "os_family",
+          "manufacturer",
+          "model",
+          "scan_status"
+        ],
+        "properties": {
+          "device_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{22}$",
+            "description": "22-character base64url string encoding 128 random bits"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "os_family": {
+            "anyOf": [
+              {
+                "enum": [
+                  "windows",
+                  "macos",
+                  "linux"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "manufacturer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "identity.product_version when present, else identity.model"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scan_status": {
+            "enum": [
+              "complete",
+              "partial"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Newest first"
+    }
+  },
+  "additionalProperties": false
+}

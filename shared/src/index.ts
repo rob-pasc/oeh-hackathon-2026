@@ -11,7 +11,9 @@ export * from './session.ts'
 export * from './ranking.ts'
 export * from './invariants.ts'
 export * from './validate.ts'
+export * from './admin.ts'
 
+import { AdminLogin, AdminScanPage, AdminSession } from './admin.ts'
 import { Assessment } from './assessment.ts'
 import { CategoryResult } from './categories.ts'
 import { ApiError, DeviceRecord, DeviceScan, UploadResponse } from './device.ts'
@@ -23,6 +25,9 @@ import { ScanSession, ScanSessionEvent, ScanSessionRequest, ScannerEvent } from 
 
 /** Every top-level schema, exported to shared/schemas/<$id>.schema.json for non-TS consumers. */
 export const TOP_LEVEL_SCHEMAS = {
+  AdminLogin,
+  AdminSession,
+  AdminScanPage,
   DeviceScan,
   UploadResponse,
   DeviceRecord,

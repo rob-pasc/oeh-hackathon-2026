@@ -14,6 +14,8 @@
         "not_found",
         "payload_too_large",
         "rate_limited",
+        "unauthorized",
+        "unsupported_media_type",
         "internal"
       ]
     },

@@ -3,12 +3,12 @@
 // step plan of an opened option (feature 009).
 // Routes and bodies follow shared/src/api.ts; every non-2xx JSON response is an ApiError.
 //
-// There is deliberately no route that lists devices (FR-011): the unguessable device ID is the
-// only access control.
+// There is deliberately no public route that lists devices (FR-011): the unguessable device ID is
+// the only access control. The one exception is the admin list (feature 013), behind a login.
 import { createReadStream, existsSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import { Readable } from 'node:stream'
-import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
+import Fastify, { type FastifyInstance, type FastifyRequest, type FastifyServerOptions } from 'fastify'
 import {
   API_ROUTES,
   checkDeviceScan,
@@ -29,6 +29,8 @@ import {
   type StreamEnd,
 } from '@leaaf/shared'
 import { hourlyLimit, loadLimits } from './limits.ts'
+import type { AdminConfig } from './admin/config.ts'
+import { registerAdminRoutes } from './admin/routes.ts'
 import type { AssessmentService } from './assessment/service.ts'
 import type { DeviceStore } from './devices/store.ts'
 import { checkScan } from './devices/validate.ts'
@@ -53,7 +55,20 @@ export interface AppOptions {
   scannerExePath?: string
   /** Scanner builds per system (feature 007 FR-012); each download is 404 while its file is missing. Overrides scannerExePath for Windows. */
   scannerPaths?: Partial<Record<OsFamily, string>>
+  /** The admin area (feature 013); absent or null keeps every /api/admin/* route 404. */
+  admin?: AdminConfig | null
+  /** Clock for admin sessions and login limits; tests replace it. */
+  now?: () => number
   logger?: FastifyServerOptions['logger']
+}
+
+/**
+ * Request log fields: the method and the route pattern, never the raw URL, the client IP, headers
+ * or bodies, so device IDs, admin credentials and session tokens never reach the log (feature 001
+ * privacy requirement, feature 013 FR-009).
+ */
+export const REQUEST_LOG_SERIALIZERS = {
+  req: (req: FastifyRequest) => ({ method: req.method, route: req.routeOptions?.url ?? 'unmatched' }),
 }
 
 const apiError = (error: ApiError['error'], message: string, fields?: ApiError['fields']): ApiError =>
@@ -104,6 +119,8 @@ export function buildApp(options: AppOptions): FastifyInstance {
   })
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send(apiError('not_found', 'not found')))
+
+  if (options.admin) registerAdminRoutes(app, { config: options.admin, devices: options.devices, now: options.now ?? Date.now })
 
   app.post(API_ROUTES.uploadDevice, { bodyLimit: limits.uploadBytes, onRequest: hourlyLimit(limits.uploadsPerHour) }, async (req, reply) => {
     const checked = checkScan(req.body)

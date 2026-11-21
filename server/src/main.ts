@@ -3,7 +3,8 @@ import { mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
 import { budgetedFetch, loadLimits } from './limits.ts'
-import { buildApp } from './app.ts'
+import { buildApp, REQUEST_LOG_SERIALIZERS } from './app.ts'
+import { loadAdminConfig } from './admin/config.ts'
 import { createAssessmentService } from './assessment/service.ts'
 import { loadWeights } from './assessment/weights.ts'
 import { createSqliteDeviceStore } from './devices/store.ts'
@@ -62,6 +63,7 @@ const categorize = createCategoryService(db, llm, { impactTable, warn })
 
 const app = buildApp({
   limits,
+  admin: loadAdminConfig(env),
   devices: createSqliteDeviceStore(db),
   sessions: createSqliteSessionStore(db),
   assessments,
@@ -70,11 +72,7 @@ const app = buildApp({
   publicBaseUrl,
   scannerPaths,
   logger: {
-    // Log the route pattern, never the raw URL or the client IP, so full device IDs are never
-    // logged together with request IPs (feature 001 privacy requirement).
-    serializers: {
-      req: (req) => ({ method: req.method, route: req.routeOptions?.url ?? 'unmatched' }),
-    },
+    serializers: REQUEST_LOG_SERIALIZERS,
   },
 })
 

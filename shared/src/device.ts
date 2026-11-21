@@ -216,7 +216,7 @@ export type DeviceRecord = Static<typeof DeviceRecord>
 /** Error body for every non-2xx JSON response. */
 export const ApiError = Type.Object(
   {
-    error: Type.Enum(['invalid_payload', 'not_found', 'payload_too_large', 'rate_limited', 'internal']),
+    error: Type.Enum(['invalid_payload', 'not_found', 'payload_too_large', 'rate_limited', 'unauthorized', 'unsupported_media_type', 'internal']),
     message: Type.String(),
     fields: Type.Optional(
       Type.Array(

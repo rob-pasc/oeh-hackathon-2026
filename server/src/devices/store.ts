@@ -1,12 +1,15 @@
 // Device records (feature 001 FR-008). One row per accepted upload; rescans are new rows.
 import { randomBytes } from 'node:crypto'
 import type { DatabaseSync } from 'node:sqlite'
-import { createValidator, DeviceId, DeviceScan, type DeviceRecord } from '@leaaf/shared'
+import { createValidator, DeviceId, DeviceScan, type AdminScanRow, type DeviceRecord } from '@leaaf/shared'
 
 export interface DeviceStore {
   /** Stores a validated scan under a fresh unguessable ID. */
   create(scan: DeviceScan): DeviceRecord
   get(id: string): DeviceRecord | undefined
+  /** Admin overview only (feature 013): newest first, just the displayed fields. */
+  list(offset: number, limit: number): AdminScanRow[]
+  count(): number
 }
 
 /**
@@ -28,6 +31,13 @@ export function createSqliteDeviceStore(db: DatabaseSync, generateId: () => stri
   )`)
   const insert = db.prepare('INSERT INTO devices (device_id, created_at, scan) VALUES (?, ?, ?)')
   const select = db.prepare('SELECT created_at, scan FROM devices WHERE device_id = ?')
+  const page = db.prepare(`SELECT device_id, created_at,
+      json_extract(scan, '$.os.family') AS os_family,
+      json_extract(scan, '$.identity.manufacturer') AS manufacturer,
+      coalesce(json_extract(scan, '$.identity.product_version'), json_extract(scan, '$.identity.model')) AS model,
+      json_extract(scan, '$.scan_status') AS scan_status
+    FROM devices ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?`)
+  const total = db.prepare('SELECT count(*) AS n FROM devices')
   return {
     create(scan) {
       const record: DeviceRecord = { device_id: generateId(), created_at: new Date().toISOString(), scan }
@@ -42,6 +52,12 @@ export function createSqliteDeviceStore(db: DatabaseSync, generateId: () => stri
       const scan = isScan(JSON.parse(row.scan))
       if (!scan.ok) throw new Error('stored device scan no longer matches the contract')
       return { device_id: id, created_at: row.created_at, scan: scan.value }
+    },
+    list(offset, limit) {
+      return page.all(limit, offset) as unknown as AdminScanRow[]
+    },
+    count() {
+      return Number((total.get() as { n: number }).n)
     },
   }
 }
