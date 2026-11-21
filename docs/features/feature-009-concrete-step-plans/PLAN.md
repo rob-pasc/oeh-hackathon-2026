@@ -113,6 +113,8 @@ All replacements below are **planned**; none is effective until this feature is 
 - [`feature-008-ai-categories-and-options`](../feature-008-ai-categories-and-options/PLAN.md): this feature fills the step plan area of 008 FR-010 and the fallback of 008 FR-013.
 - [`feature-010-step-level-knowledge-base`](../feature-010-step-level-knowledge-base/PLAN.md) supplies the sources these steps cite.
 
+**Current state (2026-11-21, after feature 008 was merged into `main`, 17c04b4).** The behaviour named above for replacement is already gone from the result screen. The report stream no longer sends feature 004's explained report, so its "What to do next" sections are not shown. Feature 006's path step blocks and proposed option cards were replaced by 008's option cards, which show "Why" and up to two sources but no steps (`steps: null` in `web/src/lib/categoryView.ts`). This feature fills that steps area. The fallback categories of 008 FR-013 carry `path` and the option kinds of `shared/src/categories.ts`, as FR-011 and FR-012 here expect.
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)

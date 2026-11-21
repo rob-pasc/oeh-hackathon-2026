@@ -36,3 +36,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-21: Specified after the user accepted the scope in the conversation.
 - 2026-11-21: Implementation started on branch `feat/ai-categories` at the user's request ("Implement feature 008", "on a new feature branch"). Status Specified → Ready → In progress; no blockers besides T-009's need for an API key.
 - 2026-11-21: Complete at the agreed boundary (locally verified handoff with self-review) on branch `feat/ai-categories`, not merged into `main`. Covers FR-001 to FR-015 and AC-001 to AC-017; evidence in [ACCEPTANCE_CRITERIA.md](./ACCEPTANCE_CRITERIA.md).
+- 2026-11-21: Merged into `main` at the user's request (merge commit 17c04b4, on top of origin/main 805a114); checks rerun on the merge result. Status stays `Complete`.

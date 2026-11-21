@@ -1,7 +1,7 @@
 # Acceptance Criteria: AI categories and options
 
 - **Feature ID:** `feature-008-ai-categories-and-options`
-- **Verification status:** Verified locally on branch `feat/ai-categories` (2026-11-21)
+- **Verification status:** Verified locally on branch `feat/ai-categories` and rechecked on `main` after the merge (2026-11-21)
 
 Defines the feature's acceptance criteria and records how each criterion was verified, including results and evidence.
 
@@ -50,7 +50,9 @@ Completion boundary: locally verified handoff with self-review ([plan](./PLAN.md
 6. Feature 006 FR-030's note "Only if the receiver would otherwise buy new" also appears for AI-estimated options with conditional credit, where the wording fits loosely. **Not changed:** it would change 006's approved wording; raised with the user.
 7. No exclusion was crossed: no server gate validation, no live prices, no user editing, no scanner change, no new criteria or sliders.
 
-Pushing, a pull request, and merging into `main` are outside this boundary and were not done.
+Pushing, a pull request, and merging into `main` were outside this boundary.
+
+**Merge into `main`, 2026-11-21** (requested by the user). `origin/main` (805a114, with the feature 010 corpus additions and the landing page download changes) was merged with this branch as 17c04b4. The only conflict was in feature 006's verification notes, where both sides added entries; both were kept. No duplicate feature numbers. Rechecked on the merge result: `npm run typecheck` clean, `npm test` (shared 101, server 279, web 96) and `npm run build` pass, and `npm run corpus:ingest` indexes the enlarged corpus. The live demo review (AC-016) was not repeated against the enlarged corpus.
 
 ## Verification notes
 

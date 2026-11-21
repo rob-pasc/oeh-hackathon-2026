@@ -1,6 +1,6 @@
 # Product Context
 
-**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. The local result journey covers assessment, ranking and explained reports, including a template fallback. See the [README status](../README.md). The scanner has completed one elevated scan on a real Windows 11 laptop. The other Windows checks are still open. Scanners for macOS and Linux ([feature 007](features/feature-007-macos-linux-scanner/PLAN.md)) are implemented and pass their automated tests, but have not scanned a real Mac or Linux laptop yet. This document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. The local result journey covers assessment, ranking, and AI-chosen categories and options with cited reasons (feature 008), including a five-path fallback. See the [README status](../README.md). The scanner has completed one elevated scan on a real Windows 11 laptop. The other Windows checks are still open. Scanners for macOS and Linux ([feature 007](features/feature-007-macos-linux-scanner/PLAN.md)) are implemented and pass their automated tests, but have not scanned a real Mac or Linux laptop yet. This document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
@@ -13,7 +13,7 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 
 1. Download and run the scanner, then open the private device link. See [feature 001](features/feature-001-device-scan-and-upload/PLAN.md).
 2. Choose an intended use, see five assessed and ranked paths, and switch between Environment first and Money first. See [feature 003](features/feature-003-five-path-ranking/PLAN.md). Since feature 008 (implemented locally 2026-11-21), the result screen shows ranked AI categories with concrete options instead, and falls back to the five paths when the AI is unavailable.
-3. Read the explained report with cited evidence and next steps. See [feature 004](features/feature-004-explained-report/PLAN.md).
+3. Read the explained report with cited evidence and next steps. See [feature 004](features/feature-004-explained-report/PLAN.md). Since feature 008, each option explains why it fits with up to two cited sources; concrete next steps are planned in [feature 009](features/feature-009-concrete-step-plans/PLAN.md).
 
 ## Product principles and constraints
 

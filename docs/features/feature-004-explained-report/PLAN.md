@@ -108,7 +108,7 @@ Not applicable to this feature: deployment is owned by feature 005.
 
 None superseded at specification. Builds on [feature 003](../feature-003-five-path-ranking/PLAN.md)'s ranked view (extends it without changing feature 003 requirements) and [feature 002](../feature-002-knowledge-base-retrieval/PLAN.md)'s passages.
 
-**Partly replaced by [feature 008](../feature-008-ai-categories-and-options/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on branch `feat/ai-categories` (commits cf09cde "feat(server): build AI categories and options on the report stream" and c91862d "feat(web): show AI categories with option cards and tabs"); effective on that branch, not yet on `main`):
+**Partly replaced by [feature 008](../feature-008-ai-categories-and-options/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on branch `feat/ai-categories` (commits cf09cde "feat(server): build AI categories and options on the report stream" and c91862d "feat(web): show AI categories with option cards and tabs"); merged into `main` 2026-11-21 (merge commit 17c04b4) and effective there):
 - **FR-001** (five paths ranked with the Recommended label) is replaced by 008 FR-006 and FR-007: ranked categories, Recommended on the first only when it has a Good fit option.
 - **FR-002** (impact summary) now summarizes the best option of the Recommended category.
 - **FR-003:** The report stream no longer sends the explained `report`, so the path card sections "What to do next", "Evidence", "Assumptions" and "Safety and feasibility" are no longer shown. Option cards show the "Why" text and up to two sources (008 FR-010); step plans are planned in [feature 009](../feature-009-concrete-step-plans/PLAN.md).

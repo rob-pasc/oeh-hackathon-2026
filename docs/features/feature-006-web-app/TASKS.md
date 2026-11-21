@@ -54,7 +54,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Dependencies and blockers
 
-- T-016 needs the backend team's decision on the option payload and on what avoided CO₂e means for a single action. *(2026-11-21: superseded by feature 008, whose shared `CategoryResult` contract carries per-option figures and is shown in live mode on branch `feat/ai-categories`; FR-017 is replaced there, so this task is not continued here.)*
+- T-016 needs the backend team's decision on the option payload and on what avoided CO₂e means for a single action. *(2026-11-21: superseded by feature 008, whose shared `CategoryResult` contract carries per-option figures and is shown in live mode on `main` since 2026-11-21; FR-017 is replaced there, so this task is not continued here.)*
 
 ## Progress notes
 

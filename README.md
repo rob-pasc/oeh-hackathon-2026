@@ -10,7 +10,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 
 ## Status
 
-**In progress.** The full journey works locally, from scan to explained report. On the branch `feat/ai-categories`, the result screen shows AI-chosen categories and options instead (feature 008), with the five paths as fallback. The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. The latest release images (`v0.2.0`) are published to GHCR. The public site at [leaaf.green](https://leaaf.green) is not deployed yet.
+**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Step plans inside the options (feature 009) are next. The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. The latest release images (`v0.2.0`) are published to GHCR. The public site at [leaaf.green](https://leaaf.green) is not deployed yet.
 
 | # | Feature | Status |
 |---|---|---|
@@ -21,9 +21,9 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: the hosting provider isn't chosen yet |
 | 006 | [Web app](docs/features/feature-006-web-app/PLAN.md) | Implemented, awaiting the team's browser review |
 | 007 | [macOS and Linux scanner](docs/features/feature-007-macos-linux-scanner/PLAN.md) | Implemented, awaiting real scans on a Mac and a Linux laptop |
-| 008 | [AI categories and options](docs/features/feature-008-ai-categories-and-options/PLAN.md) | Complete on branch `feat/ai-categories` (not merged into `main`) |
+| 008 | [AI categories and options](docs/features/feature-008-ai-categories-and-options/PLAN.md) | Complete |
 | 009 | [Concrete step plans](docs/features/feature-009-concrete-step-plans/PLAN.md) | Specified |
-| 010 | [Step-level knowledge base](docs/features/feature-010-step-level-knowledge-base/PLAN.md) | Specified |
+| 010 | [Step-level knowledge base](docs/features/feature-010-step-level-knowledge-base/PLAN.md) | Implemented, awaiting its review (ingestion and corpus tests pass on `main`) |
 
 The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP EliteBook 840 G5.
 

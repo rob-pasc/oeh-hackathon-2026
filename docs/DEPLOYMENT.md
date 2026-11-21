@@ -2,7 +2,7 @@
 
 How leaaf is built, published, and run in production. Scope and open decisions are in [feature 005](features/feature-005-public-demo-deployment/PLAN.md). This guide does not authorize a deployment; each release to the public host needs the team's go-ahead.
 
-**Local deployment status (2026-11-20).** The live web app and server support scanner sessions, uploads, ranked assessments and explained reports. The server enforces upload, per-client and daily provider limits. The repository and scanner secret scan passed locally (feature 005 AC-007). Demo seeding, backup and restore rehearsal, and public deployment verification remain open.
+**Local deployment status (2026-11-20; updated 2026-11-21).** The live web app and server support scanner sessions, uploads, ranked assessments and, since feature 008, AI categories and options on the report stream. The server creates the additive SQLite table `category_cache` on start; no data migration is needed, and deleting the table only forces new category calls. The new optional settings `LLM_CATEGORY_TIMEOUT_MS` and `LLM_THINKING_CATEGORIES` are in `deploy/.env.example`. The server enforces upload, per-client and daily provider limits. The repository and scanner secret scan passed locally (feature 005 AC-007). Demo seeding, backup and restore rehearsal, and public deployment verification remain open.
 
 ## Release images
 
