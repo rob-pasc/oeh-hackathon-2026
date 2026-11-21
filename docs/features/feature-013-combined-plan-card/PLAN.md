@@ -93,7 +93,7 @@ Completion boundary: locally verified handoff with self-review, committed on the
 
 ## Related and superseded features
 
-Planned (not yet implemented):
+Implemented 2026-11-21 on `feat/combined-plan` (server in ed06786, card in the following commit); reciprocal notes added to features 011 and 008:
 
 - [Feature 011](../feature-011-tab-gauge-and-capped-option-status/PLAN.md) **FR-003** (on the Overview the gauge shows the first category's best option) is replaced by FR-008 here when a plan exists; unchanged without a plan.
 - [Feature 008](../feature-008-ai-categories-and-options/PLAN.md) **FR-001** (the category call returns categories) and **FR-013** (fallback) are extended with the plan; their requirements stay valid. FR-007 (Recommended label) is unchanged.

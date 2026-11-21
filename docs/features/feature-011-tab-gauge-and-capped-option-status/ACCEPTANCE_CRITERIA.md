@@ -44,6 +44,8 @@ No blocking findings. Push, merge and release are outside the boundary and were 
 
 ## Verification notes
 
+**2026-11-21, supersession note.** [Feature 013](../feature-013-combined-plan-card/PLAN.md) FR-008 replaces FR-003 when the result has a plan: the Overview gauge shows the plan. The AC-004 result above is historical; the component test now expects "Your plan" on the Overview for the sample data, and feature 013 AC-007 covers the case without a plan.
+
 **2026-11-21, server cap (T-001).** `npx vitest run` in `server/`: 326 passed; `npm run typecheck -w server` passes. Mutation check: with `capDraft` bypassed, the five tests for AC-005 to AC-009 that expect a lowered status fail ("never raises…" passes either way, as expected). The shared category fixture is unchanged because the sample answer already agrees with the office gates.
 
 **2026-11-21, gauge (T-002) and close-out.** `npm run typecheck`, `npm test` and `npm run build` from the repository root. The first full `npm test` had one failure in `steps.test.tsx` (see the self-review); the web suite then passed 118/118 twice. No browser check; the gauge behaviour is covered by the component test and joins the team browser review of feature 006 (T-009).

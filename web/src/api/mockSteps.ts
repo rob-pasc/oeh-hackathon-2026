@@ -41,6 +41,20 @@ const ERASE = step({
 
 /** Steps of the laptop's sample options other than the SSD swap, which comes from the shared fixture. */
 const LAPTOP_STEPS: Record<string, Step[]> = {
+  'copy-system': [
+    BACK_UP,
+    step({
+      title: 'Connect the new SSD with a USB adapter',
+      detail: 'Put the new SSD into a USB-to-M.2 adapter and plug it into the laptop while the old disk is still inside.',
+      tools: ['USB-to-M.2 NVMe adapter'],
+      minutes: { low: 5, high: 10 },
+    }),
+    step({
+      title: 'Copy the old disk to the SSD',
+      detail: 'Use free cloning software to copy the whole old disk to the SSD, then shut the laptop down before swapping the drives.',
+      minutes: { low: 60, high: 120 },
+    }),
+  ],
   'clean-install': [
     BACK_UP,
     step({
