@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 import type { Assessment } from '@leaaf/shared/assessment'
+import type { Report } from '@leaaf/shared/report'
 import { formatEur, formatYears } from '../lib/impact'
 import fixture from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
 import sampleReport from '@leaaf/fixtures/report.example-laptop-14.office.json'
@@ -45,7 +46,8 @@ describe('Landing', () => {
     const first = screen.getByText('L', { selector: 'span' })
     const line = first.parentElement as HTMLElement
     expect(line).toHaveTextContent('Lifecycle Evaluation and Action Finder')
-    expect(Array.from(line.children).map((c) => c.textContent).join('')).toBe('LEAAF')
+    // The line is uppercased by CSS, so the second a (from "and") is lowercase in the text.
+    expect(Array.from(line.children).map((c) => c.textContent).join('').toUpperCase()).toBe('LEAAF')
     expect(screen.getByRole('contentinfo')).toHaveTextContent('leaaf = Lifecycle Evaluation and Action Finder')
   })
 
@@ -222,11 +224,12 @@ describe('ResultsView', () => {
   })
 
   it('leaves out evidence, assumptions and safety sections that are empty', () => {
-    const explanation = sampleReport.paths.find((p) => p.path === 'upgrade')!
+    const report = sampleReport as Report
+    const explanation = report.paths.find((p) => p.path === 'upgrade')!
     const empty = { ...explanation, claims: [], assumptions: [], safety: [] }
-    const { container, rerender } = render(<ReportDetails explanation={empty} passages={sampleReport.passages} />)
+    const { container, rerender } = render(<ReportDetails explanation={empty} passages={report.passages} />)
     expect(container).toBeEmptyDOMElement()
-    rerender(<ReportDetails explanation={{ ...empty, assumptions: ['The battery is replaceable.'] }} passages={sampleReport.passages} />)
+    rerender(<ReportDetails explanation={{ ...empty, assumptions: ['The battery is replaceable.'] }} passages={report.passages} />)
     expect(container.querySelector('details')).not.toBeNull()
     expect(screen.getByText('Assumptions')).toBeInTheDocument()
     expect(screen.queryByText('Evidence')).toBeNull()
