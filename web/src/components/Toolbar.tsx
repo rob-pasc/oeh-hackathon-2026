@@ -1,4 +1,5 @@
 import type { Mode } from '@leaaf/shared/common'
+import { useLayoutEffect, useState } from 'react'
 import {
   MODE_LABELS,
   MODE_ORDER,
@@ -23,7 +24,7 @@ interface Props {
 
 /**
  * The highlight behind the active button of a segmented control. It slides to the active button instead of
- * jumping. The buttons are equally wide (flex-1) with a 4 px gap, so position and width follow from the index.
+ * jumping. The buttons of the priority toggle are equally wide (flex-1) with a 4 px gap, so position and width follow from the index.
  */
 function SlidingHighlight({ index, count, className }: { index: number; count: number; className: string }) {
   if (index < 0) return null
@@ -39,7 +40,39 @@ function SlidingHighlight({ index, count, className }: { index: number; count: n
   )
 }
 
+/**
+ * Highlight for a segmented control whose buttons differ in width (the path tags). It follows the real position and
+ * width of the active button, so a long label such as "Overview" is never wider than its highlight.
+ */
+function MeasuredHighlight({ container, index, className }: { container: HTMLElement | null; index: number; className: string }) {
+  const [box, setBox] = useState<{ left: number; width: number } | null>(null)
+  useLayoutEffect(() => {
+    if (!container || index < 0) return undefined
+    const buttons = Array.from(container.querySelectorAll('button'))
+    const measure = () => {
+      const button = buttons[index]
+      if (button) setBox({ left: button.offsetLeft, width: button.offsetWidth })
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return undefined
+    // Buttons change width when the window, the font, or the labels change.
+    const observer = new ResizeObserver(measure)
+    buttons.forEach((button) => observer.observe(button))
+    return () => observer.disconnect()
+  }, [container, index])
+  if (index < 0 || !box) return null
+  return (
+    <span
+      aria-hidden="true"
+      className={`pointer-events-none absolute inset-y-0 left-0 rounded-full motion-safe:transition-[transform,width] motion-safe:duration-300 motion-safe:ease-out ${className}`}
+      style={{ width: box.width, transform: `translateX(${box.left}px)` }}
+    />
+  )
+}
+
 export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathTabChange, disabled = false }: Props) {
+  // The tag bar is held in state (not a ref object) so the highlight measures it once it exists.
+  const [tabs, setTabs] = useState<HTMLDivElement | null>(null)
   return (
     // Same two columns as the result screen, so the tag bar ends exactly where the cards end and the priority
     // toggle lines up with the gauge and specs column.
@@ -79,8 +112,8 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
         </label>
 
         <div role="group" aria-label="Show steps for" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white p-1 shadow-card">
-          <div className="relative flex min-w-[32rem] flex-1 xl:min-w-0 gap-1">
-          <SlidingHighlight index={PATH_TABS.indexOf(pathTab)} count={PATH_TABS.length} className="bg-leaf-tint" />
+          <div ref={setTabs} className="relative flex min-w-[32rem] flex-1 xl:min-w-0 gap-1">
+          <MeasuredHighlight container={tabs} index={PATH_TABS.indexOf(pathTab)} className="bg-leaf-tint" />
           {PATH_TABS.map((tab) => {
             const active = tab === pathTab
             return (
@@ -90,7 +123,7 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
                 aria-pressed={active}
                 disabled={disabled}
                 onClick={() => onPathTabChange(tab)}
-                className={`relative min-w-0 flex-1 cursor-pointer rounded-full border-0 bg-transparent px-2 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-default ${
+                className={`relative flex-auto cursor-pointer rounded-full border-0 bg-transparent px-2 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-default ${
                   active ? 'text-leaf-deep' : 'text-muted hover:text-ink'
                 }`}
               >
