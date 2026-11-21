@@ -15,6 +15,7 @@ import { loadImpactTable } from './impact/table.ts'
 import { createOpenAiCompatibleClient, LlmError, loadLlmConfig } from './llm/index.ts'
 import { DEFAULT_CORPUS_INDEX_PATH, IndexError, openRetriever, type Retriever } from './retrieval/index.ts'
 import { createCategoryService } from './categories/service.ts'
+import { schedulePurge } from './retention.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
 import { createStepService } from './steps/service.ts'
 
@@ -79,6 +80,14 @@ const app = buildApp({
   logger: {
     serializers: REQUEST_LOG_SERIALIZERS,
   },
+})
+
+// Scan data is deleted after SCAN_RETENTION_DAYS, as the privacy notice states (feature 006 FR-046).
+schedulePurge(db, {
+  purged: ({ devices, sessions }) => {
+    if (devices || sessions) app.log.info({ devices, sessions }, 'deleted expired scan data')
+  },
+  failed: (error) => app.log.error({ err: error }, 'deleting expired scan data failed'),
 })
 
 await app.listen({ port, host })

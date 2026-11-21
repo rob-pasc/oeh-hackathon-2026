@@ -29,6 +29,10 @@ The LLM API key is configured only here, through environment variables. It never
 
 No route lists devices: the device ID (16 random bytes, base64url) is the only access control. An upload carrying `session_id` completes that session; the ID is removed before the scan is stored, so device routes never return it. Request logs record the method and route pattern only, never the URL or the client IP.
 
+## Scan retention
+
+`src/retention.ts` deletes scan data after `SCAN_RETENTION_DAYS` (30), as the privacy notice states (feature 006 FR-046). `main.ts` runs it on start and then every hour. A run deletes devices whose `created_at` is older than that, together with their rows in `category_cache`, `step_cache`, `explanation_cache` and `ai_fallbacks`, and scan sessions older than that. The model `fact_cache` and the daily LLM counter are kept, because they hold no scan data. A deleted device link answers 404. The constant must match `scanRetentionDays` in `web/src/legal/provider.ts`, and a test checks this. The log line "deleted expired scan data" gives only the counts.
+
 ## Request limits
 
 Each server process allows 10 upload attempts, 60 report requests and 120 step plan requests per client IP in separate one-hour windows starting with the first request. A 429 includes `Retry-After` in seconds. Direct connections use the socket IP. Configure the immediate Caddy peer for the deployed topology as described in the [deployment guide](../docs/DEPLOYMENT.md#client-ip-configuration).

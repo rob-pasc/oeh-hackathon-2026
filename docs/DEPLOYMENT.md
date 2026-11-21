@@ -109,6 +109,8 @@ Open `https://leaaf.green` in a browser and check that the landing page loads ov
 ## Rollback and data
 
 - **Rollback:** Set `LEAAF_TAG` in `deploy/.env` to the previous release tag, then run `docker compose pull && docker compose up -d`. Every tag stays in GHCR. This has not been rehearsed yet (feature 005 AC-010).
+- **Retention:** The server deletes scans, their cached results and scan sessions 30 days after they were created, hourly and on start ([server README](../server/README.md#scan-retention)). A backup keeps them past that date, so keep backups at most 30 days, or the privacy notice no longer holds.
+- **Access logs:** The privacy notice says Caddy's access logs are deleted after 3 days. Configure that on the host, for example `roll_keep_for 72h` in Caddy's `log` output. The logged URL path includes device links (`/d/<id>`, `/api/devices/<id>`), so anyone who reads the logs can open those results until the logs are deleted. This is accepted (decided 2026-11-21); restrict who can read the logs.
 - **Data:** Only the server has persistent data, in the `leaaf_server-data` volume. Pulling new images and recreating containers keeps it, but `docker compose down -v` deletes it. The server creates its SQLite database at `/data/leaaf.sqlite` on first start. The backup and restore procedure is not written yet.
 
 ## Evidence
