@@ -90,7 +90,7 @@ Adopted during implementation (2026-11-20) unless marked otherwise.
 
 - **Completion boundary:** Locally verified handoff with self-review.
 - **Review:** Self-review of the diff and of the manifest's terms notes, recorded in `ACCEPTANCE_CRITERIA.md`.
-- **CI/merge:** No CI yet. Server tests and type checks must pass locally. Pushing and merging need user authorization.
+- **CI/merge:** CI ([`.github/workflows/ci.yaml`](../../../.github/workflows/ci.yaml), added by feature 005 on 2026-11-20) runs the workspace checks and the scanner's Go checks on pull requests and pushes to `main`. Server tests and type checks must pass locally. Pushing and merging need user authorization.
 
 ## Release and recovery (when applicable)
 

@@ -8,7 +8,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 ## Tasks
 
 - [ ] **T-001:** Get the user's choice of hosting provider and account ownership, and record it in the plan (supports `AC-001`)
-- [ ] **T-002:** Add the Dockerfile and production config (static web assets, persistent volume path, environment variables) (supports `AC-001`, `AC-008`)
+- [x] **T-002:** Add the Dockerfile and production config (static web assets, persistent volume path, environment variables) (supports `AC-001`, `AC-008`)
 - [x] **T-003:** Implement the size limits, per-client rate limits, and daily LLM cap with fallback, with tests (supports `AC-005`, `AC-006`)
 - [ ] **T-004:** Implement the idempotent seed command and the demo device and cache files, with tests including an LLM-disabled render (supports `AC-003`, `AC-004`)
 - [x] **T-005:** Add the scanner release build with the public URL and serve it as the download; run a secret scan of the repository and the binary (supports `AC-002`, `AC-007`)
@@ -35,6 +35,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: T-005 partly done. The server image now builds the Windows scanner for `https://leaaf.green` and serves it as the download; the secret scan of the repository and the binary is still open, so T-005 stays unchecked. CI runs the scanner's Go checks, the web image is built against the real API, and Compose runs the server by default (see the plan's scope change log). Verified locally with Docker (see the [verification notes](./ACCEPTANCE_CRITERIA.md#verification-notes)); not yet on GitHub Actions.
 
 - 2026-11-20: T-005 done. Secret scan with gitleaks (history, working tree, scanner binary strings) and a canary-key response test; see AC-007.
+- 2026-11-21: T-002 checked during a documentation reconciliation. Its parts are done: the web image serves the static assets (T-011), the server image sets `HOST` and `DATABASE_PATH=/data/leaaf.sqlite`, the Compose file mounts the `leaaf_server-data` volume, and `deploy/.env.example` lists the variables (T-013). T-006 stays open: `docs/DEPLOYMENT.md` has no seed or backup procedure yet.
 
 ## Lifecycle history
 

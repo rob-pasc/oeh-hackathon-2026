@@ -99,7 +99,7 @@ The assessment pipeline and its adopted contracts are implemented. Real-device c
 
 - **Completion boundary:** Locally verified handoff with self-review.
 - **Review:** Self-review of the diff, the rubrics, and the impact table sources, recorded in `ACCEPTANCE_CRITERIA.md`. The team's circular-economy members are encouraged, but not required, to review the rubrics and weights.
-- **CI/merge:** No CI yet. Server and web tests and type checks must pass locally. Pushing and merging need user authorization.
+- **CI/merge:** CI ([`.github/workflows/ci.yaml`](../../../.github/workflows/ci.yaml), added by feature 005 on 2026-11-20) runs the workspace checks and the scanner's Go checks on pull requests and pushes to `main`. Server and web tests and type checks must pass locally. Pushing and merging need user authorization.
 
 ## Release and recovery (when applicable)
 

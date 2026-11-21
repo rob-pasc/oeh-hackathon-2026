@@ -1,6 +1,6 @@
 # Product Context
 
-**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. The local result journey covers assessment, ranking and explained reports, including a template fallback. See the [README status](../README.md). The scanner has not yet run on a real Windows laptop. This document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. The local result journey covers assessment, ranking and explained reports, including a template fallback. See the [README status](../README.md). The scanner has completed one elevated scan on a real Windows 11 laptop. The other Windows checks are still open. This document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
@@ -9,7 +9,7 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 - **Primary user:** an individual owner of an old Windows laptop or PC.
 - **Other stakeholders:** hackathon judges and demo audience. IT departments and refurbishers are possible future users and are not targeted by the MVP.
 
-## Core journeys (approved; journey 1 built but not yet verified on Windows, journey 2 built for six intended uses, journey 3 locally verified)
+## Core journeys (approved; journey 1 built and partly verified on Windows, journey 2 built for six intended uses, journey 3 locally verified)
 
 1. Download and run the scanner, then open the private device link. See [feature 001](features/feature-001-device-scan-and-upload/PLAN.md).
 2. Choose an intended use, see five assessed and ranked paths, and switch between Environment first and Money first. See [feature 003](features/feature-003-five-path-ranking/PLAN.md).

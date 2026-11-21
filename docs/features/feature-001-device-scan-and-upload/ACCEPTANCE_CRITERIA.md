@@ -35,8 +35,8 @@ If the user approves changing or waiving a criterion, update the approved scope 
 
 ## Review and integration evidence
 
-Completion boundary: locally verified handoff with self-review (see [PLAN.md § Review and integration](./PLAN.md#review-and-integration)). No CI exists; local Go, server, and web tests and type checks are required. Not yet reviewed.
+Completion boundary: locally verified handoff with self-review (see [PLAN.md § Review and integration](./PLAN.md#review-and-integration)). CI (`.github/workflows/ci.yaml`) now runs these checks too; local Go, server, and web tests and type checks are required. Not yet reviewed.
 
 ## Verification notes
 
-Not yet verified.
+- 2026-11-20, first elevated Windows run (T-009, partial; recorded in [TASKS.md](./TASKS.md#progress-notes)). The user ran the local window build (0.0.0-local, against the local stack) on a Lenovo convertible (product 83JT, Windows 11 26H2) through Download and Scan now, and accepted the UAC prompt. The stored record has `scan_status: complete` and no `null` field, including TPM 2.0 and the `root\WMI` battery classes. This covers the consent half of AC-001 and the Windows part of AC-014's scan flow. AC-001 stays `Not run` until the declined prompt is checked. AC-008 stays `Not run` until it is checked that **Show my results** opens the browser non-elevated. AC-014 stays `Not run` until the window has been checked against its criterion. AC-015 (offline retry) and AC-016's title bar and taskbar icon were not checked in this run.

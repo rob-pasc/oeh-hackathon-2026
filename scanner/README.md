@@ -81,11 +81,11 @@ A copy downloaded through Scan now ends with the 37-byte trailer `LEAAFSCAN1:<se
 
 These codes apply to the console build. The Windows window shows the same outcomes as screens: completion, or an error with the saved file's path.
 
-## Not verified yet
+## Windows verification
 
-No run on a real Windows laptop has happened (feature 001 T-009). Still to be checked there:
+On 2026-11-20 an elevated run on a Windows 11 laptop (Lenovo, product 83JT) went through Download and Scan now against the local stack. After the UAC prompt was accepted, it stored a `complete` scan with no `null` field, TPM and the `root\WMI` battery classes included (feature 001 T-009). Still to be checked on Windows:
 
-- the elevation prompt (accept and decline);
-- the window on Windows 10 and 11, including high-DPI displays (so far it has only been rendered off screen on Linux);
+- declining the elevation prompt;
+- the window on Windows 10, and on high-DPI displays;
 - that **Show my results** opens the browser non-elevated;
 - which battery sources read `null` even when elevated on the demo models.

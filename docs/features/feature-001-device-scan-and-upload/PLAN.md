@@ -98,7 +98,7 @@ Partly adopted during implementation (marked below); the rest is still a proposa
 
 - **Completion boundary:** Locally verified handoff with self-review. Public deployment of this functionality is owned by feature 005.
 - **Review:** Self-review of the final diff against this plan (privacy fields in particular), recorded in `ACCEPTANCE_CRITERIA.md`. No independent reviewer is required by repository policy; the team may review informally.
-- **CI/merge:** No CI exists yet. The required local checks are Go tests, server tests, web tests, and type checks. Pushing and merging need user authorization.
+- **CI/merge:** CI ([`.github/workflows/ci.yaml`](../../../.github/workflows/ci.yaml), added by feature 005 on 2026-11-20) runs the workspace checks and the scanner's Go checks on pull requests and pushes to `main`. The required local checks are Go tests, server tests, web tests, and type checks. Pushing and merging need user authorization.
 
 ## Release and recovery (when applicable)
 
