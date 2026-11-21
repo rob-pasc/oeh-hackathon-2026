@@ -1,7 +1,7 @@
 # Implementation Tasks: Admin scan overview
 
 - **Feature ID:** `feature-013-admin-scan-overview`
-- **Status:** In progress
+- **Status:** Implemented (verification pending)
 
 This is the **authoritative progress checklist**. Draft ordered, independently verifiable tasks after scope approval. Map tasks to acceptance criteria where practical. Check a task only after its work is actually complete.
 
@@ -28,9 +28,9 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 
 - [x] **T-011:** *(revision 2026-11-21)* Fallback log: additive `ai_fallbacks` table, reason mapping, `onFallback` in the category and step services, wiring in `main.ts`, and tests. (supports `AC-024`)
 - [x] **T-012:** *(revision 2026-11-21)* Admin insights: `AdminScanDetail` and `ai_usage` contracts, `GET /api/admin/scans/:id`, category and step status, fallbacks and AI usage queries, route inventory update, and tests. (supports `AC-020`, `AC-021`, `AC-022`, `AC-023`, `AC-025`, `AC-026`)
-- [ ] **T-013:** *(revision 2026-11-21)* Web: Details per row with formatted JSON, Copy JSON, AI status and fallbacks, AI calls today, live and mock client, and tests. (supports `AC-020`, `AC-022`, `AC-023`, `AC-025`)
-- [ ] **T-014:** *(revision 2026-11-21)* Docs: server README routes, the plan's approach, and a re-run of the existing admin checks for regressions. (supports `AC-019`)
-- [ ] **T-015:** *(revision 2026-11-21)* Self-review of the revision and finding resolution. (supports `AC-019`)
+- [x] **T-013:** *(revision 2026-11-21)* Web: Details per row with formatted JSON, Copy JSON, AI status and fallbacks, AI calls today, live and mock client, and tests. (supports `AC-020`, `AC-022`, `AC-023`, `AC-025`)
+- [x] **T-014:** *(revision 2026-11-21)* Docs: server README routes, the plan's approach, and a re-run of the existing admin checks for regressions. (supports `AC-019`)
+- [x] **T-015:** *(revision 2026-11-21)* Self-review of the revision and finding resolution. (supports `AC-019`)
 
 ## Dependencies and blockers
 
@@ -48,3 +48,4 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 - 2026-11-21: Implementation started after the user replied "ok lets go".
 - 2026-11-21: Implementation and self-review done on `feat/adminpage`. Status Implemented (verification pending): the browser checks of AC-002 and AC-017, merge into `main`, and the post-release check (T-010, AC-018) are open. Evidence: [ACCEPTANCE_CRITERIA.md](./ACCEPTANCE_CRITERIA.md#review-and-integration-evidence).
 - 2026-11-21: Scope extended by the [revision](./PLAN.md#scope-change-log) (FR-013 to FR-017); status back to In progress for T-011 to T-015.
+- 2026-11-21: Revision implemented and self-reviewed (AC-020 to AC-026 pass). Status Implemented (verification pending): the browser checks of AC-002 and AC-017, merge into `main`, and the post-release check (T-010, AC-018) are still open.
