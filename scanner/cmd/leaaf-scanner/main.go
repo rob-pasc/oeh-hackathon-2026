@@ -54,6 +54,7 @@ func config(out io.Writer) run.Config {
 		BackendURL:     backendURL,
 		ScannerVersion: version,
 		OutDir:         outDir,
+		SaveFailed:     saveFailed,
 		Collect:        collect.Collect,
 		Now:            time.Now,
 		HTTP:           &http.Client{Timeout: 30 * time.Second},

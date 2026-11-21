@@ -443,3 +443,23 @@ func TestUnreachableIsRetryable(t *testing.T) {
 		t.Errorf("unreachable server should be retryable: %+v", e)
 	}
 }
+
+func TestSaveFailureUsesTheConfiguredMessage(t *testing.T) {
+	for _, custom := range []string{"", "The scanner could not save its results in your home folder."} {
+		var events []Event
+		cfg, _ := testConfig(t, "http://127.0.0.1:1", &events)
+		cfg.OutDir = filepath.Join(t.TempDir(), "missing", "folder")
+		cfg.SaveFailed = custom
+		if code := NewRunner(cfg).Scan(); code != ExitSaveFailed {
+			t.Fatalf("scan: %d", code)
+		}
+		e := last(t, events)
+		want := custom
+		if want == "" {
+			want = "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again."
+		}
+		if e.Kind != EventFailed || e.Message != want {
+			t.Errorf("got %q, want %q", e.Message, want)
+		}
+	}
+}

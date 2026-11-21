@@ -148,6 +148,19 @@ describe('scan sessions', () => {
     expect(unknown.statusCode).toBe(404)
   })
 
+  it('serves an archive it cannot rename without the session rather than failing', async () => {
+    const db = new DatabaseSync(':memory:')
+    const dir = mkdtempSync(join(tmpdir(), 'leaaf-'))
+    const zip = join(dir, 'leaaf-scanner-macos.zip')
+    writeFileSync(zip, 'PK not really a zip archive')
+    const app = buildApp({ devices: createSqliteDeviceStore(db), sessions: createSqliteSessionStore(db), publicBaseUrl: 'https://leaaf.example', scannerPaths: { macos: zip } })
+    servers.push(app)
+    const { download_url } = (await app.inject({ method: 'POST', url: '/api/sessions', payload: { os: 'macos' } })).json<ScanSession>()
+    const res = await app.inject({ method: 'GET', url: download_url })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toBe('PK not really a zip archive')
+  })
+
   it('streams scanner steps and completes when the upload carries the session ID', async () => {
     const app = setup()
     const base = await app.listen({ port: 0, host: '127.0.0.1' })

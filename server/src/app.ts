@@ -5,7 +5,7 @@
 // There is deliberately no route that lists devices (FR-011): the unguessable device ID is the
 // only access control.
 import { createReadStream, existsSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { Readable } from 'node:stream'
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import {
@@ -66,6 +66,14 @@ const DOWNLOAD_TYPES: Record<OsFamily, { contentType: string; filename: string }
   macos: { contentType: 'application/zip', filename: 'leaaf-scanner-macos.zip' },
 }
 const MAC_BUNDLE = 'leaaf-scanner.app'
+
+/** The macOS archive, read once per file version: session downloads are not rate-limited. */
+let macArchive: { path: string; mtimeMs: number; data: Buffer } | null = null
+async function readMacArchive(path: string): Promise<Buffer> {
+  const { mtimeMs } = await stat(path)
+  if (macArchive?.path !== path || macArchive.mtimeMs !== mtimeMs) macArchive = { path, mtimeMs, data: await readFile(path) }
+  return macArchive.data
+}
 const isIntendedUse = createValidator(IntendedUse)
 
 const sseFrame = (event: string, data: unknown) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
@@ -188,11 +196,15 @@ export function buildApp(options: AppOptions): FastifyInstance {
       if (os === 'macos') {
         // The app's signature covers everything inside the bundle but not the bundle folder's
         // name, so the session goes there (feature 007; read back by run.SessionFromBundle).
+        const archive = await readMacArchive(path)
         try {
-          return reply.send(renameZipRoot(await readFile(path), MAC_BUNDLE, `leaaf-scanner-${sessionId}.app`))
+          return reply.send(renameZipRoot(archive, MAC_BUNDLE, `leaaf-scanner-${sessionId}.app`))
         } catch (err) {
-          if (err instanceof ZipError) throw new Error(`invalid macOS scanner archive: ${err.message}`)
-          throw err
+          if (!(err instanceof ZipError)) throw err
+          // An archive the renamer cannot handle (for example Zip64) still works without the
+          // session: the window's Show my results button opens the device page.
+          req.log.warn({ reason: err.message }, 'macOS scanner served without its session')
+          return reply.send(archive)
         }
       }
       // Windows never loads bytes after the last PE section (an "overlay"), and the Linux loader

@@ -31,8 +31,11 @@ type Config struct {
 	// BackendURL is the API origin, fixed at build time (FR-007).
 	BackendURL     string
 	ScannerVersion string
-	// OutDir receives the JSON file; the directory of the executable in production.
+	// OutDir receives the JSON file: the directory of the executable, or the home folder on macOS.
 	OutDir string
+	// SaveFailed is the message when the JSON cannot be written to OutDir; empty for the
+	// default, which suggests moving the scanner to another folder.
+	SaveFailed string
 	// Collect returns the system's raw readings and notes about sources that failed.
 	Collect func(progress func(string)) (scan.Reading, []string)
 	Now     func() time.Time
@@ -167,7 +170,11 @@ func (r *Runner) Scan() int {
 	path := filepath.Join(cfg.OutDir, "leaaf-scan-"+cfg.Now().UTC().Format("20060102-150405")+".json")
 	if err := os.WriteFile(path, body, 0o644); err != nil {
 		fmt.Fprintf(out, "Error: could not save the scan to %s: %v\n", path, err)
-		r.fail("scanner_failed", "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again.", err.Error())
+		msg := cfg.SaveFailed
+		if msg == "" {
+			msg = "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again."
+		}
+		r.fail("scanner_failed", msg, err.Error())
 		return ExitSaveFailed
 	}
 	fmt.Fprintf(out, "Saved the scan to %s\n", path)
