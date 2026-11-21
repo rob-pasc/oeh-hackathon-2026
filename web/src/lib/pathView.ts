@@ -36,7 +36,7 @@ export interface CardView {
   summary: string
   /** Short key figures under the summary. */
   metrics: CardMetric[]
-  /** "What to do" steps; null when the card has no steps section (options until feature 009). */
+  /** One-line "What to do" steps of a path card; null for categories and options, whose step plans come separately (feature 009). */
   steps: string[] | null
   why: string | null
   /** At most two cited sources. */

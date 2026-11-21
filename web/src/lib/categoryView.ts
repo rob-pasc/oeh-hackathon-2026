@@ -55,7 +55,7 @@ function optionView({ option, total }: RankedOption, categoryId: string, result:
       { label: 'CO₂e avoided', value: impact ? formatAvoided(impact) : '—', hint: 'Compared with buying a comparable new laptop now.' },
       scoreMetric(total),
     ],
-    // Step plans arrive with feature 009; until then an option card has no steps section.
+    // The option card shows its step plan (feature 009) through PathCard's `plan`, not these one-line steps.
     steps: null,
     why: option.why || null,
     sources: sources.slice(0, MAX_SOURCES),

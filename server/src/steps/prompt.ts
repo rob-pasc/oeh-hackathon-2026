@@ -19,7 +19,7 @@ import { SAFETY_RULES } from '../categories/prompt.ts'
 import { passageContext } from '../facts/prompt.ts'
 import type { JsonRequest } from '../llm/types.ts'
 
-export const STEP_PROMPT_VERSION = 'steps-v1'
+export const STEP_PROMPT_VERSION = 'steps-v3'
 
 const strict = { additionalProperties: false } as const
 
@@ -55,7 +55,7 @@ Return 1 to ${MAX_STEPS} steps in the order the owner does them. For each step:
 - title: an imperative sentence of at most ${STEP_TITLE_MAX} characters. detail: one to three sentences saying how to do it.
 - tools: the tools it needs, for example "Phillips #0 screwdriver". parts: the parts it needs with their specification, for example "8 GB DDR4-2400 SO-DIMM". Use empty lists when none are needed.
 - minutes: a low-high range of minutes the step takes, or null when unknown.
-- kind: "technical" when the step opens the device, handles internal parts, names a part specification or depends on compatibility; otherwise "general" (backing up, resetting the operating system, finding a repair or donation offer).
+- kind: "technical" when the step opens or reassembles the device, handles internal parts or cables, names a part specification, or checks whether a part fits or is compatible; otherwise "general" (backing up, resetting the operating system, finding a repair or donation offer). Refitting a cover, reconnecting a battery and checking that a part fits another computer are technical. Never mark a step "general" to avoid citing a passage; when in doubt, use "technical".
 - passage_ids: the passages that support the step, copied exactly as supplied. Every technical step must cite a passage that supports it; technical steps without one are removed. General steps may come from your own reasoning and need no citation.
 - safety: "none"; "caution" when a mistake can damage the device or hurt the owner, with the warning sentence in warning; or "professional" when a service provider must do it, and then the detail says to have a service provider do it. warning is null unless safety is "caution".
 
@@ -64,7 +64,7 @@ ${SAFETY_RULES.map((rule) => `- ${rule}`).join('\n')}
 - Flag a step "professional" whenever these rules or the supplied passages say a service provider should do it.
 
 When the passages name local offers in Austria, such as repair cafés, the repair bonus, donation or collection points, name them in the relevant step.
-When the option's status is "not_suitable", return one or two general steps saying what to check or which other option to consider instead.
+When the option's status is "not_suitable", return one or two general steps saying which other option to consider instead, by name and without part specifications.
 Never include numeric euro or CO2e figures in any text field. Hardware quantities such as "8 GB" are fine.
 Follow scan.os.family: give instructions for that operating system, and when it is "macos" or "linux", do not mention Windows 11.`
 
