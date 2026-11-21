@@ -2,6 +2,7 @@ import type { CardView } from '../lib/pathView'
 import { PathCard } from './PathCard'
 import { PathHeader, SUMMARY_BLOCK } from './PathHeader'
 import { StepsView } from './StepsView'
+import { Thinking } from './Thinking'
 import { Sk } from './ui'
 
 interface Props {
@@ -41,17 +42,20 @@ export function PathTabView({ path, options, pending, selectedKey, openKey, onTo
           />
         ))
       ) : (
-        <div aria-hidden="true" className="flex flex-col gap-3.5" data-testid="options-skeleton">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="flex items-center gap-4 rounded-[20px] bg-white px-5 py-[18px] shadow-card">
-              <Sk className="h-12 w-12 flex-none rounded-[14px]" />
-              <div className="flex flex-1 flex-col gap-2.5">
-                <Sk className="h-4 w-2/5" />
-                <Sk className="h-3 w-4/5" />
+        <>
+          <Thinking className="px-1" />
+          <div aria-hidden="true" className="flex flex-col gap-3.5" data-testid="options-skeleton">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-4 rounded-[20px] bg-white px-5 py-[18px] shadow-card">
+                <Sk className="h-12 w-12 flex-none rounded-[14px]" />
+                <div className="flex flex-1 flex-col gap-2.5">
+                  <Sk className="h-4 w-2/5" />
+                  <Sk className="h-3 w-4/5" />
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

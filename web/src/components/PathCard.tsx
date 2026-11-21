@@ -1,5 +1,6 @@
 import type { CardView } from '../lib/pathView'
 import { PathHeader } from './PathHeader'
+import { Thinking } from './Thinking'
 import { Sk } from './ui'
 
 const SECTION_LABEL = 'text-xs font-bold tracking-wider text-leaf uppercase'
@@ -45,6 +46,7 @@ export function PathCard({ view, selected, open, reportPending, onToggle, childr
 
       {open ? (
         <div className="fade-up grid sm:grid-cols-2 gap-x-7 gap-y-3.5 border-t border-line pt-4 pr-5 pb-5 pl-5 sm:pl-[84px]">
+          {reportPending && view.steps.length === 0 && !view.why ? <Thinking className="sm:col-span-2" /> : null}
           <div className="flex flex-col gap-2">
             <span className={SECTION_LABEL}>What to do</span>
             {view.steps.length > 0 ? (

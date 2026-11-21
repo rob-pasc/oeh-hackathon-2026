@@ -1,5 +1,6 @@
 import type { CardView } from '../lib/pathView'
 import { PathHeader, SUMMARY_BLOCK } from './PathHeader'
+import { Thinking } from './Thinking'
 import { Sk } from './ui'
 
 const BLOCK = 'rounded-[20px] bg-white shadow-card'
@@ -30,14 +31,17 @@ export function StepsView({ view, reportPending }: Props) {
           ))}
         </ol>
       ) : reportPending ? (
-        <div aria-hidden="true" className="flex flex-col gap-3.5">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className={`${BLOCK} flex items-center gap-4 px-5 py-[18px]`}>
-              <Sk className="h-12 w-12 flex-none rounded-[14px]" />
-              <Sk className="h-4 w-3/5" />
-            </div>
-          ))}
-        </div>
+        <>
+          <Thinking className="px-1" />
+          <div aria-hidden="true" className="flex flex-col gap-3.5">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={`${BLOCK} flex items-center gap-4 px-5 py-[18px]`}>
+                <Sk className="h-12 w-12 flex-none rounded-[14px]" />
+                <Sk className="h-4 w-3/5" />
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <div className={`${BLOCK} px-5 py-[18px] text-[15px] text-muted`}>No steps available for this path.</div>
       )}

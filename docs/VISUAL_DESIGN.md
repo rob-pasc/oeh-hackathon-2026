@@ -35,14 +35,14 @@ Calm, light, and friendly: mostly white and off-white surfaces with one fresh gr
 - **Path summary block:** a flat light-green block without shadow or chevron that heads a path tab. It is not clickable and must not look like a card; the white icon tile sits on the tint.
 - **Option card:** a path card without rank, with the figures Cost, Extra life, and CO₂e added; opens to the steps like a path card.
 - **Step block:** same white card as a path card, with the step number in a light-green tile and one line of text.
-- **Loading:** grey shimmer blocks in the exact layout of the final screen; a spinner with a one-line status above them.
+- **Loading:** grey shimmer blocks in the exact layout of the final screen; a spinner with a one-line status above them. While waiting for the AI, a thinking line instead: a small leaf glyph whose six petals light up in turn, and a rotating phrase ("Thinking…", "Evaluating…") in muted semibold text.
 - **Errors:** white card with a title and one explanatory sentence; amber notes for incomplete data.
 
 ## Responsive behavior, accessibility, and motion
 
 - Report pages retain two columns from 1280 px. On narrower screens the gauge and specs follow the cards. The compact toolbar allows horizontal scrolling within the path tags.
 - Visible focus ring (3 px light green). Native `select` and `button` elements. Color is never the only carrier of meaning: statuses are also written out.
-- Shimmer, spinner, and needle motion are switched off for `prefers-reduced-motion`.
+- Shimmer, spinner, thinking glyph, and needle motion are switched off for `prefers-reduced-motion`.
 
 ## Proposed changes and open questions
 

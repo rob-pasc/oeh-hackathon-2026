@@ -17,6 +17,7 @@ import { Gauge } from './Gauge'
 import { PathCard } from './PathCard'
 import { PathTabView } from './PathTabView'
 import { ResultSkeleton } from './ResultSkeleton'
+import { Thinking } from './Thinking'
 import { SpecsCard } from './SpecsCard'
 import { Toolbar } from './Toolbar'
 import { ErrorCard } from './ui'
@@ -142,7 +143,10 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
       {streamError && !assessment ? (
         <ErrorCard title="We could not load your results" message={streamError.message} />
       ) : !assessment || scan.state === 'loading' ? (
-        <ResultSkeleton />
+        <div className="flex flex-col gap-3.5">
+          <Thinking label="Assessing your computer…" className="px-1" />
+          <ResultSkeleton />
+        </div>
       ) : (
         <div className="fade-up grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] items-start gap-7">
           <div className="relative flex flex-col gap-3.5">
