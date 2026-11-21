@@ -10,7 +10,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 
 ## Status
 
-**In progress.** The full journey works locally, from scan to explained report. The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. The first release images (`v0.1.0`) are published to GHCR. The public site at [leaaf.green](https://leaaf.green) is not deployed yet.
+**In progress.** The full journey works locally, from scan to explained report. The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. The latest release images (`v0.2.0`) are published to GHCR. The public site at [leaaf.green](https://leaaf.green) is not deployed yet.
 
 | # | Feature | Status |
 |---|---|---|
