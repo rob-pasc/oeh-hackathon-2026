@@ -12,6 +12,7 @@ import { App } from '../app/App'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
 import { Footer } from '../components/Footer'
 import { Inline } from '../pages/Legal'
+import { PROVIDER } from '../legal/provider'
 import { ReportDetails } from '../components/ReportDetails'
 import { ResultsView } from '../components/ResultsView'
 import { SpecsCard } from '../components/SpecsCard'
@@ -525,7 +526,9 @@ describe('Imprint and privacy notice (feature 006 FR-046)', () => {
     window.history.replaceState(null, '', '/imprint')
     const { unmount } = render(withApi(<App />))
     expect(screen.getByRole('main')).toHaveTextContent('Yannik Fischer')
-    expect(screen.getByRole('main')).toHaveTextContent('Hohenems')
+    // Check against the configured address rather than a fixed town, so a change of address in
+    // provider.ts does not need a test change.
+    for (const line of PROVIDER.address) expect(screen.getByRole('main')).toHaveTextContent(line)
     unmount()
 
     window.history.replaceState(null, '', '/privacy')

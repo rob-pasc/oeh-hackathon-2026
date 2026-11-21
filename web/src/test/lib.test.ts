@@ -13,7 +13,7 @@ import { liveClient } from '../api/live'
 import { USE_TAGS } from '../lib/labels'
 import { explainModeChange } from '../lib/modeChange'
 import { existsSync, readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { resolve } from 'node:path'
 import { parseRoute } from '../app/router'
 import { legalDoc } from '../legal/content'
 import { GAUGE, TRACK_PATH, arcPath, needleAngle, polar } from '../lib/gauge'
@@ -305,13 +305,15 @@ describe('legal texts and fonts (feature 006 FR-046)', () => {
 
   it('self-hosts Inter: no font provider in index.html and every @font-face file exists', () => {
     // Read as plain files: with `css: false` Vitest would return an empty string for an imported .css file.
-    const indexHtml = readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8')
-    const indexCss = readFileSync(fileURLToPath(new URL('../index.css', import.meta.url)), 'utf8')
+    // Paths are resolved from the web workspace (Vitest's working directory), because under jsdom
+    // `import.meta.url` is not a file: URL.
+    const indexHtml = readFileSync(resolve('index.html'), 'utf8')
+    const indexCss = readFileSync(resolve('src/index.css'), 'utf8')
     expect(indexHtml).not.toMatch(/googleapis|gstatic/)
     const files = [...indexCss.matchAll(/url\('(\/fonts\/[^']+)'\)/g)].map((match) => match[1] as string)
     expect(files.length).toBeGreaterThanOrEqual(5)
     for (const file of files) {
-      expect(existsSync(fileURLToPath(new URL(`../../public${file}`, import.meta.url))), file).toBe(true)
+      expect(existsSync(resolve(`public${file}`)), file).toBe(true)
     }
   })
 })
