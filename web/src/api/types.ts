@@ -1,5 +1,5 @@
 import type { Assessment, Impact } from '@leaaf/shared/assessment'
-import type { Path, Suitability } from '@leaaf/shared/common'
+import type { OsFamily, Path, Suitability } from '@leaaf/shared/common'
 import type { DeviceRecord } from '@leaaf/shared/device'
 import type { Report } from '@leaaf/shared/report'
 import type { UseTag } from '../lib/labels'
@@ -104,7 +104,8 @@ export interface ReportStreamHandlers {
 
 export interface ApiClient {
   mode: 'mock' | 'live'
-  createScanSession(): Promise<ScanSession>
+  /** Starts a scan session whose download is the scanner for `os` (feature 007 FR-012). */
+  createScanSession(os: OsFamily): Promise<ScanSession>
   /** Subscribes to the scanner's progress; returns an unsubscribe function. */
   subscribeScanSession(sessionId: string, onEvent: (event: ScanSessionEvent) => void): () => void
   getDevice(deviceId: string): Promise<DeviceRecord>

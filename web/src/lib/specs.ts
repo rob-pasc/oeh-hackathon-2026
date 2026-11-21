@@ -93,8 +93,16 @@ export function summarizeScan(scan: DeviceScan): SpecsSummary {
   // Graphics
   if (gpus !== null && gpus.length > 0) rows.push({ label: 'Graphics', value: gpus.join(', '), tone: 'neutral' })
 
-  // Windows 11 readiness hint: only what the scan can show without claiming a verdict.
-  const tpmValue = tpm.present === null ? UNKNOWN : tpm.present ? `TPM ${tpm.spec_version ?? ''}`.trim() : 'No TPM'
+  // Windows 11 readiness hint: only what the scan can show without claiming a verdict. Macs have
+  // no TPM at all, so for them the row says so instead of "Unknown" (feature 007 FR-019).
+  const tpmValue =
+    os.family === 'macos'
+      ? 'Not applicable'
+      : tpm.present === null
+        ? UNKNOWN
+        : tpm.present
+          ? `TPM ${tpm.spec_version ?? ''}`.trim()
+          : 'No TPM'
   rows.push({ label: 'Security chip', value: tpmValue, tone: tpm.present === false ? 'warn' : 'neutral' })
 
   return { title: name, subtitle, rows, batteryPercent }

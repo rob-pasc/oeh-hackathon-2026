@@ -1,14 +1,16 @@
 import { useState } from 'react'
+import type { OsFamily } from '@leaaf/shared/common'
 import { useApi } from '../api'
 import { navigate } from '../app/router'
 import { Footer } from '../components/Footer'
 import { Logo } from '../components/Logo'
 import { PRIMARY_BUTTON } from '../components/ui'
+import { detectOs, PLATFORM_ORDER, PLATFORMS } from '../lib/platform'
 
 const STEPS = [
   {
     title: 'Scan Device',
-    text: 'Run a small Windows scanner. It reads your hardware, nothing personal.',
+    text: 'Run a small scanner on Windows, Mac or Linux. It reads your hardware, nothing personal.',
     icon: 'M4 5h16v11H4zM2 19h20',
   },
   {
@@ -23,23 +25,29 @@ const STEPS = [
   },
 ] as const
 
+const LINK_BUTTON = 'cursor-pointer border-0 bg-transparent p-0 font-semibold text-leaf underline underline-offset-2 disabled:cursor-wait'
+
 export function Landing() {
   const api = useApi()
+  const [detected] = useState<OsFamily | null>(() => (typeof navigator === 'undefined' ? null : detectOs(navigator)))
+  // The system whose steps are shown: the detected one, or the last one the visitor chose.
+  const [shown, setShown] = useState<OsFamily | null>(detected)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function startScan() {
+  async function startScan(os: OsFamily) {
     if (busy) return
     setBusy(true)
     setError(null)
+    setShown(os)
     // Open the result tab inside the click handler so popup blockers allow it, then point it at the session.
     const tab = window.open('', '_blank')
     try {
-      const session = await api.createScanSession()
+      const session = await api.createScanSession(os)
       if (session.download_url) {
         const link = document.createElement('a')
         link.href = session.download_url
-        link.download = 'leaaf-scanner.exe'
+        link.download = PLATFORMS[os].filename
         document.body.appendChild(link)
         link.click()
         link.remove()
@@ -54,6 +62,9 @@ export function Landing() {
       setBusy(false)
     }
   }
+
+  const platform = shown ? PLATFORMS[shown] : null
+  const others = PLATFORM_ORDER.filter((os) => os !== detected)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -91,28 +102,70 @@ export function Landing() {
           </ol>
 
           <div className="flex flex-col items-center gap-3">
-            <details className="max-w-[580px] text-left text-sm text-muted">
-              <summary className="cursor-pointer text-center font-semibold text-ink">What does the scanner collect?</summary>
-              <p className="mt-3">
-                Windows asks for administrator access. When you press Start scan, leaaf reads your device model,
-                processor, graphics, memory, internal drives, battery health, Windows version, and firmware settings
-                including TPM and Secure Boot.
-              </p>
-              <p className="mt-2">
-                It saves the scan next to the scanner and uploads it to leaaf for your report. The scan excludes
-                personal files, user and computer names, serial numbers, device UUIDs, and network addresses.
-              </p>
-            </details>
-            <button
-              type="button"
-              onClick={startScan}
-              disabled={busy}
-              className={`${PRIMARY_BUTTON} mb-[15px] py-6 text-[26px] font-bold disabled:cursor-wait disabled:opacity-80`}
-            >
-              Download and Scan now
-              <span aria-hidden="true">→</span>
-            </button>
-            <span className="text-sm text-muted">Windows laptops and PCs. Opens a new tab and downloads a small scanner.</span>
+            {platform ? (
+              <details className="max-w-[580px] text-left text-sm text-muted">
+                <summary className="cursor-pointer text-center font-semibold text-ink">What does the scanner collect?</summary>
+                <p className="mt-3">{platform.reads}</p>
+                <p className="mt-2">
+                  {platform.saves} and uploads it to leaaf for your report. The scan excludes personal files, user and
+                  computer names, serial numbers, device UUIDs, and network addresses.
+                </p>
+              </details>
+            ) : null}
+            {detected ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => startScan(detected)}
+                  disabled={busy}
+                  className={`${PRIMARY_BUTTON} mb-[15px] py-6 text-[26px] font-bold disabled:cursor-wait disabled:opacity-80`}
+                >
+                  Download and Scan now
+                  <span aria-hidden="true">→</span>
+                </button>
+                <span className="text-sm text-muted">
+                  Scanner for {PLATFORMS[detected].label}. Opens a new tab and downloads a small scanner.
+                </span>
+                <span className="text-sm text-muted">
+                  Other systems:{' '}
+                  {others.map((os, i) => (
+                    <span key={os}>
+                      {i > 0 ? ' · ' : null}
+                      <button type="button" onClick={() => startScan(os)} disabled={busy} className={LINK_BUTTON}>
+                        {PLATFORMS[os].label}
+                      </button>
+                    </span>
+                  ))}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-base text-ink">Run the scanner on the computer you want to check.</span>
+                <div className="flex flex-wrap justify-center gap-3" role="group" aria-label="Download the scanner">
+                  {PLATFORM_ORDER.map((os) => (
+                    <button
+                      key={os}
+                      type="button"
+                      onClick={() => startScan(os)}
+                      disabled={busy}
+                      className={`${PRIMARY_BUTTON} py-4 text-lg font-bold disabled:cursor-wait disabled:opacity-80`}
+                    >
+                      Download for {PLATFORMS[os].label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {platform ? (
+              <section aria-label={`How to run the scanner on ${platform.label}`} className="max-w-[580px] text-left text-sm text-muted">
+                <h3 className="m-0 mb-1 text-center text-sm font-semibold text-ink">How to run it on {platform.label}</h3>
+                <ol className="m-0 pl-5">
+                  {platform.steps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+              </section>
+            ) : null}
             {error ? (
               <span role="alert" className="text-sm font-semibold text-rose-ink">
                 {error}
