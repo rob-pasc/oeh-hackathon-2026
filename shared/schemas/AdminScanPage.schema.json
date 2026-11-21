@@ -5,6 +5,7 @@
   "type": "object",
   "required": [
     "total",
+    "ai_usage",
     "page",
     "page_size",
     "scans"
@@ -13,6 +14,29 @@
     "total": {
       "type": "integer",
       "minimum": 0
+    },
+    "ai_usage": {
+      "type": "object",
+      "required": [
+        "day",
+        "used",
+        "cap"
+      ],
+      "properties": {
+        "day": {
+          "type": "string",
+          "format": "date"
+        },
+        "used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cap": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
     },
     "page": {
       "type": "integer",

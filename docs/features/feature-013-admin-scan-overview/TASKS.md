@@ -26,8 +26,8 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 - [x] **T-009:** Self-review of the final diff (authentication, sessions, rate limits, logging), record findings and their resolution, rerun the checks. (supports `AC-019`)
 - [ ] **T-010:** After the release: post-release checks on the deployed site. (supports `AC-018`)
 
-- [ ] **T-011:** *(revision 2026-11-21)* Fallback log: additive `ai_fallbacks` table, reason mapping, `onFallback` in the category and step services, wiring in `main.ts`, and tests. (supports `AC-024`)
-- [ ] **T-012:** *(revision 2026-11-21)* Admin insights: `AdminScanDetail` and `ai_usage` contracts, `GET /api/admin/scans/:id`, category and step status, fallbacks and AI usage queries, route inventory update, and tests. (supports `AC-020`, `AC-021`, `AC-022`, `AC-023`, `AC-025`, `AC-026`)
+- [x] **T-011:** *(revision 2026-11-21)* Fallback log: additive `ai_fallbacks` table, reason mapping, `onFallback` in the category and step services, wiring in `main.ts`, and tests. (supports `AC-024`)
+- [x] **T-012:** *(revision 2026-11-21)* Admin insights: `AdminScanDetail` and `ai_usage` contracts, `GET /api/admin/scans/:id`, category and step status, fallbacks and AI usage queries, route inventory update, and tests. (supports `AC-020`, `AC-021`, `AC-022`, `AC-023`, `AC-025`, `AC-026`)
 - [ ] **T-013:** *(revision 2026-11-21)* Web: Details per row with formatted JSON, Copy JSON, AI status and fallbacks, AI calls today, live and mock client, and tests. (supports `AC-020`, `AC-022`, `AC-023`, `AC-025`)
 - [ ] **T-014:** *(revision 2026-11-21)* Docs: server README routes, the plan's approach, and a re-run of the existing admin checks for regressions. (supports `AC-019`)
 - [ ] **T-015:** *(revision 2026-11-21)* Self-review of the revision and finding resolution. (supports `AC-019`)
@@ -41,6 +41,7 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 
 - 2026-11-21: Server and contracts done. `ApiError` gains the codes `unauthorized` and `unsupported_media_type`. Fastify refuses bodies it has no parser for (such as form-encoded) with 400 before the login route runs; `text/plain` reaches the route and gets 415. Either way no session starts (AC-015). The request-log serializer moved into `app.ts` as `REQUEST_LOG_SERIALIZERS`, so the log test uses the production serializer.
 - 2026-11-21: Web page done. `ApiClientError` gains an optional `retryAfter` from the 429 header, so the form can say how long to wait. Mock mode accepts the sample login `admin` / `sample-admin-password` and shows it on the form; the live server never knows it. The page sets a `robots` meta tag while shown, and the server adds `X-Robots-Tag` to every admin API response.
+- 2026-11-21 (revision): The explanation report (feature 004) is no longer wired into the server, so only the category and step calls record fallbacks. A step template shown because the categories already fell back is not recorded twice. The fallback log is a new additive table `ai_fallbacks`; the insights module reads the service caches and treats a missing table as empty.
 
 ## Lifecycle history
 

@@ -3,8 +3,9 @@
 // The cache stores the AI's checked answer, not the finished result: figures and scores are
 // recomputed from the current assessment on every read, so they always match the impact table and
 // weights the assessment used (FR-003, FR-014).
+import type { RecordFallback } from '../admin/fallbacks.ts'
 import type { DatabaseSync } from 'node:sqlite'
-import { createValidator, usesWindowsRules, type Category, type CategoryResult, type DeviceScan, type OptionKind } from '@leaaf/shared'
+import { createValidator, usesWindowsRules, type AiFallbackReason, type Category, type CategoryResult, type DeviceScan, type OptionKind } from '@leaaf/shared'
 import type { Static } from 'typebox'
 import { indexImpactTable } from '../assessment/calculator.ts'
 import { runGates } from '../assessment/gates.ts'
@@ -117,6 +118,8 @@ export interface CategoryServiceDeps {
   impactTable: ImpactTable
   /** Receives the reason a fallback was used; never device IDs or prompt content. */
   warn?: (message: string, details?: Record<string, unknown>) => void
+  /** Records each fallback for the admin page (feature 013 FR-016). */
+  onFallback?: RecordFallback
 }
 
 export function createCategoryService(db: DatabaseSync, llm: LlmClient | null, deps: CategoryServiceDeps) {
@@ -150,15 +153,16 @@ export function createCategoryService(db: DatabaseSync, llm: LlmClient | null, d
 
   async function categorize(scan: DeviceScan, input: DeviceAssessment): Promise<CategoryResult> {
     const { device_id, intended_use } = input.assessment
-    const fallback = (reason: string, details: Record<string, unknown> = {}) => {
+    const fallback = (reason: string, code: AiFallbackReason, details: Record<string, unknown> = {}) => {
       deps.warn?.(`category call unavailable, showing the five paths: ${reason}`, details)
+      deps.onFallback?.({ device_id, intended_use, call: 'categories', option_id: null, reason: code })
       return fallbackCategories(input)
     }
 
     const hit = cached(scan, input)
     if (hit) return hit
 
-    if (!llm) return fallback('no LLM configured')
+    if (!llm) return fallback('no LLM configured', 'no_llm')
     const key = JSON.stringify([device_id, intended_use])
     let generation = pending.get(key)
     if (!generation) {
@@ -178,8 +182,8 @@ export function createCategoryService(db: DatabaseSync, llm: LlmClient | null, d
       const { output, generated_at } = await generation
       return buildResult(scan, input, output, generated_at, deps.impactTable)
     } catch (error) {
-      if (error instanceof LlmError) return fallback(error.message, { kind: error.kind })
-      if (error instanceof UnusableAnswer) return fallback(error.message)
+      if (error instanceof LlmError) return fallback(error.message, error.kind, { kind: error.kind })
+      if (error instanceof UnusableAnswer) return fallback(error.message, 'rejected_answer')
       throw error
     }
   }

@@ -31,6 +31,7 @@ import {
 import { hourlyLimit, loadLimits } from './limits.ts'
 import type { AdminConfig } from './admin/config.ts'
 import { registerAdminRoutes } from './admin/routes.ts'
+import { emptyInsights, type AdminInsights } from './admin/insights.ts'
 import type { AssessmentService } from './assessment/service.ts'
 import type { DeviceStore } from './devices/store.ts'
 import { checkScan } from './devices/validate.ts'
@@ -57,6 +58,8 @@ export interface AppOptions {
   scannerPaths?: Partial<Record<OsFamily, string>>
   /** The admin area (feature 013); absent or null keeps every /api/admin/* route 404. */
   admin?: AdminConfig | null
+  /** AI status for the admin page; without it the page shows no AI use. */
+  adminInsights?: AdminInsights
   /** Clock for admin sessions and login limits; tests replace it. */
   now?: () => number
   logger?: FastifyServerOptions['logger']
@@ -120,7 +123,13 @@ export function buildApp(options: AppOptions): FastifyInstance {
 
   app.setNotFoundHandler((_req, reply) => reply.code(404).send(apiError('not_found', 'not found')))
 
-  if (options.admin) registerAdminRoutes(app, { config: options.admin, devices: options.devices, now: options.now ?? Date.now })
+  if (options.admin)
+    registerAdminRoutes(app, {
+      config: options.admin,
+      devices: options.devices,
+      insights: options.adminInsights ?? emptyInsights(limits.dailyCalls),
+      now: options.now ?? Date.now,
+    })
 
   app.post(API_ROUTES.uploadDevice, { bodyLimit: limits.uploadBytes, onRequest: hourlyLimit(limits.uploadsPerHour) }, async (req, reply) => {
     const checked = checkScan(req.body)

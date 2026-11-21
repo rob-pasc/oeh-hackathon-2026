@@ -2,10 +2,12 @@ import { readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { Writable } from 'node:stream'
 import { afterEach, describe, expect, it } from 'vitest'
-import { AdminScanPage, createValidator, type DeviceScan } from '@leaaf/shared'
+import { AdminScanDetail, AdminScanPage, createValidator, type DeviceScan } from '@leaaf/shared'
 import { buildApp, REQUEST_LOG_SERIALIZERS } from '../src/app.ts'
 import { credentialsMatch } from '../src/admin/auth.ts'
 import { loadAdminConfig } from '../src/admin/config.ts'
+import { createFallbackLog } from '../src/admin/fallbacks.ts'
+import { createAdminInsights } from '../src/admin/insights.ts'
 import { createSqliteDeviceStore } from '../src/devices/store.ts'
 import { createSqliteSessionStore } from '../src/sessions/store.ts'
 
@@ -22,7 +24,7 @@ afterEach(async () => {
   await Promise.all(apps.splice(0).map((a) => a.close()))
 })
 
-function setup(options: { admin?: typeof config | null; logLines?: string[] } = {}) {
+function setup(options: { admin?: typeof config | null; logLines?: string[]; insights?: boolean } = {}) {
   const db = new DatabaseSync(':memory:')
   const devices = createSqliteDeviceStore(db)
   const clock = { t: Date.UTC(2026, 10, 21, 12) }
@@ -31,6 +33,7 @@ function setup(options: { admin?: typeof config | null; logLines?: string[] } = 
     sessions: createSqliteSessionStore(db),
     publicBaseUrl: 'https://leaaf.example',
     admin: options.admin === undefined ? config : options.admin,
+    ...(options.insights ? { adminInsights: createAdminInsights(db, 200, () => new Date(clock.t)) } : {}),
     now: () => clock.t,
     ...(options.logLines
       ? {
@@ -48,7 +51,7 @@ function setup(options: { admin?: typeof config | null; logLines?: string[] } = 
       : {}),
   })
   apps.push(app)
-  return { app, devices, clock }
+  return { app, devices, clock, db }
 }
 
 type App = ReturnType<typeof setup>['app']
@@ -250,7 +253,7 @@ describe('admin scan list (FR-007, FR-008, FR-009)', () => {
     }
   })
 
-  it('offers exactly four admin routes, none of which edits or deletes (FR-008, FR-011)', async () => {
+  it('offers exactly five admin routes, none of which edits or deletes (FR-008, FR-011)', async () => {
     const { app } = setup()
     await app.ready()
     const admin: [string, string][] = [
@@ -258,10 +261,17 @@ describe('admin scan list (FR-007, FR-008, FR-009)', () => {
       ['POST', '/api/admin/logout'],
       ['GET', '/api/admin/session'],
       ['GET', '/api/admin/scans'],
+      ['GET', '/api/admin/scans/:id'],
     ]
     for (const [method, url] of admin) expect(app.hasRoute({ method, url })).toBe(true)
     for (const method of ['DELETE', 'PUT', 'PATCH'])
       for (const [, url] of admin) expect(app.hasRoute({ method, url })).toBe(false)
+    // Exactly these admin routes and nothing else (AC-013, AC-026): turning the admin area on adds
+    // five registered paths to the public ones.
+    const { app: off } = setup({ admin: null })
+    await off.ready()
+    const paths = (a: App) => a.printRoutes().match(/\(/g)!.length
+    expect(paths(app) - paths(off)).toBe(admin.length)
   })
 
   it('logs no credentials, tokens or device IDs (FR-009)', async () => {
@@ -290,5 +300,84 @@ describe('cookies for visitors (FR-012)', () => {
       await app.inject({ method: 'GET', url: '/nothing-here' }),
     ])
       expect(res.headers['set-cookie']).toBeUndefined()
+  })
+})
+
+describe('scan details and AI status (FR-013 to FR-017)', () => {
+  const isDetail = createValidator(AdminScanDetail)
+
+  it('returns the full scan with its AI results and recorded fallbacks', async () => {
+    const { app, devices, db, clock } = setup({ insights: true })
+    const id = devices.create(laptop).device_id
+    const other = devices.create(laptop).device_id
+    // The caches the category and step services keep (their columns that the admin page reads).
+    db.exec('CREATE TABLE category_cache (device_id TEXT, intended_use TEXT, prompt_hash TEXT, output TEXT, generated_at TEXT)')
+    db.exec('CREATE TABLE step_cache (device_id TEXT, intended_use TEXT, option_id TEXT, prompt_hash TEXT, output TEXT, generated_at TEXT)')
+    const cat = db.prepare("INSERT INTO category_cache VALUES (?, ?, 'h', '{}', ?)")
+    cat.run(id, 'office', '2026-11-21T10:00:00Z')
+    cat.run(id, 'gaming', '2026-11-21T10:05:00Z')
+    cat.run(other, 'office', '2026-11-21T10:06:00Z')
+    const step = db.prepare("INSERT INTO step_cache VALUES (?, 'office', ?, 'h', '{}', '2026-11-21T10:01:00Z')")
+    step.run(id, 'ssd-swap')
+    step.run(id, 'ram-add')
+    const log = createFallbackLog(db, () => new Date(clock.t))
+    log.record({ device_id: id, intended_use: 'office', call: 'steps', option_id: 'battery-swap', reason: 'timeout' })
+    clock.t += 60_000
+    log.record({ device_id: id, intended_use: 'study', call: 'categories', option_id: null, reason: 'no_llm' })
+    log.record({ device_id: other, intended_use: 'office', call: 'categories', option_id: null, reason: 'auth' })
+
+    const cookie = cookieOf(await login(app))
+    const res = await app.inject({ method: 'GET', url: `/api/admin/scans/${id}`, headers: { cookie } })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['cache-control']).toBe('no-store')
+    const body = res.json()
+    expect(isDetail(body).ok).toBe(true)
+    expect(body.device.scan).toEqual(laptop)
+    expect(body.ai.categories).toEqual([
+      { intended_use: 'gaming', generated_at: '2026-11-21T10:05:00Z' },
+      { intended_use: 'office', generated_at: '2026-11-21T10:00:00Z' },
+    ])
+    expect(body.ai.steps).toEqual([{ intended_use: 'office', plans: 2 }])
+    expect(body.ai.fallbacks.map((f: { reason: string; call: string }) => [f.call, f.reason])).toEqual([
+      ['categories', 'no_llm'],
+      ['steps', 'timeout'],
+    ])
+    expect(body.ai.fallbacks[1]).toMatchObject({ intended_use: 'office', option_id: 'battery-swap' })
+  })
+
+  it('stores no prompt, answer or message text with a fallback', () => {
+    const db = new DatabaseSync(':memory:')
+    createFallbackLog(db).record({ device_id: 'q3Xk9vT2mB7pLw0cZr1sEa', intended_use: 'office', call: 'steps', option_id: 'x', reason: 'timeout' })
+    const columns = (db.prepare('PRAGMA table_info(ai_fallbacks)').all() as { name: string }[]).map((c) => c.name)
+    expect(columns).toEqual(['device_id', 'intended_use', 'call', 'option_id', 'reason', 'created_at'])
+  })
+
+  it('answers 401 without a session and 404 for unknown or malformed IDs', async () => {
+    const { app, devices } = setup({ insights: true })
+    const id = devices.create(laptop).device_id
+    expect((await app.inject({ method: 'GET', url: `/api/admin/scans/${id}` })).statusCode).toBe(401)
+    const cookie = cookieOf(await login(app))
+    for (const bad of ['AAAAAAAAAAAAAAAAAAAAAA', 'not-an-id', '..%2F..%2Fetc'])
+      expect((await app.inject({ method: 'GET', url: `/api/admin/scans/${bad}`, headers: { cookie } })).statusCode).toBe(404)
+  })
+
+  it('works before any AI table exists', async () => {
+    const { app, devices } = setup({ insights: true })
+    const id = devices.create(laptop).device_id
+    const cookie = cookieOf(await login(app))
+    const detail = (await app.inject({ method: 'GET', url: `/api/admin/scans/${id}`, headers: { cookie } })).json()
+    expect(detail.ai).toEqual({ categories: [], steps: [], fallbacks: [] })
+    const page = (await app.inject({ method: 'GET', url: '/api/admin/scans', headers: { cookie } })).json()
+    expect(page.ai_usage).toEqual({ day: '2026-11-21', used: 0, cap: 200 })
+  })
+
+  it("shows today's AI calls against the daily cap", async () => {
+    const { app, db } = setup({ insights: true })
+    db.exec('CREATE TABLE llm_daily_usage (day TEXT PRIMARY KEY, calls INTEGER NOT NULL)')
+    db.prepare('INSERT INTO llm_daily_usage VALUES (?, ?)').run('2026-11-20', 199)
+    db.prepare('INSERT INTO llm_daily_usage VALUES (?, ?)').run('2026-11-21', 37)
+    const cookie = cookieOf(await login(app))
+    const page = (await app.inject({ method: 'GET', url: '/api/admin/scans', headers: { cookie } })).json()
+    expect(page.ai_usage).toEqual({ day: '2026-11-21', used: 37, cap: 200 })
   })
 })

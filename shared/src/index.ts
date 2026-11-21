@@ -13,7 +13,7 @@ export * from './invariants.ts'
 export * from './validate.ts'
 export * from './admin.ts'
 
-import { AdminLogin, AdminScanPage, AdminSession } from './admin.ts'
+import { AdminLogin, AdminScanDetail, AdminScanPage, AdminSession } from './admin.ts'
 import { Assessment } from './assessment.ts'
 import { CategoryResult } from './categories.ts'
 import { ApiError, DeviceRecord, DeviceScan, UploadResponse } from './device.ts'
@@ -28,6 +28,7 @@ export const TOP_LEVEL_SCHEMAS = {
   AdminLogin,
   AdminSession,
   AdminScanPage,
+  AdminScanDetail,
   DeviceScan,
   UploadResponse,
   DeviceRecord,

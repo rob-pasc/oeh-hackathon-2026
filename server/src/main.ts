@@ -5,6 +5,8 @@ import { DatabaseSync } from 'node:sqlite'
 import { budgetedFetch, loadLimits } from './limits.ts'
 import { buildApp, REQUEST_LOG_SERIALIZERS } from './app.ts'
 import { loadAdminConfig } from './admin/config.ts'
+import { createFallbackLog } from './admin/fallbacks.ts'
+import { createAdminInsights } from './admin/insights.ts'
 import { createAssessmentService } from './assessment/service.ts'
 import { loadWeights } from './assessment/weights.ts'
 import { createSqliteDeviceStore } from './devices/store.ts'
@@ -59,16 +61,19 @@ try {
 
 const warn = (message: string, details?: Record<string, unknown>) => app.log.warn(details ?? {}, message)
 const assessments = retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn }) : undefined
-const categorize = createCategoryService(db, llm, { impactTable, warn })
+// AI fallbacks are recorded for the admin page (feature 013 FR-016).
+const fallbackLog = createFallbackLog(db)
+const categorize = createCategoryService(db, llm, { impactTable, warn, onFallback: fallbackLog.record })
 
 const app = buildApp({
   limits,
   admin: loadAdminConfig(env),
+  adminInsights: createAdminInsights(db, limits.dailyCalls),
   devices: createSqliteDeviceStore(db),
   sessions: createSqliteSessionStore(db),
   assessments,
   categorize,
-  steps: retriever && assessments ? createStepService(db, llm, { retriever, assessments, shownCategories: categorize.shown, warn }) : undefined,
+  steps: retriever && assessments ? createStepService(db, llm, { retriever, assessments, shownCategories: categorize.shown, warn, onFallback: fallbackLog.record }) : undefined,
   publicBaseUrl,
   scannerPaths,
   logger: {

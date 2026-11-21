@@ -1,10 +1,11 @@
 // Admin routes (feature 013). Registered only when the admin area is configured, so without it
 // every /api/admin/* request falls through to the 404 handler (FR-001).
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
-import { ADMIN_PAGE_SIZE, ADMIN_ROUTES, AdminLogin, createValidator, type AdminScanPage, type ApiError } from '@leaaf/shared'
+import { ADMIN_PAGE_SIZE, ADMIN_ROUTES, AdminLogin, createValidator, type AdminScanDetail, type AdminScanPage, type ApiError } from '@leaaf/shared'
 import type { DeviceStore } from '../devices/store.ts'
 import { createAdminSessions, createLoginLimiter, credentialsMatch, SESSION_TTL_MS } from './auth.ts'
 import type { AdminConfig } from './config.ts'
+import type { AdminInsights } from './insights.ts'
 
 const COOKIE = 'leaaf_admin'
 // The cookie only ever goes to the admin API: visitors and other routes never see it (FR-005, FR-012).
@@ -29,10 +30,11 @@ const isJson = (req: FastifyRequest) => /^application\/json\s*(;|$)/i.test(req.h
 export interface AdminRouteOptions {
   config: AdminConfig
   devices: DeviceStore
+  insights: AdminInsights
   now: () => number
 }
 
-export function registerAdminRoutes(app: FastifyInstance, { config, devices, now }: AdminRouteOptions) {
+export function registerAdminRoutes(app: FastifyInstance, { config, devices, insights, now }: AdminRouteOptions) {
   const sessions = createAdminSessions(now)
   const limiter = createLoginLimiter(now)
 
@@ -75,10 +77,19 @@ export function registerAdminRoutes(app: FastifyInstance, { config, devices, now
       const page = /^[1-9]\d{0,6}$/.test(req.query.page ?? '1') ? Number(req.query.page ?? '1') : 1
       const body: AdminScanPage = {
         total: devices.count(),
+        ai_usage: insights.aiUsageToday(),
         page,
         page_size: ADMIN_PAGE_SIZE,
         scans: devices.list((page - 1) * ADMIN_PAGE_SIZE, ADMIN_PAGE_SIZE),
       }
+      return reply.send(body)
+    })
+
+    // The full scan and its AI status, fetched only when Details is opened (FR-013 to FR-015).
+    admin.get<{ Params: { id: string } }>('/api/admin/scans/:id', { onRequest: requireSession }, async (req, reply) => {
+      const device = devices.get(req.params.id)
+      if (!device) return reply.code(404).send(error('not_found', 'device not found'))
+      const body: AdminScanDetail = { device, ai: insights.aiStatus(device.device_id) }
       return reply.send(body)
     })
   })
