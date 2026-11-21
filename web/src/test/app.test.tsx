@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Assessment } from '@leaaf/shared/assessment'
 import type { Report } from '@leaaf/shared/report'
 import { formatEur, formatYears } from '../lib/impact'
@@ -10,6 +10,8 @@ import { rankPaths } from '@leaaf/shared/ranking'
 import { ApiContext } from '../api'
 import { App } from '../app/App'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
+import { Footer } from '../components/Footer'
+import { Inline } from '../pages/Legal'
 import { ReportDetails } from '../components/ReportDetails'
 import { ResultsView } from '../components/ResultsView'
 import { SpecsCard } from '../components/SpecsCard'
@@ -394,5 +396,88 @@ describe('SpecsCard (feature 001 AC-009)', () => {
     expect(valueOf('Battery health')).toHaveTextContent(/^Unknown$/)
     expect(valueOf('Processor')).toHaveTextContent(/^Unknown$/)
     expect(within(card).getByText(/Results are less certain/)).toBeInTheDocument()
+  })
+})
+
+describe('Imprint and privacy notice (feature 006 FR-046)', () => {
+  beforeEach(() => {
+    // jsdom has no layout; the page scrolls to the top when it opens.
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {})
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+    window.history.replaceState(null, '', '/')
+  })
+
+  it('links to both pages from the footer', () => {
+    render(<Footer />)
+    const legal = within(screen.getByRole('navigation', { name: 'Legal' }))
+    expect(legal.getByRole('link', { name: 'Imprint' })).toHaveAttribute('href', '/imprint')
+    expect(legal.getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy')
+  })
+
+  it('shows the imprint in English first and switches between German and English', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState(null, '', '/imprint')
+    render(withApi(<App />))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Imprint')
+    expect(screen.getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true')
+
+    await user.click(screen.getByRole('button', { name: 'Deutsch' }))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Impressum')
+    expect(screen.getByRole('button', { name: 'Deutsch' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('main')).toHaveAttribute('lang', 'de')
+    expect(screen.getByRole('heading', { name: 'Medieninhaber und Diensteanbieter' })).toBeInTheDocument()
+    expect(window.location.search).toBe('?lang=de')
+  })
+
+  it('opens in the language of ?lang= and keeps it when moving to the privacy notice', async () => {
+    const user = userEvent.setup()
+    window.history.replaceState(null, '', '/imprint?lang=de')
+    render(withApi(<App />))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Impressum')
+
+    await user.click(screen.getByRole('link', { name: /Zur Datenschutzerklärung/ }))
+    expect(window.location.pathname).toBe('/privacy')
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Datenschutzerklärung')
+  })
+
+  it('answers /impressum and /datenschutz with the same pages', () => {
+    window.history.replaceState(null, '', '/datenschutz?lang=de')
+    render(withApi(<App />))
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Datenschutzerklärung')
+  })
+
+  it('states what is stored, for how long and where it goes, in both languages', () => {
+    for (const lang of ['de', 'en'] as const) {
+      window.history.replaceState(null, '', `/privacy?lang=${lang}`)
+      const { unmount } = render(withApi(<App />))
+      const text = screen.getByRole('main').textContent ?? ''
+      expect(text).toContain('30')
+      expect(text).toContain('DeepSeek')
+      expect(text).toContain('Vorarlberg')
+      expect(text).toContain('dsb@dsb.gv.at')
+      expect(text).toContain('contact@leaaf.green')
+      unmount()
+    }
+  })
+
+  it('highlights details that are still in [square brackets] and links addresses', () => {
+    render(<Inline text="Write to [Street and number], see https://example.org/a. Mail contact@leaaf.green." />)
+    expect(screen.getByText('[Street and number]').tagName).toBe('MARK')
+    expect(screen.getByRole('link', { name: 'https://example.org/a' })).toHaveAttribute('href', 'https://example.org/a')
+    expect(screen.getByRole('link', { name: 'contact@leaaf.green' })).toHaveAttribute('href', 'mailto:contact@leaaf.green')
+  })
+
+  it('names the provider in the imprint and the server operator in the privacy notice', () => {
+    window.history.replaceState(null, '', '/imprint')
+    const { unmount } = render(withApi(<App />))
+    expect(screen.getByRole('main')).toHaveTextContent('Yannik Fischer')
+    expect(screen.getByRole('main')).toHaveTextContent('Hohenems')
+    unmount()
+
+    window.history.replaceState(null, '', '/privacy')
+    render(withApi(<App />))
+    expect(screen.getByRole('main')).toHaveTextContent('Marco Stadelmann')
   })
 })

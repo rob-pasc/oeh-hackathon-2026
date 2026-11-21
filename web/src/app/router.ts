@@ -2,12 +2,15 @@
 //   /            landing page
 //   /s/:id       scan session (skeleton + live status from the scanner)
 //   /d/:id       device page (results)
+//   /imprint     Impressum (also /impressum), /privacy privacy notice (also /datenschutz)
 import { useMemo, useSyncExternalStore } from 'react'
 
 export type Route =
   | { name: 'landing' }
   | { name: 'session'; id: string }
   | { name: 'device'; id: string }
+  | { name: 'imprint' }
+  | { name: 'privacy' }
   // `device`: the path looked like a device link (/d/...) but the ID is malformed (feature 001 FR-011).
   | { name: 'not_found'; device?: true }
 
@@ -19,6 +22,8 @@ const SESSION_ROUTE = /^\/s\/([0-9A-HJKMNP-TV-Z]{26})$/
 export function parseRoute(pathname: string): Route {
   const clean = pathname.replace(/\/+$/, '') || '/'
   if (clean === '/') return { name: 'landing' }
+  if (clean === '/imprint' || clean === '/impressum') return { name: 'imprint' }
+  if (clean === '/privacy' || clean === '/datenschutz') return { name: 'privacy' }
   const device = DEVICE_ROUTE.exec(clean)
   if (device) return { name: 'device', id: device[1] as string }
   const session = SESSION_ROUTE.exec(clean)

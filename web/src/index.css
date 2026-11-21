@@ -1,5 +1,42 @@
 @import 'tailwindcss';
 
+/* Inter is self-hosted (web/public/fonts, licence in OFL.txt there): no request to Google Fonts. Latin subset, weights 400-800. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-latin-regular.woff') format('woff');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/inter-latin-medium.woff') format('woff');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-latin-semibold.woff') format('woff');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin-bold.woff') format('woff');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/inter-latin-extrabold.woff') format('woff');
+}
+
 /* Design tokens. The palette and its rationale are documented in docs/VISUAL_DESIGN.md. */
 @theme {
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;

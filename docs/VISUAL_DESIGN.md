@@ -21,7 +21,7 @@ Calm, light, and friendly: mostly white and off-white surfaces with one fresh gr
 | Conditional / warning | `amber-tint`, `amber-ink` | used sparingly |
 | Not suitable / error | `rose-tint`, `rose-ink` | used sparingly |
 
-- **Type:** Inter (Google Fonts), weights 400–800. Wordmark and headings use heavy weights with tight tracking. The logo is the wordmark "leaaf" followed by a smaller green ".green", without icon or animation. On the landing page a line of small letter-spaced capitals under it spells out "Lifecycle Evaluation and Action Finder" with the initials in green.
+- **Type:** Inter, self-hosted (Latin subset in `web/public/fonts`, SIL Open Font License), weights 400–800; no request to a font provider. Wordmark and headings use heavy weights with tight tracking. The logo is the wordmark "leaaf" followed by a smaller green ".green", without icon or animation. On the landing page a line of small letter-spaced capitals under it spells out "Lifecycle Evaluation and Action Finder" with the initials in green.
 - **Selection:** selected text uses a `leaf-soft` background with `leaf-deep` text (contrast 5.4:1).
 - **Shape:** Cards 20 px radius, buttons and toggles fully rounded (pill), icon tiles 14–18 px radius.
 - **Layout:** Content width up to 1312 px, 64 px side padding. The result screen is a flexible left column and a 400 px right column with 28 px gap.
