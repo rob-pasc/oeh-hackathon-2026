@@ -10,7 +10,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 
 ## Status
 
-**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). A "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). A password-protected admin page at `/admin` lists the stored scans with their details and AI status (feature 016). The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. CI publishes release images to GHCR when a tag is pushed; the newest tag, `v0.5.0`, adds the admin page (feature 016) and is live at [leaaf.green](https://leaaf.green), on the team's own server. The backup and rollback rehearsals are still open (feature 005).
+**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). A "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). A password-protected admin page at `/admin` lists the stored scans with their details and AI status (feature 016). The team has run the scanner from the live site on Windows, macOS and Linux, and all three scans worked; some edge paths are still unchecked (features 001 and 007). CI publishes release images to GHCR when a tag is pushed; the newest tag, `v0.5.0`, adds the admin page (feature 016) and is live at [leaaf.green](https://leaaf.green), on the team's own server. The backup and rollback rehearsals are still open (feature 005).
 
 | # | Feature | Status |
 |---|---|---|
@@ -20,7 +20,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 004 | [Explained report](docs/features/feature-004-explained-report/PLAN.md) | Complete |
 | 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: `v0.5.0` is live; backup and rollback rehearsals are open |
 | 006 | [Web app](docs/features/feature-006-web-app/PLAN.md) | Implemented, awaiting the team's browser review |
-| 007 | [macOS and Linux scanner](docs/features/feature-007-macos-linux-scanner/PLAN.md) | Implemented, awaiting real scans on a Mac and a Linux laptop |
+| 007 | [macOS and Linux scanner](docs/features/feature-007-macos-linux-scanner/PLAN.md) | Implemented; live Mac and Linux scans worked, edge paths open |
 | 008 | [AI categories and options](docs/features/feature-008-ai-categories-and-options/PLAN.md) | Complete |
 | 009 | [Concrete step plans](docs/features/feature-009-concrete-step-plans/PLAN.md) | Complete |
 | 010 | [Step-level knowledge base](docs/features/feature-010-step-level-knowledge-base/PLAN.md) | Complete |

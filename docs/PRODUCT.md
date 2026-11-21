@@ -1,6 +1,6 @@
 # Product Context
 
-**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. The local result journey covers assessment, ranking, and AI-chosen categories and options with cited reasons (feature 008), including a five-path fallback. See the [README status](../README.md). The scanner has completed one elevated scan on a real Windows 11 laptop. The other Windows checks are still open. Scanners for macOS and Linux ([feature 007](features/feature-007-macos-linux-scanner/PLAN.md)) are implemented and pass their automated tests, but have not scanned a real Mac or Linux laptop yet. This document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. The local result journey covers assessment, ranking, and AI-chosen categories and options with cited reasons (feature 008), including a five-path fallback. See the [README status](../README.md). The scanner has run from the live site on Windows, macOS and Linux (2026-11-21). Some edge paths are still open. Scanners for macOS and Linux ([feature 007](features/feature-007-macos-linux-scanner/PLAN.md)) are implemented, and their live runs worked. This document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
