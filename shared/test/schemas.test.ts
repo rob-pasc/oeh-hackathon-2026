@@ -21,6 +21,8 @@ describe('exported schemas under strict Ajv (JSON Schema 2020-12)', () => {
   it.each([
     ['DeviceScan', 'device-scan.laptop-complete.json'],
     ['DeviceScan', 'device-scan.desktop-partial.json'],
+    ['DeviceScan', 'device-scan.macos-complete.json'],
+    ['DeviceScan', 'device-scan.linux-complete.json'],
     ['RetrievalResult', 'retrieval.example-laptop-14.json'],
     ['FactSet', 'facts.example-laptop-14.json'],
     ['Assessment', 'assessment.example-laptop-14.office.json'],

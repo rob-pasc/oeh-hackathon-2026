@@ -6,7 +6,8 @@
 //
 // Every field the scanner might fail to read is present and nullable rather than optional,
 // so "unknown" is always explicit (FR-004). Source hints name the Windows data source the
-// scanner team is expected to use; they are guidance, not part of the contract.
+// scanner team is expected to use; they are guidance, not part of the contract. The macOS and
+// Linux sources are listed in docs/features/feature-007-macos-linux-scanner/RESEARCH.md.
 import { Type, type Static } from 'typebox'
 import { DeviceId, IsoDate, IsoDateTime, MemoryType, Nullable } from './common.ts'
 import { SessionId } from './session.ts'
@@ -45,11 +46,29 @@ export const Identity = Type.Object(
   },
 )
 
+/** Operating system family the scan ran on (feature 007 FR-010). */
+export const OS_FAMILIES = ['windows', 'macos', 'linux'] as const
+export const OsFamily = Type.Enum(OS_FAMILIES)
+export type OsFamily = Static<typeof OsFamily>
+
 export const Os = Type.Object(
   {
-    caption: Nullable(Type.String({ description: 'Win32_OperatingSystem.Caption, e.g. "Microsoft Windows 11 Pro"' })),
-    build: Nullable(Type.String({ description: 'Win32_OperatingSystem.Version, e.g. "10.0.22631"' })),
-    display_version: Nullable(Type.String({ description: 'Registry DisplayVersion, e.g. "23H2"' })),
+    // Optional rather than nullable: scans from before feature 007 have no family and stay valid.
+    family: Type.Optional(OsFamily),
+    caption: Nullable(
+      Type.String({
+        description:
+          'Win32_OperatingSystem.Caption ("Microsoft Windows 11 Pro"); sw_vers ProductName and ProductVersion ("macOS 14.5"); os-release PRETTY_NAME ("Fedora Linux 43 (Workstation Edition)")',
+      }),
+    ),
+    build: Nullable(
+      Type.String({
+        description: 'Win32_OperatingSystem.Version ("10.0.22631"); sw_vers BuildVersion ("23F79"); os-release VERSION_ID ("43")',
+      }),
+    ),
+    display_version: Nullable(
+      Type.String({ description: 'Registry DisplayVersion ("23H2"); Windows only, not applicable on macOS and Linux' }),
+    ),
   },
   strict,
 )
@@ -57,7 +76,9 @@ export const Os = Type.Object(
 export const Firmware = Type.Object(
   {
     bios_release_date: Nullable(IsoDate),
-    firmware_type: Nullable(Type.Enum(['uefi', 'legacy_bios'])),
+    firmware_type: Nullable(
+      Type.Enum(['uefi', 'legacy_bios', 'apple'], { description: 'apple: Apple Silicon boot firmware, neither UEFI nor BIOS' }),
+    ),
     secure_boot_enabled: Nullable(Type.Boolean()),
   },
   { ...strict, description: 'BIOS date is an age hint only; it changes with BIOS updates' },
@@ -68,7 +89,7 @@ export const Tpm = Type.Object(
     present: Nullable(Type.Boolean()),
     spec_version: Nullable(Type.String({ description: 'Highest supported TPM spec version, e.g. "2.0"' })),
   },
-  { ...strict, description: 'Win32_Tpm may need admin rights; report null when unreadable' },
+  { ...strict, description: 'Win32_Tpm or /sys/class/tpm; Macs have no TPM (not applicable). Report null when unreadable' },
 )
 
 export const Cpu = Type.Object(
@@ -152,6 +173,27 @@ export const DeviceScan = Type.Object(
   { ...strict, title: 'Device scan payload (v1)' },
 )
 export type DeviceScan = Static<typeof DeviceScan>
+
+/**
+ * Fields that do not exist on the scanned system (feature 007 FR-018), as dotted paths. They are
+ * always null there and do not make a scan partial. Windows scans and scans without
+ * `os.family` have none, so feature 001 FR-004 is unchanged for them. The Go scanner mirrors
+ * this list in internal/payload; a shared fixture test keeps the two in agreement.
+ */
+export function notApplicableFields(scan: Pick<DeviceScan, 'os' | 'firmware'>): readonly string[] {
+  switch (scan.os.family) {
+    case 'macos': {
+      const fields = ['tpm.present', 'tpm.spec_version', 'firmware.bios_release_date', 'firmware.secure_boot_enabled', 'os.display_version']
+      // Apple Silicon memory is part of the chip, so there are no slots to count.
+      if (scan.firmware.firmware_type === 'apple') fields.push('memory.slots_total', 'memory.slots_used')
+      return fields
+    }
+    case 'linux':
+      return ['os.display_version']
+    default:
+      return []
+  }
+}
 
 /** Response of POST /api/devices. */
 export const UploadResponse = Type.Object(

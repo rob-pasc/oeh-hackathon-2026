@@ -11,7 +11,7 @@
     "system_sku": "LENOVO_MT_20L5_BU_Think_FM_ThinkPad T480",
     "form_factor": "laptop"
   },
-  "os": { "caption": "Microsoft Windows 11 Pro", "build": "10.0.22631", "display_version": "23H2" },
+  "os": { "family": "windows", "caption": "Microsoft Windows 11 Pro", "build": "10.0.22631", "display_version": "23H2" },
   "firmware": { "bios_release_date": "2023-05-12", "firmware_type": "uefi", "secure_boot_enabled": true },
   "tpm": { "present": true, "spec_version": "2.0" },
   "cpu": { "name": "Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz", "cores": 4, "threads": 8 },

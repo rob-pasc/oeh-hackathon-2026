@@ -15,7 +15,7 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 
 ## Tasks
 
-- [ ] **T-001:** Add the optional `os.family` field and the `apple` firmware value to `shared/src/device.ts`, update field descriptions with per-system sources, add the not-applicable rule to `checkDeviceScan` and the Go normalizer, regenerate the JSON Schema, and have the Windows scanner report `windows`. (supports `AC-015`, `AC-024`)
+- [x] **T-001:** Add the optional `os.family` field and the `apple` firmware value to `shared/src/device.ts`, update field descriptions with per-system sources, add the not-applicable rule to `checkDeviceScan` and the Go normalizer, regenerate the JSON Schema, and have the Windows scanner report `windows`. (supports `AC-015`, `AC-024`)
 - [ ] **T-002:** On a real Mac, decide the session-ID mechanism (zip with a session file in the bundle, or the appended trailer) and the local save location; record the decision in `PLAN.md`. (supports `AC-016`, `AC-017`)
 - [ ] **T-003:** Linux collector without root: sysfs/procfs readers, `scan.RawLinux`, pure normalization, fixtures from a real laptop with planted identifiers and external drives, and schema tests. (supports `AC-007`, `AC-011`, `AC-012`, `AC-014`)
 - [ ] **T-004:** Linux root helper: `--privileged-helper` mode (SMBIOS types 16/17, drive health), `pkexec` launch from the window process, allowlist decoding, cancel and missing-`pkexec` paths, and tests. (supports `AC-009`, `AC-010`, `AC-012`)

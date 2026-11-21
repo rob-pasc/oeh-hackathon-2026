@@ -31,10 +31,7 @@ func Normalize(raw Raw, meta Meta) payload.DeviceScan {
 		Battery:        battery(raw),
 		GPUs:           gpus(raw),
 	}
-	s.ScanStatus = "complete"
-	if payload.HasNull(s) {
-		s.ScanStatus = "partial"
-	}
+	s.ScanStatus = payload.Status(s)
 	return s
 }
 
@@ -109,7 +106,7 @@ func formFactor(types []int32) *string {
 }
 
 func osInfo(raw Raw) payload.OS {
-	var o payload.OS
+	o := payload.OS{Family: "windows"}
 	if os := first(raw.OS); os != nil {
 		o.Caption = text(os.Caption)
 		o.Build = text(os.Version)
