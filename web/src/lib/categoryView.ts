@@ -1,11 +1,11 @@
 // Turns the CategoryResult (feature 008) into the Overview's category cards and each category's
 // option cards. Ordering comes from shared/src/ranking.ts, so the mode toggle re-ranks without a
 // request (FR-008); every figure comes from the payload.
-import type { Assessment } from '@leaaf/shared/assessment'
+import type { Assessment, Impact } from '@leaaf/shared/assessment'
 import type { CategoryOption, CategoryResult } from '@leaaf/shared/categories'
 import type { Mode } from '@leaaf/shared/common'
 import { rankCategories, recommendedCategory, type RankedOption } from '@leaaf/shared/ranking'
-import { formatAvoided, formatEur, formatYears, gaugeValue } from './impact'
+import { avoidsNothing, formatAvoided, formatCaused, formatEur, formatYears, gaugeValue } from './impact'
 import { KIND_ICONS, STATUS_LABELS } from './labels'
 import { co2Of, scoreMetric, type CardView, type SourceRef } from './pathView'
 
@@ -26,6 +26,14 @@ export interface CategoryView extends CardView {
 }
 
 const MAX_SOURCES = 2
+
+const AVOIDED_HINT = 'Compared with buying a comparable new laptop now.'
+
+/** Hover text of the CO₂e avoided figure; explains a "None" (FR-049) with the option's own emissions. */
+export function avoidedHint(impact: Impact): string {
+  if (!avoidsNothing(impact)) return AVOIDED_HINT
+  return `Nothing is credited against buying a comparable new laptop. This option itself causes about ${formatCaused(impact)} CO₂e.`
+}
 
 function optionView({ option, total }: RankedOption, categoryId: string, result: CategoryResult, baseline: Assessment['baseline']): OptionView {
   const impact = option.impact
@@ -52,7 +60,7 @@ function optionView({ option, total }: RankedOption, categoryId: string, result:
     metrics: [
       { label: 'Cost', value: impact ? formatEur(impact.cost_eur) : '—' },
       { label: 'Extra life', value: impact ? formatYears(impact.useful_life_years) : '—' },
-      { label: 'CO₂e avoided', value: impact ? formatAvoided(impact) : '—', hint: 'Compared with buying a comparable new laptop now.' },
+      { label: 'CO₂e avoided', value: impact ? formatAvoided(impact) : '—', hint: impact ? avoidedHint(impact) : AVOIDED_HINT },
       scoreMetric(total),
     ],
     // The option card shows its step plan (feature 009) through PathCard's `plan`, not these one-line steps.

@@ -50,8 +50,29 @@ export function formatAdded(impact: Impact): string {
   return `+${lo === hi ? hi : `${lo}–${hi}`} kg`
 }
 
-/** CO₂e avoided against the baseline, as "120–322 kg"; can be negative when nothing is credited. */
+/**
+ * True when the option credits no avoided production against the baseline (feature 003 displacement `none`,
+ * e.g. salvage and recycle): `avoided_vs_baseline` is then only the option's own emissions, negated.
+ */
+export function avoidsNothing(impact: Impact): boolean {
+  return impact.co2e_kg.avoided_vs_baseline.high <= 0
+}
+
+const kgSmall = (n: number) => (n < 10 ? Math.round(n * 10) / 10 : Math.round(n))
+
+/** The option's own CO₂e, as "0.5–2 kg", with one decimal below 10 kg so small figures don't round to 0. */
+export function formatCaused(impact: Impact): string {
+  const low = kgSmall(Math.max(0, impact.co2e_kg.path.low))
+  const high = kgSmall(Math.max(0, impact.co2e_kg.path.high))
+  return low === high ? `${high} kg` : `${low}–${high} kg`
+}
+
+/**
+ * CO₂e avoided against the baseline, as "120–322 kg". "None" when nothing is credited (feature 006 FR-049):
+ * a negative range such as "−2–0 kg" under the label "avoided" reads like an error.
+ */
 export function formatAvoided(impact: Impact): string {
+  if (avoidsNothing(impact)) return 'None'
   const low = round(impact.co2e_kg.avoided_vs_baseline.low)
   const high = round(impact.co2e_kg.avoided_vs_baseline.high)
   return low === high ? `${low} kg` : `${low}–${high} kg`

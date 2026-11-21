@@ -10,7 +10,7 @@ import { useFlip } from '../lib/motion'
 import { useStepPlans } from '../lib/useStepPlans'
 import { buildPathViews, type CardView } from '../lib/pathView'
 import { explainCategoryModeChange, explainModeChange } from '../lib/modeChange'
-import { formatAvoided, formatEur, formatYears } from '../lib/impact'
+import { avoidsNothing, formatAvoided, formatEur, formatYears } from '../lib/impact'
 import { CategoryTabView } from './CategoryTabView'
 import { Equivalents } from './Equivalents'
 import { Gauge } from './Gauge'
@@ -221,7 +221,7 @@ function RecommendationSummary({ recommended, baseline }: { recommended: Categor
         <>
           <strong className="text-ink">{recommended.title}</strong>
           {recommended.best.title !== recommended.title ? ` · ${recommended.best.title}` : ''} · {formatEur(impact.cost_eur)} ·{' '}
-          {formatYears(impact.useful_life_years)} · {formatAvoided(impact)} CO₂e avoided
+          {formatYears(impact.useful_life_years)} · {avoidsNothing(impact) ? 'no' : formatAvoided(impact)} CO₂e avoided
           {recommended.best.aiEstimate ? ' (AI estimate)' : ''}. Baseline: {baseline}.
         </>
       ) : (

@@ -51,6 +51,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [ ] **T-042:** Backend: finish the deletion of scan data after 30 days (being added), set the access-log retention, and decide how the Caddy access log treats `/d/<id>` paths (supports `AC-056`)
 - [x] **T-043:** Restyle the downloads for the other systems as small buttons and the run steps as a numbered card (supports `AC-057`)
 - [x] **T-044:** Add the system switch to the run-steps card so the steps can be read before downloading (supports `AC-058`)
+- [x] **T-045:** Show "None" for a CO₂e avoided range that credits nothing, with the hover text and the summary wording, plus tests (supports `AC-059`)
 
 ## Dependencies and blockers
 
@@ -88,3 +89,5 @@ The first version was written without network access. After the merge into `main
 - 2026-11-21: Fifteenth scope extension by amendment (FR-046, AC-053 to AC-056, T-040 to T-042: imprint, privacy notice, self-hosted Inter); see the plan's scope change log. T-040 implemented and looked at in headless Chrome; T-041 and T-042 are open and block AC-056.
 - 2026-11-21: Sixteenth scope extension by amendment (FR-047, AC-057, T-043: small download buttons and run-steps card on the landing page); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
 - 2026-11-21: Seventeenth scope extension by amendment (FR-048, AC-058, T-044: system switch in the run-steps card); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
+- 2026-11-21: Eighteenth scope extension by amendment (FR-049, AC-059, T-045: "None" instead of a negative CO₂e avoided range); see the plan's scope change log. Status set from `Implemented (verification pending)` to `In progress` for the implementation.
+- 2026-11-21: T-045 implemented and verified (AC-059 passes; see the acceptance criteria). Status back to `Implemented (verification pending)`: the team browser review (T-009) and T-016 remain.

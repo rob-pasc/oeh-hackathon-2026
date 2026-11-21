@@ -1,4 +1,4 @@
-import type { Assessment } from '@leaaf/shared/assessment'
+import type { Assessment, Impact } from '@leaaf/shared/assessment'
 import type { DeviceScan } from '@leaaf/shared/device'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import assessmentJson from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
@@ -17,9 +17,9 @@ import { resolve } from 'node:path'
 import { parseRoute } from '../app/router'
 import { legalDoc } from '../legal/content'
 import { GAUGE, TRACK_PATH, arcPath, needleAngle, polar } from '../lib/gauge'
-import { formatEur, formatYears, gaugeValue } from '../lib/impact'
+import { formatAvoided, formatCaused, formatEur, formatYears, gaugeValue } from '../lib/impact'
 import { fallbackCategories } from '../api/mockCategories'
-import { buildCategoryViews } from '../lib/categoryView'
+import { avoidedHint, buildCategoryViews } from '../lib/categoryView'
 import { buildPathViews } from '../lib/pathView'
 import { summarizeScan } from '../lib/specs'
 import { detectOs } from '../lib/platform'
@@ -91,6 +91,22 @@ describe('impact formatting', () => {
     expect(formatEur({ low: 0, high: 0 })).toBe('€0')
     expect(formatYears({ low: 2, high: 3.04 })).toBe('+2–3 years')
     expect(formatYears({ low: 0, high: 0 })).toBe('No extra life')
+  })
+  // Feature 006 FR-049 / AC-059: salvage and recycle credit nothing, so avoided is the negated own emissions.
+  const withCo2 = (path: [number, number], avoided: [number, number]) =>
+    ({ co2e_kg: { path: { low: path[0], high: path[1] }, baseline: { low: 200, high: 330 }, avoided_vs_baseline: { low: avoided[0], high: avoided[1] } } }) as Impact
+  it('shows "None" instead of a negative CO₂e avoided range and names the option’s own CO₂e (AC-059)', () => {
+    const recycle = withCo2([0.5, 2], [-2, -0.5])
+    expect(formatAvoided(recycle)).toBe('None')
+    expect(formatCaused(recycle)).toBe('0.5–2 kg')
+    expect(avoidedHint(recycle)).toBe('Nothing is credited against buying a comparable new laptop. This option itself causes about 0.5–2 kg CO₂e.')
+    expect(formatAvoided(withCo2([0, 0], [0, 0]))).toBe('None')
+  })
+  it('keeps kg ranges whenever some CO₂e is avoided (AC-059)', () => {
+    const passOn = withCo2([10, 25], [-25, 320])
+    expect(formatAvoided(passOn)).toBe('-25–320 kg')
+    expect(formatAvoided(withCo2([8, 20], [180, 322]))).toBe('180–322 kg')
+    expect(avoidedHint(passOn)).toBe('Compared with buying a comparable new laptop now.')
   })
   it('keeps every gauge value within 0-100 and ordered', () => {
     for (const path of assessment.paths) {

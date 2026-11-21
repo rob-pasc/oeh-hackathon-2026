@@ -278,6 +278,24 @@ describe('ResultsView', () => {
     expect(summary).toHaveTextContent(laptop.baseline.description)
   })
 
+  it('says "no CO₂e avoided" in the summary and "None" on the card when nothing is credited (feature 006 AC-059)', async () => {
+    const uncredited = { low: 0.5, high: 2 }
+    renderWith(withCategories((r) => ({
+      ...r,
+      categories: r.categories.map((c) => ({
+        ...c,
+        options: c.options.map((o) =>
+          o.impact ? { ...o, impact: { ...o.impact, co2e_kg: { ...o.impact.co2e_kg, path: uncredited, avoided_vs_baseline: { low: -2, high: -0.5 } } } } : o,
+        ),
+      })),
+    })))
+    const summary = await screen.findByLabelText('Recommendation summary')
+    await waitFor(() => expect(summary).toHaveTextContent('no CO₂e avoided'))
+    expect(summary).not.toHaveTextContent(/-\d/)
+    const first = screen.getByRole('region', { name: ranked(sample)[0]!.category.label })
+    expect(within(first).getByTitle(/Nothing is credited/)).toHaveTextContent('None')
+  })
+
   it('labels nothing Recommended and says so when no option is a good fit (AC-007)', async () => {
     renderWith(withCategories((r) => ({
       ...r,
