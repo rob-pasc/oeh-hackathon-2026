@@ -1,4 +1,5 @@
 // Step plans (feature 009): the step call, its checks, templates, cache and route.
+import type { FallbackEvent } from '../src/admin/fallbacks.ts'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
@@ -104,9 +105,16 @@ function setup(options: { shown?: typeof aiCategories; llm?: LlmClient | null } 
   }))
   const llm: LlmClient = { completeJson: completeJson as unknown as LlmClient['completeJson'] }
   const warnings: string[] = []
-  const deps = { retriever, assessments, shownCategories: options.shown ?? aiCategories, warn: (m: string) => warnings.push(m) }
+  const fallbacks: FallbackEvent[] = []
+  const deps = {
+    retriever,
+    assessments,
+    shownCategories: options.shown ?? aiCategories,
+    warn: (m: string) => warnings.push(m),
+    onFallback: (e: FallbackEvent) => fallbacks.push(e),
+  }
   const make = (client: LlmClient | null) => createStepService(db, client, deps)
-  return { db, completeJson, llm, warnings, make, steps: make(options.llm === undefined ? llm : options.llm) }
+  return { db, completeJson, llm, warnings, fallbacks, make, steps: make(options.llm === undefined ? llm : options.llm) }
 }
 
 const valid = (plan: StepPlanT | null): StepPlanT => {
@@ -217,13 +225,14 @@ describe('figures (AC-008)', () => {
     ['a euro amount', 'An SSD costs about €40.'],
     ['a CO₂e amount', 'This saves 25 kg CO₂e.'],
   ])('rejects an answer whose step text contains %s, without caching it', async (_name, text) => {
-    const { steps, completeJson, warnings } = setup()
+    const { steps, completeJson, warnings, fallbacks } = setup()
     const value = answer()
     value.steps[1].detail = text
     completeJson.mockResolvedValueOnce({ value, model: 'fake', attempts: 1, latency_ms: 1, usage: { prompt_tokens: 1, completion_tokens: 1 } })
     const plan = valid(await steps(record(), 'office', 'ssd-swap'))
     expect(plan).toMatchObject({ source: 'template', notice: STEPS_UNAVAILABLE })
     expect(warnings).toEqual([expect.stringContaining('figure')])
+    expect(fallbacks.map((f) => f.reason)).toEqual(['rejected_answer'])
     expect((await steps(record(), 'office', 'ssd-swap'))!.source).toBe('llm')
     expect(completeJson).toHaveBeenCalledTimes(2)
   })
@@ -299,8 +308,9 @@ describe('cache (AC-001)', () => {
 
 describe('template plans (AC-011, AC-012)', () => {
   it('shows the template plan for the option kind when no LLM is configured', async () => {
-    const { steps, warnings } = setup({ llm: null })
+    const { steps, warnings, fallbacks } = setup({ llm: null })
     const plan = valid(await steps(record(), 'office', 'ram-add'))
+    expect(fallbacks).toEqual([{ device_id: DEVICE_ID, intended_use: 'office', call: 'steps', option_id: 'ram-add', reason: 'no_llm' }])
     expect(plan).toMatchObject({ source: 'template', notice: STEPS_UNAVAILABLE })
     expect(plan.steps.map((s) => s.title)).toEqual(TEMPLATE_STEPS.ram.map((s) => s.title))
     expect(warnings).toEqual([expect.stringContaining('no LLM configured')])
@@ -312,9 +322,10 @@ describe('template plans (AC-011, AC-012)', () => {
     ['an invalid answer after repair', new LlmError('invalid_output', 'bad')],
     ['the daily budget', new LlmError('rate_limited', 'limit')],
   ])('shows the template plan after %s, and retries on the next open', async (_name, error) => {
-    const { steps, completeJson, warnings } = setup()
+    const { steps, completeJson, warnings, fallbacks } = setup()
     completeJson.mockRejectedValueOnce(error)
     const plan = valid(await steps(record(), 'office', 'battery-swap'))
+    expect(fallbacks.map((f) => f.reason)).toEqual([error.kind])
     expect(plan).toMatchObject({ source: 'template', notice: STEPS_UNAVAILABLE })
     expect(plan.steps.map((s) => s.title)).toEqual(TEMPLATE_STEPS.battery.map((s) => s.title))
     expect(warnings).toEqual([expect.stringContaining(error.message)])
@@ -323,13 +334,15 @@ describe('template plans (AC-011, AC-012)', () => {
   })
 
   it('uses template plans for the five-path fallback without any provider call (FR-012)', async () => {
-    const { steps, completeJson } = setup({ shown: (_scan, input) => fallbackCategories(input) })
+    const { steps, completeJson, fallbacks } = setup({ shown: (_scan, input) => fallbackCategories(input) })
     for (const path of ['upgrade', 'repair', 'pass_on', 'salvage', 'recycle']) {
       const plan = valid(await steps(record(), 'office', path))
       expect(plan).toMatchObject({ source: 'template', notice: STEPS_UNAVAILABLE, option_id: path })
       expect(plan.steps.length).toBeGreaterThan(0)
     }
     expect(completeJson).not.toHaveBeenCalled()
+    // The category fallback is recorded by the category service; the steps add nothing (feature 016 FR-016).
+    expect(fallbacks).toEqual([])
   })
 
   describe.each(OPTION_KINDS)('the %s template', (kind) => {
@@ -487,17 +500,20 @@ describe('one step list for the plan (feature 014)', () => {
     expect(list.steps.map((s) => s.title)).not.toContain(output.steps[0].title)
     expect(list.steps.find((s) => s.title === output.steps[1].title)!.passage_ids).toEqual([])
 
-    const { steps: steps2, completeJson: call2 } = setup()
+    const { steps: steps2, completeJson: call2, fallbacks: fallbacks2 } = setup()
     const figure = answer()
     figure.steps[0].detail = 'This costs 40 € in total.'
     call2.mockResolvedValueOnce({ value: figure, model: 'fake', attempts: 1, latency_ms: 1, usage: { prompt_tokens: 1, completion_tokens: 1 } })
     expect(validList(await steps2.planSteps(record(), 'office')).source).toBe('template')
+    // Recorded for the admin page with the plan's option ID (feature 016 FR-016).
+    expect(fallbacks2).toEqual([{ device_id: DEVICE_ID, intended_use: 'office', call: 'steps', option_id: '#plan', reason: 'rejected_answer' }])
   })
 
   it('joins the steps’ template plans without repeated titles, at most 16, with the notice (AC-006)', async () => {
-    const { steps, warnings } = setup({ llm: null })
+    const { steps, warnings, fallbacks } = setup({ llm: null })
     const list = validList(await steps.planSteps(record(), 'office'))
     expect(list).toMatchObject({ source: 'template', notice: STEPS_UNAVAILABLE })
+    expect(fallbacks.map((f) => [f.option_id, f.reason])).toEqual([['#plan', 'no_llm']])
     const expected = [...new Set(plan.steps.flatMap((s) => TEMPLATE_STEPS[s.kind].map((t) => t.title)))].slice(0, MAX_PLAN_STEPS)
     expect(list.steps.map((s) => s.title)).toEqual(expected)
     expect(new Set(list.steps.map((s) => s.title)).size).toBe(list.steps.length)

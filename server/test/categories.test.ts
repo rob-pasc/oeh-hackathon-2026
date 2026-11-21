@@ -1,4 +1,5 @@
 // AI categories and options (feature 008): server checks, figures, scores, fallback and cache.
+import type { FallbackEvent } from '../src/admin/fallbacks.ts'
 import { readFileSync } from 'node:fs'
 import { DatabaseSync } from 'node:sqlite'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -452,7 +453,9 @@ function setup(db = new DatabaseSync(':memory:')) {
     },
   }
   const warnings: string[] = []
-  return { db, completeJson, llm, warnings, categorize: createCategoryService(db, llm, { impactTable, warn: (m) => warnings.push(m) }) }
+  const fallbacks: FallbackEvent[] = []
+  const categorize = createCategoryService(db, llm, { impactTable, warn: (m) => warnings.push(m), onFallback: (e) => fallbacks.push(e) })
+  return { db, completeJson, llm, warnings, fallbacks, categorize }
 }
 
 describe('fallback (AC-013)', () => {
@@ -476,10 +479,14 @@ describe('fallback (AC-013)', () => {
     }
   }
 
-  it('shows the five paths when no LLM is configured', async () => {
+  it('shows the five paths when no LLM is configured, and records it (feature 016 FR-016)', async () => {
     const db = new DatabaseSync(':memory:')
     databases.push(db)
-    expectFallback(await createCategoryService(db, null, { impactTable })(scan, input))
+    const fallbacks: FallbackEvent[] = []
+    expectFallback(await createCategoryService(db, null, { impactTable, onFallback: (e) => fallbacks.push(e) })(scan, input))
+    expect(fallbacks).toEqual([
+      { device_id: assessment.device_id, intended_use: assessment.intended_use, call: 'categories', option_id: null, reason: 'no_llm' },
+    ])
   })
 
   it.each([
@@ -488,10 +495,11 @@ describe('fallback (AC-013)', () => {
     ['an invalid answer after repair', new LlmError('invalid_output', 'bad')],
     ['the daily budget', new LlmError('rate_limited', 'limit')],
   ])('shows the five paths after %s, and retries on the next open', async (_name, error) => {
-    const { categorize, completeJson, warnings } = setup()
+    const { categorize, completeJson, warnings, fallbacks } = setup()
     completeJson.mockRejectedValueOnce(error)
     expectFallback(await categorize(scan, input))
     expect(warnings).toEqual([expect.stringContaining(error.message)])
+    expect(fallbacks.map((f) => f.reason)).toEqual([error.kind])
     expect((await categorize(scan, input)).source).toBe('llm')
     expect(completeJson).toHaveBeenCalledTimes(2)
   })
@@ -520,7 +528,7 @@ describe('cache (AC-014)', () => {
   })
 
   it('never caches an answer the server checks make unusable', async () => {
-    const { completeJson, categorize } = setup()
+    const { completeJson, categorize, fallbacks } = setup()
     const mac = { ...scan, os: { ...scan.os, family: 'linux' as const } }
     const bad = answer()
     for (const c of bad.categories) for (const o of c.options) o.title = 'Windows 11 upgrade'
@@ -528,5 +536,6 @@ describe('cache (AC-014)', () => {
     expect((await categorize(mac, input)).source).toBe('template')
     expect((await categorize(mac, input)).source).toBe('llm')
     expect(completeJson).toHaveBeenCalledTimes(2)
+    expect(fallbacks.map((f) => f.reason)).toEqual(['rejected_answer'])
   })
 })

@@ -4,11 +4,13 @@
 // Like the category cache, the step cache stores the AI's answer, not the finished plan: citations
 // are checked against the passages retrieved now on every read, so a corpus change can only remove
 // steps, never keep a citation to a passage that no longer exists.
+import type { RecordFallback } from '../admin/fallbacks.ts'
 import { createHash } from 'node:crypto'
 import type { DatabaseSync } from 'node:sqlite'
 import {
   createValidator,
   usesWindowsRules,
+  type AiFallbackReason,
   type CategoryOption,
   type CategoryResult,
   type DeviceRecord,
@@ -128,6 +130,8 @@ export interface StepServiceDeps {
   shownCategories: (scan: DeviceScan, input: DeviceAssessment) => CategoryResult
   /** Receives the reason a template was used; never device IDs or prompt content. */
   warn?: (message: string, details?: Record<string, unknown>) => void
+  /** Records each fallback for the admin page (feature 016 FR-016). */
+  onFallback?: RecordFallback
 }
 
 export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps: StepServiceDeps) {
@@ -156,8 +160,10 @@ export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps:
     const passages = stepPassages(deps.retriever, scan, option, categories)
     const base = { device_id: record.device_id, intended_use: use, option_id: optionId }
 
-    const template = (reason: string | null, details: Record<string, unknown> = {}): StepPlan => {
+    // `code` is null when the categories already fell back: that is recorded once, as a category fallback.
+    const template = (reason: string | null, code: AiFallbackReason | null = null, details: Record<string, unknown> = {}): StepPlan => {
       if (reason) deps.warn?.(`step call unavailable, showing the template plan: ${reason}`, details)
+      if (code) deps.onFallback?.({ device_id: record.device_id, intended_use: use, call: 'steps', option_id: optionId, reason: code })
       const planSteps = templateSteps(option.kind, passages)
       const cited = new Set(planSteps.flatMap((s) => s.passage_ids))
       return {
@@ -191,7 +197,7 @@ export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps:
       }
     }
 
-    if (!llm) return template('no LLM configured')
+    if (!llm) return template('no LLM configured', 'no_llm')
     const pendingKey = JSON.stringify([record.device_id, use, optionId, key])
     let generation = pending.get(pendingKey)
     if (!generation) {
@@ -211,8 +217,8 @@ export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps:
       const { output, generated_at } = await generation
       return fromOutput(output, generated_at)
     } catch (error) {
-      if (error instanceof LlmError) return template(error.message, { kind: error.kind })
-      if (error instanceof UnusableSteps) return template(error.message)
+      if (error instanceof LlmError) return template(error.message, error.kind, { kind: error.kind })
+      if (error instanceof UnusableSteps) return template(error.message, 'rejected_answer')
       throw error
     }
   }
@@ -237,8 +243,10 @@ export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps:
     const passages = [...byId.values()]
     const base = { device_id: record.device_id, intended_use: use, option_id: PLAN_STEPS_ID as typeof PLAN_STEPS_ID }
 
-    const template = (reason: string | null, details: Record<string, unknown> = {}): PlanStepList => {
+    // Recorded like an option's step fallback, with the option ID "#plan" (feature 016 FR-016).
+    const template = (reason: string | null, code: AiFallbackReason | null = null, details: Record<string, unknown> = {}): PlanStepList => {
       if (reason) deps.warn?.(`plan step call unavailable, showing the template plans: ${reason}`, details)
+      if (code) deps.onFallback?.({ device_id: record.device_id, intended_use: use, call: 'steps', option_id: PLAN_STEPS_ID, reason: code })
       const planSteps = joinedTemplates(options.map((o) => o.kind), passages)
       const cited = new Set(planSteps.flatMap((s) => s.passage_ids))
       return { ...base, generated_at: now(), source: 'template', notice: STEPS_UNAVAILABLE, steps: planSteps, passages: passages.filter((p) => cited.has(p.passage_id)) }
@@ -269,7 +277,7 @@ export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps:
       }
     }
 
-    if (!llm) return template('no LLM configured')
+    if (!llm) return template('no LLM configured', 'no_llm')
     const pendingKey = JSON.stringify([record.device_id, use, PLAN_STEPS_ID, key])
     let generation = pending.get(pendingKey)
     if (!generation) {
@@ -288,8 +296,8 @@ export function createStepService(db: DatabaseSync, llm: LlmClient | null, deps:
       const { output, generated_at } = await generation
       return fromOutput(output, generated_at)
     } catch (error) {
-      if (error instanceof LlmError) return template(error.message, { kind: error.kind })
-      if (error instanceof UnusableSteps) return template(error.message)
+      if (error instanceof LlmError) return template(error.message, error.kind, { kind: error.kind })
+      if (error instanceof UnusableSteps) return template(error.message, 'rejected_answer')
       throw error
     }
   }

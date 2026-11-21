@@ -21,6 +21,11 @@ The LLM API key is configured only here, through environment variables. It never
 | `POST /api/sessions` | Optional body `{"os": "windows" \| "macos" \| "linux"}` (default Windows). `201 ScanSession`: a new 26-character session ID and the download URL for that system (features 006 and 007); `400` for another body |
 | `POST /api/sessions/:id/events` | The scanner's `step` or `error` event; `204`, `400` if invalid, `404` if unknown |
 | `GET /api/sessions/:id/events` | Server-Sent Events: the latest event first, then live ones; ends after `complete` or `error` |
+| `POST /api/admin/login` | Admin area (feature 016, only when configured, else 404). JSON `{"username", "password"}` → `204` with the `leaaf_admin` session cookie (`HttpOnly`, `Secure`, `SameSite=Strict`, `Path=/api/admin`, 12 hours); `401 unauthorized` with one generic message; `429 rate_limited` after 5 failures per client or 50 overall in 15 minutes; `415` for non-JSON bodies |
+| `POST /api/admin/logout` | JSON `{}` → `204`, ends the session and clears the cookie |
+| `GET /api/admin/session` | `200 {"username"}` with a valid session, else `401` |
+| `GET /api/admin/scans?page=<n>` | `200 AdminScanPage`: 50 scans per page, newest first, with time, device ID, maker, model, system and status, plus the total and today's AI calls against `LLM_DAILY_CALLS`; `401` without a session. Every admin response is `no-store` and `X-Robots-Tag: noindex` |
+| `GET /api/admin/scans/:id` | `200 AdminScanDetail`: the full stored scan and its AI status (category results and step plans from the AI per intended use, and the AI fallbacks recorded in the `ai_fallbacks` table with a fixed reason code); `401` without a session, `404` for an unknown or malformed ID |
 
 No route lists devices: the device ID (16 random bytes, base64url) is the only access control. An upload carrying `session_id` completes that session; the ID is removed before the scan is stored, so device routes never return it. Request logs record the method and route pattern only, never the URL or the client IP.
 
@@ -36,6 +41,7 @@ Each server process allows 10 upload attempts, 60 report requests and 120 step p
 | `STEPS_PER_HOUR` | 120 | Positive integer |
 | `LLM_DAILY_CALLS` | 200 | Nonnegative integer. Zero prevents all fresh provider calls. |
 | `TRUSTED_PROXY_IP` | Empty | One IPv4 or IPv6 address |
+| `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Empty (admin off) | The single admin login for `/admin` (feature 016). Both must be set and the password must have at least 16 characters; otherwise the admin routes are absent and a warning without the password is logged. Sessions live in memory, so a restart logs the admin out |
 
 The running API shares one SQLite counter per UTC day across extraction and the category call. It reserves a call before each provider attempt, including failed requests, transport retries and JSON repairs. Cache hits consume no allowance. After exhaustion, fresh assessments can use cached facts, and uncached category results use the five-path fallback with its unavailable notice.
 

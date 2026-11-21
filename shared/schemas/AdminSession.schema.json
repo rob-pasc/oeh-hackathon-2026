@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "AdminSession.schema.json",
+  "title": "AdminSession",
+  "type": "object",
+  "required": [
+    "username"
+  ],
+  "properties": {
+    "username": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}
