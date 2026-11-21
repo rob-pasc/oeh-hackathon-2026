@@ -26,7 +26,7 @@ func testConfig(t *testing.T, backend string, events *[]Event) (Config, *bytes.B
 		BackendURL:     backend,
 		ScannerVersion: "0.1.0-test",
 		OutDir:         t.TempDir(),
-		Collect: func(progress func(string, string)) (scan.Raw, []string) {
+		Collect: func(progress func(string, string)) (scan.Reading, []string) {
 			progress("started", scan.StepRunning)
 			return scan.Raw{ComputerSystem: &[]scan.ComputerSystem{{Model: &model}}}, []string{"Win32_Tpm: access denied"}
 		},
@@ -197,6 +197,23 @@ func TestReadSessionID(t *testing.T) {
 }
 
 // With a session, progress goes to the session and the upload carries the ID.
+func TestSessionFromBundle(t *testing.T) {
+	cases := map[string]string{
+		"/Users/x/Downloads/leaaf-scanner-" + testSession + ".app/Contents/MacOS/leaaf-scanner":                    testSession,
+		"/private/var/folders/ab/T/AppTranslocation/1234/d/leaaf-scanner-" + testSession + ".app/Contents/MacOS/x": testSession,
+		"/Users/x/Downloads/leaaf-scanner.app/Contents/MacOS/leaaf-scanner":                                        "",
+		"/Users/x/Downloads/leaaf-scanner-not-a-session.app/Contents/MacOS/leaaf-scanner":                          "",
+		// Only the innermost bundle counts.
+		"/Users/x/leaaf-scanner-" + testSession + ".app/Contents/Helpers/other.app/Contents/MacOS/x": "",
+		"/home/x/Downloads/leaaf-scanner": "",
+	}
+	for path, want := range cases {
+		if got := SessionFromBundle(path); got != want {
+			t.Errorf("%s: got %q, want %q", path, got, want)
+		}
+	}
+}
+
 func TestSessionRunReportsProgress(t *testing.T) {
 	var events []map[string]string
 	var uploaded map[string]any
@@ -338,7 +355,7 @@ func TestRetryAfterTemporaryFailure(t *testing.T) {
 	cfg.SessionID = testSession
 	scans := 0
 	collect := cfg.Collect
-	cfg.Collect = func(p func(string, string)) (scan.Raw, []string) { scans++; return collect(p) }
+	cfg.Collect = func(p func(string, string)) (scan.Reading, []string) { scans++; return collect(p) }
 
 	r := NewRunner(cfg)
 	if code := r.Scan(); code != ExitOK {
@@ -453,7 +470,7 @@ func TestSessionReceivesStepOutcomes(t *testing.T) {
 	// The order the Windows collector reports in, on readings with CPU, memory and a disk but
 	// no battery (a desktop).
 	raw := scan.Raw{Processors: &[]scan.Processor{{}}, Memory: &[]scan.PhysicalMemory{{}}, Disks: &[]scan.PhysicalDisk{{}}, Batteries: &[]scan.Battery{}}
-	cfg.Collect = func(progress func(string, string)) (scan.Raw, []string) {
+	cfg.Collect = func(progress func(string, string)) (scan.Reading, []string) {
 		progress("started", scan.StepRunning)
 		for _, step := range []string{"cpu_memory", "storage", "battery"} {
 			progress(step, scan.StepRunning)
@@ -479,5 +496,25 @@ func TestSessionReceivesStepOutcomes(t *testing.T) {
 	}
 	if n := strings.Count(out.String(), "Reading storage"); n != 1 {
 		t.Errorf("console logs storage %d times, want once", n)
+	}
+}
+
+func TestSaveFailureUsesTheConfiguredMessage(t *testing.T) {
+	for _, custom := range []string{"", "The scanner could not save its results in your home folder."} {
+		var events []Event
+		cfg, _ := testConfig(t, "http://127.0.0.1:1", &events)
+		cfg.OutDir = filepath.Join(t.TempDir(), "missing", "folder")
+		cfg.SaveFailed = custom
+		if code := NewRunner(cfg).Scan(); code != ExitSaveFailed {
+			t.Fatalf("scan: %d", code)
+		}
+		e := last(t, events)
+		want := custom
+		if want == "" {
+			want = "The scanner could not save its results next to itself. Move it to another folder, such as Downloads, and run it again."
+		}
+		if e.Kind != EventFailed || e.Message != want {
+			t.Errorf("got %q, want %q", e.Message, want)
+		}
 	}
 }

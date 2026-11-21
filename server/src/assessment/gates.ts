@@ -3,7 +3,7 @@
 // Pure functions: the same scan, use, model evidence, and facts always give the same statuses.
 // Each path gets one status with at least one reason, plus the plan the calculator prices.
 // The rules are listed in DESIGN.md (docs/features/feature-003-five-path-ranking/DESIGN.md).
-import type { DeviceScan, Fact, IntendedUse, Path, Suitability } from '@leaaf/shared'
+import { usesWindowsRules, type DeviceScan, type Fact, type IntendedUse, type Path, type Suitability } from '@leaaf/shared'
 import { lookupFacts, reason, type FactLookup, type Reason } from './facts.ts'
 
 /**
@@ -106,7 +106,8 @@ function osSupport(facts: FactLookup) {
   return { fact, supported: fact?.value ?? null }
 }
 
-function osCapForOwnUse(facts: FactLookup, reasons: Reason[]): Suitability {
+function osCapForOwnUse(scan: DeviceScan, facts: FactLookup, reasons: Reason[]): Suitability {
+  if (!usesWindowsRules(scan)) return 'viable'
   const { fact, supported } = osSupport(facts)
   if (supported !== false) return 'viable'
   reasons.push(
@@ -207,7 +208,7 @@ function gateUpgrade({ scan, use }: GateInput, facts: FactLookup): GateResult {
   const graphics = graphicsGate(scan, use, 'upgrade', reasons)
   const shortfall = ramShort || graphics.shortfall
   let status: Suitability = unverified || graphics.unverified || shortfall ? 'conditional' : 'viable'
-  status = atMost(status, osCapForOwnUse(facts, reasons))
+  status = atMost(status, osCapForOwnUse(scan, facts, reasons))
   return { path: 'upgrade', status, reasons, plan: { path: 'upgrade', ssd, ram, ram_after_gb: ramAfter }, shortfall }
 }
 
@@ -270,11 +271,23 @@ function gateRepair({ scan, use }: GateInput, facts: FactLookup): GateResult {
   const shortfall = ramShort || graphics.shortfall
 
   let status: Suitability = unverified || graphics.unverified || graphics.shortfall || battery === 'professional' ? 'conditional' : 'viable'
-  status = atMost(status, osCapForOwnUse(facts, reasons))
+  status = atMost(status, osCapForOwnUse(scan, facts, reasons))
   return { path: 'repair', status, reasons, plan: { path: 'repair', battery }, shortfall }
 }
 
+const SYSTEM_NAME = { macos: 'macOS', linux: 'its Linux distribution' } as const
+
 function gatePassOn({ scan }: GateInput, facts: FactLookup): GateResult {
+  if (!usesWindowsRules(scan)) {
+    // No sources say which Macs or distributions still get updates, so this stays open.
+    const system = SYSTEM_NAME[scan.os.family as 'macos' | 'linux']
+    const reasons = [
+      reason('cannot_verify_os_support', `We cannot verify that this computer still gets security updates for ${system}.`),
+    ]
+    if (scan.storage?.some((d) => d.health === 'unhealthy'))
+      reasons.push(reason('drive_failing', 'A drive reports as unhealthy; replace it before passing the computer on.'))
+    return { path: 'pass_on', status: 'conditional', reasons, plan: { path: 'pass_on' }, shortfall: false }
+  }
   const { fact, supported } = osSupport(facts)
   if (supported === false)
     return {

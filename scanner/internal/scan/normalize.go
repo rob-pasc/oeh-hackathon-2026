@@ -14,6 +14,15 @@ type Meta struct {
 	ScannedAt      time.Time
 }
 
+// Reading is one system's raw readings: Raw on Windows, RawLinux and RawDarwin elsewhere.
+type Reading interface {
+	// Payload normalizes the readings into the payload (see Normalize).
+	Payload(meta Meta) payload.DeviceScan
+}
+
+// Payload implements Reading for the Windows readings.
+func (raw Raw) Payload(meta Meta) payload.DeviceScan { return Normalize(raw, meta) }
+
 // Normalize builds the payload from raw readings. It is pure: every value comes from raw or
 // meta, and anything missing or implausible becomes nil rather than a guess.
 func Normalize(raw Raw, meta Meta) payload.DeviceScan {
@@ -31,10 +40,7 @@ func Normalize(raw Raw, meta Meta) payload.DeviceScan {
 		Battery:        battery(raw),
 		GPUs:           gpus(raw),
 	}
-	s.ScanStatus = "complete"
-	if payload.HasNull(s) {
-		s.ScanStatus = "partial"
-	}
+	s.ScanStatus = payload.Status(s)
 	return s
 }
 
@@ -109,7 +115,7 @@ func formFactor(types []int32) *string {
 }
 
 func osInfo(raw Raw) payload.OS {
-	var o payload.OS
+	o := payload.OS{Family: "windows"}
 	if os := first(raw.OS); os != nil {
 		o.Caption = text(os.Caption)
 		o.Build = text(os.Version)

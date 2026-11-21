@@ -9,7 +9,7 @@ How leaaf is built, published, and run in production. Scope and open decisions a
 | Image | Built from | Serves | Port |
 |---|---|---|---|
 | `ghcr.io/rob-pasc/leaaf-web` | [`web/Dockerfile`](../web/Dockerfile) | The built React app via unprivileged nginx ([`web/nginx.conf`](../web/nginx.conf)), with `index.html` fallback for client routes and `/healthz` | 8080 |
-| `ghcr.io/rob-pasc/leaaf-server` | [`server/Dockerfile`](../server/Dockerfile) | The Node API (TypeScript run directly by Node 24), data under `/data`, the retrieval index built from `corpus/` at image build time (`CORPUS_INDEX_PATH=/app/corpus-index/corpus.sqlite`; an invalid manifest fails the build), and the Windows scanner at `/downloads/leaaf-scanner.exe` | 3000 |
+| `ghcr.io/rob-pasc/leaaf-server` | [`server/Dockerfile`](../server/Dockerfile) | The Node API (TypeScript run directly by Node 24), data under `/data`, the retrieval index built from `corpus/` at image build time (`CORPUS_INDEX_PATH=/app/corpus-index/corpus.sqlite`; an invalid manifest fails the build), and the scanner downloads for Windows (`/downloads/leaaf-scanner.exe`), Linux (`/downloads/leaaf-scanner-linux`) and macOS (`/downloads/leaaf-scanner-macos.zip`) | 3000 |
 
 Both build from the repository root because they need the root lockfile and `shared/`:
 
@@ -21,15 +21,19 @@ docker build -f server/Dockerfile --build-arg SCANNER_VERSION=0.1.0 -t leaaf-ser
 
 - **Web mode:** `VITE_API_MODE` is fixed when the image is built. The default and the CI build use `live`, which calls `/api` and `/downloads` on the same origin. `mock` serves the labeled sample data without a backend and is for local use only.
 - **Server:** The image runs `node src/main.ts` with `PORT=3000`, `HOST=0.0.0.0`, and `DATABASE_PATH=/data/leaaf.sqlite`. Set `PUBLIC_BASE_URL` in `deploy/.env`.
-- **Scanner:** A Go build stage cross-compiles the Windows scanner with the backend URL `SCANNER_BACKEND_URL` (default `https://leaaf.green`) and the version `SCANNER_VERSION` compiled in, and puts it at `SCANNER_EXE_PATH` (`/app/scanner/leaaf-scanner.exe`). CI passes the Git tag, or `sha-<short sha>` on other runs, as the version. The binary holds no secrets.
+- **Scanner:** Every build has the backend URL `SCANNER_BACKEND_URL` (default `https://leaaf.green`) and the version `SCANNER_VERSION` compiled in. CI passes the Git tag, or `sha-<short sha>` on other runs, as the version. No build holds secrets.
+  - **Windows:** a Go stage cross-compiles it to `SCANNER_EXE_PATH` (`/app/scanner/leaaf-scanner.exe`).
+  - **Linux** (feature 007): a stage on Ubuntu 22.04 builds the Gio window with cgo, so it runs on glibc 2.35 and later. It goes to `SCANNER_LINUX_PATH` (`/app/scanner/leaaf-scanner-linux`).
+  - **macOS** (feature 007): the app can only be built on a Mac, so CI's `scanner-macos` job builds it with [`scanner/packaging/macos/build.sh`](../scanner/packaging/macos/build.sh) and puts the zip in `scanner/macos-release/` before the image build. The Dockerfile copies it to `SCANNER_MACOS_PATH` (`/app/scanner/macos/leaaf-scanner-macos.zip`). A local `docker build` without that file has no Mac download (404); to include one, run the script on a Mac with the public URL and copy the zip into `scanner/macos-release/` first.
 
 ## CI and publishing
 
 [`.github/workflows/ci.yaml`](../.github/workflows/ci.yaml) runs on every pull request, every push to `main`, and every tag push:
 
 1. `checks`: `npm ci`, then the type check, tests, and build for all workspaces.
-2. `scanner`: `go vet` for Linux and Windows, then `go test` in `scanner/`.
-3. `images`: builds both images for `linux/amd64` (after both jobs pass). Only on a **tag push** does it log in to GHCR and push. Each image gets the Git tag name, `sha-<short sha>`, and `latest`.
+2. `scanner`: installs the Gio build libraries, runs `go vet` for the Linux window and console builds, Windows and the macOS console build, then `go test` in `scanner/`.
+3. `scanner-macos`: on a macOS runner, `go vet` and `go test`, then builds the zipped universal app and keeps it as the `scanner-macos` artifact.
+4. `images`: builds both images for `linux/amd64` (after the three jobs pass), with the macOS artifact in the server image. Only on a **tag push** does it log in to GHCR and push. Each image gets the Git tag name, `sha-<short sha>`, and `latest`.
 
 To release, tag a commit on `main` and push the tag:
 
@@ -88,7 +92,9 @@ docker compose ps                                     # web is "healthy", server
 curl -fsS http://127.0.0.1:8080/healthz               # "ok"
 curl -fsS -o /dev/null -w '%{http_code}\n' https://leaaf.green/d/example   # 200 (client route fallback)
 curl -fsS -X POST https://leaaf.green/api/sessions    # {"session_id": ..., "download_url": ...}
-curl -fsS -o /dev/null -w '%{http_code} %{size_download}\n' https://leaaf.green/downloads/leaaf-scanner.exe   # 200, several MB
+curl -fsS -o /dev/null -w '%{http_code} %{size_download}\n' https://leaaf.green/downloads/leaaf-scanner.exe        # 200, several MB
+curl -fsS -o /dev/null -w '%{http_code} %{size_download}\n' https://leaaf.green/downloads/leaaf-scanner-linux      # 200, about 12 MB
+curl -fsS -o /dev/null -w '%{http_code} %{size_download}\n' https://leaaf.green/downloads/leaaf-scanner-macos.zip  # 200, several MB
 ```
 
 Open `https://leaaf.green` in a browser and check that the landing page loads over HTTPS without the "Sample data" label. For the rate-limit smoke check, use a dedicated test client and repeatedly request the report for a missing device with a valid use. Expect 404 until the configured report allowance is spent, then 429 with a positive Retry-After. From a second client IP the first request should still return 404. Repeat on the upload route with an empty JSON object (400 until 429). This checks both client separation through Caddy and the limits without storing scans or calling the provider. Add a seeded-report check when the seed command is available.

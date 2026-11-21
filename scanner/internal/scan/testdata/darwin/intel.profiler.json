@@ -1,0 +1,48 @@
+{
+  "SPDisplaysDataType": [
+    { "_name": "Intel Iris Plus Graphics 655", "sppci_bus": "spdisplays_builtin", "sppci_device_type": "spdisplays_gpu", "sppci_model": "Intel Iris Plus Graphics 655" }
+  ],
+  "SPHardwareDataType": [
+    {
+      "_name": "hardware_overview",
+      "boot_rom_version": "2022.80.1.0.0 (iBridge: 21.16.4222.0.0,0)",
+      "cpu_type": "Quad-Core Intel Core i5",
+      "current_processor_speed": "2,3 GHz",
+      "machine_model": "MacBookPro15,2",
+      "machine_name": "MacBook Pro",
+      "model_number": "MR9Q2D/A",
+      "number_processors": 4,
+      "packages": 1,
+      "physical_memory": "8 GB",
+      "platform_UUID": "PLANTED-1A2B3C4D-5E6F-7081-92A3-B4C5D6E7F809",
+      "serial_number": "PLANTED-C02XL0ABJHD3"
+    }
+  ],
+  "SPMemoryDataType": [
+    {
+      "_items": [
+        { "_name": "BANK 0/ChannelA-DIMM0", "dimm_manufacturer": "0x80CE", "dimm_part_number": "PLANTED-PART", "dimm_serial_number": "PLANTED-DIMM-1", "dimm_size": "4 GB", "dimm_speed": "2133 MHz", "dimm_status": "ok", "dimm_type": "LPDDR3" },
+        { "_name": "BANK 1/ChannelB-DIMM0", "dimm_manufacturer": "0x80CE", "dimm_serial_number": "PLANTED-DIMM-2", "dimm_size": "4 GB", "dimm_speed": "2133 MHz", "dimm_status": "ok", "dimm_type": "LPDDR3" }
+      ],
+      "_name": "memory",
+      "global_ecc_state": "ecc_disabled",
+      "is_memory_upgradeable": "No"
+    }
+  ],
+  "SPNVMeDataType": [
+    {
+      "_items": [
+        { "_name": "APPLE SSD AP0256M", "bsd_name": "disk0", "detachable_drive": "no", "device_serial": "PLANTED-C0283330", "removable_media": "no", "size_in_bytes": 251000193024, "smart_status": "Verified" }
+      ],
+      "_name": "Apple SSD Controller"
+    }
+  ],
+  "SPSerialATADataType": [],
+  "SPPowerDataType": [
+    {
+      "_name": "spbattery_information",
+      "sppower_battery_health_info": { "sppower_battery_cycle_count": 512, "sppower_battery_health": "Service Recommended", "sppower_battery_health_maximum_capacity": "74%" },
+      "sppower_battery_model_info": { "sppower_battery_serial_number": "PLANTED-D86812345" }
+    }
+  ]
+}

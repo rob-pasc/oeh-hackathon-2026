@@ -7,5 +7,6 @@ dist/
 
 # Local server database (server/data/)
 server/data/
-# Scanner build output
+# Scanner build output, and the macOS app CI hands to the server image
 scanner/dist/
+scanner/macos-release/

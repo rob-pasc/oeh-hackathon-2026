@@ -7,6 +7,7 @@ import { SCANNER_SESSION_MARKER, type DeviceRecord, type DeviceScan, type ScanSe
 import { buildApp } from '../src/app.ts'
 import { createSqliteDeviceStore } from '../src/devices/store.ts'
 import { createSqliteSessionStore, newSessionId } from '../src/sessions/store.ts'
+import { makeZip } from './make-zip.ts'
 
 const laptop = JSON.parse(
   readFileSync(new URL('../../shared/fixtures/device-scan.laptop-complete.json', import.meta.url), 'utf8'),
@@ -18,16 +19,25 @@ afterEach(async () => {
   await Promise.all(servers.splice(0).map((s) => s.close()))
 })
 
+const ELF = '\x7fELF fake Linux scanner'
+const MAC_ZIP = makeZip([
+  { name: 'leaaf-scanner.app/', data: '' },
+  { name: 'leaaf-scanner.app/Contents/MacOS/leaaf-scanner', data: 'fake Mach-O', descriptor: true },
+])
+
 function setup() {
   const db = new DatabaseSync(':memory:')
   const dir = mkdtempSync(join(tmpdir(), 'leaaf-'))
   const exe = join(dir, 'leaaf-scanner.exe')
   writeFileSync(exe, EXE, 'latin1')
+  writeFileSync(join(dir, 'leaaf-scanner-linux'), ELF, 'latin1')
+  writeFileSync(join(dir, 'leaaf-scanner-macos.zip'), MAC_ZIP)
   const app = buildApp({
     devices: createSqliteDeviceStore(db),
     sessions: createSqliteSessionStore(db),
     publicBaseUrl: 'https://leaaf.example',
     scannerExePath: exe,
+    scannerPaths: { linux: join(dir, 'leaaf-scanner-linux'), macos: join(dir, 'leaaf-scanner-macos.zip') },
   })
   servers.push(app)
   return app
@@ -93,6 +103,62 @@ describe('scan sessions', () => {
     expect(plain.rawPayload.toString('latin1')).toBe(EXE)
     const unknown = await app.inject({ method: 'GET', url: `/downloads/leaaf-scanner.exe?session=${newSessionId()}` })
     expect(unknown.statusCode).toBe(404)
+  })
+
+  it('returns the download for the requested system (feature 007 FR-012)', async () => {
+    const app = setup()
+    for (const [os, path] of [
+      ['windows', '/downloads/leaaf-scanner.exe'],
+      ['linux', '/downloads/leaaf-scanner-linux'],
+      ['macos', '/downloads/leaaf-scanner-macos.zip'],
+    ]) {
+      const res = await app.inject({ method: 'POST', url: '/api/sessions', payload: { os } })
+      expect(res.statusCode).toBe(201)
+      const { session_id, download_url } = res.json<ScanSession>()
+      expect(download_url).toBe(`${path}?session=${session_id}`)
+    }
+    for (const payload of [{ os: 'beos' }, { os: 'linux', extra: 1 }]) {
+      const res = await app.inject({ method: 'POST', url: '/api/sessions', payload })
+      expect(res.statusCode).toBe(400)
+    }
+  })
+
+  it('appends the session to the Linux scanner like the Windows one', async () => {
+    const app = setup()
+    const res0 = await app.inject({ method: 'POST', url: '/api/sessions', payload: { os: 'linux' } })
+    const { session_id, download_url } = res0.json<ScanSession>()
+    const res = await app.inject({ method: 'GET', url: download_url })
+    expect(res.headers['content-disposition']).toBe('attachment; filename="leaaf-scanner"')
+    expect(res.rawPayload.toString('latin1')).toBe(ELF + SCANNER_SESSION_MARKER + session_id)
+  })
+
+  it('renames the macOS bundle for the session and leaves the plain download unchanged', async () => {
+    const app = setup()
+    const res0 = await app.inject({ method: 'POST', url: '/api/sessions', payload: { os: 'macos' } })
+    const { session_id, download_url } = res0.json<ScanSession>()
+    const res = await app.inject({ method: 'GET', url: download_url })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['content-type']).toBe('application/zip')
+    const body = res.rawPayload.toString('latin1')
+    expect(body).toContain(`leaaf-scanner-${session_id}.app/Contents/MacOS/leaaf-scanner`)
+    expect(body).not.toContain('leaaf-scanner.app/')
+    const plain = await app.inject({ method: 'GET', url: '/downloads/leaaf-scanner-macos.zip' })
+    expect(plain.rawPayload.equals(MAC_ZIP)).toBe(true)
+    const unknown = await app.inject({ method: 'GET', url: `/downloads/leaaf-scanner-macos.zip?session=${newSessionId()}` })
+    expect(unknown.statusCode).toBe(404)
+  })
+
+  it('serves an archive it cannot rename without the session rather than failing', async () => {
+    const db = new DatabaseSync(':memory:')
+    const dir = mkdtempSync(join(tmpdir(), 'leaaf-'))
+    const zip = join(dir, 'leaaf-scanner-macos.zip')
+    writeFileSync(zip, 'PK not really a zip archive')
+    const app = buildApp({ devices: createSqliteDeviceStore(db), sessions: createSqliteSessionStore(db), publicBaseUrl: 'https://leaaf.example', scannerPaths: { macos: zip } })
+    servers.push(app)
+    const { download_url } = (await app.inject({ method: 'POST', url: '/api/sessions', payload: { os: 'macos' } })).json<ScanSession>()
+    const res = await app.inject({ method: 'GET', url: download_url })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toBe('PK not really a zip archive')
   })
 
   it('streams scanner steps and completes when the upload carries the session ID', async () => {

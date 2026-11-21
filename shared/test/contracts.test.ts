@@ -37,6 +37,8 @@ describe('fixtures are valid examples', () => {
   const cases: [string, ReturnType<typeof createValidator>, ((v: never) => string[]) | null][] = [
     ['device-scan.laptop-complete.json', validateScan, checkDeviceScan as never],
     ['device-scan.desktop-partial.json', validateScan, checkDeviceScan as never],
+    ['device-scan.macos-complete.json', validateScan, checkDeviceScan as never],
+    ['device-scan.linux-complete.json', validateScan, checkDeviceScan as never],
     ['retrieval.example-laptop-14.json', createValidator(RetrievalResult), null],
     ['facts.example-laptop-14.json', createValidator(FactSet), checkFactSet as never],
     ['assessment.example-laptop-14.office.json', validateAssessment, checkAssessment as never],
@@ -95,6 +97,51 @@ describe('DeviceScan', () => {
     const s = scan()
     s.battery.cycle_count = null
     expect(checkDeviceScan(s)).toEqual(['scan_status must be "partial"'])
+  })
+
+  describe('fields that do not exist on a system (feature 007 FR-018)', () => {
+    const mac = () => clone(fixture<DeviceScanT>('device-scan.macos-complete.json'))
+    const linux = () => clone(fixture<DeviceScanT>('device-scan.linux-complete.json'))
+
+    it('accepts os.family as optional', () => {
+      expect(validateScan(scan()).ok).toBe(true)
+      const s = scan() as any
+      s.os.family = 'beos'
+      expect(validateScan(s).ok).toBe(false)
+    })
+
+    it('keeps a Mac with no TPM, BIOS date, Secure Boot, display version or slots complete', () => {
+      expect(checkDeviceScan(mac())).toEqual([])
+    })
+
+    it('still counts the RAM slots on an Intel Mac', () => {
+      const s = mac()
+      s.firmware.firmware_type = 'uefi'
+      expect(checkDeviceScan(s)).toEqual(['scan_status must be "partial"'])
+    })
+
+    it('still makes a Mac partial for any other null', () => {
+      const s = mac()
+      s.battery.cycle_count = null
+      expect(checkDeviceScan(s)).toEqual(['scan_status must be "partial"'])
+    })
+
+    it('ignores only the display version on Linux', () => {
+      expect(checkDeviceScan(linux())).toEqual([])
+      const s = linux()
+      s.tpm.spec_version = null
+      expect(checkDeviceScan(s)).toEqual(['scan_status must be "partial"'])
+    })
+
+    it('leaves Windows and scans without a family unchanged', () => {
+      for (const family of ['windows', undefined] as const) {
+        const s = scan()
+        if (family) s.os.family = family
+        else delete s.os.family
+        s.os.display_version = null
+        expect(checkDeviceScan(s)).toEqual(['scan_status must be "partial"'])
+      }
+    })
   })
 
   it('flags battery values when no battery is present', () => {

@@ -54,6 +54,28 @@ it('drops unknown and mixed citations and filters figures from every generated s
   expect(report.passages).toContainEqual(passage)
 })
 
+it('removes Windows 11 statements from Mac and Linux reports only (feature 007 FR-015)', async () => {
+  const passage = retrieval.passages_by_path.pass_on[0] ?? retrieval.passages_by_path.upgrade[0]!
+  const claim = { text: 'This CPU is not supported by Windows 11.', passage_ids: [passage.passage_id] }
+  const mention = (paths: ReturnType<typeof setup>['paths']) =>
+    Object.assign(paths.pass_on!, {
+      summary: 'The CPU is not on the Windows 11 list.', why: 'Windows 11 does not support it.',
+      next_steps: ['Check Windows 11 support.', 'Wipe the drive.'], claims: [claim],
+    })
+  for (const family of ['macos', 'linux'] as const) {
+    const { explain, paths } = setup()
+    mention(paths)
+    const report = await explain({ ...scan, os: { ...scan.os, family } }, input)
+    const text = JSON.stringify(report.paths)
+    expect(text).not.toMatch(/windows\s*11/i)
+    expect(report.paths.find((p) => p.path === 'pass_on')!.next_steps).toEqual(['Wipe the drive.'])
+  }
+  const { explain, paths } = setup()
+  mention(paths)
+  const windows = await explain(scan, input)
+  expect(windows.paths.find((p) => p.path === 'pass_on')!.claims).toEqual([claim])
+})
+
 it('shares concurrent requests, reopens from SQLite across modes, and isolates devices and uses', async () => {
   const { db, llm, completeJson, explain } = setup()
   const [first, concurrent] = await Promise.all([explain(scan, input), explain(scan, input)])

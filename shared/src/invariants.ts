@@ -3,21 +3,24 @@
 // Run these after schema validation, on both the producing and consuming side where practical.
 import { PATHS, type Range } from './common.ts'
 import { CRITERIA, type Assessment, type Weights } from './assessment.ts'
-import type { DeviceScan } from './device.ts'
+import { notApplicableFields, type DeviceScan } from './device.ts'
 import type { FactSet } from './facts.ts'
 import type { Report } from './report.ts'
 import type { Passage } from './retrieval.ts'
 
-function containsNull(value: unknown): boolean {
+/** Whether any value below `value` is null, skipping the dotted paths in `skip`. */
+function containsNull(value: unknown, skip: ReadonlySet<string> = new Set(), path = ''): boolean {
+  if (skip.has(path)) return false
   if (value === null) return true
-  if (Array.isArray(value)) return value.some(containsNull)
-  if (typeof value === 'object') return Object.values(value).some(containsNull)
+  if (Array.isArray(value)) return value.some((v) => containsNull(v, skip, `${path}[]`))
+  if (typeof value === 'object')
+    return Object.entries(value).some(([k, v]) => containsNull(v, skip, path ? `${path}.${k}` : k))
   return false
 }
 
 export function checkDeviceScan(scan: DeviceScan): string[] {
   const errors: string[] = []
-  const expected = containsNull(scan) ? 'partial' : 'complete'
+  const expected = containsNull(scan, new Set(notApplicableFields(scan))) ? 'partial' : 'complete'
   if (scan.scan_status !== expected) errors.push(`scan_status must be "${expected}"`)
   const { slots_total, slots_used } = scan.memory
   if (slots_total !== null && slots_used !== null && slots_used > slots_total)

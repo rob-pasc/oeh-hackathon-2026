@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<array>
+	<dict>
+		<key>BatterySerialNumber</key>
+		<string>PLANTED-D86812345</string>
+		<key>CycleCount</key>
+		<integer>512</integer>
+		<key>DesignCapacity</key>
+		<integer>5086</integer>
+		<key>MaxCapacity</key>
+		<integer>3772</integer>
+		<key>Voltage</key>
+		<integer>11850</integer>
+	</dict>
+</array>
+</plist>

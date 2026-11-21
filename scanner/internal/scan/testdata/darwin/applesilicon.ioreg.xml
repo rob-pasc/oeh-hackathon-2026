@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>AppleRawMaxCapacity</key>
+		<integer>3946</integer>
+		<key>BatteryData</key>
+		<dict>
+			<key>DesignCapacity</key>
+			<integer>1</integer>
+			<key>Serial</key>
+			<string>PLANTED-NESTED-SERIAL</string>
+		</dict>
+		<key>BatterySerialNumber</key>
+		<string>PLANTED-F5D1234ABCDEFG</string>
+		<key>CycleCount</key>
+		<integer>210</integer>
+		<key>DesignCapacity</key>
+		<integer>4382</integer>
+		<key>MaxCapacity</key>
+		<integer>100</integer>
+		<key>Serial</key>
+		<string>PLANTED-F5D1234ABCDEFG</string>
+		<key>Voltage</key>
+		<integer>12480</integer>
+	</dict>
+</array>
+</plist>

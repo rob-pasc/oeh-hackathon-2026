@@ -27,8 +27,12 @@ function parse<T>(event: Event): T | null {
 export const liveClient: ApiClient = {
   mode: 'live',
 
-  async createScanSession(): Promise<ScanSession> {
-    const response = await fetch(API_ROUTES.createSession, { method: 'POST' })
+  async createScanSession(os): Promise<ScanSession> {
+    const response = await fetch(API_ROUTES.createSession, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ os }),
+    })
     if (!response.ok) throw await readError(response)
     return (await response.json()) as ScanSession
   },

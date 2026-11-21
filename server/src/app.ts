@@ -5,6 +5,7 @@
 // There is deliberately no route that lists devices (FR-011): the unguessable device ID is the
 // only access control.
 import { createReadStream, existsSync } from 'node:fs'
+import { readFile, stat } from 'node:fs/promises'
 import { Readable } from 'node:stream'
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify'
 import {
@@ -14,10 +15,14 @@ import {
   INTENDED_USES,
   MAX_UPLOAD_BYTES,
   IntendedUse,
+  OS_FAMILIES,
+  SCANNER_DOWNLOADS,
   SCANNER_SESSION_MARKER,
+  ScanSessionRequest,
   ScannerEvent,
   WEB_ROUTES,
   type ApiError,
+  type OsFamily,
   type ScanSession,
   type ScanSessionEvent,
   type StreamEnd,
@@ -26,6 +31,7 @@ import { hourlyLimit, loadLimits } from './limits.ts'
 import type { AssessmentService } from './assessment/service.ts'
 import type { DeviceStore } from './devices/store.ts'
 import { checkScan } from './devices/validate.ts'
+import { renameZipRoot, ZipError } from './downloads/zip.ts'
 import type { createReportService } from './report/service.ts'
 import type { SessionStore } from './sessions/store.ts'
 
@@ -38,8 +44,10 @@ export interface AppOptions {
   explain?: ReturnType<typeof createReportService> | undefined
   /** Origin of the web app, used to build device page URLs, e.g. https://leaaf.green */
   publicBaseUrl: string
-  /** Path of the scanner executable to serve; the download is 404 while it is missing. */
+  /** Path of the Windows scanner executable; the download is 404 while it is missing. */
   scannerExePath?: string
+  /** Scanner builds per system (feature 007 FR-012); each download is 404 while its file is missing. Overrides scannerExePath for Windows. */
+  scannerPaths?: Partial<Record<OsFamily, string>>
   logger?: FastifyServerOptions['logger']
 }
 
@@ -49,6 +57,23 @@ const apiError = (error: ApiError['error'], message: string, fields?: ApiError['
 const NOT_FOUND = apiError('not_found', 'device not found')
 const SESSION_NOT_FOUND = apiError('not_found', 'scan session not found')
 const isScannerEvent = createValidator(ScannerEvent)
+const isSessionRequest = createValidator(ScanSessionRequest)
+
+/** How each scanner build is sent. The bundle inside the macOS zip is named MAC_BUNDLE. */
+const DOWNLOAD_TYPES: Record<OsFamily, { contentType: string; filename: string }> = {
+  windows: { contentType: 'application/vnd.microsoft.portable-executable', filename: 'leaaf-scanner.exe' },
+  linux: { contentType: 'application/octet-stream', filename: 'leaaf-scanner' },
+  macos: { contentType: 'application/zip', filename: 'leaaf-scanner-macos.zip' },
+}
+const MAC_BUNDLE = 'leaaf-scanner.app'
+
+/** The macOS archive, read once per file version: session downloads are not rate-limited. */
+let macArchive: { path: string; mtimeMs: number; data: Buffer } | null = null
+async function readMacArchive(path: string): Promise<Buffer> {
+  const { mtimeMs } = await stat(path)
+  if (macArchive?.path !== path || macArchive.mtimeMs !== mtimeMs) macArchive = { path, mtimeMs, data: await readFile(path) }
+  return macArchive.data
+}
 const isIntendedUse = createValidator(IntendedUse)
 
 const sseFrame = (event: string, data: unknown) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
@@ -154,33 +179,56 @@ export function buildApp(options: AppOptions): FastifyInstance {
     },
   )
 
-  app.get<{ Querystring: { session?: string } }>(API_ROUTES.scannerDownload, async (req, reply) => {
-    const path = options.scannerExePath
-    if (!path || !existsSync(path))
-      return reply.code(404).send(apiError('not_found', 'the scanner download is not available yet'))
-    const sessionId = req.query.session
-    if (sessionId !== undefined && !options.sessions.get(sessionId)) return reply.code(404).send(SESSION_NOT_FOUND)
-    reply
-      .header('content-type', 'application/vnd.microsoft.portable-executable')
-      .header('content-disposition', 'attachment; filename="leaaf-scanner.exe"')
-      .header('cache-control', 'no-store')
-    if (sessionId === undefined) return reply.send(createReadStream(path))
-    // Windows never loads bytes after the last PE section (an "overlay"), so the marker and ID can
-    // follow the executable unchanged; the scanner reads them back from the end of its own file.
-    const trailer = Buffer.from(SCANNER_SESSION_MARKER + sessionId, 'ascii')
-    return reply.send(
-      Readable.from(
-        (async function* () {
-          yield* createReadStream(path)
-          yield trailer
-        })(),
-      ),
-    )
-  })
+  const scannerPaths: Partial<Record<OsFamily, string | undefined>> = { windows: options.scannerExePath, ...options.scannerPaths }
+  for (const os of OS_FAMILIES) {
+    app.get<{ Querystring: { session?: string } }>(SCANNER_DOWNLOADS[os], async (req, reply) => {
+      const path = scannerPaths[os]
+      if (!path || !existsSync(path))
+        return reply.code(404).send(apiError('not_found', 'the scanner download is not available yet'))
+      const sessionId = req.query.session
+      if (sessionId !== undefined && !options.sessions.get(sessionId)) return reply.code(404).send(SESSION_NOT_FOUND)
+      const { contentType, filename } = DOWNLOAD_TYPES[os]
+      reply
+        .header('content-type', contentType)
+        .header('content-disposition', `attachment; filename="${filename}"`)
+        .header('cache-control', 'no-store')
+      if (sessionId === undefined) return reply.send(createReadStream(path))
+      if (os === 'macos') {
+        // The app's signature covers everything inside the bundle but not the bundle folder's
+        // name, so the session goes there (feature 007; read back by run.SessionFromBundle).
+        const archive = await readMacArchive(path)
+        try {
+          return reply.send(renameZipRoot(archive, MAC_BUNDLE, `leaaf-scanner-${sessionId}.app`))
+        } catch (err) {
+          if (!(err instanceof ZipError)) throw err
+          // An archive the renamer cannot handle (for example Zip64) still works without the
+          // session: the window's Show my results button opens the device page.
+          req.log.warn({ reason: err.message }, 'macOS scanner served without its session')
+          return reply.send(archive)
+        }
+      }
+      // Windows never loads bytes after the last PE section (an "overlay"), and the Linux loader
+      // ignores bytes after the ELF segments, so the marker and ID can follow the executable
+      // unchanged; the scanner reads them back from the end of its own file.
+      const trailer = Buffer.from(SCANNER_SESSION_MARKER + sessionId, 'ascii')
+      return reply.send(
+        Readable.from(
+          (async function* () {
+            yield* createReadStream(path)
+            yield trailer
+          })(),
+        ),
+      )
+    })
+  }
 
-  app.post(API_ROUTES.createSession, async (_req, reply) => {
+  app.post(API_ROUTES.createSession, async (req, reply) => {
+    // The body is optional; without it the session downloads the Windows scanner (feature 006).
+    const checked = isSessionRequest(req.body ?? {})
+    if (!checked.ok) return reply.code(400).send(apiError('invalid_payload', 'not a scan session request', checked.errors))
     const id = options.sessions.create()
-    const body: ScanSession = { session_id: id, download_url: `${API_ROUTES.scannerDownload}?session=${id}` }
+    const os = checked.value.os ?? 'windows'
+    const body: ScanSession = { session_id: id, download_url: `${SCANNER_DOWNLOADS[os]}?session=${id}` }
     return reply.code(201).send(body)
   })
 

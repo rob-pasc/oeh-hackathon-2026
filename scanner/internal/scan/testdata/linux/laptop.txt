@@ -1,0 +1,144 @@
+# A Linux laptop's sources, recorded from a ThinkPad E14 Gen 7 on Fedora 45 (2026-11-21) and
+# trimmed. Planted extras: DMI and battery serials and UUIDs (must never be read), a USB stick,
+# an SD card, a loop and a zram device, an external Thunderbolt NVMe drive, a wireless mouse
+# battery, and the mains adapter. "-- path -> target --" is a symbolic link.
+-- sys/class/dmi/id/sys_vendor --
+LENOVO
+-- sys/class/dmi/id/product_name --
+21SXCTO1WW
+-- sys/class/dmi/id/product_version --
+ThinkPad E14 Gen 7
+-- sys/class/dmi/id/product_family --
+ThinkPad E14 Gen 7
+-- sys/class/dmi/id/product_sku --
+LENOVO_MT_21SX_BU_Think_FM_ThinkPad E14 Gen 7
+-- sys/class/dmi/id/chassis_type --
+10
+-- sys/class/dmi/id/bios_date --
+08/20/2025
+-- sys/class/dmi/id/product_serial --
+PLANTED-SERIAL-PF5XYZ12
+-- sys/class/dmi/id/product_uuid --
+4c4c4544-0042-3510-8052-b2c04f4b4a32
+-- sys/class/dmi/id/board_serial --
+PLANTED-BOARD-L1HF000000
+-- proc/cpuinfo --
+processor	: 0
+model name	: Intel(R) Core(TM) Ultra 5 225H
+physical id	: 0
+core id		: 0
+
+processor	: 1
+model name	: Intel(R) Core(TM) Ultra 5 225H
+physical id	: 0
+core id		: 4
+
+processor	: 2
+model name	: Intel(R) Core(TM) Ultra 5 225H
+physical id	: 0
+core id		: 8
+
+processor	: 3
+model name	: Intel(R) Core(TM) Ultra 5 225H
+physical id	: 0
+core id		: 8
+-- proc/meminfo --
+MemTotal:       31726568 kB
+MemFree:         1234567 kB
+-- sys/devices/system/memory/block_size_bytes --
+1f2000000
+-- sys/block/nvme0n1 -> ../devices/pci0000:00/0000:00:06.2/0000:04:00.0/nvme/nvme0/nvme0n1 --
+-- sys/devices/pci0000:00/0000:00:06.2/0000:04:00.0/nvme/nvme0/nvme0n1/size --
+1000215216
+-- sys/devices/pci0000:00/0000:00:06.2/0000:04:00.0/nvme/nvme0/nvme0n1/removable --
+0
+-- sys/devices/pci0000:00/0000:00:06.2/0000:04:00.0/nvme/nvme0/nvme0n1/queue/rotational --
+0
+-- sys/devices/pci0000:00/0000:00:06.2/0000:04:00.0/nvme/nvme0/nvme0n1/device -> ../../nvme0 --
+-- sys/devices/pci0000:00/0000:00:06.2/0000:04:00.0/nvme/nvme0/device -> ../../../0000:04:00.0 --
+-- sys/devices/pci0000:00/0000:00:06.2/0000:04:00.0/nvme/nvme0/serial --
+PLANTED-NVME-SERIAL-S6P7NS0T
+-- sys/block/nvme1n1 -> ../devices/pci0000:00/0000:00:07.0/0000:20:00.0/nvme/nvme1/nvme1n1 --
+-- sys/devices/pci0000:00/0000:00:07.0/0000:20:00.0/nvme/nvme1/nvme1n1/size --
+1953525168
+-- sys/devices/pci0000:00/0000:00:07.0/0000:20:00.0/nvme/nvme1/nvme1n1/removable --
+0
+-- sys/devices/pci0000:00/0000:00:07.0/0000:20:00.0/nvme/nvme1/nvme1n1/device -> ../../nvme1 --
+-- sys/devices/pci0000:00/0000:00:07.0/0000:20:00.0/nvme/nvme1/device -> ../../../0000:20:00.0 --
+-- sys/devices/pci0000:00/0000:00:07.0/0000:20:00.0/removable --
+removable
+-- sys/block/sda -> ../devices/pci0000:00/0000:00:14.0/usb2/2-1/2-1:1.0/host0/target0:0:0/0:0:0:0/block/sda --
+-- sys/devices/pci0000:00/0000:00:14.0/usb2/2-1/2-1:1.0/host0/target0:0:0/0:0:0:0/block/sda/size --
+62521344
+-- sys/devices/pci0000:00/0000:00:14.0/usb2/2-1/2-1:1.0/host0/target0:0:0/0:0:0:0/block/sda/removable --
+1
+-- sys/block/mmcblk0 -> ../devices/pci0000:00/0000:00:1a.0/mmc_host/mmc0/mmc0:aaaa/block/mmcblk0 --
+-- sys/devices/pci0000:00/0000:00:1a.0/mmc_host/mmc0/mmc0:aaaa/block/mmcblk0/size --
+124735488
+-- sys/devices/pci0000:00/0000:00:1a.0/mmc_host/mmc0/mmc0:aaaa/block/mmcblk0/removable --
+0
+-- sys/devices/pci0000:00/0000:00:1a.0/mmc_host/mmc0/mmc0:aaaa/block/mmcblk0/device -> ../../../mmc0:aaaa --
+-- sys/devices/pci0000:00/0000:00:1a.0/mmc_host/mmc0/mmc0:aaaa/type --
+SD
+-- sys/block/loop0 -> ../devices/virtual/block/loop0 --
+-- sys/block/zram0 -> ../devices/virtual/block/zram0 --
+-- sys/devices/virtual/block/loop0/size --
+2048
+-- sys/devices/virtual/block/zram0/size --
+16777216
+-- sys/class/power_supply/AC/type --
+Mains
+-- sys/class/power_supply/BAT0/type --
+Battery
+-- sys/class/power_supply/BAT0/present --
+1
+-- sys/class/power_supply/BAT0/energy_full_design --
+64000000
+-- sys/class/power_supply/BAT0/energy_full --
+62990000
+-- sys/class/power_supply/BAT0/voltage_min_design --
+15320000
+-- sys/class/power_supply/BAT0/cycle_count --
+61
+-- sys/class/power_supply/BAT0/serial_number --
+PLANTED-BATTERY-SERIAL-4711
+-- sys/class/power_supply/hidpp_battery_0/type --
+Battery
+-- sys/class/power_supply/hidpp_battery_0/scope --
+Device
+-- sys/class/power_supply/hidpp_battery_0/energy_full_design --
+1000000
+-- sys/bus/pci/devices/0000:00:02.0/class --
+0x030000
+-- sys/bus/pci/devices/0000:00:02.0/vendor --
+0x8086
+-- sys/bus/pci/devices/0000:00:02.0/device --
+0x7d51
+-- sys/bus/pci/devices/0000:00:06.2/class --
+0x060400
+-- usr/share/hwdata/pci.ids --
+# excerpt
+10de  NVIDIA Corporation
+	1c8d  GP107M [GeForce GTX 1050 Mobile]
+8086  Intel Corporation
+	7d45  Meteor Lake-P [Intel Graphics]
+	7d51  Arrow Lake-P [Arc Pro 130T/140T]
+		17aa 2288  ThinkPad Arc Pro 130T
+8087  Intel Corp.
+-- etc/os-release --
+NAME="Fedora Linux"
+VERSION_ID=45
+PRETTY_NAME="Fedora Linux 45 (KDE Plasma Desktop Edition)"
+-- sys/firmware/efi/efivars/.keep --
+-- sys/class/tpm/tpm0/tpm_version_major --
+2
+-- sys/devices/system/memory/memory0/state --
+online
+-- sys/devices/system/memory/memory1/state --
+online
+-- sys/devices/system/memory/memory2/state --
+online
+-- sys/devices/system/memory/memory3/state --
+online
+-- sys/devices/system/memory/memory4/state --
+offline

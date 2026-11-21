@@ -4,6 +4,8 @@ import type { Report } from '@leaaf/shared/report'
 import assessmentJson from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
 import scanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
+import macScanJson from '@leaaf/fixtures/device-scan.macos-complete.json'
+import linuxScanJson from '@leaaf/fixtures/device-scan.linux-complete.json'
 import reportJson from '@leaaf/fixtures/report.example-laptop-14.office.json'
 import { INTENDED_USES } from '@leaaf/shared/common'
 import { describe, expect, it, vi } from 'vitest'
@@ -17,6 +19,7 @@ import { LAPTOP_OPTIONS } from '../api/mockOptions'
 import { buildOptionViews } from '../lib/optionView'
 import { buildPathViews } from '../lib/pathView'
 import { summarizeScan } from '../lib/specs'
+import { detectOs } from '../lib/platform'
 import { CAR_G_PER_KM, equivalents } from '../lib/equivalents'
 import { interpolateText } from '../lib/motion'
 import { partsFromScan, upsertPart } from '../lib/parts'
@@ -158,6 +161,43 @@ describe('scan summary', () => {
   it('never invents values for a partial scan', () => {
     const s = summarizeScan(desktopScanJson as unknown as DeviceScan)
     expect(s.rows.some((r) => r.value === 'Unknown')).toBe(true)
+  })
+  it('says a Mac has no TPM to report instead of "Unknown" (feature 007 FR-019)', () => {
+    const chip = (scan: unknown) => summarizeScan(scan as DeviceScan).rows.find((r) => r.label === 'Security chip')?.value
+    expect(chip(macScanJson)).toBe('Not applicable')
+    expect(chip(linuxScanJson)).toBe('TPM 2.0')
+    expect(chip(scanJson)).toBe('TPM 2.0')
+    expect(chip({ ...desktopScanJson, tpm: { present: null, spec_version: null } })).toBe('Unknown')
+    expect(chip({ ...desktopScanJson, tpm: { present: false, spec_version: null } })).toBe('No TPM')
+  })
+})
+
+describe('system detection (feature 007 FR-013)', () => {
+  const cases: [string, Parameters<typeof detectOs>[0], ReturnType<typeof detectOs>][] = [
+    ['Chrome on Windows', { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/131.0', userAgentData: { platform: 'Windows' } }, 'windows'],
+    ['Firefox on Windows', { userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:133.0) Gecko/20100101 Firefox/133.0' }, 'windows'],
+    ['Safari on a Mac', { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/18.1 Safari/605.1.15', maxTouchPoints: 0 }, 'macos'],
+    ['Chrome on a Mac', { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', userAgentData: { platform: 'macOS' } }, 'macos'],
+    ['Firefox on Linux', { userAgent: 'Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0' }, 'linux'],
+    ['Chrome on Linux', { userAgent: 'Mozilla/5.0 (X11; Linux x86_64) Chrome/131.0', userAgentData: { platform: 'Linux' } }, 'linux'],
+    ['an iPad asking for the desktop site', { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/605.1.15', maxTouchPoints: 5 }, null],
+    ['an Android phone', { userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) Chrome/131.0 Mobile' }, null],
+    ['Chrome on Android with client hints', { userAgent: 'Mozilla/5.0 (Linux; Android 14)', userAgentData: { platform: 'Android' } }, null],
+    ['a Chromebook', { userAgent: 'Mozilla/5.0 (X11; CrOS x86_64 15917.71.0) Chrome/131.0' }, null],
+    ['an iPhone', { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X)' }, null],
+  ]
+  it.each(cases)('%s', (_name, nav, expected) => {
+    expect(detectOs(nav)).toBe(expected)
+  })
+})
+
+describe('live session client', () => {
+  it('asks for the scanner of the given system', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ session_id: 'S', download_url: '/x' }), { status: 201 }))
+    vi.stubGlobal('fetch', fetchMock)
+    await liveClient.createScanSession('linux')
+    expect(fetchMock).toHaveBeenCalledWith('/api/sessions', expect.objectContaining({ method: 'POST', body: JSON.stringify({ os: 'linux' }) }))
+    vi.unstubAllGlobals()
   })
 })
 

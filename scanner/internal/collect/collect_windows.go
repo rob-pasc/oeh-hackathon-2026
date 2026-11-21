@@ -33,7 +33,7 @@ var client = &wmi.Client{PtrNil: true, AllowMissingFields: true}
 // progress receives the scan step IDs of shared/src/session.ts (started, cpu_memory, storage,
 // battery) with the state "running" when a step starts, and, for the steps that read parts, its
 // outcome (scan.StepState: "done" or "skipped") when it ends (feature 001 FR-017).
-func Collect(progress func(step, state string)) (scan.Raw, []string) {
+func Collect(progress func(step, state string)) (scan.Reading, []string) {
 	var raw scan.Raw
 	var notes []string
 	note := func(source string, err error) {

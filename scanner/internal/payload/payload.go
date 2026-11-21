@@ -1,6 +1,6 @@
 // Package payload mirrors the DeviceScan v1 contract in shared/src/device.ts.
 //
-// The structs are written by hand (ADR-001); payload_test.go validates real output against
+// The structs are written by hand (ADR-001); scan/schema_test.go validates real output against
 // shared/schemas/DeviceScan.schema.json so drift is caught. Nullable fields are pointers without
 // omitempty, so an unreadable value is serialized as an explicit null (feature 001 FR-004).
 package payload
@@ -37,6 +37,9 @@ type Identity struct {
 }
 
 type OS struct {
+	// "windows", "macos" or "linux" (feature 007 FR-010). Optional in the schema, but every
+	// scanner build sets it.
+	Family         string  `json:"family,omitempty"`
 	Caption        *string `json:"caption"`
 	Build          *string `json:"build"`
 	DisplayVersion *string `json:"display_version"`
@@ -82,9 +85,35 @@ type Battery struct {
 	CycleCount            *int     `json:"cycle_count"`
 }
 
-// HasNull reports whether any field of the serialized scan is null, which makes the scan
-// "partial" (FR-004). It walks the JSON form so new fields are covered automatically.
-func HasNull(scan DeviceScan) bool {
+// NotApplicable lists the fields, as dotted JSON paths, that do not exist on the scanned
+// system (feature 007 FR-018). It mirrors notApplicableFields in shared/src/device.ts; the
+// shared fixture test in status_test.go keeps the two in agreement.
+func NotApplicable(scan DeviceScan) []string {
+	switch scan.OS.Family {
+	case "macos":
+		fields := []string{"tpm.present", "tpm.spec_version", "firmware.bios_release_date", "firmware.secure_boot_enabled", "os.display_version"}
+		// Apple Silicon memory is part of the chip, so there are no slots to count.
+		if scan.Firmware.FirmwareType != nil && *scan.Firmware.FirmwareType == "apple" {
+			fields = append(fields, "memory.slots_total", "memory.slots_used")
+		}
+		return fields
+	case "linux":
+		return []string{"os.display_version"}
+	}
+	return nil
+}
+
+// Status is "partial" when any applicable field of the serialized scan is null, and
+// "complete" otherwise (feature 001 FR-004, feature 007 FR-018). It walks the JSON form so new
+// fields are covered automatically.
+func Status(scan DeviceScan) string {
+	if hasNull(scan) {
+		return "partial"
+	}
+	return "complete"
+}
+
+func hasNull(scan DeviceScan) bool {
 	raw, err := json.Marshal(scan)
 	if err != nil {
 		return true
@@ -93,22 +122,33 @@ func HasNull(scan DeviceScan) bool {
 	if err := json.Unmarshal(raw, &tree); err != nil {
 		return true
 	}
-	return containsNull(tree)
+	skip := map[string]bool{}
+	for _, f := range NotApplicable(scan) {
+		skip[f] = true
+	}
+	return containsNull(tree, skip, "")
 }
 
-func containsNull(v any) bool {
+func containsNull(v any, skip map[string]bool, path string) bool {
+	if skip[path] {
+		return false
+	}
 	switch t := v.(type) {
 	case nil:
 		return true
 	case []any:
 		for _, e := range t {
-			if containsNull(e) {
+			if containsNull(e, skip, path+"[]") {
 				return true
 			}
 		}
 	case map[string]any:
-		for _, e := range t {
-			if containsNull(e) {
+		for k, e := range t {
+			p := k
+			if path != "" {
+				p = path + "." + k
+			}
+			if containsNull(e, skip, p) {
 				return true
 			}
 		}

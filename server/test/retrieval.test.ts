@@ -266,6 +266,16 @@ describe('retrieval on the fixture corpus', () => {
     expect(passOn.map((p) => p.passage_id)).toContain('os-cpu-list#intel-8th-generation-1')
   })
 
+  it('leaves out the Windows 11 queries for Macs and Linux machines (feature 007 FR-015)', () => {
+    for (const family of ['macos', 'linux'] as const) {
+      const scan = { ...modelA, os: { ...modelA.os, family } }
+      const ids = Object.values(retriever.retrieve(scan).passages_by_path).flat().map((p) => p.passage_id)
+      expect(ids.filter((id) => id.startsWith('os-cpu-list'))).toEqual([])
+    }
+    const windows = { ...modelA, os: { ...modelA.os, family: 'windows' as const } }
+    expect(retriever.retrieve(windows)).toEqual(retriever.retrieve(modelA))
+  })
+
   it('returns at most k passages per path', () => {
     const result = retriever.retrieve(modelA, { k: 1 })
     for (const path of PATHS) expect(result.passages_by_path[path].length).toBeLessThanOrEqual(1)

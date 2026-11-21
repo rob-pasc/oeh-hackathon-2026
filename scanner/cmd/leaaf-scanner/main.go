@@ -18,7 +18,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
 	"time"
 
 	"leaaf.green/scanner/internal/collect"
@@ -31,18 +30,31 @@ var (
 	version    = "0.1.0-dev"
 )
 
+// init starts the Linux root helper instead of the scanner when pkexec runs the executable with
+// HelperFlag (feature 007 FR-006). It runs before the window code, so the helper never touches
+// the display, and it accepts no other arguments.
+func init() {
+	if len(os.Args) == 2 && os.Args[1] == collect.HelperFlag {
+		os.Exit(collect.RunHelper(os.Stdout))
+	}
+}
+
 // config is the scan configuration shared by the window and the console build. The JSON is
-// saved next to the executable, and a session ID is read from its trailer (feature 006).
+// saved in saveDir (next to the executable, or the home folder on macOS). The session ID comes
+// from the executable's trailer (feature 006) or, on macOS, from the app bundle's name.
 func config(out io.Writer) run.Config {
 	outDir, sessionID := ".", ""
 	if exe, err := os.Executable(); err == nil {
-		outDir = filepath.Dir(exe)
-		sessionID = run.ReadSessionID(exe)
+		outDir = saveDir(exe)
+		if sessionID = run.ReadSessionID(exe); sessionID == "" {
+			sessionID = run.SessionFromBundle(exe)
+		}
 	}
 	return run.Config{
 		BackendURL:     backendURL,
 		ScannerVersion: version,
 		OutDir:         outDir,
+		SaveFailed:     saveFailed,
 		Collect:        collect.Collect,
 		Now:            time.Now,
 		HTTP:           &http.Client{Timeout: 30 * time.Second},

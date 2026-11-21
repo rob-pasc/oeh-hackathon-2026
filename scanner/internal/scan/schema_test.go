@@ -26,12 +26,21 @@ func TestOutputMatchesSharedSchema(t *testing.T) {
 	if len(fixtures) == 0 {
 		t.Fatal("no fixtures")
 	}
-	cases := map[string]Raw{"all sources failed": {}}
+	cases := map[string]Reading{"all sources failed": Raw{}, "Linux, all sources failed": RawLinux{}}
 	for _, f := range fixtures {
 		cases[filepath.Base(f)] = loadRaw(t, filepath.Base(f))
 	}
+	linux, _ := ReadLinux(loadTree(t, "laptop.txt"))
+	cases["linux/laptop.txt"] = linux
+	mem, _ := ParseSMBIOS(smbiosTable(t))
+	linux.Privileged = &Privileged{Memory: &mem, DiskHealth: map[string]string{"nvme0n1": "healthy"}}
+	cases["linux/laptop.txt with the root helper"] = linux
+	for _, name := range []string{"applesilicon", "intel", "desktop"} {
+		cases["darwin/"+name] = loadDarwin(t, name)
+	}
+	cases["macOS, all sources failed"] = RawDarwin{}
 	for name, raw := range cases {
-		data, err := json.Marshal(Normalize(raw, testMeta))
+		data, err := json.Marshal(raw.Payload(testMeta))
 		if err != nil {
 			t.Fatal(err)
 		}

@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "scanner_version": "0.1.0",
+  "scanned_at": "2026-11-21T09:30:00Z",
+  "scan_status": "complete",
+  "identity": {
+    "manufacturer": "Apple Inc.",
+    "model": "Mac14,2",
+    "product_version": "MacBook Air",
+    "system_family": "MacBook Air",
+    "system_sku": "Z15S",
+    "form_factor": "laptop"
+  },
+  "os": { "family": "macos", "caption": "macOS 14.5", "build": "23F79", "display_version": null },
+  "firmware": { "bios_release_date": null, "firmware_type": "apple", "secure_boot_enabled": null },
+  "tpm": { "present": null, "spec_version": null },
+  "cpu": { "name": "Apple M2", "cores": 8, "threads": 8 },
+  "memory": { "total_gb": 8, "type": "lpddr5", "speed_mts": 6400, "slots_total": null, "slots_used": null },
+  "storage": [{ "media": "ssd", "bus": "nvme", "capacity_gb": 256, "health": "healthy" }],
+  "battery": {
+    "present": true,
+    "design_capacity_mwh": 52600,
+    "full_charge_capacity_mwh": 47340,
+    "health_percent": 90,
+    "cycle_count": 210
+  },
+  "gpus": ["Apple M2"]
+}

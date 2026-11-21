@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Assessment } from '@leaaf/shared/assessment'
 import type { Report } from '@leaaf/shared/report'
 import { formatEur, formatYears } from '../lib/impact'
@@ -26,7 +26,22 @@ function withApi(ui: React.ReactElement) {
   return <ApiContext.Provider value={fast}>{ui}</ApiContext.Provider>
 }
 
+const UA = {
+  windows: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0 Safari/537.36',
+  macos: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 Version/18.1 Safari/605.1.15',
+  linux: 'Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0',
+  phone: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/131.0 Mobile Safari/537.36',
+}
+const useAgent = (ua: string) => vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(ua)
+
 describe('Landing', () => {
+  beforeEach(() => {
+    useAgent(UA.windows)
+  })
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('shows the three steps and the Download and Scan now button', () => {
     render(withApi(<Landing />))
     expect(screen.getByRole('button', { name: /download and scan now/i })).toBeInTheDocument()
@@ -67,6 +82,43 @@ describe('Landing', () => {
     await waitFor(() => expect(tab.location.href).toMatch(/^\/s\/[0-9A-HJKMNP-TV-Z]{26}$/))
     expect(open).toHaveBeenCalledWith('', '_blank')
     open.mockRestore()
+  })
+
+  it.each([
+    ['macos', 'Mac', /Open Anyway/, /No password is needed/, 'Windows · Linux'],
+    ['linux', 'Linux', /chmod \+x leaaf-scanner/, /Your password lets it also read memory type/, 'Windows · Mac'],
+    ['windows', 'Windows', /SmartScreen/, /Windows asks for administrator access/, 'Mac · Linux'],
+  ] as const)('offers the %s scanner with its steps and disclosure (feature 007 FR-013, FR-014)', async (os, label, step, reads, others) => {
+    useAgent(UA[os])
+    render(withApi(<Landing />))
+    expect(screen.getByText(`Scanner for ${label}. Opens a new tab and downloads a small scanner.`)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: `How to run the scanner on ${label}` })).toHaveTextContent(step)
+    await userEvent.click(screen.getByText('What does the scanner collect?'))
+    expect(screen.getByText(reads)).toBeInTheDocument()
+    expect(screen.getByText(/Other systems:/)).toHaveTextContent(`Other systems: ${others}`)
+  })
+
+  it('asks the API for the system that was chosen', async () => {
+    useAgent(UA.macos)
+    const create = vi.spyOn(fast, 'createScanSession')
+    vi.spyOn(window, 'open').mockReturnValue({ location: { href: '' }, close: vi.fn() } as unknown as Window)
+    render(withApi(<Landing />))
+    await userEvent.click(screen.getByRole('button', { name: /download and scan now/i }))
+    await waitFor(() => expect(create).toHaveBeenCalledWith('macos'))
+    await userEvent.click(screen.getByRole('button', { name: 'Linux' }))
+    await waitFor(() => expect(create).toHaveBeenLastCalledWith('linux'))
+    // Choosing another system shows its steps.
+    expect(screen.getByRole('region', { name: 'How to run the scanner on Linux' })).toBeInTheDocument()
+  })
+
+  it('offers all three downloads on a phone', async () => {
+    useAgent(UA.phone)
+    render(withApi(<Landing />))
+    expect(screen.queryByRole('button', { name: /download and scan now/i })).not.toBeInTheDocument()
+    const group = screen.getByRole('group', { name: 'Download the scanner' })
+    for (const label of ['Windows', 'Mac', 'Linux'])
+      expect(within(group).getByRole('button', { name: `Download for ${label}` })).toBeInTheDocument()
+    expect(screen.getByText('Run the scanner on the computer you want to check.')).toBeInTheDocument()
   })
 })
 
