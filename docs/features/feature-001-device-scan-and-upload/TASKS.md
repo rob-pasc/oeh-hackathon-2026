@@ -21,6 +21,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-013:** *(Added 2026-11-20)* Build the Gio scanner window (start, progress, completion, and error screens; embedded Inter subset; `-H windowsgui`), report run events through a callback instead of opening the browser, keep a console build for other operating systems, with tests for the state model and the run events (supports `AC-005`, `AC-008`, `AC-014`)
 - [x] **T-014:** *(Amendment 2026-11-20)* Add **Try again** for temporary upload failures (re-upload the saved scan; defer the session error until Close), with tests; add the `gui` build tag for a Linux dev window (supports `AC-015`)
 - [x] **T-015:** *(Amendment 2026-11-20)* Add the exe icon, the leaf favicon since the revision (`winres/make_icon.py`, PNGs, `RT_GROUP_ICON` `#1`), regenerate the `.syso`, with a resource test (supports `AC-016`)
+- [ ] **T-016:** *(Added 2026-11-21)* Report `done` or `skipped` after each reading step, with tests (supports `AC-017`)
 - [ ] **T-010:** Run all checks, self-review the diff against the plan, record the findings, and update the README and the feature index (supports `AC-012`)
 
 ## Dependencies and blockers
@@ -68,3 +69,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-20: FR-010 narrowed to feature 006 FR-010 (behavioral replacement); see the [scope change log](./PLAN.md#scope-change-log).
 - 2026-11-20: Scope extended by an amendment (FR-016, AC-016, T-015: exe icon); see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.
 - 2026-11-20: FR-016 revised (leaf favicon instead of the monogram); see the [scope change log](./PLAN.md#scope-change-log).
+- 2026-11-21: Scope extended by an amendment (FR-017, AC-017, T-016: `done` and `skipped` step states, for feature 006 FR-041); see the [scope change log](./PLAN.md#scope-change-log). Implementation authorized in the same conversation.

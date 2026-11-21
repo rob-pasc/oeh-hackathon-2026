@@ -1,7 +1,7 @@
 # Implementation Tasks: Web app (landing, scan session, results)
 
 - **Feature ID:** `feature-006-web-app`
-- **Status:** Implemented (verification pending)
+- **Status:** In progress
 
 This is the **authoritative progress checklist**. Check a task only after its work is actually complete.
 
@@ -41,6 +41,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-032:** Show what leaaf stands for on the landing page, in the footer, and in the tab title (supports `AC-037`)
 - [x] **T-033:** Reword the labels and landing texts (supports `AC-038`, `AC-039`)
 - [x] **T-034:** Hover explanations, shorter priority-change line, empty detail sections left out (supports `AC-040` to `AC-042`)
+- [ ] **T-035:** Derive the zone states from step events (`done`, `skipped`, implicit done) and show skipped zones in amber (supports `AC-043`, `AC-044`)
+- [ ] **T-036:** Pace the playback of the scan events with the 2 s limit and no pacing for reduced motion (supports `AC-045` to `AC-047`)
 
 ## Dependencies and blockers
 
@@ -69,3 +71,4 @@ The first version was written without network access. After the merge into `main
 - 2026-11-20: Eighth scope extension by amendment (FR-026 to FR-032, AC-028 to AC-034, T-024 to T-030); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
 - 2026-11-20: Ninth scope extension by amendment (FR-033, FR-034, AC-035, AC-036, T-031); see the plan's scope change log. Implemented the same day; verification by the team pending.
 - 2026-11-21: Tenth scope extension by amendment (FR-035 to FR-040, AC-037 to AC-042, T-032 to T-034); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
+- 2026-11-21: Eleventh scope extension by amendment (FR-041, FR-042, AC-043 to AC-047, T-035, T-036), together with feature 001 FR-017; see the plan's scope change log. Status set from `Implemented (verification pending)` to `In progress` for the implementation.
