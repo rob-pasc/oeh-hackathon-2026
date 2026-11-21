@@ -99,6 +99,8 @@ Implemented 2026-11-21 on `feat/combined-plan` (server in ed06786, card in the f
 - [Feature 008](../feature-008-ai-categories-and-options/PLAN.md) **FR-001** (the category call returns categories) and **FR-013** (fallback) are extended with the plan; their requirements stay valid. FR-007 (Recommended label) is unchanged.
 - [Feature 003](../feature-003-five-path-ranking/PLAN.md) calculator and displacement rules are reused unchanged.
 
+- [Feature 015](../feature-015-remove-recommendation-summary/PLAN.md#related-and-superseded-features) (implemented 2026-11-21 on `main`) removes the recommendation summary, so the plan card of FR-007 sits directly above the categories; otherwise FR-007 is unchanged.
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)

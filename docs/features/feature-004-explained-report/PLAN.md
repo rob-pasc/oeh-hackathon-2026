@@ -123,6 +123,8 @@ None superseded at specification. Builds on [feature 003](../feature-003-five-pa
 - **FR-005's** figure rule carries over to step text (009 FR-008).
 - **FR-009** (template fallback) is extended by template step plans (009 FR-011).
 
+**FR-002 replaced by [feature 015](../feature-015-remove-recommendation-summary/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on `main`): the Overview no longer shows the impact summary.
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)

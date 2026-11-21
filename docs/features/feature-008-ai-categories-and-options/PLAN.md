@@ -137,6 +137,8 @@ Implemented 2026-11-21 on branch `feat/ai-categories` (commits cf09cde "feat(ser
 - [`feature-013-combined-plan-card`](../feature-013-combined-plan-card/PLAN.md) extends **FR-001** (the category call also returns an optional plan) and **FR-013** (the fallback carries a rule-based plan); both stay valid. FR-007 (Recommended label) is unchanged. Implemented 2026-11-21 on `feat/combined-plan`.
 - [`feature-011-tab-gauge-and-capped-option-status`](../feature-011-tab-gauge-and-capped-option-status/PLAN.md) replaces **FR-011** (gauge follows the last opened option) with a gauge that follows the selected tab, and replaces the "checks only the payload shape" part of **FR-012** for `ssd`, `ram` and `battery` options with a cap at the gate status. Implemented 2026-11-21 on `main`. AC-011, AC-012 and AC-016 here remain historical evidence; the rest of FR-012 is unchanged.
 
+**FR-007 partly replaced by [feature 015](../feature-015-remove-recommendation-summary/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on `main`): the Overview no longer says that no option is clearly recommended; the Recommended label rule stays. The application of 004 FR-002 to the Recommended category is moot, since feature 015 removes the impact summary.
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)

@@ -4,14 +4,13 @@ import type { Mode } from '@leaaf/shared/common'
 import type { DeviceScan } from '@leaaf/shared/device'
 import { useEffect, useMemo, useState } from 'react'
 import { ApiClientError, useApi } from '../api'
-import { buildCategoryViews, type CategoryView, type OptionView } from '../lib/categoryView'
+import { buildCategoryViews, type OptionView } from '../lib/categoryView'
 import { DEFAULT_USE, type ResultTab, type UseTag } from '../lib/labels'
 import { useFlip } from '../lib/motion'
 import { useStepPlans } from '../lib/useStepPlans'
 import { buildPathViews, type CardView } from '../lib/pathView'
 import { buildPlanView, PLAN_TITLE } from '../lib/planView'
 import { explainCategoryModeChange, explainModeChange } from '../lib/modeChange'
-import { avoidsNothing, formatAvoided, formatEur, formatYears } from '../lib/impact'
 import { CategoryTabView } from './CategoryTabView'
 import { PlanCard } from './PlanCard'
 import { Equivalents } from './Equivalents'
@@ -92,7 +91,6 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const tabs: TabItem[] = [{ id: 'overview', label: 'Overview' }, ...categoryViews.map(c => ({ id: c.id, label: c.title }))]
 
   const allOptions = categoryViews.flatMap(c => c.options)
-  const recommended = categoryViews.find(c => c.isRecommended) ?? null
   // The gauge follows the selected tab (feature 011, replacing 008 FR-011): in a category tab the option last
   // opened there, else the category's best option. On the Overview, whose cards only switch tabs, it shows the
   // plan when there is one (feature 013 FR-008), else the best option of the first category.
@@ -191,7 +189,6 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
                     }}
                   />
                 ) : null}
-                <RecommendationSummary recommended={recommended} baseline={assessment.baseline.description} />
                 {categoryViews.map(view => (
                   <div key={view.key} ref={registerCard(view.key)}>
                     <PathCard
@@ -235,25 +232,6 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
         </div>
       )}
     </div>
-  )
-}
-
-/** The impact summary for the best option of the recommended category (feature 004 FR-002, 008 FR-007). */
-function RecommendationSummary({ recommended, baseline }: { recommended: CategoryView | null; baseline: string }) {
-  const impact = recommended?.best.option.impact ?? null
-  return (
-    <p className="px-1 text-sm text-muted" aria-label="Recommendation summary">
-      {recommended && impact ? (
-        <>
-          <strong className="text-ink">{recommended.title}</strong>
-          {recommended.best.title !== recommended.title ? ` · ${recommended.best.title}` : ''} · {formatEur(impact.cost_eur)} ·{' '}
-          {formatYears(impact.useful_life_years)} · {avoidsNothing(impact) ? 'no' : formatAvoided(impact)} CO₂e avoided
-          {recommended.best.aiEstimate ? ' (AI estimate)' : ''}. Baseline: {baseline}.
-        </>
-      ) : (
-        'No option is clearly recommended. Each one depends on something or is not a fit for this use.'
-      )}
-    </p>
   )
 }
 

@@ -85,6 +85,8 @@ The agreed completion boundary is a locally verified handoff with self-review (s
 
 ## Verification notes
 
+**2026-11-21, supersession note.** Feature 015 removes the recommendation summary, so the summary part of AC-059 no longer applies; its test now checks only the card. The AC-059 result stays as historical evidence; see the [feature 015 plan](../feature-015-remove-recommendation-summary/PLAN.md) and [acceptance criteria](../feature-015-remove-recommendation-summary/ACCEPTANCE_CRITERIA.md).
+
 **2026-11-20, first version, environment without network access.** Packages could not be installed, so Vite, Vitest, jsdom, Testing Library, the React type packages, and `typebox` were not available. What was run instead:
 
 - `esbuild` bundled `web/src/main.tsx` (including the shared contracts and fixtures through aliases) without errors. `typebox` was replaced by an inert stand-in for this check, because the web app imports only types and the ranking helpers from `shared/`.

@@ -199,6 +199,8 @@ When a replacement is implemented and merged, record the date and implementing c
 - The step blocks of **FR-015** and the "What to do" steps of **FR-017**, already removed by feature 008, are replaced by numbered step blocks in the option card with tools, parts, time, safety flags and per-step source links (009 FR-002 to FR-007).
 - **FR-045** (thinking line) applies unchanged while a plan loads (009 FR-010).
 
+**FR-049 partly replaced by [feature 015](../feature-015-remove-recommendation-summary/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on `main`): the recommendation summary is gone, so its "no CO₂e avoided" sentence no longer applies; the "None" figure and hover text stay in force.
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
