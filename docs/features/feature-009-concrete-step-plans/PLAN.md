@@ -67,14 +67,23 @@ Today a path's "What to do" is one or two vague sentences, such as "If consideri
 
 ## Proposed technical approach
 
-Proposed, not yet adopted:
+Adopted during implementation (2026-11-21) unless marked otherwise:
 
-- **Contract:** `StepPlan` in `shared/src/` with `steps[]` (`title`, `detail`, `tools[]`, `parts[]`, `minutes: Range | null`, `safety`, `kind`, `passage_ids[]`) plus `source: 'llm' | 'template'`, `notice`, and the cited passages.
-- **Route:** `GET /api/devices/:id/options/:optionId/steps?intended_use=…` returning JSON (or SSE if the thinking line needs progress). Option IDs come from the cached `CategoryResult` of feature 008.
-- **Retrieval:** Per option, query the existing index with the option's title and kind plus the facets of the closest path, with the existing model-aware filters (`server/src/retrieval/retrieve.ts`).
-- **Server:** A new `server/src/steps/` module with the prompt, validation (FR-005, FR-008), templates (FR-011), and an additive SQLite table `step_cache` keyed by device, intended use, option ID and prompt hash.
-- **Web:** A step list component in the option card that replaces today's one-line "What to do" items.
-- **Unresolved:** JSON or SSE for the route; whether to prefetch the plan of the recommended option.
+- **Contract:** `StepPlan` in `shared/src/steps.ts` with `steps[]` (`title`, `detail`, `tools[]`, `parts[]`, `minutes: Range | null`, `safety`, `warning`, `kind`, `passage_ids[]`) plus `source: 'llm' | 'template'`, `notice`, and the cited passages. `warning` holds the caution sentence of FR-004 and is set exactly when `safety` is `caution`. `checkStepPlan` (`shared/src/invariants.ts`) checks the cross-field rules: known citations, a citation on every technical step that is not `professional`, the warning, the time range, and the notice.
+- **Route:** `GET /api/devices/:id/options/:optionId/steps?intended_use=…` returning plain JSON (`API_ROUTES.optionSteps`). It answers 404 for an unknown device or an option the shown categories do not have.
+- **Retrieval:** `retrieveOption` in `server/src/retrieval/retrieve.ts` searches the option kind's procedure words and the option title first, then the facets of the closest path (the fallback option's own path, else the kind's path, else all topics for `other`), with the existing model-aware filters. The passages that the option's own claims cite are added.
+- **Server:** `server/src/steps/` holds the prompt (`prompt.ts`), the service with its checks and cache (`service.ts`) and the template plans (`templates.ts`). The additive table `step_cache` is keyed by device, intended use and option ID, and stores the AI's checked answer with a hash of the prompt version, system prompt, output schema and the option's own fields.
+- **Web:** `StepList` in the option card, under "Why", replaces the empty "What to do" area that feature 008 left. `useStepPlans` requests a plan when an option is opened for the first time.
+- **Settled during implementation (2026-11-21, routine choices within scope):**
+  - **JSON, not SSE:** One plan is one small answer, and the thinking line of FR-010 needs no progress events.
+  - **No prefetch:** A plan is requested only when its card is opened, so step calls stay proportional to what users look at (Cost requirement above).
+  - **Timeout and thinking:** The step call has its own deadline, `LLM_STEP_TIMEOUT_MS` (default 25 s), covering transport retries and the repair attempt. Thinking is off by default (`LLM_THINKING_STEPS=disabled`), like the other calls.
+  - **Request limit:** The step route has its own hourly limit per address, `STEPS_PER_HOUR` (default 120), because each open of a new option can start an AI call.
+  - **No category call from the step route:** The route finds the option in the cached categories, or in the five-path fallback when none are cached. Opening a card never starts a category call.
+  - **Option fields in the cache key:** A new category answer may reuse an option ID for a different option. Including the option's title, kind, difficulty, status, reason and why in the key stops an old plan from being shown for it.
+  - **Checks on an answer:** A euro or CO₂e figure in any step text rejects the whole answer (FR-008), which then shows the template plan and is not cached. Unknown citations are removed, then uncited technical steps (FR-005). On a Mac or Linux device, steps about Windows 11 are removed (feature 007 FR-015). An invalid time range is dropped, a missing caution warning gets a default sentence, and a `professional` step whose detail does not name a service provider gets the sentence "Have a service provider do this step." (FR-004).
+  - **Template citations:** Template steps are generic text, so each lists words a supporting passage must contain. A step cites the first passage retrieved for the option that contains one, preferring the device's own model. A technical template step with no such passage becomes `professional` (FR-011).
+  - **Mock template plans:** The step fixture script also exports the template steps of every kind without passages to `shared/fixtures/steps.templates.json`. Mock mode shows them for the desktop's fallback options, and a server test keeps the file current.
 
 ## Dependencies and risks
 
@@ -94,8 +103,8 @@ Not applicable: no deployment exists yet (feature 005 owns it). The `step_cache`
 ## Assumptions and open questions
 
 - Option IDs from feature 008 are stable within a cached category result.
-- Open: JSON or SSE for the step route; prefetching the recommended option's plan.
-- Open: the step call's timeout and whether thinking is enabled.
+- ~~Open: JSON or SSE for the step route; prefetching the recommended option's plan.~~ Resolved 2026-11-21: JSON, no prefetch (see the approach above).
+- ~~Open: the step call's timeout and whether thinking is enabled.~~ Resolved 2026-11-21: 25 s, thinking off, both configurable.
 
 ## Scope change log
 
@@ -106,14 +115,14 @@ Not applicable: no deployment exists yet (feature 005 owns it). The `step_cache`
 
 ## Related and superseded features
 
-All replacements below are **planned**; none is effective until this feature is implemented.
+The replacements below were implemented 2026-11-21 on `main` (commits 22938bd "feat(server): build step plans for opened options" and bf1ed95 "feat(web): show step plans in opened option cards") and are effective there. They are not pushed yet.
 
 - [`feature-004-explained-report`](../feature-004-explained-report/PLAN.md): the "What to do next" section of **FR-003** (one-line `next_steps` strings without citations) is replaced, for options, by the structured step plans here. FR-005's figure rule carries over (FR-008 here). FR-009's template fallback is extended by FR-011.
 - [`feature-006-web-app`](../feature-006-web-app/PLAN.md): the step blocks of **FR-015** and the "What to do" steps of **FR-017** are replaced by the step blocks of FR-002 to FR-007 here. FR-045 (thinking line) applies unchanged (FR-010).
 - [`feature-008-ai-categories-and-options`](../feature-008-ai-categories-and-options/PLAN.md): this feature fills the step plan area of 008 FR-010 and the fallback of 008 FR-013.
 - [`feature-010-step-level-knowledge-base`](../feature-010-step-level-knowledge-base/PLAN.md) supplies the sources these steps cite.
 
-**Current state (2026-11-21, after feature 008 was merged into `main`, 17c04b4).** The behaviour named above for replacement is already gone from the result screen. The report stream no longer sends feature 004's explained report, so its "What to do next" sections are not shown. Feature 006's path step blocks and proposed option cards were replaced by 008's option cards, which show "Why" and up to two sources but no steps (`steps: null` in `web/src/lib/categoryView.ts`). This feature fills that steps area. The fallback categories of 008 FR-013 carry `path` and the option kinds of `shared/src/categories.ts`, as FR-011 and FR-012 here expect.
+**State before this feature (2026-11-21, after feature 008 was merged into `main`, 17c04b4).** The behaviour named above for replacement was already gone from the result screen. The report stream no longer sends feature 004's explained report, so its "What to do next" sections are not shown. Feature 006's path step blocks and proposed option cards were replaced by 008's option cards, which show "Why" and up to two sources but no steps. This feature fills that steps area. The fallback categories of 008 FR-013 carry `path` and the option kinds of `shared/src/categories.ts`, as FR-011 and FR-012 here expect.
 
 ## References
 

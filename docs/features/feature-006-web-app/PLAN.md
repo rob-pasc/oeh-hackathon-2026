@@ -188,6 +188,10 @@ When a replacement is implemented and merged, record the date and implementing c
 - **FR-022** (non-clickable summary block) and **FR-045** (thinking line) carry over.
 - **FR-030's** note "Only if the receiver would otherwise buy new" is still shown for every conditional CO₂e credit. On an AI-estimated option that may add no life, the wording fits only loosely; changing it needs a decision on FR-030.
 
+**Partly replaced by [feature 009](../feature-009-concrete-step-plans/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on `main`, commits 22938bd "feat(server): build step plans for opened options" and bf1ed95 "feat(web): show step plans in opened option cards"; effective there, not pushed yet):
+- The step blocks of **FR-015** and the "What to do" steps of **FR-017**, already removed by feature 008, are replaced by numbered step blocks in the option card with tools, parts, time, safety flags and per-step source links (009 FR-002 to FR-007).
+- **FR-045** (thinking line) applies unchanged while a plan loads (009 FR-010).
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)

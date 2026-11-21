@@ -111,12 +111,17 @@ None superseded at specification. Builds on [feature 003](../feature-003-five-pa
 **Partly replaced by [feature 008](../feature-008-ai-categories-and-options/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on branch `feat/ai-categories` (commits cf09cde "feat(server): build AI categories and options on the report stream" and c91862d "feat(web): show AI categories with option cards and tabs"); merged into `main` 2026-11-21 (merge commit 17c04b4) and effective there):
 - **FR-001** (five paths ranked with the Recommended label) is replaced by 008 FR-006 and FR-007: ranked categories, Recommended on the first only when it has a Good fit option.
 - **FR-002** (impact summary) now summarizes the best option of the Recommended category.
-- **FR-003:** The report stream no longer sends the explained `report`, so the path card sections "What to do next", "Evidence", "Assumptions" and "Safety and feasibility" are no longer shown. Option cards show the "Why" text and up to two sources (008 FR-010); step plans are planned in [feature 009](../feature-009-concrete-step-plans/PLAN.md).
+- **FR-003:** The report stream no longer sends the explained `report`, so the path card sections "What to do next", "Evidence", "Assumptions" and "Safety and feasibility" are no longer shown. Option cards show the "Why" text and up to two sources (008 FR-010); their step plans come from feature 009 (note below).
 - **FR-008** (mode-change explanation) applies to categories.
 - **FR-009** (template fallback) is extended by 008 FR-013, whose fallback categories use this feature's template text.
 - **FR-010** (caching) is extended by 008 FR-014 (`category_cache`).
 - **FR-004 to FR-006** stay in force for the category call's text and citations.
 - The explanation service (`server/src/report/`) remains in the code base but is no longer called by the report stream.
+
+**Partly replaced by [feature 009](../feature-009-concrete-step-plans/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on `main`, commits 22938bd "feat(server): build step plans for opened options" and bf1ed95 "feat(web): show step plans in opened option cards"; effective there, not pushed yet):
+- **FR-003's** "What to do next" section (one-line `next_steps` without citations) is replaced, for options, by structured step plans with per-step sources (009 FR-002 to FR-007).
+- **FR-005's** figure rule carries over to step text (009 FR-008).
+- **FR-009** (template fallback) is extended by template step plans (009 FR-011).
 
 ## References
 
