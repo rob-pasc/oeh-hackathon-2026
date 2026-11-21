@@ -1,4 +1,4 @@
-// Admin scan overview (feature 013): one login from ADMIN_USERNAME and ADMIN_PASSWORD, then a
+// Admin scan overview (feature 016): one login from ADMIN_USERNAME and ADMIN_PASSWORD, then a
 // read-only, paged list of stored scans. The list exposes device IDs, which are the only key to a
 // result page, so every route except login answers 401 without a valid admin session.
 //
@@ -22,7 +22,7 @@ export const ADMIN_ROUTES = {
   scan: (id: string) => `/api/admin/scans/${id}`,
 } as const
 
-/** Scans per page of the admin list (feature 013 FR-007). */
+/** Scans per page of the admin list (feature 016 FR-007). */
 export const ADMIN_PAGE_SIZE = 50
 
 export const AdminLogin = Type.Object(
@@ -48,7 +48,7 @@ export const AdminScanRow = Type.Object(
 )
 export type AdminScanRow = Static<typeof AdminScanRow>
 
-/** Today's AI calls (UTC day) against LLM_DAILY_CALLS (feature 013 FR-017). */
+/** Today's AI calls (UTC day) against LLM_DAILY_CALLS (feature 016 FR-017). */
 export const AdminAiUsage = Type.Object(
   { day: IsoDate, used: Type.Integer({ minimum: 0 }), cap: Type.Integer({ minimum: 0 }) },
   strict,
@@ -68,7 +68,7 @@ export const AdminScanPage = Type.Object(
 export type AdminScanPage = Static<typeof AdminScanPage>
 
 /**
- * Why the server showed a template instead of an AI answer (feature 013 FR-016): no AI
+ * Why the server showed a template instead of an AI answer (feature 016 FR-016): no AI
  * configured, one of the LLM client's error kinds, or an answer the server checks rejected.
  */
 export const AI_FALLBACK_REASONS = [

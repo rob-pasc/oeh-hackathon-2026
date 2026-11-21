@@ -91,13 +91,13 @@ export interface ApiClient {
   /** The step plan of one option of the shown categories (feature 009, shared/src/steps.ts). */
   getSteps(deviceId: string, use: UseTag, optionId: string): Promise<StepPlan>
   /**
-   * Admin area (feature 013, shared/src/admin.ts). `adminSession` resolves to null when logged out
+   * Admin area (feature 016, shared/src/admin.ts). `adminSession` resolves to null when logged out
    * and throws code `not_found` when the admin area is not set up.
    */
   adminSession(): Promise<AdminSession | null>
   adminLogin(username: string, password: string): Promise<void>
   adminLogout(): Promise<void>
   adminScans(page: number): Promise<AdminScanPage>
-  /** The full scan and its AI status, for the Details view (feature 013 FR-013 to FR-015). */
+  /** The full scan and its AI status, for the Details view (feature 016 FR-013 to FR-015). */
   adminScan(deviceId: string): Promise<AdminScanDetail>
 }

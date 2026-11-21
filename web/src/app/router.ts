@@ -3,7 +3,7 @@
 //   /s/:id       scan session (skeleton + live status from the scanner)
 //   /d/:id       device page (results)
 //   /imprint     Impressum (also /impressum), /privacy privacy notice (also /datenschutz)
-//   /admin       admin login and scan list (feature 013)
+//   /admin       admin login and scan list (feature 016)
 import { useMemo, useSyncExternalStore } from 'react'
 
 export type Route =

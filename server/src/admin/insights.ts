@@ -1,4 +1,4 @@
-// What the admin page shows about AI use (feature 013 FR-014, FR-015, FR-017). Reads the caches of
+// What the admin page shows about AI use (feature 016 FR-014, FR-015, FR-017). Reads the caches of
 // the category and step services, the daily call counter and the fallback log. Each of those
 // tables is created by its own service, so a table that does not exist yet counts as empty.
 import type { DatabaseSync } from 'node:sqlite'

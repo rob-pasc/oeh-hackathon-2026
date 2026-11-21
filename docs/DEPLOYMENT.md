@@ -57,7 +57,7 @@ docker compose pull
 docker compose up -d
 ```
 
-To use the admin page at `https://leaaf.green/admin` (feature 013), set `ADMIN_USERNAME` and a password of at least 16 characters as `ADMIN_PASSWORD` in `deploy/.env`, then run `docker compose up -d` again. Without them the admin area stays off. The password is stored in plain text, so keep `deploy/.env` readable by root only (`chmod 600 deploy/.env`). The per-client login limit needs `TRUSTED_PROXY_IP` (below); without it every visitor counts as Caddy and shares one counter.
+To use the admin page at `https://leaaf.green/admin` (feature 016), set `ADMIN_USERNAME` and a password of at least 16 characters as `ADMIN_PASSWORD` in `deploy/.env`, then run `docker compose up -d` again. Without them the admin area stays off. The password is stored in plain text, so keep `deploy/.env` readable by root only (`chmod 600 deploy/.env`). The per-client login limit needs `TRUSTED_PROXY_IP` (below); without it every visitor counts as Caddy and shares one counter.
 
 Both containers publish their ports on `127.0.0.1` only. The server's data lives in the named volume `leaaf_server-data`. `deploy/.env` both configures Compose and is passed to the server container. The server variables are described in [`server/README.md`](../server/README.md#configuration).
 

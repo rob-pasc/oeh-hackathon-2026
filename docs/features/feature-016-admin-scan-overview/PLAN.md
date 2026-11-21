@@ -1,6 +1,6 @@
-# Feature 013: Admin scan overview
+# Feature 016: Admin scan overview
 
-- **Feature ID:** `feature-013-admin-scan-overview`
+- **Feature ID:** `feature-016-admin-scan-overview`
 - **Scope status:** Approved by user
 - **Scope approval date:** 2026-11-21
 
@@ -126,6 +126,7 @@ Proposal based on repository inspection on 2026-11-21; not adopted yet.
 | ---------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-11-21 | Initial approved scope | User asked for an admin page on `feat/adminpage`, chose "No IP", "Plain password in .env", "Login form + session" and "View only", and replied "accept", 2026-11-21 |
 | 2026-11-21 | Revision before release (the feature is implemented on `feat/adminpage` but not merged or released): the exclusion "only the listed fields" is replaced by FR-013 to FR-017 (Details with the full scan JSON, AI status per scan, recorded AI fallbacks, AI calls today). The server records fallbacks in a new additive table. AC-020 to AC-026 and T-011 to T-015 added; all earlier requirements stay valid. | User chose "Full scan JSON" and "AI status", "Record fallbacks", and "Accept and implement", 2026-11-21 |
+| 2026-11-21 | Renumbered from `feature-013-admin-scan-overview` to `feature-016-admin-scan-overview` before merging into `main`, where `feature-013-combined-plan-card` (and 014, 015) already existed ([duplicate numbers](../../workflow/ALLOCATION.md#duplicate-numbers)). Requirement, acceptance and task IDs, approvals and evidence are unchanged; code comments and references now say feature 016. | User asked to make the branch mergeable ("yes, do it all"), 2026-11-21 |
 
 ## Related and superseded features
 

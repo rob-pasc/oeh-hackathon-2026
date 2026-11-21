@@ -1,4 +1,4 @@
-// Credential check, sessions, and failed-login limits for the admin area (feature 013).
+// Credential check, sessions, and failed-login limits for the admin area (feature 016).
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto'
 import type { AdminConfig } from './config.ts'
 

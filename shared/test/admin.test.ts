@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { ADMIN_ROUTES, AdminLogin, AdminScanDetail, AdminScanPage, createValidator } from '../src/index.ts'
 
-describe('admin contracts (feature 013)', () => {
+describe('admin contracts (feature 016)', () => {
   const page = createValidator(AdminScanPage)
   const login = createValidator(AdminLogin)
   const ai_usage = { day: '2026-11-21', used: 37, cap: 200 }

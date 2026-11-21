@@ -1,4 +1,4 @@
-// Admin scan overview (feature 013): a login form, then a read-only, paged list of the stored scans.
+// Admin scan overview (feature 016): a login form, then a read-only, paged list of the stored scans.
 // The page holds no secret: the server decides everything, and the session cookie never reaches
 // JavaScript (HttpOnly).
 import { Fragment, useCallback, useEffect, useState, type FormEvent } from 'react'
@@ -17,7 +17,7 @@ type View = { kind: 'loading' } | { kind: 'disabled' } | { kind: 'login' } | { k
 const SYSTEM: Record<OsFamily, string> = { windows: 'Windows', macos: 'macOS', linux: 'Linux' }
 const DASH = '–'
 
-/** Plain-language reasons for an AI fallback (feature 013 FR-015). */
+/** Plain-language reasons for an AI fallback (feature 016 FR-015). */
 const FALLBACK_REASONS: Record<AiFallbackReason, string> = {
   no_llm: 'No AI configured',
   config: 'AI configuration problem',
@@ -297,7 +297,7 @@ function ScanList({ onLoggedOut }: { onLoggedOut: () => void }) {
   )
 }
 
-/** The full scan and its AI status, fetched when Details is opened (feature 013 FR-013 to FR-015). */
+/** The full scan and its AI status, fetched when Details is opened (feature 016 FR-013 to FR-015). */
 function ScanDetails({ deviceId, onLoggedOut }: { deviceId: string; onLoggedOut: () => void }) {
   const api = useApi()
   const [detail, setDetail] = useState<AdminScanDetail | null>(null)

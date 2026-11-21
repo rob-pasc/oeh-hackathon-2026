@@ -4,7 +4,7 @@
 // Routes and bodies follow shared/src/api.ts; every non-2xx JSON response is an ApiError.
 //
 // There is deliberately no public route that lists devices (FR-011): the unguessable device ID is
-// the only access control. The one exception is the admin list (feature 013), behind a login.
+// the only access control. The one exception is the admin list (feature 016), behind a login.
 import { createReadStream, existsSync } from 'node:fs'
 import { readFile, stat } from 'node:fs/promises'
 import { Readable } from 'node:stream'
@@ -56,7 +56,7 @@ export interface AppOptions {
   scannerExePath?: string
   /** Scanner builds per system (feature 007 FR-012); each download is 404 while its file is missing. Overrides scannerExePath for Windows. */
   scannerPaths?: Partial<Record<OsFamily, string>>
-  /** The admin area (feature 013); absent or null keeps every /api/admin/* route 404. */
+  /** The admin area (feature 016); absent or null keeps every /api/admin/* route 404. */
   admin?: AdminConfig | null
   /** AI status for the admin page; without it the page shows no AI use. */
   adminInsights?: AdminInsights
@@ -68,7 +68,7 @@ export interface AppOptions {
 /**
  * Request log fields: the method and the route pattern, never the raw URL, the client IP, headers
  * or bodies, so device IDs, admin credentials and session tokens never reach the log (feature 001
- * privacy requirement, feature 013 FR-009).
+ * privacy requirement, feature 016 FR-009).
  */
 export const REQUEST_LOG_SERIALIZERS = {
   req: (req: FastifyRequest) => ({ method: req.method, route: req.routeOptions?.url ?? 'unmatched' }),

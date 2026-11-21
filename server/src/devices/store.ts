@@ -7,7 +7,7 @@ export interface DeviceStore {
   /** Stores a validated scan under a fresh unguessable ID. */
   create(scan: DeviceScan): DeviceRecord
   get(id: string): DeviceRecord | undefined
-  /** Admin overview only (feature 013): newest first, just the displayed fields. */
+  /** Admin overview only (feature 016): newest first, just the displayed fields. */
   list(offset: number, limit: number): AdminScanRow[]
   count(): number
 }

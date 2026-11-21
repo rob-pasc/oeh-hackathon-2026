@@ -150,7 +150,7 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       return plan
     },
 
-    // Admin area (feature 013): a fixed sample login and a generated list, so the page can be
+    // Admin area (feature 016): a fixed sample login and a generated list, so the page can be
     // built without a server. The first two rows link to the sample devices above.
     async adminSession() {
       return adminLoggedIn ? { username: MOCK_ADMIN.username } : null

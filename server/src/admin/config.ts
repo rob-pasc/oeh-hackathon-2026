@@ -1,4 +1,4 @@
-// Admin configuration (feature 013 FR-001, FR-002). The admin area exists only when both
+// Admin configuration (feature 016 FR-001, FR-002). The admin area exists only when both
 // ADMIN_USERNAME and ADMIN_PASSWORD are set and the password is long enough; otherwise every admin
 // route is absent (404) and the rest of the server runs as usual.
 

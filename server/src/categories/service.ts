@@ -118,7 +118,7 @@ export interface CategoryServiceDeps {
   impactTable: ImpactTable
   /** Receives the reason a fallback was used; never device IDs or prompt content. */
   warn?: (message: string, details?: Record<string, unknown>) => void
-  /** Records each fallback for the admin page (feature 013 FR-016). */
+  /** Records each fallback for the admin page (feature 016 FR-016). */
   onFallback?: RecordFallback
 }
 

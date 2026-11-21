@@ -1,6 +1,6 @@
 # Acceptance Criteria: Admin scan overview
 
-- **Feature ID:** `feature-013-admin-scan-overview`
+- **Feature ID:** `feature-016-admin-scan-overview`
 - **Verification status:** In progress: automated checks pass; the browser checks and the post-release check are open
 
 Defines the feature’s acceptance criteria and records how each criterion was verified, including results and evidence.

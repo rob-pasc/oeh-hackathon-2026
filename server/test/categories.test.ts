@@ -350,7 +350,7 @@ describe('fallback (AC-013)', () => {
     }
   }
 
-  it('shows the five paths when no LLM is configured, and records it (feature 013 FR-016)', async () => {
+  it('shows the five paths when no LLM is configured, and records it (feature 016 FR-016)', async () => {
     const db = new DatabaseSync(':memory:')
     databases.push(db)
     const fallbacks: FallbackEvent[] = []

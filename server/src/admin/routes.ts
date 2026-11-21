@@ -1,4 +1,4 @@
-// Admin routes (feature 013). Registered only when the admin area is configured, so without it
+// Admin routes (feature 016). Registered only when the admin area is configured, so without it
 // every /api/admin/* request falls through to the 404 handler (FR-001).
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { ADMIN_PAGE_SIZE, ADMIN_ROUTES, AdminLogin, createValidator, type AdminScanDetail, type AdminScanPage, type ApiError } from '@leaaf/shared'

@@ -20,7 +20,7 @@ async function logIn(username: string = MOCK_ADMIN.username, password: string = 
   await userEvent.click(screen.getByRole('button', { name: 'Log in' }))
 }
 
-describe('admin page (feature 013)', () => {
+describe('admin page (feature 016)', () => {
   it('has its own route', () => {
     expect(parseRoute('/admin')).toEqual({ name: 'admin' })
     expect(parseRoute('/admin/')).toEqual({ name: 'admin' })
@@ -89,7 +89,7 @@ describe('admin page (feature 013)', () => {
   })
 })
 
-describe('cookies (feature 013 FR-012)', () => {
+describe('cookies (feature 016 FR-012)', () => {
   it('names the admin-only session cookie in both languages of the privacy notice', async () => {
     const { legalDoc } = await import('../legal/content')
     for (const lang of ['de', 'en'] as const) {
@@ -114,7 +114,7 @@ describe('cookies (feature 013 FR-012)', () => {
   })
 })
 
-describe('scan details (feature 013 FR-013 to FR-017)', () => {
+describe('scan details (feature 016 FR-013 to FR-017)', () => {
   it("shows today's AI calls above the list", async () => {
     show(createMockClient())
     await logIn()

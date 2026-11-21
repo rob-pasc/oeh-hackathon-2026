@@ -1,4 +1,4 @@
-// Log of AI fallbacks (feature 013 FR-016): each time the category or step call shows a template
+// Log of AI fallbacks (feature 016 FR-016): each time the category or step call shows a template
 // instead of an AI answer. It keeps a fixed reason code, never prompt, answer or message text, so
 // it holds no personal data. Rows belong to their scan and must be deleted with it once scan
 // deletion exists.

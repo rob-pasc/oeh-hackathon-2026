@@ -334,7 +334,7 @@ describe('template plans (AC-011, AC-012)', () => {
       expect(plan.steps.length).toBeGreaterThan(0)
     }
     expect(completeJson).not.toHaveBeenCalled()
-    // The category fallback is recorded by the category service; the steps add nothing (feature 013 FR-016).
+    // The category fallback is recorded by the category service; the steps add nothing (feature 016 FR-016).
     expect(fallbacks).toEqual([])
   })
 

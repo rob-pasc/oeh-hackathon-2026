@@ -19,7 +19,7 @@ async function readError(response: Response): Promise<ApiClientError> {
   }
 }
 
-/** Admin calls send the session cookie, which the server scopes to /api/admin (feature 013). */
+/** Admin calls send the session cookie, which the server scopes to /api/admin (feature 016). */
 const adminPost = (url: string, body: unknown) =>
   fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
 

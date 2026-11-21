@@ -61,7 +61,7 @@ try {
 
 const warn = (message: string, details?: Record<string, unknown>) => app.log.warn(details ?? {}, message)
 const assessments = retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn }) : undefined
-// AI fallbacks are recorded for the admin page (feature 013 FR-016).
+// AI fallbacks are recorded for the admin page (feature 016 FR-016).
 const fallbackLog = createFallbackLog(db)
 const categorize = createCategoryService(db, llm, { impactTable, warn, onFallback: fallbackLog.record })
 
