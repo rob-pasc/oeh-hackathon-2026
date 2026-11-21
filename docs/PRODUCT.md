@@ -21,11 +21,11 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 - **Honest impact:** CO₂e is shown as ranges against an explicit baseline and never summed across alternative paths. Weights are illustrative.
 - **Safety first:** infeasible or unsafe paths are marked, never scored attractively, and hazardous self-repair is never recommended.
 - **Data minimization:** only the hardware facts needed are collected, with no accounts, serial numbers, or personal files.
-- **Narrow and deep:** one OS (Windows) and 2–3 demo laptop models, supported well.
+- **Narrow and deep:** one OS (Windows) and 2–3 demo laptop models, supported well. *(2026-11-21: scanning on macOS and Linux was approved as [feature 007](features/feature-007-macos-linux-scanner/PLAN.md); it is specified, not implemented, so the scanner is still Windows-only.)*
 
 ## Deliberate non-goals (MVP)
 
-Scanning on macOS, Linux, or a bootable USB; user accounts; a fleet dashboard (deferred, may be specified later); live price scraping or purchasing; recycler or partner integrations; a full lifecycle assessment.
+Scanning on a bootable USB (macOS and Linux scanning moved into scope with feature 007); user accounts; a fleet dashboard (deferred, may be specified later); live price scraping or purchasing; recycler or partner integrations; a full lifecycle assessment.
 
 ## Uncertainty and references
 
