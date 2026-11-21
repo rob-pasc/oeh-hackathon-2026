@@ -2,7 +2,8 @@
 # Build from the repository root: docker build -f server/Dockerfile .
 #
 # Runs server/src/main.ts; its variables are listed in server/.env.example. The image also
-# contains the Windows scanner, served at /downloads/leaaf-scanner.exe.
+# contains the scanner downloads: Windows and Linux are built here, and the macOS app is copied
+# from scanner/macos-release/ when CI put it there (it can only be built on a Mac, feature 007).
 
 # Windows scanner release build. The backend URL is compiled in; it holds no secrets (feature 005
 # FR-007). Pure Go, so it cross-compiles without cgo. -H windowsgui: the scanner is a window
@@ -17,6 +18,29 @@ COPY scanner .
 RUN CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -trimpath \
       -ldflags "-s -w -H windowsgui -X main.backendURL=${SCANNER_BACKEND_URL} -X main.version=${SCANNER_VERSION}" \
       -o /out/leaaf-scanner.exe ./cmd/leaaf-scanner
+# The macOS app from CI's macOS job, if present; without it the Mac download is 404.
+RUN mkdir -p /out/macos && if [ -f macos-release/leaaf-scanner-macos.zip ]; then \
+      cp macos-release/leaaf-scanner-macos.zip /out/macos/; fi
+
+# Linux scanner release build (feature 007). The Gio window needs cgo and the X11/Wayland
+# headers. Built on Ubuntu 22.04 so it runs on glibc 2.35 and later (Ubuntu 22.04, Debian 12,
+# Fedora 36 and newer); the Go toolchain is copied from the official image.
+FROM ubuntu:22.04 AS scanner-linux
+ARG SCANNER_BACKEND_URL=https://leaaf.green
+ARG SCANNER_VERSION=0.0.0-dev
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+      ca-certificates gcc libc6-dev pkg-config libwayland-dev libx11-dev libx11-xcb-dev \
+      libxkbcommon-x11-dev libgles2-mesa-dev libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=golang:1.26 /usr/local/go /usr/local/go
+ENV PATH=/usr/local/go/bin:$PATH
+WORKDIR /src
+COPY scanner/go.mod scanner/go.sum ./
+RUN go mod download
+COPY scanner .
+RUN CGO_ENABLED=1 go build -trimpath \
+      -ldflags "-s -w -X main.backendURL=${SCANNER_BACKEND_URL} -X main.version=${SCANNER_VERSION}" \
+      -o /out/leaaf-scanner-linux ./cmd/leaaf-scanner
 
 FROM node:24-slim AS deps
 WORKDIR /app
@@ -44,6 +68,8 @@ ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     DATABASE_PATH=/data/leaaf.sqlite \
     SCANNER_EXE_PATH=/app/scanner/leaaf-scanner.exe \
+    SCANNER_LINUX_PATH=/app/scanner/leaaf-scanner-linux \
+    SCANNER_MACOS_PATH=/app/scanner/macos/leaaf-scanner-macos.zip \
     CORPUS_INDEX_PATH=/app/corpus-index/corpus.sqlite
 WORKDIR /app
 COPY --from=prod-deps /app/node_modules node_modules
@@ -56,6 +82,8 @@ COPY server/src server/src
 COPY data data
 COPY config config
 COPY --from=scanner /out/leaaf-scanner.exe scanner/leaaf-scanner.exe
+COPY --from=scanner /out/macos/ scanner/macos/
+COPY --from=scanner-linux /out/leaaf-scanner-linux scanner/leaaf-scanner-linux
 # The retrieval index is built at image build time, never per request (feature 002); an invalid
 # corpus manifest fails the build.
 COPY corpus corpus

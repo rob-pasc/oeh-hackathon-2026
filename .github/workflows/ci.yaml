@@ -43,17 +43,53 @@ jobs:
         with:
           go-version-file: scanner/go.mod
           cache-dependency-path: scanner/go.sum
+      # The Linux build is the Gio window (feature 007), which needs cgo and these headers.
+      - name: Install the Gio build libraries
+        run: >-
+          sudo apt-get update && sudo apt-get install -y --no-install-recommends gcc pkg-config
+          libwayland-dev libx11-dev libx11-xcb-dev libxkbcommon-x11-dev libgles2-mesa-dev
+          libegl1-mesa-dev libffi-dev libxcursor-dev libvulkan-dev
       - run: go vet ./...
-      # The Windows collector only compiles for Windows, so vet that build too.
+      - run: go vet -tags console ./...
+      # Each system's collector only compiles for that system, so vet those builds too. The
+      # macOS window needs the macOS SDK; its console build is vetted here, the window in
+      # scanner-macos.
       - run: go vet ./...
         env:
           GOOS: windows
+      - run: go vet -tags console ./...
+        env:
+          GOOS: darwin
       # schema_test.go reads ../shared/schemas, which the checkout provides.
       - run: go test ./...
 
+  scanner-macos:
+    name: Scanner on macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: scanner/go.mod
+          cache-dependency-path: scanner/go.sum
+      - run: go vet ./...
+        working-directory: scanner
+      - run: go test ./...
+        working-directory: scanner
+      # Same version scheme as the images: the Git tag on releases, sha-<short sha> otherwise.
+      - name: Build the app
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then version=$GITHUB_REF_NAME; else version=sha-$(git rev-parse --short=7 HEAD); fi
+          scanner/packaging/macos/build.sh https://leaaf.green "$version" scanner/macos-release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scanner-macos
+          path: scanner/macos-release/leaaf-scanner-macos.zip
+          if-no-files-found: error
+
   images:
     name: Image (${{ matrix.image }})
-    needs: [checks, scanner]
+    needs: [checks, scanner, scanner-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -66,6 +102,12 @@ jobs:
       PUBLISH: ${{ startsWith(github.ref, 'refs/tags/') }}
     steps:
       - uses: actions/checkout@v5
+      # server/Dockerfile copies the macOS app from here (it cannot be built in Docker).
+      - uses: actions/download-artifact@v4
+        if: matrix.image == 'server'
+        with:
+          name: scanner-macos
+          path: scanner/macos-release
       - uses: docker/setup-buildx-action@v3
 
       - name: Log in to GHCR
