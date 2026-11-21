@@ -1,7 +1,7 @@
 // Live API client for the routes in shared/src/api.ts, including the scan-session routes
 // (POST /api/sessions, GET /api/sessions/:id/events; contract in shared/src/session.ts).
 import type { Assessment } from '@leaaf/shared/assessment'
-import { ADMIN_ROUTES, type AdminScanPage, type AdminSession } from '@leaaf/shared/admin'
+import { ADMIN_ROUTES, type AdminScanDetail, type AdminScanPage, type AdminSession } from '@leaaf/shared/admin'
 import { API_ROUTES } from '@leaaf/shared/api'
 import type { DeviceRecord } from '@leaaf/shared/device'
 import type { CategoryResult } from '@leaaf/shared/categories'
@@ -129,5 +129,11 @@ export const liveClient: ApiClient = {
     const response = await fetch(ADMIN_ROUTES.scans(page), { credentials: 'same-origin' })
     if (!response.ok) throw await readError(response)
     return (await response.json()) as AdminScanPage
+  },
+
+  async adminScan(deviceId): Promise<AdminScanDetail> {
+    const response = await fetch(ADMIN_ROUTES.scan(encodeURIComponent(deviceId)), { credentials: 'same-origin' })
+    if (!response.ok) throw await readError(response)
+    return (await response.json()) as AdminScanDetail
   },
 }

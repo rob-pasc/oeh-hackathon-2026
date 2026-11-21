@@ -1,6 +1,6 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { ApiContext } from '../api'
 import { createMockClient, MOCK_ADMIN, MOCK_DEVICE_IDS } from '../api/mock'
 import { ApiClientError, type ApiClient } from '../api/types'
@@ -111,5 +111,54 @@ describe('cookies (feature 013 FR-012)', () => {
       expect(document.cookie).toBe('')
       unmount()
     }
+  })
+})
+
+describe('scan details (feature 013 FR-013 to FR-017)', () => {
+  it("shows today's AI calls above the list", async () => {
+    show(createMockClient())
+    await logIn()
+    expect(await screen.findByText('AI calls today: 37 of 200')).toBeInTheDocument()
+  })
+
+  it('loads the details only when opened, with AI status, fallbacks and the scan JSON', async () => {
+    const client = createMockClient()
+    const detail = vi.spyOn(client, 'adminScan')
+    show(client)
+    await logIn()
+    const table = await screen.findByRole('table')
+    expect(detail).not.toHaveBeenCalled()
+    const firstRow = within(table).getAllByRole('row')[1]!
+    await userEvent.click(within(firstRow).getByRole('button', { name: 'Details' }))
+    expect(detail).toHaveBeenCalledWith(MOCK_DEVICE_IDS.laptop)
+
+    const status = await screen.findByRole('region', { name: 'AI status' })
+    expect(status).toHaveTextContent('General: result categories from the AI')
+    expect(status).toHaveTextContent('General: 2 step plans from the AI')
+    expect(status).toHaveTextContent('Steps for battery-swap')
+    expect(status).toHaveTextContent('AI timed out')
+
+    const json = screen.getByRole('region', { name: 'Scan JSON' })
+    expect(json).toHaveTextContent('"schema_version": 1')
+    expect(json).toHaveTextContent('"product_version": "ThinkPad T480"')
+
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+    await userEvent.click(within(json).getByRole('button', { name: 'Copy JSON' }))
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('"schema_version": 1'))
+    expect(await within(json).findByRole('status')).toHaveTextContent('Copied')
+
+    await userEvent.click(within(firstRow).getByRole('button', { name: 'Hide' }))
+    expect(screen.queryByRole('region', { name: 'Scan JSON' })).not.toBeInTheDocument()
+  })
+
+  it('says when a scan has no AI results and no fallbacks', async () => {
+    show(createMockClient())
+    await logIn()
+    const rows = within(await screen.findByRole('table')).getAllByRole('row')
+    await userEvent.click(within(rows[3]!).getByRole('button', { name: 'Details' }))
+    const status = await screen.findByRole('region', { name: 'AI status' })
+    expect(status).toHaveTextContent('No AI results stored for this scan.')
+    expect(status).toHaveTextContent('No fallbacks recorded.')
   })
 })

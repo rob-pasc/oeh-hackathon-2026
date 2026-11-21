@@ -1,8 +1,8 @@
 // Admin scan overview (feature 013): a login form, then a read-only, paged list of the stored scans.
 // The page holds no secret: the server decides everything, and the session cookie never reaches
 // JavaScript (HttpOnly).
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import type { AdminScanPage } from '@leaaf/shared/admin'
+import { Fragment, useCallback, useEffect, useState, type FormEvent } from 'react'
+import type { AdminScanDetail, AdminScanPage, AiFallbackReason } from '@leaaf/shared/admin'
 import type { OsFamily } from '@leaaf/shared/common'
 import { useApi } from '../api'
 import { MOCK_ADMIN } from '../api/mock'
@@ -10,11 +10,25 @@ import { ApiClientError } from '../api/types'
 import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
 import { PRIMARY_BUTTON, Spinner } from '../components/ui'
+import { USE_LABELS } from '../lib/labels'
 
 type View = { kind: 'loading' } | { kind: 'disabled' } | { kind: 'login' } | { kind: 'list'; username: string } | { kind: 'error' }
 
 const SYSTEM: Record<OsFamily, string> = { windows: 'Windows', macos: 'macOS', linux: 'Linux' }
 const DASH = '–'
+
+/** Plain-language reasons for an AI fallback (feature 013 FR-015). */
+const FALLBACK_REASONS: Record<AiFallbackReason, string> = {
+  no_llm: 'No AI configured',
+  config: 'AI configuration problem',
+  auth: 'AI key rejected',
+  rate_limited: 'Rate limit or daily cap reached',
+  timeout: 'AI timed out',
+  unavailable: 'AI service unavailable',
+  bad_request: 'Request rejected by the AI service',
+  invalid_output: 'AI answer unreadable',
+  rejected_answer: 'AI answer failed the server checks',
+}
 const SECONDARY_BUTTON =
   'cursor-pointer rounded-full border border-line bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-leaf-tint disabled:cursor-default disabled:opacity-50'
 const INPUT = 'rounded-xl border border-line bg-white px-4 py-3 text-base text-ink'
@@ -173,6 +187,7 @@ function ScanList({ onLoggedOut }: { onLoggedOut: () => void }) {
   const [page, setPage] = useState(1)
   const [data, setData] = useState<AdminScanPage | null>(null)
   const [failed, setFailed] = useState(false)
+  const [open, setOpen] = useState<string | null>(null)
 
   useEffect(() => {
     let live = true
@@ -207,9 +222,14 @@ function ScanList({ onLoggedOut }: { onLoggedOut: () => void }) {
   const pages = Math.max(1, Math.ceil(data.total / data.page_size))
   return (
     <section aria-label="Scans" className="flex flex-col gap-4">
-      <p className="m-0 text-lg text-muted">
-        {data.total} {data.total === 1 ? 'scan' : 'scans'} stored, newest first.
-      </p>
+      <div className="flex flex-wrap items-baseline justify-between gap-3">
+        <p className="m-0 text-lg text-muted">
+          {data.total} {data.total === 1 ? 'scan' : 'scans'} stored, newest first.
+        </p>
+        <p className="m-0 text-sm text-muted">
+          AI calls today: {data.ai_usage.used} of {data.ai_usage.cap}
+        </p>
+      </div>
       <div className="overflow-x-auto rounded-[20px] bg-white shadow-card">
         <table className="w-full border-collapse text-left text-sm">
           <thead>
@@ -219,22 +239,45 @@ function ScanList({ onLoggedOut }: { onLoggedOut: () => void }) {
                   {h}
                 </th>
               ))}
+              <th scope="col" className="px-4 py-3">
+                <span className="sr-only">Details</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {data.scans.map((s) => (
-              <tr key={s.device_id} className="border-b border-line last:border-0">
-                <td className="px-4 py-3 whitespace-nowrap">{new Date(s.created_at).toLocaleString()}</td>
-                <td className="px-4 py-3 font-mono text-xs">
-                  <a href={`/d/${s.device_id}`} target="_blank" rel="noopener noreferrer" className="text-leaf">
-                    {s.device_id}
-                  </a>
-                </td>
-                <td className="px-4 py-3">{s.manufacturer ?? DASH}</td>
-                <td className="px-4 py-3">{s.model ?? DASH}</td>
-                <td className="px-4 py-3">{s.os_family ? SYSTEM[s.os_family] : DASH}</td>
-                <td className="px-4 py-3">{s.scan_status === 'complete' ? 'Complete' : 'Partial'}</td>
-              </tr>
+              <Fragment key={s.device_id}>
+                <tr className="border-b border-line last:border-0">
+                  <td className="px-4 py-3 whitespace-nowrap">{new Date(s.created_at).toLocaleString()}</td>
+                  <td className="px-4 py-3 font-mono text-xs">
+                    <a href={`/d/${s.device_id}`} target="_blank" rel="noopener noreferrer" className="text-leaf">
+                      {s.device_id}
+                    </a>
+                  </td>
+                  <td className="px-4 py-3">{s.manufacturer ?? DASH}</td>
+                  <td className="px-4 py-3">{s.model ?? DASH}</td>
+                  <td className="px-4 py-3">{s.os_family ? SYSTEM[s.os_family] : DASH}</td>
+                  <td className="px-4 py-3">{s.scan_status === 'complete' ? 'Complete' : 'Partial'}</td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      type="button"
+                      className={SECONDARY_BUTTON}
+                      aria-expanded={open === s.device_id}
+                      aria-controls={`details-${s.device_id}`}
+                      onClick={() => setOpen(open === s.device_id ? null : s.device_id)}
+                    >
+                      {open === s.device_id ? 'Hide' : 'Details'}
+                    </button>
+                  </td>
+                </tr>
+                {open === s.device_id ? (
+                  <tr id={`details-${s.device_id}`} className="border-b border-line bg-page">
+                    <td colSpan={7} className="px-4 py-4">
+                      <ScanDetails deviceId={s.device_id} onLoggedOut={onLoggedOut} />
+                    </td>
+                  </tr>
+                ) : null}
+              </Fragment>
             ))}
           </tbody>
         </table>
@@ -251,5 +294,103 @@ function ScanList({ onLoggedOut }: { onLoggedOut: () => void }) {
         </button>
       </nav>
     </section>
+  )
+}
+
+/** The full scan and its AI status, fetched when Details is opened (feature 013 FR-013 to FR-015). */
+function ScanDetails({ deviceId, onLoggedOut }: { deviceId: string; onLoggedOut: () => void }) {
+  const api = useApi()
+  const [detail, setDetail] = useState<AdminScanDetail | null>(null)
+  const [failed, setFailed] = useState(false)
+  const [copied, setCopied] = useState<'yes' | 'no' | null>(null)
+
+  useEffect(() => {
+    let live = true
+    api
+      .adminScan(deviceId)
+      .then((d) => live && setDetail(d))
+      .catch((e: unknown) => {
+        if (!live) return
+        if (e instanceof ApiClientError && e.code === 'unauthorized') onLoggedOut()
+        else setFailed(true)
+      })
+    return () => {
+      live = false
+    }
+  }, [api, deviceId, onLoggedOut])
+
+  if (failed)
+    return (
+      <p role="alert" className="m-0 font-semibold text-rose-ink">
+        The details could not be loaded.
+      </p>
+    )
+  if (!detail)
+    return (
+      <div className="flex items-center gap-3 text-muted">
+        <Spinner /> Loading details…
+      </div>
+    )
+
+  const json = JSON.stringify(detail.device.scan, null, 2)
+  const { categories, steps, fallbacks } = detail.ai
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(json)
+      setCopied('yes')
+    } catch {
+      setCopied('no')
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4 text-left">
+      <section aria-label="AI status" className="flex flex-col gap-2">
+        <h2 className="m-0 text-base font-bold">AI status</h2>
+        {categories.length === 0 && steps.length === 0 ? (
+          <p className="m-0 text-sm text-muted">No AI results stored for this scan.</p>
+        ) : (
+          <ul className="m-0 flex flex-col gap-1 pl-5 text-sm">
+            {categories.map((c) => (
+              <li key={`c-${c.intended_use}`}>
+                {USE_LABELS[c.intended_use]}: result categories from the AI, {new Date(c.generated_at).toLocaleString()}
+              </li>
+            ))}
+            {steps.map((s) => (
+              <li key={`s-${s.intended_use}`}>
+                {USE_LABELS[s.intended_use]}: {s.plans} step {s.plans === 1 ? 'plan' : 'plans'} from the AI
+              </li>
+            ))}
+          </ul>
+        )}
+        <h3 className="m-0 text-sm font-bold">Fallbacks</h3>
+        {fallbacks.length === 0 ? (
+          <p className="m-0 text-sm text-muted">No fallbacks recorded.</p>
+        ) : (
+          <ul className="m-0 flex flex-col gap-1 pl-5 text-sm">
+            {fallbacks.map((f, i) => (
+              <li key={i}>
+                {new Date(f.created_at).toLocaleString()} · {f.call === 'categories' ? 'Result categories' : `Steps for ${f.option_id ?? 'an option'}`} ·{' '}
+                {USE_LABELS[f.intended_use]} · {FALLBACK_REASONS[f.reason]}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <section aria-label="Scan JSON" className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <h2 className="m-0 text-base font-bold">Scan JSON</h2>
+          <button type="button" className={SECONDARY_BUTTON} onClick={copy}>
+            Copy JSON
+          </button>
+          {copied ? (
+            <span role="status" className="text-sm text-muted">
+              {copied === 'yes' ? 'Copied' : 'Copying failed; select the text instead'}
+            </span>
+          ) : null}
+        </div>
+        <pre className="m-0 max-h-[480px] overflow-auto rounded-xl border border-line bg-white p-4 font-mono text-xs leading-relaxed">{json}</pre>
+      </section>
+    </div>
   )
 }

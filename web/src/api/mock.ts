@@ -166,7 +166,31 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
     async adminScans(page) {
       if (!adminLoggedIn) throw new ApiClientError('unauthorized', 'Log in to see the admin area')
       const start = (page - 1) * ADMIN_PAGE_SIZE
-      return { total: MOCK_ADMIN_SCANS.length, page, page_size: ADMIN_PAGE_SIZE, scans: MOCK_ADMIN_SCANS.slice(start, start + ADMIN_PAGE_SIZE) }
+      return {
+        total: MOCK_ADMIN_SCANS.length,
+        ai_usage: { day: '2026-11-21', used: 37, cap: 200 },
+        page,
+        page_size: ADMIN_PAGE_SIZE,
+        scans: MOCK_ADMIN_SCANS.slice(start, start + ADMIN_PAGE_SIZE),
+      }
+    },
+    async adminScan(deviceId) {
+      if (!adminLoggedIn) throw new ApiClientError('unauthorized', 'Log in to see the admin area')
+      const row = MOCK_ADMIN_SCANS.find((s) => s.device_id === deviceId)
+      if (!row) throw new ApiClientError('not_found', 'device not found')
+      const base = deviceId === MOCK_DEVICE_IDS.desktop ? desktopScan : laptopScan
+      const scan = { ...clone(base), identity: { ...base.identity, manufacturer: row.manufacturer, product_version: row.model } }
+      const first = deviceId === MOCK_DEVICE_IDS.laptop
+      return {
+        device: { device_id: deviceId, created_at: row.created_at, scan },
+        ai: first
+          ? {
+              categories: [{ intended_use: 'general', generated_at: row.created_at }],
+              steps: [{ intended_use: 'general', plans: 2 }],
+              fallbacks: [{ created_at: row.created_at, call: 'steps', intended_use: 'general', option_id: 'battery-swap', reason: 'timeout' }],
+            }
+          : { categories: [], steps: [], fallbacks: [] },
+      }
     },
   }
 }

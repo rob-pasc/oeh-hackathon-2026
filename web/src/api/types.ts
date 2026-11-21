@@ -1,4 +1,4 @@
-import type { AdminScanPage, AdminSession } from '@leaaf/shared/admin'
+import type { AdminScanDetail, AdminScanPage, AdminSession } from '@leaaf/shared/admin'
 import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { OsFamily } from '@leaaf/shared/common'
@@ -98,4 +98,6 @@ export interface ApiClient {
   adminLogin(username: string, password: string): Promise<void>
   adminLogout(): Promise<void>
   adminScans(page: number): Promise<AdminScanPage>
+  /** The full scan and its AI status, for the Details view (feature 013 FR-013 to FR-015). */
+  adminScan(deviceId: string): Promise<AdminScanDetail>
 }
