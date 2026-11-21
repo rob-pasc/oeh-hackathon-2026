@@ -38,6 +38,6 @@ The demo needs a public URL (`leaaf.green`) for the web app, the API and the sca
 
 ## Supersession notes (if applicable)
 
-- **2026-11-21, hosting and ports (feature 005 scope change log):** The production host is the team's own server in Vorarlberg, operated by Marco Stadelmann, not a rented VPS. Everything else in the hosting decision stands: the same Compose setup behind the external Caddy. Since commit 6c85995 the example Compose file publishes both ports on all host interfaces, and the host firewall must keep them unreachable from outside. This resolves the open provider question in the consequences. `v0.5.0` is deployed at `https://leaaf.green`. The title and decision text above are kept as the original record.
+- **2026-11-21, hosting and ports (feature 005 scope change log):** The production host is the team's own server in Vorarlberg, operated by Marco Stadelmann, not a rented VPS. Everything else in the hosting decision stands: the same Compose setup behind the external Caddy. Since commit 6c85995 the example Compose file publishes both ports on all host interfaces, and the host firewall must keep them unreachable from outside. This resolves the open provider question in the consequences. The GHCR packages are public, which settles the other open question. `v0.5.0` is deployed at `https://leaaf.green`. The title and decision text above are kept as the original record.
 
 None.

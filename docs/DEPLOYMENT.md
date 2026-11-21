@@ -42,7 +42,7 @@ git tag v0.1.0
 git push origin v0.1.0
 ```
 
-Then wait for the workflow run to go green. The packages appear under the repository owner's GitHub packages. New GHCR packages are **private**. The host must log in (below) or the packages must be made public in their package settings.
+Then wait for the workflow run to go green. The packages appear under the repository owner's GitHub packages. New GHCR packages are **private**. `leaaf-web` and `leaaf-server` have been made public (checked 2026-11-21), so the host can pull without logging in.
 
 ## Host setup
 

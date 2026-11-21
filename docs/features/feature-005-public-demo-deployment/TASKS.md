@@ -20,7 +20,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-011:** *(Added 2026-11-20)* Add the `web` and `server` Dockerfiles, the nginx config, and `.dockerignore` (supports `AC-012`, `AC-014`; covers the image part of T-002)
 - [x] **T-012:** *(Added 2026-11-20)* Add `.github/workflows/ci.yaml` with the checks, the image builds, and publishing to GHCR on tag pushes (supports `AC-012`, `AC-013`)
 - [x] **T-013:** *(Added 2026-11-20)* Add the example production Compose file and document the images, the CI, the Compose setup, and the external Caddy routes in `docs/DEPLOYMENT.md` (supports `AC-014`, `AC-009`)
-- [ ] **T-014:** *(Added 2026-11-20)* Verify on GitHub: a push to `main`, a tag push that publishes, and the Compose file on a Docker host (supports `AC-012`–`AC-014`) *(2026-11-21: AC-012 passes on a `main` push (PR runs dropped by the user); AC-013 needs the GHCR tag list; AC-014 is blocked on Marco's host check.)*
+- [ ] **T-014:** *(Added 2026-11-20)* Verify on GitHub: a push to `main`, a tag push that publishes, and the Compose file on a Docker host (supports `AC-012`–`AC-014`) *(2026-11-21: AC-012 passes on a `main` push (PR runs dropped by the user); AC-013 passes (GHCR tags checked); AC-014 is blocked on Marco's host check.)*
 
 ## Dependencies and blockers
 

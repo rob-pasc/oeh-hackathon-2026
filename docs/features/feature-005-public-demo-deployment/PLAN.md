@@ -120,7 +120,7 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 ## Assumptions and open questions
 
 - **Decided 2026-11-21:** The host is the team's own server in Vorarlberg, operated by Marco Stadelmann, who holds its access. (Previously blocking: "Which VPS provider, and who owns the account?")
-- **Open:** Whether the GHCR packages are public, or the host logs in with a read-only token. Default: the host logs in (see `docs/DEPLOYMENT.md`).
+- **Settled 2026-11-21 (observed):** Both GHCR packages are public, so the host needs no login to pull. (Previously open: public packages or a read-only token.)
 - **Decided 2026-11-20:** Configurable defaults are 10 uploads and 60 report requests per client per hour, and 200 provider attempts per UTC day. The upload ceiling defaults to 32 KiB. See the [server configuration](../../../server/README.md#request-limits).
 - **Open:** Whether to keep the public deployment running after the hackathon. Default: until the user decides otherwise.
 
