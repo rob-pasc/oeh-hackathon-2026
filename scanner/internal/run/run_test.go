@@ -197,6 +197,23 @@ func TestReadSessionID(t *testing.T) {
 }
 
 // With a session, progress goes to the session and the upload carries the ID.
+func TestSessionFromBundle(t *testing.T) {
+	cases := map[string]string{
+		"/Users/x/Downloads/leaaf-scanner-" + testSession + ".app/Contents/MacOS/leaaf-scanner":                    testSession,
+		"/private/var/folders/ab/T/AppTranslocation/1234/d/leaaf-scanner-" + testSession + ".app/Contents/MacOS/x": testSession,
+		"/Users/x/Downloads/leaaf-scanner.app/Contents/MacOS/leaaf-scanner":                                        "",
+		"/Users/x/Downloads/leaaf-scanner-not-a-session.app/Contents/MacOS/leaaf-scanner":                          "",
+		// Only the innermost bundle counts.
+		"/Users/x/leaaf-scanner-" + testSession + ".app/Contents/Helpers/other.app/Contents/MacOS/x": "",
+		"/home/x/Downloads/leaaf-scanner": "",
+	}
+	for path, want := range cases {
+		if got := SessionFromBundle(path); got != want {
+			t.Errorf("%s: got %q, want %q", path, got, want)
+		}
+	}
+}
+
 func TestSessionRunReportsProgress(t *testing.T) {
 	var events []map[string]string
 	var uploaded map[string]any

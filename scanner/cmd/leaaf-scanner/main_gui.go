@@ -1,6 +1,7 @@
-//go:build windows || gui
+//go:build windows || ((darwin || linux) && !console)
 
-// The window: always on Windows; on other systems with -tags gui for development.
+// The window (feature 001 FR-014, feature 007 FR-003): on Windows always, on macOS and Linux unless
+// built with -tags console.
 package main
 
 import (

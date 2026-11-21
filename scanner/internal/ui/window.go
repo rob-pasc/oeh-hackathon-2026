@@ -1,7 +1,7 @@
-//go:build windows || gui
+//go:build windows || ((darwin || linux) && !console)
 
-// The event loop. It is built on Windows and, with -tags gui, on Linux and macOS for development
-// (that needs cgo and the platform's windowing libraries).
+// The event loop. It is built on Windows, macOS and Linux unless -tags console is set. On macOS
+// and Linux it needs cgo and the platform's windowing libraries.
 
 package ui
 
