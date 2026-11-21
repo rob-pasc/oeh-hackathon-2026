@@ -56,10 +56,10 @@ Two corrections to the result screen of feature 008, both found when the team te
 
 ## Proposed technical approach
 
-- **Web:** In `web/src/components/ResultsView.tsx`, track the opened option per tab instead of one `selectedOption`; derive the gauge option from the active tab (FR-001 to FR-003). Extend `app.test.tsx`.
+- **Web (implemented):** `web/src/components/ResultsView.tsx` keeps the option last opened per category tab (`openedInTab`) and derives the gauge from the active tab. The Overview's category cards switch tabs rather than open options, so on the Overview FR-003 always resolves to the first category's best option.
 - **Server (implemented):** `capDraft` in `server/src/categories/options.ts` runs first in `finishOption`. It applies the gates' `atMost` (now exported from `server/src/assessment/gates.ts`) and, when it lowers a status, takes the first gate reason not in a short list of enabling codes (`ssd_slot_available`, `ram_upgradeable`, `drive_failing`, `battery_worn`, `os_supported`). Because the cache stores the AI answer and finishes options on each read (`server/src/categories/service.ts`), FR-006 needs no cache change. Extend `server/test/categories.test.ts`.
 - **Tradeoff (proposed, not yet adopted):** The `upgrade` gate covers SSD and RAM together, so an SSD option can be capped by a RAM-only finding, for example "cannot verify whether the RAM can be upgraded". This is conservative (it can only make an option look less fit) and keeps the change small. Splitting the gate per part is possible later.
-- **ADR:** After implementation, record the adopted change to ADR-003's "the server does not re-check options against the gates" in a new ADR that partly supersedes ADR-003.
+- **ADR:** Recorded in [ADR-007](../../adr/adr-007-gate-cap-for-ai-part-options.md), which partly supersedes ADR-003.
 
 ## Dependencies and risks
 
@@ -84,11 +84,11 @@ Completion boundary: locally verified handoff with self-review, committed on `ma
 
 ## Related and superseded features
 
-Planned replacements (not yet implemented):
+Replacements, implemented 2026-11-21 on `main` (server cap in 3d3dd74, gauge in the following web commit); reciprocal notes added to the feature 008 plan and acceptance criteria and to ADR-003:
 
 - [Feature 008](../feature-008-ai-categories-and-options/PLAN.md) **FR-011** ("The gauge follows the option the user last opened. Before any option is opened, it shows the best option of the first category") is replaced by FR-001 to FR-003 here. 008 AC-011 stays as historical evidence.
 - Feature 008 **FR-012**, the part "The server checks only the payload shape", is replaced for options of kind `ssd`, `ram` and `battery` by FR-004 to FR-006 here. The rest of 008 FR-012 (inputs, safety rules in the prompt, citation and figure checks) is unchanged. 008 AC-012 and AC-016 stay as historical evidence.
-- [ADR-003](../../adr/adr-003-ai-chosen-options.md): the decision "The server does not re-check options against the feature 003 gates" will be partly superseded for the three part kinds.
+- [ADR-003](../../adr/adr-003-ai-chosen-options.md): the decision "The server does not re-check options against the feature 003 gates" is partly superseded for the three part kinds by [ADR-007](../../adr/adr-007-gate-cap-for-ai-part-options.md).
 
 Unchanged: feature 008 FR-001 to FR-010 and FR-013 to FR-015; feature 003 gates and rubrics.
 
@@ -96,5 +96,5 @@ Unchanged: feature 008 FR-001 to FR-010 and FR-013 to FR-015; feature 003 gates 
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: [ADR-003](../../adr/adr-003-ai-chosen-options.md) (to be partly superseded on implementation)
+- Related ADRs: [ADR-007](../../adr/adr-007-gate-cap-for-ai-part-options.md), which partly supersedes [ADR-003](../../adr/adr-003-ai-chosen-options.md)
 - Gate rules: [feature 003 DESIGN](../feature-003-five-path-ranking/DESIGN.md#gate-rules)

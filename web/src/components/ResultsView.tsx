@@ -38,8 +38,8 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const [streamError, setStreamError] = useState<ApiClientError | null>(null)
   const [streamEnded, setStreamEnded] = useState(false)
   const [tab, setTab] = useState<ResultTab>('overview')
-  /** Key of the option the user last opened; the gauge follows it (FR-011). */
-  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  /** Key of the option last opened in each category tab; the gauge follows it (feature 011 FR-001, FR-002). */
+  const [openedInTab, setOpenedInTab] = useState<Record<string, string>>({})
   const [openOption, setOpenOption] = useState<string | null>(null)
   const plans = useStepPlans(deviceId, use)
 
@@ -87,8 +87,12 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
 
   const allOptions = categoryViews.flatMap(c => c.options)
   const recommended = categoryViews.find(c => c.isRecommended) ?? null
-  // Before any option is opened, the gauge shows the best option of the first category (FR-011).
-  const gaugeOption: OptionView | null = allOptions.find(o => o.key === selectedOption) ?? categoryViews[0]?.best ?? null
+  // The gauge follows the selected tab (feature 011, replacing 008 FR-011): in a category tab the option last
+  // opened there, else the category's best option; on the Overview, whose cards only switch tabs, the best
+  // option of the first category.
+  const selectedOption = activeCategory ? (openedInTab[activeCategory.id] ?? null) : null
+  const tabOption = activeCategory ? (activeCategory.options.find(o => o.key === selectedOption) ?? activeCategory.best) : null
+  const gaugeOption: OptionView | null = tabOption ?? categoryViews[0]?.best ?? null
   const gaugeCategory = gaugeOption ? categoryViews.find(c => c.options.includes(gaugeOption)) : undefined
   const gaugeItem: CardView | null = gaugeOption ?? pathViews.find(v => v.isRecommended) ?? pathViews[0] ?? null
   // "Category · option", or just the name when a fallback category and its only option share it.
@@ -105,7 +109,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   }
 
   function toggleOption(key: string) {
-    setSelectedOption(key)
+    setOpenedInTab(current => ({ ...current, [activeTab]: key }))
     setOpenOption(current => (current === key ? null : key))
     // Opening an option for the first time requests its step plan (feature 009 FR-001).
     const option = allOptions.find(o => o.key === key)

@@ -19,7 +19,7 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 
 - **Evidence over assertion:** technical claims need a cited source; when evidence is missing, the report says so ("cannot verify").
 - **Honest impact:** CO₂e is shown as ranges against an explicit baseline and never summed across alternative paths. Weights are illustrative. Figures the AI estimates (feature 008) are always labelled "AI estimate".
-- **Safety first:** infeasible or unsafe paths are marked, never scored attractively, and hazardous self-repair is never recommended. *(2026-11-21: for AI-chosen options of feature 008 this rests on the prompt and the demo review, not on server rules; see [ADR-003](adr/adr-003-ai-chosen-options.md).)*
+- **Safety first:** infeasible or unsafe paths are marked, never scored attractively, and hazardous self-repair is never recommended. *(2026-11-21: for AI-chosen options of feature 008 this rests on the prompt and the demo review, not on server rules; see [ADR-003](adr/adr-003-ai-chosen-options.md). Since feature 011, SSD, RAM and battery options are capped at the rule-based status, see [ADR-007](adr/adr-007-gate-cap-for-ai-part-options.md).)*
 - **Data minimization:** only the hardware facts needed are collected, with no accounts, serial numbers, or personal files.
 - **Narrow and deep:** 2–3 demo laptop models, supported well. *(2026-11-21: originally also one OS, Windows. [Feature 007](features/feature-007-macos-linux-scanner/PLAN.md) adds macOS 12+ and x64 Linux scanning; the knowledge base still has no Mac sources, so Mac-specific evidence reads "cannot verify".)*
 

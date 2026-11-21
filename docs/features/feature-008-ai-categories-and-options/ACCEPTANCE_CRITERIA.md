@@ -56,6 +56,8 @@ Pushing, a pull request, and merging into `main` were outside this boundary.
 
 ## Verification notes
 
+**2026-11-21, supersession note.** [Feature 011](../feature-011-tab-gauge-and-capped-option-status/PLAN.md) replaces FR-011 (AC-011) and, for `ssd`, `ram` and `battery` options, the shape-only server check of FR-012 (AC-012, AC-016). The results here stay as historical evidence; current evidence is in the [feature 011 acceptance criteria](../feature-011-tab-gauge-and-capped-option-status/ACCEPTANCE_CRITERIA.md). The AC-011 component test was kept: its steps still hold under feature 011.
+
 - **2026-11-21, live demo review (AC-016).** `npm run categories:smoke -w server` against the real corpus index (31 documents, 197 passages) and DeepSeek. Scans were the fictional example laptop with each model's identity, CPU, RAM layout and a worn battery, because no real scans of the demo models exist yet (`demo/README.md`). Office use, one run per model; all three had model-specific evidence; each call took about 10–11 s (deadline 40 s).
   - **T480:** battery (professional, Depends), hand it down (two options), "Upgrade to Windows 11" (AI estimate), recycle and salvage. No owner battery work.
   - **XPS 13 9360:** professional battery replacement, a repair-subsidy check (AI estimate), hand it down, "Skip SSD and RAM upgrades" (Not a fit, soldered memory), extended Windows 10 updates (AI estimate), salvage and recycle. No fitting RAM option.

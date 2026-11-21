@@ -418,6 +418,31 @@ describe('ResultsView', () => {
     expect(within(gauge).getByText('AI estimate')).toBeInTheDocument()
   })
 
+  it('moves the gauge with the selected tab and remembers the option opened in each tab (feature 011 AC-001 to AC-004)', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
+    const gauge = await screen.findByRole('region', { name: 'CO₂e gauge' })
+    const byLabel = (label: string) => ranked(sample).find((r) => r.category.label === label)!
+    const bestOf = (label: string) => `${label} · ${byLabel(label).options[0]!.option.title}`
+    const first = ranked(sample)[0]!.category.label
+    await waitFor(() => expect(gauge).toHaveTextContent(bestOf(first)))
+    const group = await tabGroup()
+
+    // AC-001: a tab with nothing opened shows its best option.
+    await userEvent.click(within(group).getByRole('button', { name: 'Faster storage' }))
+    await waitFor(() => expect(gauge).toHaveTextContent(bestOf('Faster storage')))
+    // AC-003: opening an option moves the gauge to it.
+    await userEvent.click(within(await screen.findByRole('region', { name: 'Reinstall the operating system' })).getByRole('button'))
+    expect(gauge).toHaveTextContent('Faster storage · Reinstall the operating system')
+    await userEvent.click(within(group).getByRole('button', { name: 'Hand it down' }))
+    await waitFor(() => expect(gauge).toHaveTextContent(bestOf('Hand it down')))
+    // AC-002: back in the first tab, the option opened there again.
+    await userEvent.click(within(group).getByRole('button', { name: 'Faster storage' }))
+    await waitFor(() => expect(gauge).toHaveTextContent('Faster storage · Reinstall the operating system'))
+    // AC-004: the Overview opens no options, so it shows the first category's best option.
+    await userEvent.click(within(group).getByRole('button', { name: 'Overview' }))
+    await waitFor(() => expect(gauge).toHaveTextContent(bestOf(first)))
+  })
+
   it('stops waiting when the stream ends without categories', async () => {
     // Like a server before feature 008: the assessment, then `end`.
     const none: ApiClient = { ...fast, streamReport: (id, use, handlers) => fast.streamReport(id, use, { ...handlers, onCategories: () => {} }) }

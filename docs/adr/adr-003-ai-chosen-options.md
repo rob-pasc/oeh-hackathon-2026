@@ -45,4 +45,4 @@ Feature 003 kept the LLM out of every decision: only fact extraction used it, an
 
 ## Supersession notes (if applicable)
 
-None.
+2026-11-21: Partly superseded by [ADR-007](adr-007-gate-cap-for-ai-part-options.md). For options of kind `ssd`, `ram` and `battery`, the server now caps the AI's status at the feature 003 gate ("The server does not re-check options against the feature 003 gates" no longer holds for them). The rest of this decision stands.
