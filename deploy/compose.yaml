@@ -1,6 +1,7 @@
 # Example production setup: both images on one host, behind an external Caddy that terminates
 # HTTPS and routes /api/* to the server and everything else to the web app.
-# Both ports are published on loopback only, so nothing is reachable except through Caddy.
+# Both ports are published on all host interfaces, as the production host needs. The host firewall
+# must keep them unreachable from outside, so nothing is reachable except through Caddy.
 # Usage and the Caddy routes: docs/DEPLOYMENT.md.
 #
 #   cp .env.example .env               # image tag, ports, server secrets

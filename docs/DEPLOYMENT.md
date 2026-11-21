@@ -2,7 +2,7 @@
 
 How leaaf is built, published, and run in production. Scope and open decisions are in [feature 005](features/feature-005-public-demo-deployment/PLAN.md). This guide does not authorize a deployment; each release to the public host needs the team's go-ahead.
 
-**Local deployment status (2026-11-20; updated 2026-11-21).** The live web app and server support scanner sessions, uploads, ranked assessments and, since feature 008, AI categories and options on the report stream. The server creates the additive SQLite table `category_cache` on start; no data migration is needed, and deleting the table only forces new category calls. The new optional settings `LLM_CATEGORY_TIMEOUT_MS` and `LLM_THINKING_CATEGORIES` are in `deploy/.env.example`. The server enforces upload, per-client and daily provider limits. The repository and scanner secret scan passed locally (feature 005 AC-007). Demo seeding, backup and restore rehearsal, and public deployment verification remain open.
+**Deployment status (updated 2026-11-21).** `https://leaaf.green` runs `v0.5.0` on the team's own server in Vorarlberg, operated by Marco Stadelmann, behind Caddy. The post-release smoke checks, the HTTPS check and the rate-limit check passed from outside on 2026-11-21 (feature 005 AC-001, AC-005). The repository and scanner secret scan passed (AC-007). Still open: demo seeding, the backup and restore procedure and its rehearsal, the rollback rehearsal, and the host-side port check (AC-014).
 
 ## Release images
 
@@ -28,7 +28,7 @@ docker build -f server/Dockerfile --build-arg SCANNER_VERSION=0.1.0 -t leaaf-ser
 
 ## CI and publishing
 
-[`.github/workflows/ci.yaml`](../.github/workflows/ci.yaml) runs on every pull request, every push to `main`, and every tag push:
+[`.github/workflows/ci.yaml`](../.github/workflows/ci.yaml) runs on every push to `main` and every tag push. It also has a `pull_request` trigger, but the team doesn't use pull requests:
 
 1. `checks`: `npm ci`, then the type check, tests, and build for all workspaces.
 2. `scanner`: installs the Gio build libraries, runs `go vet` for the Linux window and console builds, Windows and the macOS console build, then `go test` in `scanner/`.
@@ -59,11 +59,11 @@ docker compose up -d
 
 To use the admin page at `https://leaaf.green/admin` (feature 016), set `ADMIN_USERNAME` and a password of at least 16 characters as `ADMIN_PASSWORD` in `deploy/.env`, then run `docker compose up -d` again. Without them the admin area stays off. The password is stored in plain text, so keep `deploy/.env` readable by root only (`chmod 600 deploy/.env`). The per-client login limit needs `TRUSTED_PROXY_IP` (below); without it every visitor counts as Caddy and shares one counter.
 
-Both containers publish their ports on `127.0.0.1` only. The server's data lives in the named volume `leaaf_server-data`. `deploy/.env` both configures Compose and is passed to the server container. The server variables are described in [`server/README.md`](../server/README.md#configuration).
+Both containers publish their ports on all host interfaces (since 6c85995, as the production host needs). Keep `WEB_PORT` and `SERVER_PORT` closed to the outside in the host firewall: a reachable API port lets clients bypass Caddy, and if they appear as the trusted proxy address they could set their own forwarded address. The server's data lives in the named volume `leaaf_server-data`. `deploy/.env` both configures Compose and is passed to the server container. The server variables are described in [`server/README.md`](../server/README.md#configuration).
 
 ### Client IP configuration
 
-Set `TRUSTED_PROXY_IP` in the server environment to the exact immediate peer address the API sees from Caddy. A host proxy reaching a published container port may appear as the Docker bridge gateway. Only use this setting on an ingress path accessible exclusively to the proxy. Keep the API bound to loopback on the host and keep Caddy’s default handling of incoming forwarded headers. With the setting empty the API counts the socket peer, so everyone behind a proxy shares its allowance. Confirm separation from two real client addresses before go-live.
+Set `TRUSTED_PROXY_IP` in the server environment to the exact immediate peer address the API sees from Caddy. A host proxy reaching a published container port may appear as the Docker bridge gateway. Only use this setting on an ingress path accessible exclusively to the proxy. Keep the API port closed to the outside and keep Caddy’s default handling of incoming forwarded headers. With the setting empty the API counts the socket peer, so everyone behind a proxy shares its allowance. Confirm separation from two real client addresses before go-live.
 
 The per-client windows reset if the server restarts. An additive SQLite table, `llm_daily_usage`, keeps the daily allowance across restarts. Earlier images can ignore the table, but rolling back to an image that predates limits removes enforcement.
 

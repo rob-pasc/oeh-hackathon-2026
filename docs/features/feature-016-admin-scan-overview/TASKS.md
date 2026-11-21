@@ -24,7 +24,7 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 - [x] **T-007:** Privacy notice (DE/EN) cookie section and a test that public pages set no cookie. (supports `AC-017`)
 - [x] **T-008:** Documentation: `server/.env.example`, `deploy/.env.example`, `server/README.md`, `docs/DEPLOYMENT.md` (setup and post-release checks), README status, notes on features 001, 005 and 006, feature index. (supports `AC-018`)
 - [x] **T-009:** Self-review of the final diff (authentication, sessions, rate limits, logging), record findings and their resolution, rerun the checks. (supports `AC-019`)
-- [ ] **T-010:** After the release: post-release checks on the deployed site. (supports `AC-018`)
+- [ ] **T-010:** After the release: post-release checks on the deployed site. (supports `AC-018`) *(2026-11-21: the `curl` checks pass on `v0.5.0`; the browser login and cookie check remains, see AC-018.)*
 
 - [x] **T-011:** *(revision 2026-11-21)* Fallback log: additive `ai_fallbacks` table, reason mapping, `onFallback` in the category and step services, wiring in `main.ts`, and tests. (supports `AC-024`)
 - [x] **T-012:** *(revision 2026-11-21)* Admin insights: `AdminScanDetail` and `ai_usage` contracts, `GET /api/admin/scans/:id`, category and step status, fallbacks and AI usage queries, route inventory update, and tests. (supports `AC-020`, `AC-021`, `AC-022`, `AC-023`, `AC-025`, `AC-026`)

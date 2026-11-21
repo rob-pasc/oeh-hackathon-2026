@@ -47,9 +47,9 @@ leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner
 - **FR-007:** The LLM API key and other secrets are set only in host environment configuration. None appear in the repository, the scanner binary, or responses to clients.
 - **FR-008:** Device records and caches persist across application restarts and redeployments.
 - **FR-009:** `docs/DEPLOYMENT.md` documents prerequisites, environment variables (names only), build and deploy steps, seeding, post-deploy smoke checks, backup of the SQLite database, and rollback to the previous release.
-- **FR-010:** *(Added 2026-11-20)* Every pull request and every push to `main` runs the type check, tests, and build for all workspaces, and builds both container images. A failure in any of them fails the workflow.
+- **FR-010:** *(Added 2026-11-20; revised 2026-11-21: pull requests dropped, the team works without them)* Every push to `main` runs the type check, tests, and build for all workspaces, and builds both container images. A failure in any of them fails the workflow.
 - **FR-011:** *(Added 2026-11-20)* Pushing a Git tag runs the same checks and then publishes the `web` and `server` images to GHCR. Each image is tagged with the Git tag name, the short commit SHA, and `latest`, so any earlier release can be redeployed by its tag. Pull requests and pushes to `main` build the images without publishing them.
-- **FR-012:** *(Added 2026-11-20)* An example production Compose file runs the published images. The web container serves the built app with client-side route fallback. Both containers publish their ports only on the host's loopback interface for the external Caddy, and the server keeps its data on a named volume.
+- **FR-012:** *(Added 2026-11-20)* An example production Compose file runs the published images. The web container serves the built app with client-side route fallback. Both containers publish their ports only on the host's loopback interface for the external Caddy, and the server keeps its data on a named volume. *(Revised 2026-11-21: the file publishes both ports on all host interfaces, as the production host needs; the host firewall must keep them unreachable from outside, so only Caddy reaches them. Originally "on the host's loopback interface".)*
 
 ## Non-functional requirements and constraints
 
@@ -73,7 +73,7 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 - **Packaging (decided 2026-11-20, replaces the earlier one-image proposal):** Two images built from the repository root.
   - `web`: the Vite build served by unprivileged nginx on port 8080, with fallback to `index.html` for client-side routes. `VITE_API_MODE` is a build argument; the default and the CI build use `live` (decided 2026-11-20). Until features 003 and 004 add the report stream, a real scan reaches the result screen but it shows a connection error instead of the ranked paths.
   - `server`: Node 24 running the TypeScript sources directly, with `shared/` built and production dependencies only, on port 3000, with SQLite on a mounted volume. Since feature 001 added `server/src/main.ts` (merged 2026-11-20), the image sets `HOST=0.0.0.0` and `DATABASE_PATH=/data/leaaf.sqlite` for it. The example Compose file runs it by default with the web container (decided 2026-11-20).
-- **Host type (decided 2026-11-20):** A VPS running Docker Compose behind an external Caddy managed outside this repository. Caddy routes `/api/*` and `/downloads/*` to `server` and everything else to `web`, so the browser sees one origin. The provider and account ownership are still open (T-001).
+- **Host type (decided 2026-11-20):** A VPS running Docker Compose behind an external Caddy managed outside this repository. Caddy routes `/api/*` and `/downloads/*` to `server` and everything else to `web`, so the browser sees one origin. The provider and account ownership are still open (T-001). *(2026-11-21: the host is the team's own server in Vorarlberg, Austria, operated by team member Marco Stadelmann, not a rented VPS; it runs the same Compose setup behind Caddy. Source: the privacy notice in `web/src/legal/`, confirmed by the user.)*
 - **CI (decided 2026-11-20):** One GitHub Actions workflow, `.github/workflows/ci.yaml`. It also runs the scanner's `go vet` (Linux and Windows) and `go test`. On a tag push, images are pushed to `ghcr.io/<owner>/leaaf-web` and `ghcr.io/<owner>/leaaf-server` for `linux/amd64`.
 - **Domain (decided 2026-11-20):** `leaaf.green`, already registered by the team, so no domain purchase is needed. The scanner release build points at `https://leaaf.green`. DNS records for the chosen host are set up in T-008.
 - **Scanner build (adopted 2026-11-20):** A Go stage in `server/Dockerfile` cross-compiles with `GOOS=windows GOARCH=amd64` and injects the public URL and the release version with `-ldflags`. The server serves the binary at `/downloads/leaaf-scanner.exe`, appending the session trailer when asked.
@@ -84,7 +84,7 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 ## Dependencies and risks
 
 - **Dependency:** Features 001–004 implemented.
-- **Blocking:** Hosting provider not chosen; deployment requires explicit user authorization and host credentials, which the user provides.
+- ~~**Blocking:** Hosting provider not chosen; deployment requires explicit user authorization and host credentials, which the user provides.~~ *(Resolved 2026-11-21: the team's own server, see the host type above.)*
 - **Blocking for seeding:** The three models are selected. Seeding still needs real scans (feature 002, T-006).
 - **Risk:** An unsigned exe downloaded from a new domain triggers browser and SmartScreen warnings. Mitigation: guidance on the landing page; the demo laptop is prepared in advance.
 - **Risk:** SQLite on ephemeral PaaS storage loses data. Mitigation: a persistent volume is required (FR-008), with backup documented.
@@ -115,11 +115,11 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
   - The seeded demo reports render with the LLM disabled.
   - The 429 behavior triggers.
 - **Stop condition:** Any failed check. Recover by rollback.
-- **Execution:** Release execution and live verification are in scope, pending user authorization and host choice.
+- **Execution:** Release execution and live verification are in scope. *(2026-11-21: `v0.5.0` is deployed at `https://leaaf.green`; the date of the first deployment is not recorded here. Seeding is not done.)*
 
 ## Assumptions and open questions
 
-- **Blocking:** Which VPS provider, and who owns the account and credentials? (The host type is decided: a VPS with an external Caddy.)
+- **Decided 2026-11-21:** The host is the team's own server in Vorarlberg, operated by Marco Stadelmann, who holds its access. (Previously blocking: "Which VPS provider, and who owns the account?")
 - **Open:** Whether the GHCR packages are public, or the host logs in with a read-only token. Default: the host logs in (see `docs/DEPLOYMENT.md`).
 - **Decided 2026-11-20:** Configurable defaults are 10 uploads and 60 report requests per client per hour, and 200 provider attempts per UTC day. The upload ceiling defaults to 32 KiB. See the [server configuration](../../../server/README.md#request-limits).
 - **Open:** Whether to keep the public deployment running after the hackathon. Default: until the user decides otherwise.
@@ -131,6 +131,8 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 | 2026-11-20 | Initial approved scope | User replied "accept" to the five-feature MVP proposal in the specification conversation, 2026-11-20 |
 | 2026-11-20 | Scope revision before implementation. Adds two images (`web`, `server`), a CI workflow that publishes them to GHCR (FR-010, FR-011), and an example production Compose file for an external Caddy (FR-012). Narrows the CI/CD exclusion to automatic deployment only. Adopts two-image packaging instead of one image, and a VPS with external Caddy as the host type. The server image is prepared but not runnable until feature 001 adds the HTTP entry point. The web image builds in mock mode for now. | User chose "Accept and implement" in the docker/CI conversation, 2026-11-20. They chose "Dockerfile only" for the server ("let's just wait with the backend / server") and asked to publish only when a tag is pushed |
 | 2026-11-20 | Decisions within FR-002, FR-010, and FR-012, no requirement changed. CI also runs the scanner's Go checks. The server image builds and serves the scanner release (FR-002). The web image is built against the real API, and the example Compose file runs the server by default. Accepted consequence: until features 003 and 004 exist, a real scan ends on a result screen with a connection error instead of the ranked paths. | User asked to fix the three gaps reported after the merge ("Fix these. Commit on main") and chose "Real API only" over a separate demo image or an opt-in switch, 2026-11-20 |
+
+| 2026-11-21 | FR-010 and AC-012 no longer require a pull request run: the workflow is verified on pushes to `main` (the `pull_request` trigger stays in the workflow but is unused). FR-012 and AC-014 accept ports published on all interfaces with the host firewall keeping them closed (production change 6c85995). The host is recorded as the team's own server. | User, 2026-11-21: "remove that need entirely, we do not work with PRs here in this repo/team"; for the ports the user chose "Accept and document"; for the host "Marco's own server" |
 
 ## Related and superseded features
 
@@ -145,4 +147,4 @@ None superseded. Deploys features [001](../feature-001-device-scan-and-upload/PL
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
 - Deployment guide: `docs/DEPLOYMENT.md` (to be created by this feature)
-- Related ADRs: [ADR-006](../../adr/adr-006-images-ghcr-vps-caddy.md) (two images on GHCR, VPS behind an external Caddy)
+- Related ADRs: [ADR-006](../../adr/adr-006-images-ghcr-vps-caddy.md) (two images on GHCR behind an external Caddy; the host is now the team's own server, see its note)
