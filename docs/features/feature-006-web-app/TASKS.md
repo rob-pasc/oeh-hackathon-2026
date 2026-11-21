@@ -22,7 +22,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-013:** Add the path tags to the toolbar and the steps view with step blocks, with tests (supports `AC-016`)
 - [x] **T-014:** Add the option cards to the path tabs: types, option view builder, sample data, path tab view, gauge following the option, with tests (supports `AC-018`, `AC-020`)
 - [x] **T-015:** Align the toolbar with the result columns and restyle the Use dropdown chevron (supports `AC-019`)
-- [ ] **T-016:** Agree the option payload with the backend team (`DESIGN.md`) and show real options in live mode (supports `AC-018`)
+- [x] **T-016:** Agree the option payload with the backend team (`DESIGN.md`) and show real options in live mode (supports `AC-018`) *(Closed 2026-11-21 without further work: feature 008 replaced FR-017 with its `CategoryResult` options, which live mode shows on `main`. AC-018 stays `Not run` as a historical record of the replaced behavior; see the supersession note in the acceptance criteria.)*
 - [x] **T-017:** Add the contact footer to every screen and write the header wordmark in capitals (supports `AC-021`)
 - [x] **T-018:** Lowercase wordmark in the header; 5 px more space under the scan button (supports `AC-022`)
 - [x] **T-019:** Add the `general` use tag (supports `AC-023`)
@@ -94,3 +94,4 @@ The first version was written without network access. After the merge into `main
 - 2026-11-21: Eighteenth scope extension by amendment (FR-049, AC-059, T-045: "None" instead of a negative CO₂e avoided range); see the plan's scope change log. Status set from `Implemented (verification pending)` to `In progress` for the implementation.
 - 2026-11-21: Nineteenth scope extension by amendment (FR-050 to FR-053, AC-060 to AC-063, T-046, T-047: name in the loading and result headers, segmented system switch, scanner disclosure moved down, category tab row without scrollbar); see the plan's scope change log. Implemented the same day; verification by the team pending.
 - 2026-11-21: T-045 implemented and verified (AC-059 passes; see the acceptance criteria). Status back to `Implemented (verification pending)`: the team browser review (T-009) and T-016 remain.
+- 2026-11-21: T-016 closed as replaced by feature 008 (FR-017). Remaining: the team browser review (T-009) and the legal follow-ups T-041 and T-042.
