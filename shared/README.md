@@ -13,6 +13,7 @@ The data contracts between the scanner, server, and web app. They are defined wi
 | `Assessment` | `src/assessment.ts` | server → web | 003 |
 | `Report`, `StreamEnd`, SSE events | `src/report.ts` | server → web | 004 |
 | `CategoryResult`, `Category`, `CategoryOption`, option kinds and difficulties; the optional combined `Plan` and `PlanStep` (013) | `src/categories.ts` | server → web | 008, 013 |
+| `PlanStepList`: one step list for the plan, up to 16 steps, `option_id` `#plan` | `src/steps.ts` | server → web | 014 |
 | `StepPlan`, `Step`, step safety flags and kinds | `src/steps.ts` | server → web | 009 |
 | `ScanSession`, `ScannerEvent`, `ScanSessionEvent`, `SessionId` | `src/session.ts` | server ↔ web and scanner | 006 |
 | Routes | `src/api.ts` | all | 001–004, 006, 009 |

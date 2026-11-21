@@ -43,6 +43,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   /** Key of the option last opened in each category tab; the gauge follows it (feature 011 FR-001, FR-002). */
   const [openedInTab, setOpenedInTab] = useState<Record<string, string>>({})
   const [openOption, setOpenOption] = useState<string | null>(null)
+  const [planOpen, setPlanOpen] = useState(false)
   const plans = useStepPlans(deviceId, use)
 
   // Scan data: loaded once per device.
@@ -67,6 +68,8 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     setCategories(null)
     setStreamError(null)
     setStreamEnded(false)
+    // A new use has its own plan and step list, so the plan card starts closed again (feature 014).
+    setPlanOpen(false)
     return api.streamReport(deviceId, use, {
       onAssessment: value => { setAssessment(value); setChange([]) },
       onCategories: value => { setCategories(value); setChange([]) },
@@ -175,7 +178,19 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
               />
             ) : categories ? (
               <>
-                {planView ? <PlanCard view={planView} selected={overviewPlan !== null} /> : null}
+                {planView ? (
+                  <PlanCard
+                    view={planView}
+                    selected={overviewPlan !== null}
+                    open={planOpen}
+                    steps={plans.getPlan()}
+                    onToggle={() => {
+                      // Opening the card for the first time requests the plan's step list (feature 014 FR-001).
+                      if (!planOpen) plans.requestPlan()
+                      setPlanOpen(!planOpen)
+                    }}
+                  />
+                ) : null}
                 <RecommendationSummary recommended={recommended} baseline={assessment.baseline.description} />
                 {categoryViews.map(view => (
                   <div key={view.key} ref={registerCard(view.key)}>

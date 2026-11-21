@@ -81,7 +81,7 @@ Completion boundary: locally verified handoff with self-review, committed on the
 
 ## Related and superseded features
 
-- [Feature 009](../feature-009-concrete-step-plans/PLAN.md): its step rules are reused for the plan; single-option step plans are unchanged. Planned extension, not yet implemented.
+- [Feature 009](../feature-009-concrete-step-plans/PLAN.md): its step rules are reused for the plan; single-option step plans are unchanged. Implemented 2026-11-21 on `feat/combined-plan`; reciprocal note in the feature 009 plan.
 - [Feature 013](../feature-013-combined-plan-card/PLAN.md): provides the plan and the card this list appears in.
 
 ## References

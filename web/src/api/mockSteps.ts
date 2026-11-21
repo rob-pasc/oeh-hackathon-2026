@@ -4,7 +4,7 @@
 // steps (shared/fixtures/steps.templates.json), with the notice the server sends with them.
 import type { CategoryResult, OptionKind } from '@leaaf/shared/categories'
 import type { IntendedUse } from '@leaaf/shared/common'
-import type { Step, StepPlan } from '@leaaf/shared/steps'
+import { MAX_PLAN_STEPS, PLAN_STEPS_ID, type PlanStepList, type Step, type StepPlan } from '@leaaf/shared/steps'
 import laptopSsdJson from '@leaaf/fixtures/steps.example-laptop-14.office.json'
 import templatesJson from '@leaaf/fixtures/steps.templates.json'
 import { LAPTOP_CATEGORIES } from './mockCategories'
@@ -166,6 +166,36 @@ export function laptopPlan(deviceId: string, use: IntendedUse, optionId: string)
     notice: null,
     steps: structuredClone(steps),
     passages: LAPTOP_CATEGORIES.passages.filter((p) => cited.has(p.passage_id)),
+  }
+}
+
+/**
+ * The sample step list of the laptop's plan (feature 014 FR-007): the sample plans of its steps in the
+ * plan's order, with repeated steps (such as backing up) named once, as the server asks the AI to.
+ */
+export function laptopPlanSteps(deviceId: string, use: IntendedUse): PlanStepList | null {
+  const plan = LAPTOP_CATEGORIES.plan
+  if (!plan) return null
+  const seen = new Set<string>()
+  const steps: Step[] = []
+  for (const { option_id } of plan.steps)
+    for (const s of laptopPlan(deviceId, use, option_id)?.steps ?? [])
+      if (!seen.has(s.title)) {
+        seen.add(s.title)
+        steps.push(s)
+      }
+  const listed = steps.slice(0, MAX_PLAN_STEPS)
+  const cited = new Set(listed.flatMap((s) => s.passage_ids))
+  const passages = [...LAPTOP_CATEGORIES.passages, ...((laptopSsdJson as unknown as StepPlan).passages)]
+  return {
+    device_id: deviceId,
+    intended_use: use,
+    option_id: PLAN_STEPS_ID,
+    generated_at: generatedAt,
+    source: 'llm',
+    notice: null,
+    steps: listed,
+    passages: passages.filter((p, i) => cited.has(p.passage_id) && passages.findIndex((q) => q.passage_id === p.passage_id) === i),
   }
 }
 

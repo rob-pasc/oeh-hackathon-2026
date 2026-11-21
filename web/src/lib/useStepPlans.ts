@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react'
 import { ApiClientError, useApi } from '../api'
 import type { UseTag } from './labels'
+import { PLAN_STEPS_ID, type StepPlan } from '@leaaf/shared/steps'
 import type { StepState } from './steps'
 
 /**
@@ -16,25 +17,30 @@ export function useStepPlans(deviceId: string, use: UseTag) {
 
   const key = useCallback((optionId: string) => `${use}\0${optionId}`, [use])
 
-  const request = useCallback(
-    (optionId: string) => {
-      const k = key(optionId)
-      if (requested.current.has(k)) return
-      requested.current.add(k)
-      setPlans((p) => ({ ...p, [k]: { state: 'loading' } }))
-      api.getSteps(deviceId, use, optionId).then(
-        (plan) => setPlans((p) => ({ ...p, [k]: { state: 'ready', plan } })),
-        (error: unknown) => {
-          requested.current.delete(k)
-          const message = error instanceof ApiClientError ? error.message : 'Something went wrong.'
-          setPlans((p) => ({ ...p, [k]: { state: 'error', message } }))
-        },
-      )
-    },
-    [api, deviceId, use, key],
-  )
+  /** Loads one list once per key; a failed request is removed so that reopening tries again. */
+  const load = useCallback((k: string, fetchList: () => Promise<StepPlan>) => {
+    if (requested.current.has(k)) return
+    requested.current.add(k)
+    setPlans((p) => ({ ...p, [k]: { state: 'loading' } }))
+    fetchList().then(
+      (plan) => setPlans((p) => ({ ...p, [k]: { state: 'ready', plan } })),
+      (error: unknown) => {
+        requested.current.delete(k)
+        const message = error instanceof ApiClientError ? error.message : 'Something went wrong.'
+        setPlans((p) => ({ ...p, [k]: { state: 'error', message } }))
+      },
+    )
+  }, [])
 
+  const request = useCallback(
+    (optionId: string) => load(key(optionId), () => api.getSteps(deviceId, use, optionId)),
+    [api, deviceId, use, key, load],
+  )
   const get = useCallback((optionId: string): StepState | undefined => plans[key(optionId)], [plans, key])
 
-  return { get, request }
+  // The plan's single list (feature 014) is kept like an option's plan, under an ID no option can have.
+  const requestPlan = useCallback(() => load(key(PLAN_STEPS_ID), () => api.getPlanSteps(deviceId, use)), [api, deviceId, use, key, load])
+  const getPlan = useCallback((): StepState | undefined => plans[key(PLAN_STEPS_ID)], [plans, key])
+
+  return { get, request, getPlan, requestPlan }
 }

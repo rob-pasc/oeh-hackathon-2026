@@ -123,6 +123,7 @@ The replacements below were implemented 2026-11-21 on `main` (commits 22938bd "f
 - [`feature-010-step-level-knowledge-base`](../feature-010-step-level-knowledge-base/PLAN.md) supplies the sources these steps cite.
 
 **State before this feature (2026-11-21, after feature 008 was merged into `main`, 17c04b4).** The behaviour named above for replacement was already gone from the result screen. The report stream no longer sends feature 004's explained report, so its "What to do next" sections are not shown. Feature 006's path step blocks and proposed option cards were replaced by 008's option cards, which show "Why" and up to two sources but no steps. This feature fills that steps area. The fallback categories of 008 FR-013 carry `path` and the option kinds of `shared/src/categories.ts`, as FR-011 and FR-012 here expect.
+- [`feature-014-plan-step-list`](../feature-014-plan-step-list/PLAN.md) reuses this feature's step rules (FR-002 to FR-008, FR-011) for one step list of the combined plan, with up to 16 steps; single-option plans are unchanged. Implemented 2026-11-21 on `feat/combined-plan`.
 
 ## References
 
