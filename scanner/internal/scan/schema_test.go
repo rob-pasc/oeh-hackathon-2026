@@ -35,6 +35,10 @@ func TestOutputMatchesSharedSchema(t *testing.T) {
 	mem, _ := ParseSMBIOS(smbiosTable(t))
 	linux.Privileged = &Privileged{Memory: &mem, DiskHealth: map[string]string{"nvme0n1": "healthy"}}
 	cases["linux/laptop.txt with the root helper"] = linux
+	for _, name := range []string{"applesilicon", "intel", "desktop"} {
+		cases["darwin/"+name] = loadDarwin(t, name)
+	}
+	cases["macOS, all sources failed"] = RawDarwin{}
 	for name, raw := range cases {
 		data, err := json.Marshal(raw.Payload(testMeta))
 		if err != nil {

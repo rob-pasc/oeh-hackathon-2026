@@ -1,0 +1,79 @@
+{
+  "SPDisplaysDataType": [
+    {
+      "_name": "Apple M2",
+      "spdisplays_mtlgpufamilysupport": "spdisplays_metal3",
+      "spdisplays_ndrvs": [
+        { "_name": "Color LCD", "_spdisplays_display-serial-number": "PLANTED-DISPLAY-SERIAL", "spdisplays_main": "spdisplays_yes" }
+      ],
+      "spdisplays_vendor": "sppci_vendor_Apple",
+      "sppci_bus": "spdisplays_builtin",
+      "sppci_cores": "8",
+      "sppci_device_type": "spdisplays_gpu",
+      "sppci_model": "Apple M2"
+    }
+  ],
+  "SPHardwareDataType": [
+    {
+      "_name": "hardware_overview",
+      "activation_lock_status": "activation_lock_enabled",
+      "boot_rom_version": "11881.121.1",
+      "chip_type": "Apple M2",
+      "machine_model": "Mac14,2",
+      "machine_name": "MacBook Air",
+      "model_number": "MLY33D/A",
+      "number_processors": "proc 8:4:4",
+      "os_loader_version": "11881.121.1",
+      "physical_memory": "8 GB",
+      "platform_UUID": "PLANTED-0A1B2C3D-4E5F-6071-8293-A4B5C6D7E8F9",
+      "provisioning_UDID": "PLANTED-00008112-001A2B3C4D5E6F70",
+      "serial_number": "PLANTED-C02ZK1ABCDEF"
+    }
+  ],
+  "SPMemoryDataType": [{ "SPMemoryDataType": "8 GB", "dimm_manufacturer": "Hynix", "dimm_type": "LPDDR5" }],
+  "SPNVMeDataType": [
+    {
+      "_items": [
+        {
+          "_name": "APPLE SSD AP0256Z",
+          "bsd_name": "disk0",
+          "detachable_drive": "no",
+          "device_model": "APPLE SSD AP0256Z",
+          "device_revision": "387.120.",
+          "device_serial": "PLANTED-0ba01234567890ab",
+          "partition_map_type": "guid_partition_map_type",
+          "removable_media": "no",
+          "size": "251 GB",
+          "size_in_bytes": 251000193024,
+          "smart_status": "Verified",
+          "spnvme_trim_support": "Yes",
+          "volumes": [{ "_name": "PLANTED Robins Disk", "bsd_name": "disk0s2" }]
+        }
+      ],
+      "_name": "Apple SSD Controller"
+    },
+    {
+      "_items": [
+        {
+          "_name": "Samsung SSD 990 PRO 2TB",
+          "bsd_name": "disk4",
+          "detachable_drive": "yes",
+          "device_serial": "PLANTED-S6Z2NJ0W",
+          "removable_media": "no",
+          "size_in_bytes": 2000398934016,
+          "smart_status": "Verified"
+        }
+      ],
+      "_name": "Generic SSD Controller"
+    }
+  ],
+  "SPPowerDataType": [
+    {
+      "_name": "spbattery_information",
+      "sppower_battery_charge_info": { "sppower_battery_at_warn_level": "FALSE", "sppower_battery_fully_charged": "FALSE", "sppower_battery_is_charging": "FALSE", "sppower_battery_state_of_charge": 80 },
+      "sppower_battery_health_info": { "sppower_battery_cycle_count": 210, "sppower_battery_health": "Good", "sppower_battery_health_maximum_capacity": "90%" },
+      "sppower_battery_model_info": { "sppower_battery_device_name": "bq40z651", "sppower_battery_manufacturer": "SMP", "sppower_battery_serial_number": "PLANTED-F5D1234ABCDEFG" }
+    },
+    { "_name": "sppower_information", "AC Power": { "Current Power Source": "FALSE" } }
+  ]
+}

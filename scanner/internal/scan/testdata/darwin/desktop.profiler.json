@@ -1,0 +1,7 @@
+{
+  "SPDisplaysDataType": [{ "sppci_model": "Apple M1" }],
+  "SPHardwareDataType": [{ "chip_type": "Apple M1", "machine_model": "Macmini9,1", "machine_name": "Mac mini", "model_number": "MGNR3D/A", "serial_number": "PLANTED-H2WD1234Q6NV" }],
+  "SPMemoryDataType": [{ "dimm_type": "LPDDR4" }],
+  "SPNVMeDataType": [{ "_items": [{ "detachable_drive": "no", "size_in_bytes": 245107195904, "smart_status": "Verified" }] }],
+  "SPPowerDataType": [{ "_name": "sppower_information" }]
+}
