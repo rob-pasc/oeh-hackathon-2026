@@ -1,36 +1,49 @@
 # leaaf: Lifecycle Evaluation and Action Finder
 
-**Status:** In progress. Six MVP features are specified. The shared data contracts (`shared/`) are implemented and tested. The web app (`web/`) supports both live and sample data and passes its automated checks; the wider team browser review is pending. The Windows scanner (`scanner/`) and the server's device upload API are built and tested on recorded readings. One elevated scan on a real Windows 11 laptop uploaded a complete record through **Scan now** against the local stack. The remaining Windows checks (declining the prompt, the offline retry) are open. The server also has the LLM adapter, fact extraction, the sourced impact table (`data/impact.yaml`), and the assessment core (gates, impact ranges, scoring, weights in `config/weights.yaml`), and retrieval over a curated corpus of 31 sourced documents for the three demo models (ThinkPad T480, XPS 13 9360, EliteBook 840 G5) in `corpus/`. The report stream (`GET /api/devices/:id/report`) ties these together and sends the ranked assessment for six intended uses, including `general` and `gaming`; the [explained report](docs/features/feature-004-explained-report/PLAN.md) now follows the assessment with checked citations and explanations cached per device and use. A missing or unavailable LLM triggers explanations from the assessment. The report UI, source links and keyboard journey were verified at phone and laptop widths. The landing page discloses the scanner data before download. The API enforces per-client request limits and a daily provider allowance. Container images for `web` (on the real API) and `server` (with the Windows scanner) have a CI build and a GHCR publishing workflow triggered by tag pushes ([deployment guide](docs/DEPLOYMENT.md)).
+Most of a laptop's carbon footprint comes from making it, so the greenest laptop is usually the one you already own. Yet old laptops end up in a drawer or as e-waste, because working out what to do with them takes time and know-how. **leaaf**, our project for the ÖH Hackathon 2026 on the theme *AI for Green*, does that work for you. Run a small scanner on an old Windows laptop, and leaaf ranks its five possible next lives (**upgrade**, **repair**, **pass it on**, **salvage for parts** or **recycle**), with cited evidence and honest cost and CO₂e ranges.
 
-ÖH Hackathon 2026 project (theme: AI for Green), planned to run at [leaaf.green](https://leaaf.green) (not deployed yet). A small Windows scanner reads an old laptop's hardware. The platform then ranks five next lives for it (upgrade, repair, pass it on, salvage for parts, recycle) in Environment first or Money first mode, with cited evidence and honest cost and CO₂e ranges.
+## How it works
 
-## Planned features (build order)
+1. **Scan.** Download the Windows scanner from the website and run it. It reads only the hardware facts it needs (no serial numbers, accounts or personal files) and uploads them.
+2. **Assess.** The server matches the laptop to a curated knowledge base of manufacturer manuals, repair guides and regulations. An LLM extracts facts from those sources, and fixed rules decide which paths are feasible and safe.
+3. **Rank and explain.** Choose an intended use (for example office or gaming) and a priority (*Environment first* or *Money first*). leaaf ranks the five paths and explains each one, citing its sources, and says "cannot verify" where evidence is missing.
 
-1. [Device scan and upload](docs/features/feature-001-device-scan-and-upload/PLAN.md)
-2. [Curated knowledge base and model-aware retrieval](docs/features/feature-002-knowledge-base-retrieval/PLAN.md)
-3. [Five-path assessment and ranking](docs/features/feature-003-five-path-ranking/PLAN.md)
-4. [Explained report](docs/features/feature-004-explained-report/PLAN.md)
-5. [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md)
-6. [Web app: landing, scan session, results](docs/features/feature-006-web-app/PLAN.md)
+## Status
 
-Stack: a Go scanner for Windows, a TypeScript/Node backend with SQLite, and a React web app (Vite, Tailwind). The LLM is reached through an OpenAI-compatible adapter, currently DeepSeek `deepseek-flash` via its official API ([ADR-002](docs/adr/adr-002-llm-openai-compatible-deepseek.md), implemented in `server/src/llm/`).
+**In progress.** The full journey works locally, from scan to explained report. The scanner has completed one scan on a real Windows 11 laptop. The first release images (`v0.1.0`) are published to GHCR. The public site at [leaaf.green](https://leaaf.green) is not deployed yet.
+
+| # | Feature | Status |
+|---|---|---|
+| 001 | [Device scan and upload](docs/features/feature-001-device-scan-and-upload/PLAN.md) | In progress: the remaining Windows checks |
+| 002 | [Knowledge base and retrieval](docs/features/feature-002-knowledge-base-retrieval/PLAN.md) | In progress: needs real scans of the demo models |
+| 003 | [Five-path assessment and ranking](docs/features/feature-003-five-path-ranking/PLAN.md) | In progress: sourcing the impact data for the demo models |
+| 004 | [Explained report](docs/features/feature-004-explained-report/PLAN.md) | Complete |
+| 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: the hosting provider isn't chosen yet |
+| 006 | [Web app](docs/features/feature-006-web-app/PLAN.md) | Implemented, awaiting the team's browser review |
+
+The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP EliteBook 840 G5.
+
+## Tech stack
+
+- **Scanner:** Go, as a single Windows executable with a [Gio](https://gioui.org) window
+- **Server:** TypeScript on Node 24, Fastify and SQLite (with full-text search for retrieval)
+- **Web app:** React, Vite and Tailwind CSS
+- **LLM:** DeepSeek `deepseek-flash`, called through an OpenAI-compatible adapter ([ADR-002](docs/adr/adr-002-llm-openai-compatible-deepseek.md))
 
 ## Repository layout
 
-| Folder | Contents | Owning feature |
-|---|---|---|
-| [`scanner/`](scanner/) | Go Windows hardware scanner | 001, 005 (release build) |
-| [`server/`](server/) | TypeScript/Node API, storage, retrieval, assessment, reports | 001–005 |
-| [`web/`](web/) | React web app | 001, 003, 004, 006 |
-| [`shared/`](shared/) | Data contracts (TypeBox → JSON Schema), fixtures, and ranking helpers | 001–004 |
-| [`corpus/`](corpus/) | Curated knowledge base and its manifest | 002 |
-| [`data/`](data/) | Static impact table (CO₂e, prices, useful life) | 003 |
-| [`config/`](config/) | Ranking weights (illustrative) | 003 |
-| [`demo/`](demo/) | Seeded demo device scans and caches | 005 |
-| [`deploy/`](deploy/) | Example production Compose file and env templates | 005 |
-| [`docs/`](docs/) | Product, workflow, feature specs, ADRs | — |
-
-`demo/` contains only a README placeholder so far.
+| Folder | Contents |
+|---|---|
+| [`scanner/`](scanner/) | Go Windows hardware scanner |
+| [`server/`](server/) | API, storage, retrieval, assessment and reports |
+| [`web/`](web/) | React web app |
+| [`shared/`](shared/) | Data contracts (TypeBox → JSON Schema), fixtures and ranking helpers |
+| [`corpus/`](corpus/) | Curated knowledge base and its manifest |
+| [`data/`](data/) | Impact table (CO₂e, prices, useful life) |
+| [`config/`](config/) | Ranking weights (illustrative) |
+| [`deploy/`](deploy/) | Example production Compose file and env template |
+| [`demo/`](demo/) | Seeded demo devices (placeholder so far) |
+| [`docs/`](docs/) | Product, workflow, feature specs and ADRs |
 
 ## Development setup
 
