@@ -2,7 +2,7 @@
 
 How leaaf is built, published, and run in production. Scope and open decisions are in [feature 005](features/feature-005-public-demo-deployment/PLAN.md). This guide does not authorize a deployment; each release to the public host needs the team's go-ahead.
 
-**Deployment status (updated 2026-11-21).** `https://leaaf.green` runs `v0.5.0` on the team's own server in Vorarlberg, operated by Marco Stadelmann, behind Caddy. The post-release smoke checks, the HTTPS check and the rate-limit check passed from outside on 2026-11-21 (feature 005 AC-001, AC-005). The repository and scanner secret scan passed (AC-007). Still open: demo seeding, the backup and restore procedure and its rehearsal, the rollback rehearsal, and the host-side port check (AC-014).
+**Deployment status (updated 2026-11-21).** `https://leaaf.green` runs `v0.5.0` on the team's own server in Vorarlberg, operated by Marco Stadelmann, behind Caddy. The post-release smoke checks, the HTTPS check and the rate-limit check passed from outside on 2026-11-21 (feature 005 AC-001, AC-005). The repository and scanner secret scan passed (AC-007). Still open: the backup and restore procedure and its rehearsal, the rollback rehearsal, and the host-side port check (AC-014).
 
 ## Release images
 
@@ -104,7 +104,7 @@ curl -sS -D - -o /dev/null -X POST https://leaaf.green/api/admin/login -H 'conte
 
 With the admin area on, log in at `https://leaaf.green/admin` in a browser, check that the scans are listed, and look at the `leaaf_admin` cookie in the developer tools: `HttpOnly`, `Secure`, `SameSite=Strict`, path `/api/admin`. Six quick wrong logins from one client should end in 429.
 
-Open `https://leaaf.green` in a browser and check that the landing page loads over HTTPS without the "Sample data" label. For the rate-limit smoke check, use a dedicated test client and repeatedly request the report for a missing device with a valid use. Expect 404 until the configured report allowance is spent, then 429 with a positive Retry-After. From a second client IP the first request should still return 404. Repeat on the upload route with an empty JSON object (400 until 429). This checks both client separation through Caddy and the limits without storing scans or calling the provider. Add a seeded-report check when the seed command is available.
+Open `https://leaaf.green` in a browser and check that the landing page loads over HTTPS without the "Sample data" label. For the rate-limit smoke check, use a dedicated test client and repeatedly request the report for a missing device with a valid use. Expect 404 until the configured report allowance is spent, then 429 with a positive Retry-After. From a second client IP the first request should still return 404. Repeat on the upload route with an empty JSON object (400 until 429). This checks both client separation through Caddy and the limits without storing scans or calling the provider.
 
 ## Rollback and data
 

@@ -10,11 +10,11 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-001:** Get the user's choice of hosting provider and account ownership, and record it in the plan (supports `AC-001`) *(2026-11-21: the team's own server in Vorarlberg, operated by Marco Stadelmann; recorded in the plan.)*
 - [x] **T-002:** Add the Dockerfile and production config (static web assets, persistent volume path, environment variables) (supports `AC-001`, `AC-008`)
 - [x] **T-003:** Implement the size limits, per-client rate limits, and daily LLM cap with fallback, with tests (supports `AC-005`, `AC-006`)
-- [ ] **T-004:** Implement the idempotent seed command and the demo device and cache files, with tests including an LLM-disabled render (supports `AC-003`, `AC-004`)
+- [x] ~~**T-004:** Implement the idempotent seed command and the demo device and cache files, with tests including an LLM-disabled render (supports `AC-003`, `AC-004`)~~ *(Removed 2026-11-21, not implemented: seeding was dropped by the user.)*
 - [x] **T-005:** Add the scanner release build with the public URL and serve it as the download; run a secret scan of the repository and the binary (supports `AC-002`, `AC-007`)
-- [ ] **T-006:** Write `docs/DEPLOYMENT.md` (deploy, seed, smoke checks, backup, rollback) (supports `AC-009`)
+- [ ] **T-006:** Write `docs/DEPLOYMENT.md` (deploy, ~~seed,~~ smoke checks, backup, rollback) (supports `AC-009`)
 - [ ] **T-007:** Self-review and request the user's security review or acceptance before go-live (supports `AC-011`)
-- [ ] **T-008:** With user authorization, deploy, seed, and run the post-release smoke checks, recording the version and evidence (supports `AC-001`–`AC-005`, `AC-008`)
+- [ ] **T-008:** With user authorization, deploy ~~, seed,~~ and run the post-release smoke checks, recording the version and evidence (supports `AC-001`–`AC-005`, `AC-008`)
 - [ ] **T-009:** Rehearse the rollback and backup restore, recording the outcome (supports `AC-010`)
 - [x] **T-010:** Update the README status and the feature index with the public deployment state (supports `AC-009`, `AC-011`) *(2026-11-21: README, `PRODUCT.md`, `docs/DEPLOYMENT.md` and the index say `v0.5.0` is live; update them again after seeding.)*
 - [x] **T-011:** *(Added 2026-11-20)* Add the `web` and `server` Dockerfiles, the nginx config, and `.dockerignore` (supports `AC-012`, `AC-014`; covers the image part of T-002)
@@ -27,7 +27,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - ~~**Blocking:** VPS provider undecided (T-001).~~ Resolved 2026-11-21: the team's own server. `v0.5.0` is deployed; further deployments still need the team's go-ahead (T-008).
 - AC-014 needs Marco to check the host: leaaf runs from `deploy/compose.yaml`, and its web and API ports are unreachable from outside (port 8080 on the public address is open).
 - The live web app uses the implemented assessment and explanation stream. Local request-limit verification is recorded in the acceptance criteria. Public verification awaits deployment.
-- Seeding awaits real scans for the three selected demo models and the seed implementation.
+- ~~Seeding awaits real scans for the three selected demo models and the seed implementation.~~ Seeding dropped 2026-11-21.
 
 ## Progress notes
 

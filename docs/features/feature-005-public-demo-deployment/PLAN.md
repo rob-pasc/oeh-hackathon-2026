@@ -6,12 +6,12 @@
 
 ## Summary
 
-leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner download there is built to upload to it, and a few pre-scanned demo devices are seeded with cached results. A judge can open a demo report even if the live scan, the LLM, or the venue network misbehaves. The public upload endpoint gets basic abuse protection, secrets stay on the host, and `docs/DEPLOYMENT.md` documents how to deploy, seed, check, and roll back.
+leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner download there is built to upload to it, and a few pre-scanned demo devices are seeded with cached results. A judge can open a demo report even if the live scan, the LLM, or the venue network misbehaves. *(2026-11-21: seeding was dropped; demos use live scans.)* The public upload endpoint gets basic abuse protection, secrets stay on the host, and `docs/DEPLOYMENT.md` documents how to deploy, seed, check, and roll back.
 
 ## Problem and desired outcome
 
 - **Problem:** A localhost-only demo cannot be tried by judges, and a live demo that depends on fresh LLM calls and venue Wi-Fi can fail at the worst moment.
-- **Desired outcome:** A stable public site with the full scan-to-report journey, and demo reports that work instantly from cached data.
+- **Desired outcome:** A stable public site with the full scan-to-report journey, and demo reports that work instantly from cached data *(the cached demo reports were dropped 2026-11-21)*.
 - **Target users / stakeholders:** Judges and demo audience; the hackathon team running the demo; device owners trying it out.
 
 ## Approved scope
@@ -20,10 +20,10 @@ leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner
 
 - Hosting the server and web app at a public HTTPS URL, with persistent storage.
 - A scanner build pointing at the public URL, served as the download.
-- A seed command for 2–3 demo devices (plus an "uncertain model" case if useful), from stored scan JSON, with cached facts and explanations.
+- A seed command for 2–3 demo devices (plus an "uncertain model" case if useful), from stored scan JSON, with cached facts and explanations. *(Removed 2026-11-21: seeding dropped, see the scope change log.)*
 - Request size limits and rate limiting on upload and assessment endpoints, and LLM spend containment.
 - Secrets configured only through host environment settings.
-- `docs/DEPLOYMENT.md` covering build, deploy, environment variables, seeding, smoke checks, backup, and rollback.
+- `docs/DEPLOYMENT.md` covering build, deploy, environment variables, ~~seeding,~~ smoke checks, backup, and rollback.
 - Executing the deployment once the user authorizes it.
 - *(Added 2026-11-20)* Two container images, `web` and `server`, built from the repository.
 - *(Added 2026-11-20)* A GitHub Actions workflow that runs the checks (type check, tests, build) and the image builds on pull requests and on `main`, and pushes the images to the GitHub Container Registry (GHCR) when a Git tag is pushed.
@@ -40,20 +40,20 @@ leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner
 
 - **FR-001:** The web app and API are reachable at a public HTTPS URL.
 - **FR-002:** The landing page's download link serves a scanner executable built with the public API URL; scanning a laptop with it creates a device record on the public deployment.
-- **FR-003:** A seed command loads the demo devices from scan JSON files in the repository and stores their extracted facts and explanations for each intended use, so their reports need no live LLM call. Re-running it does not duplicate records and keeps their device IDs.
-- **FR-004:** The seeded demo reports render fully (ranking, explanations, evidence, mode toggle) while the LLM API is unreachable or disabled.
+- **FR-003:** A seed command loads the demo devices from scan JSON files in the repository and stores their extracted facts and explanations for each intended use, so their reports need no live LLM call. Re-running it does not duplicate records and keeps their device IDs. *(Removed 2026-11-21: seeding dropped, see the scope change log.)*
+- **FR-004:** The seeded demo reports render fully (ranking, explanations, evidence, mode toggle) while the LLM API is unreachable or disabled. *(Removed 2026-11-21: seeding dropped, see the scope change log.)*
 - **FR-005:** The upload endpoint rejects bodies over the configured size limit, and the upload and assessment endpoints rate-limit requests per client (returning HTTP 429 when the limit is exceeded).
 - **FR-006:** Fresh LLM calls are bounded by a configurable daily cap. When the cap is reached, new assessments use the feature 004 template fallback instead of calling the LLM.
 - **FR-007:** The LLM API key and other secrets are set only in host environment configuration. None appear in the repository, the scanner binary, or responses to clients.
 - **FR-008:** Device records and caches persist across application restarts and redeployments.
-- **FR-009:** `docs/DEPLOYMENT.md` documents prerequisites, environment variables (names only), build and deploy steps, seeding, post-deploy smoke checks, backup of the SQLite database, and rollback to the previous release.
+- **FR-009:** `docs/DEPLOYMENT.md` documents prerequisites, environment variables (names only), build and deploy steps, ~~seeding,~~ post-deploy smoke checks, backup of the SQLite database, and rollback to the previous release.
 - **FR-010:** *(Added 2026-11-20; revised 2026-11-21: pull requests dropped, the team works without them)* Every push to `main` runs the type check, tests, and build for all workspaces, and builds both container images. A failure in any of them fails the workflow.
 - **FR-011:** *(Added 2026-11-20)* Pushing a Git tag runs the same checks and then publishes the `web` and `server` images to GHCR. Each image is tagged with the Git tag name, the short commit SHA, and `latest`, so any earlier release can be redeployed by its tag. Pull requests and pushes to `main` build the images without publishing them.
 - **FR-012:** *(Added 2026-11-20)* An example production Compose file runs the published images. The web container serves the built app with client-side route fallback. Both containers publish their ports only on the host's loopback interface for the external Caddy, and the server keeps its data on a named volume. *(Revised 2026-11-21: the file publishes both ports on all host interfaces, as the production host needs; the host firewall must keep them unreachable from outside, so only Caddy reaches them. Originally "on the host's loopback interface".)*
 
 ## Non-functional requirements and constraints
 
-- **Reliability:** Demo reports load in under 2 seconds from cache on the public host.
+- **Reliability:** Demo reports load in under 2 seconds from cache on the public host. *(Removed 2026-11-21: seeding dropped, see the scope change log.)*
 - **Security:** HTTPS only; rate limits; no secrets in client artifacts; logs do not contain full device IDs together with client IPs.
 - **Cost:** The hosting and LLM spend fit a hackathon budget; the daily LLM cap enforces the latter.
 - **Privacy:** Only feature 001's minimal payload is stored. The landing page's data disclosure stays accurate for the public deployment.
@@ -61,8 +61,8 @@ leaaf runs at a public HTTPS URL on the team's domain `leaaf.green`. The scanner
 ## User journeys and edge cases
 
 1. **Judge tries the site:** Opens the public URL, downloads the scanner, scans a laptop, and sees the report.
-2. **Network failure during the demo:** The presenter opens a seeded demo device link; the report and toggle work from cache.
-3. **LLM outage or cap reached:** New scans get template explanations with a notice; seeded devices are unaffected.
+2. **Network failure during the demo:** The presenter opens a seeded demo device link; the report and toggle work from cache. *(Removed 2026-11-21: seeding dropped, see the scope change log.)*
+3. **LLM outage or cap reached:** New scans get template explanations with a notice; seeded devices are unaffected. *(2026-11-21: no seeded devices any more.)*
 4. **Spam uploads:** Rapid uploads from one client get HTTP 429; oversized bodies are rejected.
 5. **Bad release:** The smoke checks fail after a deploy, and the team rolls back to the previous release following the guide; the database is untouched or restored from backup.
 
@@ -77,15 +77,15 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 - **CI (decided 2026-11-20):** One GitHub Actions workflow, `.github/workflows/ci.yaml`. It also runs the scanner's `go vet` (Linux and Windows) and `go test`. On a tag push, images are pushed to `ghcr.io/<owner>/leaaf-web` and `ghcr.io/<owner>/leaaf-server` for `linux/amd64`.
 - **Domain (decided 2026-11-20):** `leaaf.green`, already registered by the team, so no domain purchase is needed. The scanner release build points at `https://leaaf.green`. DNS records for the chosen host are set up in T-008.
 - **Scanner build (adopted 2026-11-20):** A Go stage in `server/Dockerfile` cross-compiles with `GOOS=windows GOARCH=amd64` and injects the public URL and the release version with `-ldflags`. The server serves the binary at `/downloads/leaaf-scanner.exe`, appending the session trailer when asked.
-- **Seeding:** `npm run seed` reads `demo/devices/*.json`, fixed demo device IDs, and pre-generated caches stored in `demo/cache/`.
+- **Seeding:** `npm run seed` reads `demo/devices/*.json`, fixed demo device IDs, and pre-generated caches stored in `demo/cache/`. *(Removed 2026-11-21: seeding dropped, see the scope change log.)*
 - **Rate limiting:** Independent in-process hourly windows for uploads and reports. The API trusts forwarded client addresses only from the configured Caddy peer. An additive SQLite table atomically reserves each outgoing provider attempt against the UTC day. Cached results and the existing template fallback remain available at the cap.
-- **Tests:** Automated tests for the size limit, 429 behavior, seed idempotency, cached render with the LLM disabled, and the daily cap fallback; a secret scan of the repository and the scanner binary; manual smoke checks on the public URL.
+- **Tests:** Automated tests for the size limit, 429 behavior, ~~seed idempotency, cached render with the LLM disabled,~~ and the daily cap fallback; a secret scan of the repository and the scanner binary; manual smoke checks on the public URL.
 
 ## Dependencies and risks
 
 - **Dependency:** Features 001–004 implemented.
 - ~~**Blocking:** Hosting provider not chosen; deployment requires explicit user authorization and host credentials, which the user provides.~~ *(Resolved 2026-11-21: the team's own server, see the host type above.)*
-- **Blocking for seeding:** The three models are selected. Seeding still needs real scans (feature 002, T-006).
+- ~~**Blocking for seeding:** The three models are selected. Seeding still needs real scans (feature 002, T-006).~~ Seeding dropped 2026-11-21.
 - **Risk:** An unsigned exe downloaded from a new domain triggers browser and SmartScreen warnings. Mitigation: guidance on the landing page; the demo laptop is prepared in advance.
 - **Risk:** SQLite on ephemeral PaaS storage loses data. Mitigation: a persistent volume is required (FR-008), with backup documented.
 
@@ -102,7 +102,7 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
   1. Build the image and the scanner.
   2. Provision the persistent volume and secrets.
   3. Deploy.
-  4. Run the seed.
+  4. ~~Run the seed.~~ (dropped 2026-11-21)
   5. Run the smoke checks.
   6. Publish the demo links to the team.
 - **Data and migrations:** Initial deployment only, with no existing data to migrate. Schema changes must stay additive during the hackathon.
@@ -112,10 +112,10 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
   - The landing page loads over HTTPS.
   - The download returns the exe.
   - A test upload returns a link.
-  - The seeded demo reports render with the LLM disabled.
+  - ~~The seeded demo reports render with the LLM disabled.~~ (dropped 2026-11-21)
   - The 429 behavior triggers.
 - **Stop condition:** Any failed check. Recover by rollback.
-- **Execution:** Release execution and live verification are in scope. *(2026-11-21: `v0.5.0` is deployed at `https://leaaf.green`; the date of the first deployment is not recorded here. Seeding is not done.)*
+- **Execution:** Release execution and live verification are in scope. *(2026-11-21: `v0.5.0` is deployed at `https://leaaf.green`; the date of the first deployment is not recorded here. Seeding was dropped the same day.)*
 
 ## Assumptions and open questions
 
@@ -133,6 +133,8 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 | 2026-11-20 | Decisions within FR-002, FR-010, and FR-012, no requirement changed. CI also runs the scanner's Go checks. The server image builds and serves the scanner release (FR-002). The web image is built against the real API, and the example Compose file runs the server by default. Accepted consequence: until features 003 and 004 exist, a real scan ends on a result screen with a connection error instead of the ranked paths. | User asked to fix the three gaps reported after the merge ("Fix these. Commit on main") and chose "Real API only" over a separate demo image or an opt-in switch, 2026-11-20 |
 
 | 2026-11-21 | FR-010 and AC-012 no longer require a pull request run: the workflow is verified on pushes to `main` (the `pull_request` trigger stays in the workflow but is unused). FR-012 and AC-014 accept ports published on all interfaces with the host firewall keeping them closed (production change 6c85995). The host is recorded as the team's own server. | User, 2026-11-21: "remove that need entirely, we do not work with PRs here in this repo/team"; for the ports the user chose "Accept and document"; for the host "Marco's own server" |
+
+| 2026-11-21 | Seeding removed before it was implemented: FR-003 and FR-004 with AC-003 and AC-004, task T-004, the seed parts of FR-009, AC-009, T-006 and T-008, journeys 2 and 3, the reliability goal and the seed steps of the rollout. The live site serves real scans. Struck-through text keeps the original scope readable. | User, 2026-11-21: chose "Drop it" for the seed command, after the live site was working |
 
 ## Related and superseded features
 

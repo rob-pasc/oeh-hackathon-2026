@@ -10,7 +10,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 
 ## Status
 
-**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). A "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). A password-protected admin page at `/admin` lists the stored scans with their details and AI status (feature 016). The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. CI publishes release images to GHCR when a tag is pushed; the newest tag, `v0.5.0`, adds the admin page (feature 016) and is live at [leaaf.green](https://leaaf.green), on the team's own server. Demo seeding and the backup and rollback rehearsals are still open (feature 005).
+**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). A "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). A password-protected admin page at `/admin` lists the stored scans with their details and AI status (feature 016). The scanner has completed one scan on a real Windows 11 laptop. The macOS and Linux scanners pass their automated tests but have not scanned a real Mac or Linux laptop yet. CI publishes release images to GHCR when a tag is pushed; the newest tag, `v0.5.0`, adds the admin page (feature 016) and is live at [leaaf.green](https://leaaf.green), on the team's own server. The backup and rollback rehearsals are still open (feature 005).
 
 | # | Feature | Status |
 |---|---|---|
@@ -18,7 +18,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 002 | [Knowledge base and retrieval](docs/features/feature-002-knowledge-base-retrieval/PLAN.md) | In progress: needs real scans of the demo models |
 | 003 | [Five-path assessment and ranking](docs/features/feature-003-five-path-ranking/PLAN.md) | In progress: sourcing the impact data for the demo models |
 | 004 | [Explained report](docs/features/feature-004-explained-report/PLAN.md) | Complete |
-| 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: `v0.5.0` is live; seeding, backup and rollback rehearsals are open |
+| 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: `v0.5.0` is live; backup and rollback rehearsals are open |
 | 006 | [Web app](docs/features/feature-006-web-app/PLAN.md) | Implemented, awaiting the team's browser review |
 | 007 | [macOS and Linux scanner](docs/features/feature-007-macos-linux-scanner/PLAN.md) | Implemented, awaiting real scans on a Mac and a Linux laptop |
 | 008 | [AI categories and options](docs/features/feature-008-ai-categories-and-options/PLAN.md) | Complete |
@@ -52,7 +52,7 @@ The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP 
 | [`data/`](data/) | Impact table (CO₂e, prices, useful life) |
 | [`config/`](config/) | Ranking weights (illustrative) |
 | [`deploy/`](deploy/) | Example production Compose file and env template |
-| [`demo/`](demo/) | Seeded demo devices (placeholder so far) |
+| [`demo/`](demo/) | The pitch deck |
 | [`docs/`](docs/) | Product, workflow, feature specs and ADRs |
 
 ## Development setup
