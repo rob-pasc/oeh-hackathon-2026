@@ -1,33 +1,38 @@
 # Implementation Tasks: AI categories and options
 
 - **Feature ID:** `feature-008-ai-categories-and-options`
-- **Status:** Specified
+- **Status:** Complete
 
 This is the **authoritative progress checklist**. Check a task only after its work is actually complete.
 
 ## Tasks
 
-- [ ] **T-001:** Add the `CategoryResult` contract (categories, options, kind, difficulty, impact source, criterion scores) to `shared/src/`, export its JSON Schema, add a fixture for the example laptop, and add contract tests (supports `AC-001`, `AC-002`)
-- [ ] **T-002:** Add option and category ranking to `shared/src/ranking.ts` with tests, including the Recommended rule (supports `AC-006`, `AC-007`, `AC-008`)
-- [ ] **T-003:** Map priced kinds to the calculator, validate AI-estimated ranges, derive criterion scores and confidence, and record the feasibility values per difficulty in the feature 003 rubric documentation (supports `AC-003`, `AC-004`, `AC-005`)
-- [ ] **T-004:** Build the category prompt and request, the shape and citation checks, the figure check, and the `category_cache` table; send the `categories` event on the report stream (supports `AC-001`, `AC-002`, `AC-012`, `AC-014`)
-- [ ] **T-005:** Convert the five-path assessment and template text into five fallback categories for every failure case (supports `AC-013`)
-- [ ] **T-006:** Commit the domain logic and server work with their tests (milestone)
-- [ ] **T-007:** Replace the web app's proposed option types with the shared contract; build the dynamic toolbar tabs, the ranked Overview, the category tab and option cards, the "AI estimate" label, and the gauge selection (supports `AC-008`–`AC-011`)
-- [ ] **T-008:** Add the sample categories for mock mode and the component tests (supports `AC-015`)
-- [ ] **T-009:** Run the live demo review on the three demo models and record the findings (supports `AC-016`)
-- [ ] **T-010:** Record the ADR for AI-chosen options; update `docs/PRODUCT.md`, the README, `docs/GLOSSARY.md`, the feature index, and the reciprocal notes in features 003, 004 and 006 (supports `AC-017`)
-- [ ] **T-011:** Run all checks, self-review the final diff against the plan, and record the findings and their resolution (supports `AC-017`)
+- [x] **T-001:** Add the `CategoryResult` contract (categories, options, kind, difficulty, impact source, criterion scores) to `shared/src/`, export its JSON Schema, add a fixture for the example laptop, and add contract tests (supports `AC-001`, `AC-002`)
+- [x] **T-002:** Add option and category ranking to `shared/src/ranking.ts` with tests, including the Recommended rule (supports `AC-006`, `AC-007`, `AC-008`)
+- [x] **T-003:** Map priced kinds to the calculator, validate AI-estimated ranges, derive criterion scores and confidence, and record the feasibility values per difficulty in the feature 003 rubric documentation (supports `AC-003`, `AC-004`, `AC-005`)
+- [x] **T-004:** Build the category prompt and request, the shape and citation checks, the figure check, and the `category_cache` table; send the `categories` event on the report stream (supports `AC-001`, `AC-002`, `AC-012`, `AC-014`)
+- [x] **T-005:** Convert the five-path assessment and template text into five fallback categories for every failure case (supports `AC-013`)
+- [x] **T-006:** Commit the domain logic and server work with their tests (milestone)
+- [x] **T-007:** Replace the web app's proposed option types with the shared contract; build the dynamic toolbar tabs, the ranked Overview, the category tab and option cards, the "AI estimate" label, and the gauge selection (supports `AC-008`–`AC-011`)
+- [x] **T-008:** Add the sample categories for mock mode and the component tests (supports `AC-015`)
+- [x] **T-009:** Run the live demo review on the three demo models and record the findings (supports `AC-016`)
+- [x] **T-010:** Record the ADR for AI-chosen options; update `docs/PRODUCT.md`, the README, `docs/GLOSSARY.md`, the feature index, and the reciprocal notes in features 003, 004 and 006 (supports `AC-017`)
+- [x] **T-011:** Run all checks, self-review the final diff against the plan, and record the findings and their resolution (supports `AC-017`)
 
 ## Dependencies and blockers
 
-- T-009 needs a configured `LLM_API_KEY` and real scans or fixtures of the demo models.
-- The open questions in the plan (timeout, thinking, feasibility values) must be settled during T-003 and T-004.
+- ~~T-009 needs a configured `LLM_API_KEY` and real scans or fixtures of the demo models.~~ Run 2026-11-21 with the configured key on synthetic scans; rerun with real scans when they exist.
+- ~~The open questions in the plan (timeout, thinking, feasibility values) must be settled during T-003 and T-004.~~ Settled 2026-11-21; see the plan's "Proposed technical approach".
 
 ## Progress notes
 
-None yet.
+- 2026-11-21: T-001 to T-005 done on branch `feat/ai-categories`. Contract in `shared/src/categories.ts` (with `checkCategoryResult` in `invariants.ts`), ranking in `shared/src/ranking.ts`, server module `server/src/categories/`. The shared fixture `categories.example-laptop-14.office.json` is generated by `server/scripts/category-fixture.ts` from the sample answer in `server/test/fixtures/`, and a server test fails when it is stale. Tests: `shared/test/contracts.test.ts`, `shared/test/ranking.test.ts`, `server/test/categories.test.ts`, `server/test/report-stream.test.ts`.
+- 2026-11-21: T-007 and T-008 done. The web app reads the `categories` event (`web/src/lib/categoryView.ts`, `CategoryTabView`, dynamic toolbar tabs, "AI estimate" on cards and gauge). The five assessed paths show until the categories arrive. Mock mode serves the shared fixture for the example laptop and a client-side five-path fallback for the desktop. The proposed `PathOption` types, `mockOptions.ts`, `optionView.ts`, `PathTabView`, `StepsView` and `ReportDetails` are removed, which resolves feature 006 T-016. The category tabs moved to their own row beside the priority toggle, because AI labels are longer than the path names.
+
+- 2026-11-21: T-009 to T-011 done. Live demo review via the new `npm run categories:smoke -w server`, ADR-003, documentation and reciprocal notes, self-review with three fixes (category deadline tests, Windows 11 check on labels, imports). See the acceptance criteria.
 
 ## Lifecycle history
 
 - 2026-11-21: Specified after the user accepted the scope in the conversation.
+- 2026-11-21: Implementation started on branch `feat/ai-categories` at the user's request ("Implement feature 008", "on a new feature branch"). Status Specified → Ready → In progress; no blockers besides T-009's need for an API key.
+- 2026-11-21: Complete at the agreed boundary (locally verified handoff with self-review) on branch `feat/ai-categories`, not merged into `main`. Covers FR-001 to FR-015 and AC-001 to AC-017; evidence in [ACCEPTANCE_CRITERIA.md](./ACCEPTANCE_CRITERIA.md).

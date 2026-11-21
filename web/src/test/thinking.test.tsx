@@ -67,7 +67,7 @@ describe('thinking line on the result screen', () => {
     expect(screen.getByTestId('result-skeleton')).toBeInTheDocument()
   })
 
-  it('shows in an opened card until the report arrives, then disappears', async () => {
+  it('shows above the paths and in an opened card until the categories arrive, then disappears', async () => {
     const api = createMockClient({ stepMs: 5, assessmentMs: 5, reportMs: 400 })
     render(
       <ApiContext.Provider value={api}>
@@ -75,9 +75,11 @@ describe('thinking line on the result screen', () => {
       </ApiContext.Provider>,
     )
     const upgrade = await screen.findByRole('region', { name: 'Upgrade' })
+    expect(screen.getAllByTestId('thinking')[0]).toHaveTextContent('Finding options for this computer…')
     await userEvent.click(within(upgrade).getByRole('button'))
     expect(within(upgrade).getByTestId('thinking')).toHaveTextContent('Writing the explanation…')
-    await waitFor(() => expect(within(upgrade).queryByTestId('thinking')).toBeNull(), { timeout: 3000 })
-    expect(within(upgrade).getAllByRole('listitem').length).toBeGreaterThan(0)
+    // The categories replace the paths, and nothing waits any more.
+    expect(await screen.findByRole('region', { name: 'Faster storage' }, { timeout: 3000 })).toBeInTheDocument()
+    expect(screen.queryByTestId('thinking')).toBeNull()
   })
 })

@@ -4,6 +4,7 @@ export * from './retrieval.ts'
 export * from './facts.ts'
 export * from './assessment.ts'
 export * from './report.ts'
+export * from './categories.ts'
 export * from './api.ts'
 export * from './session.ts'
 export * from './ranking.ts'
@@ -11,6 +12,7 @@ export * from './invariants.ts'
 export * from './validate.ts'
 
 import { Assessment } from './assessment.ts'
+import { CategoryResult } from './categories.ts'
 import { ApiError, DeviceRecord, DeviceScan, UploadResponse } from './device.ts'
 import { Fact, FactSet } from './facts.ts'
 import { Report, StreamEnd } from './report.ts'
@@ -29,6 +31,7 @@ export const TOP_LEVEL_SCHEMAS = {
   FactSet,
   Assessment,
   Report,
+  CategoryResult,
   StreamEnd,
   ScanSession,
   ScanSessionRequest,

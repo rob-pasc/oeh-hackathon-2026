@@ -3,6 +3,11 @@
 | Term | Meaning in this project | Notes / related terms |
 | ---- | ----------------------- | --------------------- |
 | Path | One of the five possible next lives for a device: **upgrade**, **repair**, **pass it on**, **salvage for parts**, **recycle**. | Contract keys: `upgrade`, `repair`, `pass_on`, `salvage`, `recycle`. Also called "action" or "outcome" in early notes. |
+| Category | A device-specific group of options chosen by the AI for one device and intended use, for example "Faster storage" or "Hand it down"; 3 to 6 per device. Shown as Overview cards and toolbar tabs. | Feature 008. `CategoryResult.categories`. The five-path fallback shows each path as a category. |
+| Option | One concrete action inside a category, for example "Swap the hard disk for a 500 GB SSD", with a status, reason, kind, difficulty, figures and scores. | Feature 008. Replaces the proposed per-path options of feature 006. |
+| Option kind | What an option does as far as the impact table can price it: `ssd`, `ram`, `battery`, `hand_down`, `salvage`, `recycle`, or `other`. | Priced kinds use the calculator; `other` uses an AI estimate. |
+| Difficulty | Who does an option and how: `diy_easy` (no tools, device stays closed), `diy_moderate` (owner opens it with common tools), `professional` (a service provider). | Sets the option's feasibility score (feature 003 design). |
+| AI estimate | Figures supplied by the AI for an option of kind `other`, accepted only after range checks and always labelled "AI estimate". | `impact_source: "ai_estimate"`; at most medium confidence. |
 | Intended use | The owner’s planned use. The first ranking uses General. Changing the selection recomputes the ranking. | Contract keys: `general`, `office`, `study`, `development`, `gaming`, `pass_on`. Changes the rubrics and baseline assumptions. |
 | Suitability status | The per-path result of the gates: `viable`, `conditional` (possible but unverified or needing professional help), or `not_suitable` (contradicted by a verified fact or unsafe). | Not-suitable paths have no score. |
 | Gate | A deterministic feasibility or safety rule applied before scoring. | Feature 003 |

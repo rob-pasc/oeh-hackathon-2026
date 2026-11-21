@@ -9,11 +9,13 @@ const BADGE: Record<Suitability, string> = {
   not_suitable: 'bg-rose-tint text-rose-ink',
 }
 
-/** Icon, rank, name, labels, one-sentence reason, and key figures of a path. Used by the path card and the steps view. */
-/** Classes of the flat, tinted block that shows a path's summary above its options. It is not clickable. */
+/** Classes of the flat, tinted block that shows a category's summary above its options. It is not clickable. */
 export const SUMMARY_BLOCK = 'flex items-center gap-4 rounded-[20px] bg-leaf-tint px-5 py-[18px]'
 
-/** `onTint` draws the icon tile white, for use on the tinted summary block. */
+/**
+ * Icon, rank, name, labels, one-sentence reason, and key figures of a path, category or option.
+ * `onTint` draws the icon tile white, for use on the tinted summary block.
+ */
 export function PathHeader({ view, onTint = false }: { view: CardView; onTint?: boolean }) {
   const muted = view.status === 'not_suitable'
   return (
@@ -35,6 +37,14 @@ export function PathHeader({ view, onTint = false }: { view: CardView; onTint?: 
           <span className={`rounded-full px-2.5 py-[3px] text-xs font-bold ${onTint && view.status === 'viable' ? 'bg-white text-leaf-deep' : BADGE[view.status]}`}>
             {view.statusLabel}
           </span>
+          {view.aiEstimate ? (
+            <span
+              title="These figures are an AI estimate, not calculated from our impact table."
+              className="cursor-help rounded-full border border-current px-2.5 py-[2px] text-xs font-bold text-amber-ink"
+            >
+              AI estimate
+            </span>
+          ) : null}
         </div>
         <span className="text-sm leading-snug text-muted">{view.summary}</span>
         <div className="flex flex-wrap gap-x-[18px] text-[13px]">

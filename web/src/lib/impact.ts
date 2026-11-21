@@ -49,3 +49,10 @@ export function formatAdded(impact: Impact): string {
   const lo = Math.max(0, round(low))
   return `+${lo === hi ? hi : `${lo}–${hi}`} kg`
 }
+
+/** CO₂e avoided against the baseline, as "120–322 kg"; can be negative when nothing is credited. */
+export function formatAvoided(impact: Impact): string {
+  const low = round(impact.co2e_kg.avoided_vs_baseline.low)
+  const high = round(impact.co2e_kg.avoided_vs_baseline.high)
+  return low === high ? `${low} kg` : `${low}–${high} kg`
+}

@@ -6,9 +6,9 @@ React + TypeScript single-page app (Vite, Tailwind CSS v4). Specified in [featur
 |---|---|
 | `/` | Landing page with **Scan now** |
 | `/s/:sessionId` | Scan session: result skeleton and live scanner status; becomes the result screen when the scan completes |
-| `/d/:deviceId` | Result screen: five ranked path cards, CO₂e gauge, scan specs, Use and priority toolbar, and expandable report evidence |
+| `/d/:deviceId` | Result screen: ranked AI categories with a tab per category, option cards, CO₂e gauge, scan specs, and the Use and priority toolbar ([feature 008](../docs/features/feature-008-ai-categories-and-options/PLAN.md)) |
 
-The recommendation summary uses calculator ranges. Open a path and its evidence disclosure for excerpts and source links. Switching priority reorders the paths locally and explains which weight changes affected the order.
+The five assessed paths show first, while the server's category call runs. Then the Overview lists the categories, ranked locally with `rankCategories` (shared). Selecting a category opens its tab with one card per option. An option card shows cost, extra life, CO₂e avoided and score, and marks AI-estimated figures with "AI estimate" (also on the gauge). Opening it shows the "Why" text and up to two source links. Step plans inside options come with [feature 009](../docs/features/feature-009-concrete-step-plans/PLAN.md). The recommendation summary shows the best option of the Recommended category. Switching priority re-ranks categories and options without a request and explains which weight changes moved them. When the AI is unavailable, the five paths appear as five categories with the notice "AI explanation unavailable".
 
 ## Run
 
@@ -24,7 +24,7 @@ npm run build -w web
 
 ## Mock and live mode
 
-By default the app runs on the fictional fixtures in [`shared/fixtures/`](../shared/fixtures/) and simulates the scanner, so no backend is needed. The landing page shows a "Sample data" label. To talk to the real API set `VITE_API_MODE=live` (see [`.env.example`](.env.example)) and run `npm start -w server`; the dev server forwards `/api` and `/downloads` to it (`VITE_API_PROXY`, default `http://127.0.0.1:3000`). The scan-session flow is described in the [design](../docs/features/feature-006-web-app/DESIGN.md).
+By default the app runs on the fictional fixtures in [`shared/fixtures/`](../shared/fixtures/) and simulates the scanner, so no backend is needed. The example laptop shows the sample categories (`categories.example-laptop-14.office.json`, with an AI-estimated and a Not a fit option); the example desktop shows the five-path fallback. The landing page shows a "Sample data" label. To talk to the real API set `VITE_API_MODE=live` (see [`.env.example`](.env.example)) and run `npm start -w server`; the dev server forwards `/api` and `/downloads` to it (`VITE_API_PROXY`, default `http://127.0.0.1:3000`). The scan-session flow is described in the [design](../docs/features/feature-006-web-app/DESIGN.md).
 
 ## Container image
 

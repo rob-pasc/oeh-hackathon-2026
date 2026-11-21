@@ -127,3 +127,5 @@ No criterion is marked `Pass` on this basis.
 **2026-11-21, sixteenth amendment (FR-047).** Based on `main` at 30b463c plus the working tree. Ad-hoc setup (esbuild bundle, Tailwind compile, headless Chrome with the three desktop user agents); Vitest, `tsc` and `vite build` were not run by Claude.
 
 **2026-11-21, seventeenth amendment (FR-048).** Same ad-hoc setup as the sixteenth; Vitest, `tsc` and `vite build` were not run by Claude.
+
+**2026-11-21, supersession note.** Feature 008 replaces FR-005, FR-006, FR-015 and FR-017 on the result screen ([008 plan](../feature-008-ai-categories-and-options/PLAN.md), [008 acceptance](../feature-008-ai-categories-and-options/ACCEPTANCE_CRITERIA.md)). The related component tests were rewritten for categories; the earlier results here remain historical evidence for the five path cards, path tags and proposed option cards.

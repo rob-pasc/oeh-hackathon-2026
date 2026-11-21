@@ -1,25 +1,25 @@
 import type { Assessment } from '@leaaf/shared/assessment'
 import type { DeviceScan } from '@leaaf/shared/device'
-import type { Report } from '@leaaf/shared/report'
+import type { CategoryResult } from '@leaaf/shared/categories'
 import assessmentJson from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
 import scanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
 import macScanJson from '@leaaf/fixtures/device-scan.macos-complete.json'
 import linuxScanJson from '@leaaf/fixtures/device-scan.linux-complete.json'
-import reportJson from '@leaaf/fixtures/report.example-laptop-14.office.json'
+import categoriesJson from '@leaaf/fixtures/categories.example-laptop-14.office.json'
 import { INTENDED_USES } from '@leaaf/shared/common'
 import { describe, expect, it, vi } from 'vitest'
 import { liveClient } from '../api/live'
 import { USE_TAGS } from '../lib/labels'
-import { explainModeChange } from '../lib/modeChange'
+import { explainCategoryModeChange, explainModeChange } from '../lib/modeChange'
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parseRoute } from '../app/router'
 import { legalDoc } from '../legal/content'
 import { GAUGE, TRACK_PATH, arcPath, needleAngle, polar } from '../lib/gauge'
 import { formatEur, formatYears, gaugeValue } from '../lib/impact'
-import { LAPTOP_OPTIONS } from '../api/mockOptions'
-import { buildOptionViews } from '../lib/optionView'
+import { fallbackCategories } from '../api/mockCategories'
+import { buildCategoryViews } from '../lib/categoryView'
 import { buildPathViews } from '../lib/pathView'
 import { summarizeScan } from '../lib/specs'
 import { detectOs } from '../lib/platform'
@@ -28,7 +28,7 @@ import { interpolateText } from '../lib/motion'
 import { partsFromScan, upsertPart } from '../lib/parts'
 
 const assessment = assessmentJson as unknown as Assessment
-const report = reportJson as unknown as Report
+const categories = categoriesJson as unknown as CategoryResult
 
 describe('router', () => {
   const id = 'q3Xk9vT2mB7pLw0cZr1sEa'
@@ -106,55 +106,63 @@ describe('impact formatting', () => {
 
 describe('path views', () => {
   it('returns all five paths ranked, with exactly one recommendation first', () => {
-    const views = buildPathViews(assessment, report, 'environment_first')
+    const views = buildPathViews(assessment, 'environment_first')
     expect(views).toHaveLength(5)
     expect(views.map((v) => v.rank)).toEqual([1, 2, 3, 4, 5])
     expect(views.filter((v) => v.isRecommended)).toHaveLength(1)
     expect(views[0]?.isRecommended).toBe(true)
   })
   it('puts not-suitable paths last and without a score', () => {
-    const views = buildPathViews(assessment, report, 'money_first')
+    const views = buildPathViews(assessment, 'money_first')
     const order = ['viable', 'conditional', 'not_suitable']
     const statuses = views.map((v) => order.indexOf(v.status))
     expect(statuses).toEqual([...statuses].sort((a, b) => a - b))
     for (const v of views.filter((x) => x.status === 'not_suitable')) expect(v.total).toBeNull()
   })
-  it('falls back to assessment reasons until the report arrives', () => {
-    const views = buildPathViews(assessment, null, 'environment_first')
-    expect(views.every((v) => v.summaryFromAssessment)).toBe(true)
-    expect(views.every((v) => v.steps.length === 0)).toBe(true)
+  it('uses the assessment reasons while the categories are on their way', () => {
+    const views = buildPathViews(assessment, 'environment_first')
+    expect(views.map((v) => v.summary)).toEqual(views.map((v) => assessment.paths.find((p) => p.path === v.id)!.reasons[0]!.text))
   })
 })
 
-describe('option views', () => {
-  const upgrade = buildOptionViews(
-    LAPTOP_OPTIONS.filter((o) => o.path === 'upgrade'),
-    assessment.baseline,
-  )
-  it('lists the single upgrades, suitable ones first and not-suitable ones last', () => {
-    expect(upgrade.map((o) => o.key)).toEqual(['upgrade:ssd', 'upgrade:ram', 'upgrade:cpu', 'upgrade:gpu'])
-    expect(upgrade.map((o) => o.status)).toEqual(['viable', 'viable', 'not_suitable', 'not_suitable'])
+describe('category views (feature 008)', () => {
+  const views = buildCategoryViews(categories, assessment, 'environment_first')
+  const option = (id: string) => views.flatMap((c) => c.options).find((o) => o.id === id)!
+
+  it('ranks the categories with one Recommended label on the first, and no score for Not a fit (AC-006, AC-007)', () => {
+    expect(views.map((c) => c.title)).toEqual(['Memory', 'Battery', 'Faster storage', 'Hand it down', 'Graphics'])
+    expect(views.map((c) => c.isRecommended)).toEqual([true, false, false, false, false])
+    expect(views.at(-1)).toMatchObject({ status: 'not_suitable', statusLabel: 'Not a fit', total: null })
+    expect(views.at(-1)!.metrics.at(-1)).toMatchObject({ label: 'Score', value: '—' })
   })
-  it('gives each suitable option its own CO2e figures and gauge value', () => {
-    const [ssd, ram] = upgrade
-    expect(ssd!.metrics.map((m) => m.label)).toEqual(['Cost', 'Extra life', 'CO₂e added'])
-    expect(ssd!.metrics[2]!.value).toBe('+5–12 kg')
-    expect(ssd!.gauge!.mid).toBeGreaterThan(ram!.gauge!.mid)
-    for (const o of upgrade.slice(0, 2)) {
-      expect(o.gauge!.mid).toBeGreaterThanOrEqual(0)
-      expect(o.gauge!.mid).toBeLessThanOrEqual(100)
-    }
+
+  it('heads each category with its best option’s figures', () => {
+    const storage = views.find((c) => c.id === 'faster-storage')!
+    expect(storage.best.id).toBe('ssd-swap')
+    expect(storage.metrics.slice(0, 3)).toEqual(storage.best.metrics.slice(0, 3))
+    expect(storage.options.map((o) => o.status)).toEqual(['viable', 'conditional'])
   })
-  it('shows no invented figures for options that are not suitable', () => {
-    for (const o of upgrade.slice(2)) {
-      expect(o.gauge).toBeNull()
-      expect(o.metrics.every((m) => m.value === '—')).toBe(true)
-    }
+
+  it('shows cost, extra life, CO₂e avoided and score on an option, and marks AI estimates (AC-010)', () => {
+    expect(option('ssd-swap').metrics.map((m) => m.label)).toEqual(['Cost', 'Extra life', 'CO₂e avoided', 'Score'])
+    expect(option('ssd-swap').aiEstimate).toBe(false)
+    expect(option('clean-install').aiEstimate).toBe(true)
+    expect(option('gpu-add').metrics.every((m) => m.value === '—')).toBe(true)
+    expect(option('gpu-add').gauge).toBeNull()
   })
-  it('keeps every path covered by at least one option in the sample data', () => {
-    for (const path of ['upgrade', 'repair', 'pass_on', 'salvage', 'recycle']) {
-      expect(LAPTOP_OPTIONS.some((o) => o.path === path)).toBe(true)
+
+  it('links at most two cited sources and has no steps section until feature 009', () => {
+    for (const o of views.flatMap((c) => c.options)) {
+      expect(o.sources.length).toBeLessThanOrEqual(2)
+      expect(o.steps).toBeNull()
     }
+    expect(option('ssd-swap').sources).toEqual([{ label: expect.stringContaining('Hardware Maintenance Manual'), url: expect.stringMatching(/^https?:/) }])
+  })
+
+  it('turns the five assessed paths into five categories for the mock fallback', () => {
+    const fallback = buildCategoryViews(fallbackCategories(assessment), assessment, 'environment_first')
+    expect(fallback.map((c) => c.id)).toEqual(buildPathViews(assessment, 'environment_first').map((p) => p.id))
+    expect(fallback.map((c) => c.total)).toEqual(buildPathViews(assessment, 'environment_first').map((p) => p.total))
   })
 })
 
@@ -270,7 +278,7 @@ describe('use tags in live mode (feature 003 AC-020)', () => {
     try {
       const noop = () => {}
       for (const use of USE_TAGS)
-        liveClient.streamReport('q3Xk9vT2mB7pLw0cZr1sEa', use, { onAssessment: noop, onReport: noop, onEnd: noop, onError: noop })()
+        liveClient.streamReport('q3Xk9vT2mB7pLw0cZr1sEa', use, { onAssessment: noop, onCategories: noop, onEnd: noop, onError: noop })()
     } finally {
       vi.unstubAllGlobals()
     }
@@ -286,6 +294,20 @@ describe('mode change explanations', () => {
     expect(changes.join(' ')).toContain('moved above')
     const unchanged = { ...a, weights: { ...a.weights, money_first: a.weights.environment_first } }
     expect(explainModeChange(unchanged, 'environment_first', 'money_first')).toEqual([])
+  })
+
+  it('names the categories that swapped places (feature 008, 006 FR-039)', () => {
+    const a = assessmentJson as Assessment
+    const option = categories.categories[0]!.options[0]!
+    const swap: CategoryResult = {
+      ...categories,
+      categories: [
+        { category_id: 'green', label: 'Green', summary: 's', options: [{ ...option, option_id: 'g', scores: { environment: 95, useful_life: 60, economic: 10, feasibility: 60 } }] },
+        { category_id: 'cheap', label: 'Cheap', summary: 's', options: [{ ...option, option_id: 'c', scores: { environment: 30, useful_life: 60, economic: 95, feasibility: 60 } }] },
+        ...categories.categories.slice(1, 2),
+      ],
+    }
+    expect(explainCategoryModeChange(swap, a, 'environment_first', 'money_first')).toContain('Cheap moved above Green because cost now counts more.')
   })
 })
 

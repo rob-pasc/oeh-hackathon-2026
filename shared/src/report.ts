@@ -2,7 +2,9 @@
 //
 // Stream: GET /api/devices/:id/report?intended_use=<use>  (Content-Type: text/event-stream)
 //   event: assessment  -> Assessment     (sent immediately; ranking is visible at once)
-//   event: report      -> Report         (when the LLM answers, or the template fallback)
+//   event: categories  -> CategoryResult (feature 008; categories.ts) — the result screen's content
+//   event: report      -> Report         (no longer sent by the report stream since feature 008;
+//                                         the contract stays for the explanation service)
 //   event: end         -> StreamEnd      (last event; the server then closes the stream)
 //   event: error       -> ApiError       (instead of the remaining events)
 // Cached results are sent the same way, just without delay (FR-010).
@@ -52,5 +54,5 @@ export const StreamEnd = Type.Object(
 )
 export type StreamEnd = Static<typeof StreamEnd>
 
-export const REPORT_EVENTS = ['assessment', 'report', 'end', 'error'] as const
+export const REPORT_EVENTS = ['assessment', 'categories', 'report', 'end', 'error'] as const
 export type ReportEvent = (typeof REPORT_EVENTS)[number]

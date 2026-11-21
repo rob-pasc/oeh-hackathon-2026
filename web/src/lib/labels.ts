@@ -1,4 +1,5 @@
-import { PATHS, type IntendedUse, type Mode, type Path, type Suitability } from '@leaaf/shared/common'
+import type { OptionKind } from '@leaaf/shared/categories'
+import type { IntendedUse, Mode, Path, Suitability } from '@leaaf/shared/common'
 
 /**
  * The "what do you use this computer for?" tags offered in the dropdown: exactly the contract's `IntendedUse`
@@ -44,17 +45,18 @@ export function isUseTag(value: string): value is UseTag {
   return (USE_TAGS as readonly string[]).includes(value)
 }
 
-/** What the left column shows: all five paths at once, or the single steps of one path. */
-export type PathTab = 'overview' | Path
+/** What the left column shows: the ranked categories, or one category's options (feature 008 FR-009). */
+export type ResultTab = 'overview' | string
 
-/** Order of the path tags in the toolbar: the overview first, then the five paths in contract order. */
-export const PATH_TABS: readonly PathTab[] = ['overview', ...PATHS]
+/** Icon of an option kind (feature 008); `other` has its own icon. */
+export type IconKind = Path | 'other'
 
-export const PATH_TAB_LABELS: Record<PathTab, string> = {
-  overview: 'Overview',
-  upgrade: 'Upgrade',
-  repair: 'Repair',
-  pass_on: 'Pass on',
-  salvage: 'Salvage',
-  recycle: 'Recycle',
+export const KIND_ICONS: Record<OptionKind, IconKind> = {
+  ssd: 'upgrade',
+  ram: 'upgrade',
+  battery: 'repair',
+  hand_down: 'pass_on',
+  salvage: 'salvage',
+  recycle: 'recycle',
+  other: 'other',
 }

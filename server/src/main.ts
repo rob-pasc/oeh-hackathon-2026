@@ -11,7 +11,7 @@ import { createFactExtractor, createSqliteFactCache, type FactExtractor } from '
 import { loadImpactTable } from './impact/table.ts'
 import { createOpenAiCompatibleClient, LlmError, loadLlmConfig } from './llm/index.ts'
 import { DEFAULT_CORPUS_INDEX_PATH, IndexError, openRetriever, type Retriever } from './retrieval/index.ts'
-import { createReportService } from './report/service.ts'
+import { createCategoryService } from './categories/service.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
 
 const env = process.env
@@ -60,7 +60,7 @@ const app = buildApp({
   devices: createSqliteDeviceStore(db),
   sessions: createSqliteSessionStore(db),
   assessments: retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn: (message, details) => app.log.warn(details ?? {}, message) }) : undefined,
-  explain: createReportService(db, llm),
+  categorize: createCategoryService(db, llm, { impactTable, warn: (message, details) => app.log.warn(details ?? {}, message) }),
   publicBaseUrl,
   scannerPaths,
   logger: {

@@ -2,18 +2,17 @@ import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Assessment } from '@leaaf/shared/assessment'
-import type { Report } from '@leaaf/shared/report'
+import type { CategoryResult } from '@leaaf/shared/categories'
 import { formatEur, formatYears } from '../lib/impact'
 import fixture from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
-import sampleReport from '@leaaf/fixtures/report.example-laptop-14.office.json'
-import { rankPaths } from '@leaaf/shared/ranking'
+import sampleCategories from '@leaaf/fixtures/categories.example-laptop-14.office.json'
+import { rankCategories } from '@leaaf/shared/ranking'
 import { ApiContext } from '../api'
 import { App } from '../app/App'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
 import { Footer } from '../components/Footer'
 import { Inline } from '../pages/Legal'
 import { PROVIDER } from '../legal/provider'
-import { ReportDetails } from '../components/ReportDetails'
 import { ResultsView } from '../components/ResultsView'
 import { SpecsCard } from '../components/SpecsCard'
 import type { DeviceScan } from '@leaaf/shared/device'
@@ -230,72 +229,71 @@ describe('ScanSession', () => {
 })
 
 describe('ResultsView', () => {
-  it('renders five path cards with one recommendation, the gauge and the specs', async () => {
+  const sample = sampleCategories as unknown as CategoryResult
+  const laptop = fixture as Assessment
+  const ranked = (result: CategoryResult, mode: keyof Assessment['weights'] = 'environment_first') =>
+    rankCategories(result.categories, laptop.weights[mode])
+  /** The mock client with the categories event changed. */
+  const withCategories = (change: (result: CategoryResult) => CategoryResult): ApiClient => ({
+    ...fast,
+    streamReport: (id, use, handlers) =>
+      fast.streamReport(id, use, { ...handlers, onCategories: (result) => handlers.onCategories(change(result)) }),
+  })
+  const renderWith = (api: ApiClient, deviceId: string = MOCK_DEVICE_IDS.laptop) =>
+    render(<ApiContext.Provider value={api}><ResultsView deviceId={deviceId} /></ApiContext.Provider>)
+  const tabGroup = () => screen.findByRole('group', { name: 'Show options for' })
+
+  it('renders the ranked categories with one recommendation, the gauge and the specs (AC-006, AC-007)', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
-    await waitFor(() => expect(screen.getAllByRole('region').length).toBeGreaterThan(5))
-    for (const name of ['Upgrade', 'Repair', 'Pass it on', 'Salvage for parts', 'Recycle']) {
-      expect(screen.getByRole('region', { name })).toBeInTheDocument()
-    }
+    for (const { category } of ranked(sample)) expect(await screen.findByRole('region', { name: category.label })).toBeInTheDocument()
+    const first = screen.getByRole('region', { name: ranked(sample)[0]!.category.label })
+    expect(within(first).getByText('Recommended')).toBeInTheDocument()
     expect(screen.getAllByText('Recommended')).toHaveLength(1)
+    const graphics = screen.getByRole('region', { name: 'Graphics' })
+    expect(within(graphics).getByText('Not a fit')).toBeInTheDocument()
+    expect(within(graphics).getByText('Score').nextElementSibling).toHaveTextContent('—')
     expect(screen.getByRole('img', { name: /CO₂e gauge/ })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: 'Your device' })).toBeInTheDocument()
   })
 
-  it('expands a card to show steps and why once the report has arrived', async () => {
-    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
-    const upgrade = await screen.findByRole('region', { name: 'Upgrade' })
-    await userEvent.click(within(upgrade).getByRole('button'))
-    expect(within(upgrade).getByText('What to do')).toBeInTheDocument()
-    await waitFor(() => expect(within(upgrade).getAllByRole('listitem').length).toBeGreaterThan(0))
+  it('shows the five assessed paths and a thinking line until the categories arrive', async () => {
+    const slow = createMockClient({ stepMs: 5, assessmentMs: 5, reportMs: 60_000 })
+    renderWith(slow)
+    for (const name of ['Upgrade', 'Repair', 'Pass it on', 'Salvage for parts', 'Recycle'])
+      expect(await screen.findByRole('region', { name })).toBeInTheDocument()
+    expect(screen.getByText(/Finding options/)).toBeInTheDocument()
+    expect(within(await tabGroup()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Overview'])
   })
 
-  it('shows calculator ranges and the baseline for the recommended path', async () => {
+  it('summarizes the best option of the recommended category with its calculator ranges and the baseline', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
-    const a = fixture as Assessment
-    const top = rankPaths(a.paths, a.weights.environment_first).find(p => p.path.status === 'viable')!.path
-    const impact = top.impact!
+    const top = ranked(sample)[0]!
+    const impact = top.options[0]!.option.impact!
     const summary = await screen.findByLabelText('Recommendation summary')
-    expect(summary).toHaveTextContent(PATH_TITLES[top.path])
+    expect(summary).toHaveTextContent(top.category.label)
+    expect(summary).toHaveTextContent(top.options[0]!.option.title)
     expect(summary).toHaveTextContent(formatEur(impact.cost_eur))
     expect(summary).toHaveTextContent(formatYears(impact.useful_life_years))
-    expect(summary).toHaveTextContent(`${impact.co2e_kg.avoided_vs_baseline.low}–${impact.co2e_kg.avoided_vs_baseline.high} kg CO₂e`)
-    expect(summary).toHaveTextContent(a.baseline.description)
+    expect(summary).toHaveTextContent(`${impact.co2e_kg.avoided_vs_baseline.low}–${impact.co2e_kg.avoided_vs_baseline.high} kg CO₂e avoided`)
+    expect(summary).toHaveTextContent(laptop.baseline.description)
   })
 
-  it('shows the complete cited evidence on keyboard expansion', async () => {
-    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
-    const card = await screen.findByRole('region', { name: 'Upgrade' })
-    within(card).getByRole('button').focus()
-    await userEvent.keyboard('{Enter}')
-    const details = await within(card).findByText('Evidence, assumptions and safety')
-    await userEvent.click(details)
-    const explanation = sampleReport.paths.find(p => p.path === 'upgrade')!
-    for (const claim of explanation.claims) {
-      expect(within(card).getByText(claim.text)).toBeVisible()
-      for (const id of claim.passage_ids) {
-        const p = sampleReport.passages.find(p => p.passage_id === id)!
-        expect(within(card).getAllByText(p.text)[0]).toBeVisible()
-        expect(Array.from(card.querySelectorAll('blockquote a')).some(a => a.getAttribute('href') === p.url && a.textContent?.includes(p.title))).toBe(true)
-      }
-    }
-  })
-
-  it('keeps the ranking and template notice when model evidence is missing', async () => {
-    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.desktop} />))
-    expect(await screen.findByText(/AI explanation unavailable/)).toBeVisible()
-    for (const name of ['Upgrade', 'Repair']) {
-      expect(screen.getByRole('region', { name })).toHaveTextContent(/cannot verify|could not be verified|cannot be verified/i)
-    }
-  })
-
-  it('explains when no path is viable', async () => {
-    const api: typeof fast = { ...fast, streamReport: (id, use, handlers) =>
-      fast.streamReport(id, use, { ...handlers, onAssessment: a => handlers.onAssessment({
-        ...a, paths: a.paths.map(p => ({ ...p, status: p.status === 'viable' ? 'conditional' : p.status })),
-      }) }) }
-    render(<ApiContext.Provider value={api}><ResultsView deviceId={MOCK_DEVICE_IDS.laptop} /></ApiContext.Provider>)
-    expect(await screen.findByText(/no path is clearly recommended/i)).toBeVisible()
+  it('labels nothing Recommended and says so when no option is a good fit (AC-007)', async () => {
+    renderWith(withCategories((r) => ({
+      ...r,
+      categories: r.categories.map((c) => ({ ...c, options: c.options.map((o) => (o.status === 'viable' ? { ...o, status: 'conditional' as const } : o)) })),
+    })))
+    expect(await screen.findByText(/no option is clearly recommended/i)).toBeVisible()
     expect(screen.queryByText('Recommended')).toBeNull()
+  })
+
+  it('shows the five paths as categories with the notice when the AI is unavailable (AC-013)', async () => {
+    renderWith(fast, MOCK_DEVICE_IDS.desktop)
+    expect(await screen.findByText(/AI explanation unavailable/)).toBeVisible()
+    const group = await tabGroup()
+    await waitFor(() => expect(within(group).getAllByRole('button')).toHaveLength(6))
+    for (const name of ['Upgrade', 'Repair', 'Pass it on', 'Salvage for parts', 'Recycle'])
+      expect(screen.getByRole('region', { name })).toBeInTheDocument()
   })
 
   it('offers the six use tags with General as default', async () => {
@@ -316,131 +314,97 @@ describe('ResultsView', () => {
     expect(screen.getByRole('button', { name: 'Environment first' })).toHaveAttribute('aria-pressed', 'false')
   })
 
-  it('reorders by the Money first weights without a new request (feature 003 AC-012)', async () => {
-    let assessment: Assessment | null = null
+  it('re-ranks categories and tabs for Money first without a new request or AI call (AC-008)', async () => {
+    const option = sample.categories[0]!.options[0]!
+    const swap = (r: CategoryResult): CategoryResult => ({
+      ...r,
+      categories: [
+        { category_id: 'green', label: 'Green', summary: 'Good for the climate.', options: [{ ...option, option_id: 'g', scores: { environment: 95, useful_life: 60, economic: 10, feasibility: 60 } }] },
+        { category_id: 'cheap', label: 'Cheap', summary: 'Good for the wallet.', options: [{ ...option, option_id: 'c', scores: { environment: 30, useful_life: 60, economic: 95, feasibility: 60 } }] },
+        ...r.categories.slice(4),
+      ],
+    })
     let streams = 0
-    const counting = {
-      ...fast,
-      streamReport: (deviceId, use, handlers) => {
-        streams++
-        return fast.streamReport(deviceId, use, {
-          ...handlers,
-          onAssessment: (a) => {
-            assessment = a
-            handlers.onAssessment(a)
-          },
-        })
-      },
-    } satisfies typeof fast
+    const base = withCategories(swap)
+    const counting: ApiClient = { ...base, streamReport: (...args) => { streams++; return base.streamReport(...args) } }
     const fetchSpy = vi.spyOn(globalThis, 'fetch')
-    render(
-      <ApiContext.Provider value={counting}>
-        <ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />
-      </ApiContext.Provider>,
-    )
-    await screen.findByRole('region', { name: 'Upgrade' })
-    const cardOrder = () =>
-      screen
-        .getAllByRole('region')
-        .map((r) => r.getAttribute('aria-label') ?? r.querySelector('h2,h3')?.textContent ?? '')
-        .filter((name) => (Object.values(PATH_TITLES) as string[]).includes(name))
+    renderWith(counting)
+    await screen.findByRole('region', { name: 'Green' })
+    const group = await tabGroup()
+    const pair = (names: (string | null)[]) => names.filter((n) => n === 'Green' || n === 'Cheap')
+    const tabs = () => pair(within(group).getAllByRole('button').map((b) => b.textContent))
+    const cards = () => pair(screen.getAllByRole('region').map((r) => r.getAttribute('aria-label')))
+    expect(tabs()).toEqual(['Green', 'Cheap'])
+    expect(cards()).toEqual(['Green', 'Cheap'])
 
     await userEvent.click(screen.getByRole('button', { name: 'Money first' }))
-
-    const a = assessment as Assessment | null
-    if (!a) throw new Error('no assessment arrived')
-    const expected = rankPaths(a.paths, a.weights.money_first).map(({ path }) => PATH_TITLES[path.path])
-    await waitFor(() => expect(cardOrder()).toEqual(expected))
-    expect(screen.getByRole('status')).toHaveTextContent(/moved above.*because cost now counts more/i)
+    await waitFor(() => expect(tabs()).toEqual(['Cheap', 'Green']))
+    expect(cards()).toEqual(['Cheap', 'Green'])
+    expect(screen.getByRole('status')).toHaveTextContent('Cheap moved above Green because cost now counts more.')
     expect(streams).toBe(1)
     expect(fetchSpy).not.toHaveBeenCalled()
     fetchSpy.mockRestore()
   })
 
-  it('leaves out evidence, assumptions and safety sections that are empty', () => {
-    const report = sampleReport as Report
-    const explanation = report.paths.find((p) => p.path === 'upgrade')!
-    const empty = { ...explanation, claims: [], assumptions: [], safety: [] }
-    const { container, rerender } = render(<ReportDetails explanation={empty} passages={report.passages} />)
-    expect(container).toBeEmptyDOMElement()
-    rerender(<ReportDetails explanation={{ ...empty, assumptions: ['The battery is replaceable.'] }} passages={report.passages} />)
-    expect(container.querySelector('details')).not.toBeNull()
-    expect(screen.getByText('Assumptions')).toBeInTheDocument()
-    expect(screen.queryByText('Evidence')).toBeNull()
-    expect(screen.queryByText('Safety and feasibility')).toBeNull()
-    expect(screen.queryByText('None listed.')).toBeNull()
-  })
-
-  it('offers the overview and the five paths as tags next to the use dropdown', async () => {
+  it('offers Overview plus one tab per category, labelled by the AI, in Overview order (AC-009)', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
-    const group = await screen.findByRole('group', { name: 'Show steps for' })
-    expect(within(group).getAllByRole('button').map((b) => b.textContent)).toEqual([
-      'Overview',
-      'Upgrade',
-      'Repair',
-      'Pass on',
-      'Salvage',
-      'Recycle',
-    ])
+    await screen.findByRole('region', { name: 'Graphics' })
+    const group = await tabGroup()
+    expect(within(group).getAllByRole('button').map((b) => b.textContent)).toEqual(['Overview', ...ranked(sample).map((r) => r.category.label)])
     expect(within(group).getByRole('button', { name: 'Overview' })).toHaveAttribute('aria-pressed', 'true')
   })
 
-  it('shows the single actions of a path as cards when its tag is selected, and the overview again on request', async () => {
+  it('shows a category tab with its plain header and its options, Good fit before Depends (AC-009, AC-010)', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
-    const group = await screen.findByRole('group', { name: 'Show steps for' })
-    await screen.findByRole('region', { name: 'Upgrade' })
-    await userEvent.click(within(group).getByRole('button', { name: 'Upgrade' }))
+    const group = await tabGroup()
+    await screen.findByRole('region', { name: 'Faster storage' })
+    await userEvent.click(within(group).getByRole('button', { name: 'Faster storage' }))
 
-    const ssd = await screen.findByRole('region', { name: 'SSD upgrade' })
-    for (const name of ['RAM upgrade', 'CPU upgrade', 'Graphics upgrade']) {
-      expect(screen.getByRole('region', { name })).toBeInTheDocument()
-    }
-    expect(within(screen.getByRole('region', { name: 'CPU upgrade' })).getByText('Not a fit')).toBeInTheDocument()
+    const header = await screen.findByRole('region', { name: 'Faster storage summary' })
+    expect(within(header).queryByRole('button')).toBeNull()
+    const view = screen.getByTestId('category-tab-view')
+    const optionNames = within(view).getAllByRole('region').map((r) => r.getAttribute('aria-label')).slice(1)
+    expect(optionNames).toEqual(['Swap the hard disk for a 500 GB SSD', 'Reinstall the operating system'])
 
-    // Opening an option looks like opening a card in the overview and shows its steps; the gauge follows it.
+    const ssd = screen.getByRole('region', { name: 'Swap the hard disk for a 500 GB SSD' })
+    for (const label of ['Cost', 'Extra life', 'CO₂e avoided', 'Score']) expect(within(ssd).getByText(label)).toBeInTheDocument()
+    expect(within(ssd).queryByText('AI estimate')).toBeNull()
     await userEvent.click(within(ssd).getByRole('button'))
-    // The path summary above the options is a plain block, not a button.
-    expect(within(screen.getByRole('region', { name: 'Upgrade summary' })).queryByRole('button')).toBeNull()
-    expect(within(ssd).getByText('What to do')).toBeInTheDocument()
-    expect(within(ssd).getAllByRole('listitem')).toHaveLength(2)
-    expect(screen.getByText('Upgrade · SSD upgrade')).toBeInTheDocument()
-    // Before/after of the changed spec, and the gauge's avoided CO₂e as car kilometres.
-    expect(within(within(ssd).getByTestId('before-after')).getByText('500 GB SSD · NVMe')).toBeInTheDocument()
-    expect(within(screen.getByTestId('equivalents')).getByText('by car')).toBeInTheDocument()
+    expect(within(ssd).getByText('Why')).toBeInTheDocument()
+    expect(within(ssd).queryByText('What to do')).toBeNull()
+    const links = within(ssd).getAllByRole('link')
+    expect(links.length).toBeGreaterThan(0)
+    expect(links.length).toBeLessThanOrEqual(2)
+    expect(links[0]).toHaveTextContent(/^Source: /)
 
     await userEvent.click(within(group).getByRole('button', { name: 'Overview' }))
-    for (const name of ['Upgrade', 'Repair', 'Pass it on', 'Salvage for parts', 'Recycle']) {
-      expect(await screen.findByRole('region', { name })).toBeInTheDocument()
-    }
+    expect(await screen.findByRole('region', { name: 'Graphics' })).toBeInTheDocument()
   })
 
-  it('falls back to the path steps when the server sends no options', async () => {
-    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.desktop} />))
-    const group = await screen.findByRole('group', { name: 'Show steps for' })
-    await screen.findByRole('region', { name: 'Upgrade' })
-    await userEvent.click(within(group).getByRole('button', { name: 'Repair' }))
-    expect(await screen.findByText('No steps available for this path.')).toBeInTheDocument()
+  it('shows "AI estimate" on an estimated option and on the gauge once it is opened (AC-010, AC-011)', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
+    const gauge = await screen.findByRole('region', { name: 'CO₂e gauge' })
+    const first = ranked(sample)[0]!
+    // Before any option is opened, the gauge shows the best option of the first category.
+    await waitFor(() => expect(gauge).toHaveTextContent(`${first.category.label} · ${first.options[0]!.option.title}`))
+    expect(within(gauge).queryByText('AI estimate')).toBeNull()
+
+    await userEvent.click(screen.getByRole('region', { name: 'Faster storage' }).querySelector('button')!)
+    const estimate = await screen.findByRole('region', { name: 'Reinstall the operating system' })
+    expect(within(estimate).getByText('AI estimate')).toBeInTheDocument()
+    await userEvent.click(within(estimate).getByRole('button'))
+    expect(gauge).toHaveTextContent('Faster storage · Reinstall the operating system')
+    expect(within(gauge).getByText('AI estimate')).toBeInTheDocument()
   })
 
-  it('stops waiting for the report when the stream ends without one', async () => {
-    // Like the live server before feature 004: the assessment, then `end`, and no report.
-    const noReport = {
-      ...fast,
-      streamReport: (deviceId, use, handlers) =>
-        fast.streamReport(deviceId, use, {
-          ...handlers,
-          onReport: () => {},
-          onOptions: () => {},
-        }),
-    } satisfies typeof fast
-    render(
-      <ApiContext.Provider value={noReport}>
-        <ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />
-      </ApiContext.Provider>,
-    )
+  it('stops waiting when the stream ends without categories', async () => {
+    // Like a server before feature 008: the assessment, then `end`.
+    const none: ApiClient = { ...fast, streamReport: (id, use, handlers) => fast.streamReport(id, use, { ...handlers, onCategories: () => {} }) }
+    renderWith(none)
     const upgrade = await screen.findByRole('region', { name: 'Upgrade' })
     await userEvent.click(within(upgrade).getByRole('button'))
     expect(await within(upgrade).findByText('No steps available.')).toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByText(/Finding options/)).toBeNull())
   })
 
   it('explains an unknown device instead of failing silently', async () => {

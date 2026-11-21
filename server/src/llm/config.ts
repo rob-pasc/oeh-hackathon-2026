@@ -6,6 +6,8 @@ export interface LlmConfig {
   apiKey: string
   model: string
   timeoutMs: number
+  /** Deadline for the whole category call, including retries and the repair attempt (feature 008). */
+  categoryTimeoutMs: number
   thinking: Record<LlmTask, ThinkingMode>
 }
 
@@ -39,14 +41,22 @@ export function loadLlmConfig(env: NodeJS.ProcessEnv = process.env): LlmConfig {
   if (!Number.isInteger(timeoutMs) || timeoutMs <= 0)
     throw new LlmError('config', `LLM_TIMEOUT_MS must be a positive integer (got "${timeoutRaw}")`)
 
+  const categoryRaw = env.LLM_CATEGORY_TIMEOUT_MS?.trim() || '40000'
+  const categoryTimeoutMs = Number(categoryRaw)
+  if (!Number.isInteger(categoryTimeoutMs) || categoryTimeoutMs <= 0)
+    throw new LlmError('config', `LLM_CATEGORY_TIMEOUT_MS must be a positive integer (got "${categoryRaw}")`)
+
   return {
     baseUrl,
     apiKey,
     model: env.LLM_MODEL?.trim() || 'deepseek-flash',
     timeoutMs,
+    categoryTimeoutMs,
     thinking: {
       fact_extraction: thinkingMode(env, 'LLM_THINKING_FACT_EXTRACTION', 'disabled'),
       explanation: thinkingMode(env, 'LLM_THINKING_EXPLANATION', 'disabled'),
+      // Off like the explanation: the category answer is larger and must stay within its deadline.
+      categories: thinkingMode(env, 'LLM_THINKING_CATEGORIES', 'disabled'),
     },
   }
 }

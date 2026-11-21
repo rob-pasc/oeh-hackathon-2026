@@ -3,7 +3,7 @@
 // Each criterion is 0–100 and computed from one source only, so lifespan is not counted twice:
 // environment from avoided CO2e, useful life from the extra-life range, economic from the owner's
 // cost, feasibility from a fixed table. The rubrics, with examples, are in DESIGN.md.
-import type { ConfidenceLevel, CriterionScores, DeviceScan, Impact, IntendedUse, Range } from '@leaaf/shared'
+import type { ConfidenceLevel, CriterionScores, DeviceScan, Difficulty, Impact, IntendedUse, Range, Suitability } from '@leaaf/shared'
 import type { ImpactIndex } from './calculator.ts'
 import type { GateResult } from './gates.ts'
 
@@ -25,8 +25,48 @@ export const FEASIBILITY_BASE = {
 } as const
 export const CONDITIONAL_FEASIBILITY_PENALTY = 20
 
+/**
+ * Feasibility of an AI option by difficulty (feature 008 FR-005), before the same conditional
+ * penalty. Set within the range of FEASIBILITY_BASE: easy owner tasks like a one-part upgrade or
+ * handing the device on, moderate ones like the two-part upgrade, and service jobs slightly below,
+ * because they need an appointment and are the costliest to arrange.
+ */
+export const DIFFICULTY_FEASIBILITY = { diy_easy: 80, diy_moderate: 60, professional: 55 } as const satisfies Record<Difficulty, number>
+
+export function optionFeasibility(difficulty: Difficulty, status: Suitability): number {
+  return clampScore(DIFFICULTY_FEASIBILITY[difficulty] - (status === 'conditional' ? CONDITIONAL_FEASIBILITY_PENALTY : 0))
+}
+
 /** Paths after which the current owner no longer has this computer. */
 const ENDS_OWNERS_USE = new Set(['pass_on', 'salvage', 'recycle'])
+
+export interface RubricInput {
+  impact: Impact
+  use: IntendedUse
+  baselineCost: Range
+  /** The current owner no longer has the computer afterwards (passed on, salvaged or recycled). */
+  endsOwnersUse: boolean
+  /** The owner's needs stay unmet after the action; halves the useful-life score. */
+  shortfall: boolean
+}
+
+/**
+ * The three criteria computed from figures alone. Shared by the five paths and by the options of
+ * feature 008, whose feasibility comes from their difficulty instead (FR-005).
+ */
+export function rubricScores({ impact, use, baselineCost, endsOwnersUse, shortfall }: RubricInput): Omit<CriterionScores, 'feasibility'> {
+  // Environment: share of the baseline's production CO2e this path avoids (range midpoints).
+  const environment = clampScore((100 * mid(impact.co2e_kg.avoided_vs_baseline)) / mid(impact.co2e_kg.baseline))
+
+  // Useful life: extra years, halved when the device still falls short of what the use needs.
+  const useful_life = clampScore(((100 * mid(impact.useful_life_years)) / FULL_LIFE_YEARS) * (shortfall ? 0.5 : 1))
+
+  // Economic: the owner's out-of-pocket cost against buying new. If the owner wants to keep using a
+  // computer but this path gives it away, they still have to buy a new one.
+  const replacement = endsOwnersUse && use !== 'pass_on' ? mid(baselineCost) : 0
+  const economic = clampScore(100 * (1 - (mid(impact.cost_eur) + replacement) / mid(baselineCost)))
+  return { environment, useful_life, economic }
+}
 
 export interface ScoreInput {
   gate: GateResult
@@ -38,17 +78,8 @@ export interface ScoreInput {
 export function scorePath({ gate, impact, use, baselineCost }: ScoreInput): CriterionScores {
   const plan = gate.plan
   if (!plan) throw new Error(`cannot score not_suitable path ${gate.path}`)
-
-  // Environment: share of the baseline's production CO2e this path avoids (range midpoints).
-  const environment = clampScore((100 * mid(impact.co2e_kg.avoided_vs_baseline)) / mid(impact.co2e_kg.baseline))
-
-  // Useful life: extra years, halved when the device still falls short of what the use needs.
-  const useful_life = clampScore(((100 * mid(impact.useful_life_years)) / FULL_LIFE_YEARS) * (gate.shortfall ? 0.5 : 1))
-
-  // Economic: the owner's out-of-pocket cost against buying new. If the owner wants to keep using a
-  // computer but this path gives it away, they still have to buy a new one.
-  const replacement = ENDS_OWNERS_USE.has(plan.path) && use !== 'pass_on' ? mid(baselineCost) : 0
-  const economic = clampScore(100 * (1 - (mid(impact.cost_eur) + replacement) / mid(baselineCost)))
+  const rubric = rubricScores({ impact, use, baselineCost, endsOwnersUse: ENDS_OWNERS_USE.has(plan.path), shortfall: gate.shortfall })
+  const { environment, useful_life, economic } = rubric
 
   let feasibility: number
   switch (plan.path) {

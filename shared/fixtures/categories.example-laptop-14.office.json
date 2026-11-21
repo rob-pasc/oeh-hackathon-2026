@@ -1,0 +1,539 @@
+{
+  "device_id": "q3Xk9vT2mB7pLw0cZr1sEa",
+  "intended_use": "office",
+  "generated_at": "2026-11-21T12:00:00Z",
+  "source": "llm",
+  "notice": null,
+  "categories": [
+    {
+      "category_id": "faster-storage",
+      "label": "Faster storage",
+      "summary": "The slow hard disk is the main thing holding this laptop back.",
+      "options": [
+        {
+          "option_id": "ssd-swap",
+          "title": "Swap the hard disk for a 500 GB SSD",
+          "status": "viable",
+          "reason": "The M.2 slot takes an NVMe SSD, which is much faster than the old hard disk.",
+          "kind": "ssd",
+          "difficulty": "diy_moderate",
+          "why": "Office work mostly waits on the drive. An SSD in the free M.2 slot removes that wait, and the old disk can stay as extra storage.",
+          "claims": [
+            {
+              "text": "The laptop has one M.2 2280 slot for NVMe or SATA SSDs.",
+              "passage_ids": [
+                "ex14-hmm#storage-1"
+              ]
+            }
+          ],
+          "impact": {
+            "cost_eur": {
+              "low": 100,
+              "high": 135
+            },
+            "useful_life_years": {
+              "low": 2,
+              "high": 4
+            },
+            "co2e_kg": {
+              "path": {
+                "low": 28,
+                "high": 80
+              },
+              "baseline": {
+                "low": 200,
+                "high": 350
+              },
+              "avoided_vs_baseline": {
+                "low": 120,
+                "high": 322
+              }
+            },
+            "displacement": "assumed",
+            "assumptions": [
+              {
+                "text": "Buys a 500 GB NVMe M.2 SSD at sample retail prices; the owner installs them.",
+                "impact_refs": [
+                  "part.ssd_500gb.price",
+                  "part.ssd_500gb.production_co2e"
+                ]
+              },
+              {
+                "text": "Extra useful life after an SSD/RAM upgrade, office use",
+                "impact_refs": [
+                  "life_extra.upgrade.office"
+                ]
+              }
+            ]
+          },
+          "impact_source": "calculator",
+          "scores": {
+            "environment": 80,
+            "useful_life": 75,
+            "economic": 84,
+            "feasibility": 60
+          },
+          "confidence": {
+            "level": "high",
+            "reasons": []
+          },
+          "path": null
+        },
+        {
+          "option_id": "clean-install",
+          "title": "Reinstall the operating system",
+          "status": "conditional",
+          "reason": "A fresh install can remove years of clutter, but it does not fix a slow disk.",
+          "kind": "other",
+          "difficulty": "diy_easy",
+          "why": "Only worth it if the laptop is slow because of old software. Back up your files first.",
+          "claims": [],
+          "impact": {
+            "cost_eur": {
+              "low": 0,
+              "high": 0
+            },
+            "useful_life_years": {
+              "low": 0,
+              "high": 1
+            },
+            "co2e_kg": {
+              "path": {
+                "low": 0,
+                "high": 0
+              },
+              "baseline": {
+                "low": 200,
+                "high": 350
+              },
+              "avoided_vs_baseline": {
+                "low": 0,
+                "high": 350
+              }
+            },
+            "displacement": "conditional",
+            "assumptions": [
+              {
+                "text": "AI estimate: the cost, extra life and CO₂e of this option come from the AI, not from the impact table.",
+                "impact_refs": []
+              },
+              {
+                "text": "Avoided new-device production counts only if the device then replaces a new purchase.",
+                "impact_refs": [
+                  "new_laptop.production_co2e"
+                ]
+              }
+            ]
+          },
+          "impact_source": "ai_estimate",
+          "scores": {
+            "environment": 64,
+            "useful_life": 13,
+            "economic": 100,
+            "feasibility": 60
+          },
+          "confidence": {
+            "level": "medium",
+            "reasons": [
+              "The figures are an AI estimate, not calculated from the impact table"
+            ]
+          },
+          "path": null
+        }
+      ]
+    },
+    {
+      "category_id": "memory",
+      "label": "Memory",
+      "summary": "A second memory module doubles the RAM for many browser tabs.",
+      "options": [
+        {
+          "option_id": "ram-add",
+          "title": "Add an 8 GB DDR4 module",
+          "status": "viable",
+          "reason": "One of the two SO-DIMM slots is free.",
+          "kind": "ram",
+          "difficulty": "diy_moderate",
+          "why": "8 GB gets tight with many tabs and video calls. The free slot takes a second module without removing the first.",
+          "claims": [
+            {
+              "text": "The computer has two SO-DIMM DDR4 slots and supports up to 32 GB.",
+              "passage_ids": [
+                "ex14-hmm#memory-1"
+              ]
+            }
+          ],
+          "impact": {
+            "cost_eur": {
+              "low": 88,
+              "high": 105
+            },
+            "useful_life_years": {
+              "low": 2,
+              "high": 4
+            },
+            "co2e_kg": {
+              "path": {
+                "low": 9,
+                "high": 14
+              },
+              "baseline": {
+                "low": 200,
+                "high": 350
+              },
+              "avoided_vs_baseline": {
+                "low": 186,
+                "high": 341
+              }
+            },
+            "displacement": "assumed",
+            "assumptions": [
+              {
+                "text": "Buys a 8 GB RAM module at sample retail prices; the owner installs them.",
+                "impact_refs": [
+                  "part.ram_8gb_ddr4.price",
+                  "part.ram_8gb_ddr4.production_co2e"
+                ]
+              },
+              {
+                "text": "Extra useful life after an SSD/RAM upgrade, office use",
+                "impact_refs": [
+                  "life_extra.upgrade.office"
+                ]
+              }
+            ]
+          },
+          "impact_source": "calculator",
+          "scores": {
+            "environment": 96,
+            "useful_life": 75,
+            "economic": 87,
+            "feasibility": 60
+          },
+          "confidence": {
+            "level": "high",
+            "reasons": []
+          },
+          "path": null
+        }
+      ]
+    },
+    {
+      "category_id": "battery",
+      "label": "Battery",
+      "summary": "The battery holds 72% of its design capacity.",
+      "options": [
+        {
+          "option_id": "battery-swap",
+          "title": "Replace the battery",
+          "status": "viable",
+          "reason": "The manual calls the battery customer-replaceable, held by two screws.",
+          "kind": "battery",
+          "difficulty": "diy_moderate",
+          "why": "A worn battery shortens time away from the charger. The manual allows the owner to swap it.",
+          "claims": [
+            {
+              "text": "The battery is a customer-replaceable unit secured by two screws.",
+              "passage_ids": [
+                "ex14-hmm#battery-1"
+              ]
+            }
+          ],
+          "impact": {
+            "cost_eur": {
+              "low": 30,
+              "high": 150
+            },
+            "useful_life_years": {
+              "low": 2,
+              "high": 3
+            },
+            "co2e_kg": {
+              "path": {
+                "low": 5,
+                "high": 12
+              },
+              "baseline": {
+                "low": 200,
+                "high": 350
+              },
+              "avoided_vs_baseline": {
+                "low": 188,
+                "high": 345
+              }
+            },
+            "displacement": "assumed",
+            "assumptions": [
+              {
+                "text": "The owner fits a replacement battery bought at a sample retail price.",
+                "impact_refs": [
+                  "part.battery_laptop.price",
+                  "part.battery_laptop.production_co2e"
+                ]
+              },
+              {
+                "text": "Extra useful life after a battery repair, office use",
+                "impact_refs": [
+                  "life_extra.repair.office"
+                ]
+              }
+            ]
+          },
+          "impact_source": "calculator",
+          "scores": {
+            "environment": 97,
+            "useful_life": 63,
+            "economic": 88,
+            "feasibility": 60
+          },
+          "confidence": {
+            "level": "medium",
+            "reasons": [
+              "Wide range in: Price of a replacement laptop battery (model-specific; original or quality third-party)"
+            ]
+          },
+          "path": null
+        }
+      ]
+    },
+    {
+      "category_id": "graphics",
+      "label": "Graphics",
+      "summary": "The graphics are built into the processor.",
+      "options": [
+        {
+          "option_id": "gpu-add",
+          "title": "Add a graphics card",
+          "status": "not_suitable",
+          "reason": "Laptops of this kind have no slot for a graphics card.",
+          "kind": "other",
+          "difficulty": "professional",
+          "why": "An external graphics enclosure would cost more than the laptop is worth.",
+          "claims": [],
+          "impact": null,
+          "impact_source": null,
+          "scores": null,
+          "confidence": {
+            "level": "high",
+            "reasons": []
+          },
+          "path": null
+        }
+      ]
+    },
+    {
+      "category_id": "hand-down",
+      "label": "Hand it down",
+      "summary": "Someone else can keep using it once your data is erased.",
+      "options": [
+        {
+          "option_id": "donate",
+          "title": "Give it to someone who needs a laptop",
+          "status": "viable",
+          "reason": "It still runs a supported operating system and works for office tasks.",
+          "kind": "hand_down",
+          "difficulty": "diy_easy",
+          "why": "Passing it on keeps it in use. Reset it and erase the drive before handing it over.",
+          "claims": [
+            {
+              "text": "Reset the operating system and securely erase all drives before passing it on.",
+              "passage_ids": [
+                "reuse-guide#data-wipe"
+              ]
+            }
+          ],
+          "impact": {
+            "cost_eur": {
+              "low": 0,
+              "high": 0
+            },
+            "useful_life_years": {
+              "low": 2,
+              "high": 4
+            },
+            "co2e_kg": {
+              "path": {
+                "low": 0,
+                "high": 25
+              },
+              "baseline": {
+                "low": 200,
+                "high": 350
+              },
+              "avoided_vs_baseline": {
+                "low": -25,
+                "high": 350
+              }
+            },
+            "displacement": "conditional",
+            "assumptions": [
+              {
+                "text": "Given away privately after a data wipe, so the owner pays nothing; resale value is not counted.",
+                "impact_refs": [
+                  "pass_on.handover_co2e"
+                ]
+              },
+              {
+                "text": "Extra useful life with a new owner (any current use)",
+                "impact_refs": [
+                  "life_extra.pass_on.office"
+                ]
+              },
+              {
+                "text": "Avoided new-device production counts only if the recipient would otherwise buy a new device.",
+                "impact_refs": [
+                  "new_laptop.production_co2e"
+                ]
+              }
+            ]
+          },
+          "impact_source": "calculator",
+          "scores": {
+            "environment": 59,
+            "useful_life": 75,
+            "economic": 0,
+            "feasibility": 80
+          },
+          "confidence": {
+            "level": "medium",
+            "reasons": [
+              "The CO₂e saving depends on the recipient otherwise buying a new device"
+            ]
+          },
+          "path": null
+        },
+        {
+          "option_id": "recycle",
+          "title": "Bring it to an e-waste collection point",
+          "status": "viable",
+          "reason": "Certified collection recovers the materials once the laptop is no longer used.",
+          "kind": "recycle",
+          "difficulty": "diy_easy",
+          "why": "This is the right end only when nobody can use the laptop any more.",
+          "claims": [],
+          "impact": {
+            "cost_eur": {
+              "low": 0,
+              "high": 0
+            },
+            "useful_life_years": {
+              "low": 0,
+              "high": 0
+            },
+            "co2e_kg": {
+              "path": {
+                "low": 0.5,
+                "high": 2
+              },
+              "baseline": {
+                "low": 200,
+                "high": 350
+              },
+              "avoided_vs_baseline": {
+                "low": -2,
+                "high": -0.5
+              }
+            },
+            "displacement": "none",
+            "assumptions": [
+              {
+                "text": "Recycling recovers materials but does not avoid a new purchase; no recycling credit is counted.",
+                "impact_refs": [
+                  "recycle.processing_co2e"
+                ]
+              },
+              {
+                "text": "Extra useful life of the device when recycled (the device leaves service)",
+                "impact_refs": [
+                  "life_extra.recycle.office"
+                ]
+              }
+            ]
+          },
+          "impact_source": "calculator",
+          "scores": {
+            "environment": 0,
+            "useful_life": 0,
+            "economic": 0,
+            "feasibility": 80
+          },
+          "confidence": {
+            "level": "medium",
+            "reasons": [
+              "Wide range in: Emissions of transport to and treatment at end of life, without recycling credits"
+            ]
+          },
+          "path": null
+        }
+      ]
+    }
+  ],
+  "passages": [
+    {
+      "passage_id": "ex14-hmm#battery-1",
+      "document_id": "ex14-hmm",
+      "title": "Example Laptop 14 Hardware Maintenance Manual",
+      "url": "https://example.org/manuals/ex14-hmm.pdf",
+      "publisher": "Example Manufacturer",
+      "topic": "repair-hardware",
+      "section": "Battery pack",
+      "page": 60,
+      "applicability": {
+        "kind": "model",
+        "manufacturer": "Example Manufacturer",
+        "model": "Example Laptop 14"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "The battery is a customer-replaceable unit secured by two screws. Replacement packs are available under part number EX-BAT-57."
+    },
+    {
+      "passage_id": "ex14-hmm#memory-1",
+      "document_id": "ex14-hmm",
+      "title": "Example Laptop 14 Hardware Maintenance Manual",
+      "url": "https://example.org/manuals/ex14-hmm.pdf",
+      "publisher": "Example Manufacturer",
+      "topic": "repair-hardware",
+      "section": "Memory modules",
+      "page": 72,
+      "applicability": {
+        "kind": "model",
+        "manufacturer": "Example Manufacturer",
+        "model": "Example Laptop 14"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "The computer has two SO-DIMM DDR4 slots and supports up to 32 GB of memory. No memory is soldered to the system board."
+    },
+    {
+      "passage_id": "ex14-hmm#storage-1",
+      "document_id": "ex14-hmm",
+      "title": "Example Laptop 14 Hardware Maintenance Manual",
+      "url": "https://example.org/manuals/ex14-hmm.pdf",
+      "publisher": "Example Manufacturer",
+      "topic": "repair-hardware",
+      "section": "Storage drive",
+      "page": 68,
+      "applicability": {
+        "kind": "model",
+        "manufacturer": "Example Manufacturer",
+        "model": "Example Laptop 14"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "A 2.5-inch SATA drive bay and one M.2 2280 slot supporting NVMe or SATA SSDs are available."
+    },
+    {
+      "passage_id": "reuse-guide#data-wipe",
+      "document_id": "reuse-guide",
+      "title": "Guide to reusing and donating computers",
+      "url": "https://example.org/circular/reuse-guide",
+      "publisher": "Example Circular Economy Network",
+      "topic": "circular-economy",
+      "section": "Erasing data before passing on",
+      "page": null,
+      "applicability": {
+        "kind": "generic"
+      },
+      "accessed_on": "2026-11-20",
+      "text": "Before passing on a computer, reset the operating system and securely erase all drives."
+    }
+  ]
+}

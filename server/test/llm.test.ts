@@ -9,7 +9,8 @@ const config: LlmConfig = {
   apiKey: 'sk-test-secret',
   model: 'deepseek-flash',
   timeoutMs: 1000,
-  thinking: { fact_extraction: 'enabled', explanation: 'disabled' },
+  categoryTimeoutMs: 1000,
+  thinking: { fact_extraction: 'enabled', explanation: 'disabled', categories: 'disabled' },
 }
 
 const Answer = Type.Object({ status: Type.Literal('ok'), count: Type.Integer() }, { additionalProperties: false })
@@ -114,7 +115,7 @@ describe('OpenAI-compatible client', () => {
     const replies = [{ content: '{"status":"ok","count":1}' }]
     const requests: Record<string, unknown>[] = []
     const client = createOpenAiCompatibleClient(
-      { ...config, thinking: { fact_extraction: 'omit', explanation: 'omit' } },
+      { ...config, thinking: { fact_extraction: 'omit', explanation: 'omit', categories: 'omit' } },
       {
         maxRetries: 0,
         fetch: (async (_url: unknown, init?: RequestInit) => {
@@ -182,6 +183,35 @@ describe('OpenAI-compatible client', () => {
     await expect(ask(client)).rejects.toMatchObject({ kind: 'timeout' })
   })
 
+  it('gives the category call its own, longer deadline and thinking setting (feature 008)', async () => {
+    const bodies: Record<string, any>[] = []
+    // Answers after 150 ms: longer than the 50 ms explanation deadline, shorter than the 400 ms category deadline.
+    const slow: typeof fetch = async (_url, init) => {
+      bodies.push(JSON.parse(String(init?.body)))
+      await new Promise((resolve) => setTimeout(resolve, 150))
+      if (init?.signal?.aborted) throw new DOMException('aborted', 'AbortError')
+      return Response.json({
+        id: 'c', object: 'chat.completion', created: 0, model: 'deepseek-flash',
+        choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: '{"status":"ok","count":3}' } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      })
+    }
+    const client = createOpenAiCompatibleClient(
+      { ...config, timeoutMs: 50, categoryTimeoutMs: 400, thinking: { ...config.thinking, categories: 'enabled' } },
+      { fetch: slow, maxRetries: 0 },
+    )
+    const request = (task: 'explanation' | 'categories') => client.completeJson({ task, system: 'Count things.', user: 'Count to 3.', schema: Answer })
+    await expect(request('categories')).resolves.toMatchObject({ value: { status: 'ok', count: 3 } })
+    expect(bodies[0]!.thinking).toEqual({ type: 'enabled' })
+    await expect(request('explanation')).rejects.toMatchObject({ kind: 'timeout' })
+  })
+
+  it('stops the category call at its deadline', async () => {
+    const { client } = fakeProvider('hang')
+    await expect(client.completeJson({ task: 'categories', system: 'Count things.', user: 'Count to 3.', schema: Answer }))
+      .rejects.toMatchObject({ kind: 'timeout', message: 'Category deadline exceeded' })
+  })
+
   it('never puts the API key in error messages', async () => {
     const { client } = fakeProvider({ status: 401, body: { error: { message: 'bad key' } } })
     const error = (await ask(client).catch((e: unknown) => e)) as LlmError
@@ -191,13 +221,14 @@ describe('OpenAI-compatible client', () => {
 })
 
 describe('loadLlmConfig', () => {
-  it('defaults to DeepSeek with thinking off for both tasks', () => {
+  it('defaults to DeepSeek with thinking off for every task', () => {
     expect(loadLlmConfig({ LLM_API_KEY: 'k' })).toEqual({
       baseUrl: 'https://api.deepseek.com',
       apiKey: 'k',
       model: 'deepseek-flash',
       timeoutMs: 25000,
-      thinking: { fact_extraction: 'disabled', explanation: 'disabled' },
+      categoryTimeoutMs: 40000,
+      thinking: { fact_extraction: 'disabled', explanation: 'disabled', categories: 'disabled' },
     })
   })
 
@@ -210,14 +241,20 @@ describe('loadLlmConfig', () => {
         LLM_TIMEOUT_MS: '5000',
         LLM_THINKING_FACT_EXTRACTION: 'omit',
         LLM_THINKING_EXPLANATION: 'enabled',
+        LLM_CATEGORY_TIMEOUT_MS: '60000',
+        LLM_THINKING_CATEGORIES: 'enabled',
       }),
-    ).toMatchObject({ baseUrl: 'https://other.example/v1', model: 'other-model', timeoutMs: 5000, thinking: { fact_extraction: 'omit', explanation: 'enabled' } })
+    ).toMatchObject({
+      baseUrl: 'https://other.example/v1', model: 'other-model', timeoutMs: 5000, categoryTimeoutMs: 60000,
+      thinking: { fact_extraction: 'omit', explanation: 'enabled', categories: 'enabled' },
+    })
   })
 
   it.each([
     [{}, 'LLM_API_KEY'],
     [{ LLM_API_KEY: 'k', LLM_BASE_URL: 'not a url' }, 'LLM_BASE_URL'],
     [{ LLM_API_KEY: 'k', LLM_TIMEOUT_MS: '-1' }, 'LLM_TIMEOUT_MS'],
+    [{ LLM_API_KEY: 'k', LLM_CATEGORY_TIMEOUT_MS: '0' }, 'LLM_CATEGORY_TIMEOUT_MS'],
     [{ LLM_API_KEY: 'k', LLM_THINKING_EXPLANATION: 'maybe' }, 'LLM_THINKING_EXPLANATION'],
   ])('rejects invalid config %j', (env, name) => {
     expect(() => loadLlmConfig(env)).toThrowError(expect.objectContaining({ kind: 'config', message: expect.stringContaining(name) }))

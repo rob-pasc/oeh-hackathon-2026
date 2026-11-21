@@ -1,6 +1,6 @@
 # server
 
-The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights), **retrieval** (`src/retrieval/`, feature 002), and the **report stream** that combines them (003 T-007). The explained report request builder and model output schema are in `src/report/prompt.ts` (004 T-001).
+The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights), **retrieval** (`src/retrieval/`, feature 002), the **category service** (`src/categories/`, feature 008: the category call, its checks, option figures and scores, and the five-path fallback), and the **report stream** that combines them (003 T-007). The explained report request builder and model output schema are in `src/report/prompt.ts` (004 T-001).
 
 The LLM API key is configured only here, through environment variables. It never ships in the scanner or the web app.
 
@@ -12,7 +12,7 @@ The LLM API key is configured only here, through environment variables. It never
 |---|---|
 | `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above the configured ceiling (default 32 KiB), or `429 rate_limited` |
 | `GET /api/devices/:id` | `200 DeviceRecord`; unknown and malformed IDs both get the same `404 not_found` |
-| `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `assessment` (the ranked `Assessment`), then `report` (generated or template), then `end` with `{"status":"complete"}`. Templates end with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `429 rate_limited` before opening the stream, or `500` when the server has no retrieval index |
+| `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `assessment` (the ranked `Assessment`), then `categories` (the AI's `CategoryResult`, or the five-path fallback), then `end` with `{"status":"complete"}`. The fallback ends with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `429 rate_limited` before opening the stream, or `500` when the server has no retrieval index |
 | `GET /downloads/leaaf-scanner.exe` | The Windows scanner at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
 | `GET /downloads/leaaf-scanner-linux` | The Linux scanner at `SCANNER_LINUX_PATH`, with the same trailer for a session (feature 007) |
 | `GET /downloads/leaaf-scanner-macos.zip` | The zipped macOS app at `SCANNER_MACOS_PATH`. For a session, the bundle inside is renamed from `leaaf-scanner.app` to `leaaf-scanner-<id>.app`, which keeps its signature valid (feature 007) |
@@ -34,7 +34,7 @@ Each server process allows 10 upload attempts and 60 report requests per client 
 | `LLM_DAILY_CALLS` | 200 | Nonnegative integer. Zero prevents all fresh provider calls. |
 | `TRUSTED_PROXY_IP` | Empty | One IPv4 or IPv6 address |
 
-The running API shares one SQLite counter per UTC day across extraction and explanation. It reserves a call before each provider attempt, including failed requests, transport retries and JSON repairs. Cache hits consume no allowance. After exhaustion, fresh assessments can use cached facts, and uncached explanations use the template with its unavailable notice.
+The running API shares one SQLite counter per UTC day across extraction and the category call. It reserves a call before each provider attempt, including failed requests, transport retries and JSON repairs. Cache hits consume no allowance. After exhaustion, fresh assessments can use cached facts, and uncached category results use the five-path fallback with its unavailable notice.
 
 ## LLM adapter
 
@@ -57,7 +57,9 @@ Rules for callers:
 - Put document passages in `user`, clearly delimited as data.
 - Never put device IDs or personal data into prompts.
 
-The report service adds the SQLite table `explanation_cache` on startup. Repeat requests for the same device and intended use reuse the stored output. Each response filters claims against the retrieved passages and takes citation metadata from retrieval. Concurrent opens share a pending generation in the server process. If no cached result exists, a missing key or typed provider failure produces a template report derived from the assessment. The explanation deadline covers transport retries and JSON repair. A later open can retry generation. Older prompt versions regenerate on the next request. There is no device-data migration.
+The report service adds the SQLite table `explanation_cache` on startup. Repeat requests for the same device and intended use reuse the stored output. Each response filters claims against the retrieved passages and takes citation metadata from retrieval. Concurrent opens share a pending generation in the server process. If no cached result exists, a missing key or typed provider failure produces a template report derived from the assessment. The explanation deadline covers transport retries and JSON repair. A later open can retry generation. Older prompt versions regenerate on the next request. There is no device-data migration. Since feature 008 the report stream no longer calls the explanation service; its template text is still used by the category fallback.
+
+The category service (`src/categories/`) adds the SQLite table `category_cache` on startup, keyed by device and intended use and storing a hash of the category prompt, so a prompt change regenerates on the next open. It caches the AI's checked answer and recomputes option figures and scores from the current assessment on every read. Options of a priced kind (`ssd`, `ram`, `battery`, `hand_down`, `salvage`, `recycle`) are priced by the feature 003 calculator; `other` options keep the AI's ranges only if each has `low <= high` and no negative value, and are marked `ai_estimate`. Claims citing passages that were not supplied are removed, and text with a euro or CO₂e figure is replaced. A missing key, a typed provider failure, or an answer left with fewer than three categories after these checks produces the five assessed paths as five categories with the notice "AI explanation unavailable"; nothing is cached then, so the next open retries. `node scripts/category-fixture.ts` regenerates the shared example fixture.
 
 ## Fact extraction
 
@@ -99,6 +101,8 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 | `LLM_TIMEOUT_MS` | `25000` | Per-request timeout |
 | `LLM_THINKING_FACT_EXTRACTION` | `disabled` | `enabled`, `disabled`, or `omit` (don't send the parameter) |
 | `LLM_THINKING_EXPLANATION` | `disabled` | As above |
+| `LLM_CATEGORY_TIMEOUT_MS` | `40000` | Deadline for the whole category call (feature 008), including retries and the repair attempt |
+| `LLM_THINKING_CATEGORIES` | `disabled` | As above, for the category call |
 
 ## Container image
 
@@ -112,6 +116,7 @@ npm test -w server        # unit tests against a fake provider (no network, no k
 npm run typecheck -w server
 npm run llm:smoke -w server   # live call to the configured provider; needs server/.env
 npm run facts:smoke -w server # live fact extraction over shared/fixtures, compared with the expected facts
+npm run categories:smoke -w server # live category call for the three demo models, with the feature 008 AC-016 checks; needs the index
 npm run corpus:ingest -w server # build the retrieval index from corpus/ into data/corpus.sqlite
 ```
 
