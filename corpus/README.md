@@ -2,7 +2,7 @@
 
 Curated knowledge base for retrieval ([feature 002](../docs/features/feature-002-knowledge-base-retrieval/PLAN.md)): `manifest.yaml`, which holds the source, terms/licence note and model applicability for each document, plus Markdown extracts in `docs/`.
 
-It covers the three demo models (Lenovo ThinkPad T480, Dell XPS 13 9360, HP EliteBook 840 G5) with five documents each, plus 16 generic documents on Windows support, data wiping, repair funding, reuse, e-waste collection, and battery safety, with an Austrian focus. Sources, gaps, and licence notes are summarised in the feature's [RESEARCH.md](../docs/features/feature-002-knowledge-base-retrieval/RESEARCH.md).
+It covers the three demo models (Lenovo ThinkPad T480, Dell XPS 13 9360, HP EliteBook 840 G5) with their service manuals, spec sheets, and iFixit guides, plus generic documents on Windows support (including back-up and reinstalling Windows), data wiping, repair funding and repair cafés, reuse, e-waste and battery collection, and battery safety, with an Austrian focus. Sources, gaps, and licence notes are summarised in the feature's [RESEARCH.md](../docs/features/feature-002-knowledge-base-retrieval/RESEARCH.md); the step-level additions (feature 010) are in [its RESEARCH.md](../docs/features/feature-010-step-level-knowledge-base/RESEARCH.md).
 
 Licences: iFixit extracts are CC BY-NC-SA 3.0 and Umweltbundesamt extracts are CC BY-NC-ND 4.0, both non-commercial only; the rest are short quotations with links. Revisit before any commercial use.
 

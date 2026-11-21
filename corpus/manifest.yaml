@@ -412,3 +412,71 @@ documents:
   applies_to: generic
   file: docs/uba-de-lithium-akkus.md
 
+
+- id: ifixit-t480-ssd-replacement
+  title: Lenovo ThinkPad T480 SSD Replacement
+  url: https://www.ifixit.com/Guide/Lenovo+ThinkPad+T480+SSD+Replacement/167229
+  publisher: iFixit
+  accessed_on: '2026-11-21'
+  terms: CC BY-NC-SA 3.0 (iFixit, guide by Dane Elliott-Dyson and contributors); non-commercial hackathon
+    use with attribution and link, short verbatim excerpts only, shared under the same licence.
+  topic: repair-hardware
+  applies_to:
+  - manufacturer: Lenovo
+    model: ThinkPad T480
+  file: docs/ifixit-t480-ssd-replacement.md
+
+- id: ms-back-up-with-windows-backup
+  title: Back up and restore with Windows Backup
+  url: https://support.microsoft.com/en-gb/windows/experience/backup-recovery/back-up-and-restore-with-windows-backup
+  publisher: Microsoft
+  accessed_on: '2026-11-21'
+  terms: Microsoft Support content under Microsoft's terms of use; short verbatim quotations with a link,
+    as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-back-up-with-windows-backup.md
+
+- id: ms-reinstall-windows-with-installation-media
+  title: Reinstall Windows with the installation media
+  url: https://support.microsoft.com/en-us/windows/deployment/install-upgrade/reinstall-windows-with-the-installation-media
+  publisher: Microsoft
+  accessed_on: '2026-11-21'
+  terms: Microsoft Support content under Microsoft's terms of use; short verbatim quotations with a link,
+    as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-reinstall-windows-with-installation-media.md
+
+- id: at-usp-batterien-ruecknahme
+  title: Batterien (Rücknahmepflicht des Handels und kostenlose Rückgabe in Sammelzentren)
+  url: https://www.usp.gv.at/themen/betrieb-und-umwelt/abfallrecht/weitere-informationen-abfallrecht/abfall-und-produktregelungen/batterien.html
+  publisher: Unternehmensservice Portal (Republik Österreich; Inhalt verantwortlich BMLUK)
+  accessed_on: '2026-11-21'
+  terms: Official Austrian federal government website with no licence stated, so we store only short verbatim
+    German quotations with a link, as permitted quotation (Austrian UrhG §42f).
+  topic: environmental
+  applies_to: generic
+  file: docs/at-usp-batterien-ruecknahme.md
+
+- id: at-ak-wien-repair-cafes
+  title: 'Repair Cafés: Schrauben statt wegwerfen! (AK Wien)'
+  url: https://wien.arbeiterkammer.at/beratung/konsumentenschutz/konsumundeinkauf/preiseundprodukte/Repair-Cafes-Schrauben-statt-wegwerfen-.html
+  publisher: Arbeiterkammer Wien
+  accessed_on: '2026-11-21'
+  terms: Website of a statutory chamber with no licence stated, so we store only short verbatim German
+    quotations with a link, as permitted quotation (Austrian UrhG §42f).
+  topic: circular-economy
+  applies_to: generic
+  file: docs/at-ak-wien-repair-cafes.md
+
+- id: ms-create-installation-media
+  title: Create installation media for Windows
+  url: https://support.microsoft.com/en-us/help/15088
+  publisher: Microsoft
+  accessed_on: '2026-11-21'
+  terms: Microsoft Support content under Microsoft's terms of use; short verbatim quotations with a link,
+    as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-create-installation-media.md
