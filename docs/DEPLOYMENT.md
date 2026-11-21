@@ -57,6 +57,8 @@ docker compose pull
 docker compose up -d
 ```
 
+To use the admin page at `https://leaaf.green/admin` (feature 013), set `ADMIN_USERNAME` and a password of at least 16 characters as `ADMIN_PASSWORD` in `deploy/.env`, then run `docker compose up -d` again. Without them the admin area stays off. The password is stored in plain text, so keep `deploy/.env` readable by root only (`chmod 600 deploy/.env`). The per-client login limit needs `TRUSTED_PROXY_IP` (below); without it every visitor counts as Caddy and shares one counter.
+
 Both containers publish their ports on `127.0.0.1` only. The server's data lives in the named volume `leaaf_server-data`. `deploy/.env` both configures Compose and is passed to the server container. The server variables are described in [`server/README.md`](../server/README.md#configuration).
 
 ### Client IP configuration
@@ -95,7 +97,12 @@ curl -fsS -X POST https://leaaf.green/api/sessions    # {"session_id": ..., "dow
 curl -fsS -o /dev/null -w '%{http_code} %{size_download}\n' https://leaaf.green/downloads/leaaf-scanner.exe        # 200, several MB
 curl -fsS -o /dev/null -w '%{http_code} %{size_download}\n' https://leaaf.green/downloads/leaaf-scanner-linux      # 200, about 12 MB
 curl -fsS -o /dev/null -w '%{http_code} %{size_download}\n' https://leaaf.green/downloads/leaaf-scanner-macos.zip  # 200, several MB
+curl -sS -o /dev/null -w '%{http_code}\n' https://leaaf.green/api/admin/scans   # 401 when the admin area is on, 404 when off
+curl -sS -D - -o /dev/null -X POST https://leaaf.green/api/admin/login -H 'content-type: application/json' \
+  -d '{"username":"x","password":"wrong"}' | grep -iE '^HTTP|cache-control|x-robots'   # 401, no-store, noindex
 ```
+
+With the admin area on, log in at `https://leaaf.green/admin` in a browser, check that the scans are listed, and look at the `leaaf_admin` cookie in the developer tools: `HttpOnly`, `Secure`, `SameSite=Strict`, path `/api/admin`. Six quick wrong logins from one client should end in 429.
 
 Open `https://leaaf.green` in a browser and check that the landing page loads over HTTPS without the "Sample data" label. For the rate-limit smoke check, use a dedicated test client and repeatedly request the report for a missing device with a valid use. Expect 404 until the configured report allowance is spent, then 429 with a positive Retry-After. From a second client IP the first request should still return 404. Repeat on the upload route with an empty JSON object (400 until 429). This checks both client separation through Caddy and the limits without storing scans or calling the provider. Add a seeded-report check when the seed command is available.
 

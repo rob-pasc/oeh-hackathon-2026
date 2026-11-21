@@ -119,7 +119,7 @@ Proposal based on repository inspection on 2026-11-21; not adopted yet.
 
 ## Related and superseded features
 
-All relationships below are **planned**; none is effective until implemented.
+The relationships below were **implemented on `feat/adminpage` on 2026-11-21** (commits "feat(server): add the admin login and scan list API" and "feat(web): add the admin login and scan list page"), with reciprocal notes in the earlier plans. They take effect on `main` and in production only after merge and release.
 
 - [`feature-001-device-scan-and-upload`](../feature-001-device-scan-and-upload/PLAN.md) / FR-011 ("No endpoint lists or enumerates devices") and its out-of-scope entry "a list of all devices": replaced for an authenticated admin only (FR-011 here). For everyone else they stay in force, and the route inventory test keeps checking that. The privacy rule "never log full device IDs together with request IPs" is unchanged: no IPs are stored and the admin routes log no device IDs.
 - [`feature-006-web-app`](../feature-006-web-app/PLAN.md) / FR-046 (privacy notice): its statement "sets no cookies" gains the admin-only exception (FR-012 here). The rest of the notice is unchanged.

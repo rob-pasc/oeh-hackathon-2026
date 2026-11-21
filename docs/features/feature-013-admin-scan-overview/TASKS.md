@@ -1,7 +1,7 @@
 # Implementation Tasks: Admin scan overview
 
 - **Feature ID:** `feature-013-admin-scan-overview`
-- **Status:** In progress
+- **Status:** Implemented (verification pending)
 
 This is the **authoritative progress checklist**. Draft ordered, independently verifiable tasks after scope approval. Map tasks to acceptance criteria where practical. Check a task only after its work is actually complete.
 
@@ -22,8 +22,8 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 - [x] **T-005:** Server scan list: `DeviceStore.list` and `count`, `GET /api/admin/scans` with paging, and the updated route inventory test. (supports `AC-011`, `AC-012`, `AC-013`, `AC-016`)
 - [x] **T-006:** Web admin page: `/admin` route, login form with the generic error and the rate-limit message, scan table with pagination and device links, log out, "not set up" state, `noindex`, live and mock client calls, and tests. (supports `AC-001`, `AC-002`, `AC-004`, `AC-010`, `AC-011`, `AC-012`, `AC-014`)
 - [x] **T-007:** Privacy notice (DE/EN) cookie section and a test that public pages set no cookie. (supports `AC-017`)
-- [ ] **T-008:** Documentation: `server/.env.example`, `deploy/.env.example`, `server/README.md`, `docs/DEPLOYMENT.md` (setup and post-release checks), README status, notes on features 001, 005 and 006, feature index. (supports `AC-018`)
-- [ ] **T-009:** Self-review of the final diff (authentication, sessions, rate limits, logging), record findings and their resolution, rerun the checks. (supports `AC-019`)
+- [x] **T-008:** Documentation: `server/.env.example`, `deploy/.env.example`, `server/README.md`, `docs/DEPLOYMENT.md` (setup and post-release checks), README status, notes on features 001, 005 and 006, feature index. (supports `AC-018`)
+- [x] **T-009:** Self-review of the final diff (authentication, sessions, rate limits, logging), record findings and their resolution, rerun the checks. (supports `AC-019`)
 - [ ] **T-010:** After the release: post-release checks on the deployed site. (supports `AC-018`)
 
 ## Dependencies and blockers
@@ -39,3 +39,4 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 ## Lifecycle history
 
 - 2026-11-21: Implementation started after the user replied "ok lets go".
+- 2026-11-21: Implementation and self-review done on `feat/adminpage`. Status Implemented (verification pending): the browser checks of AC-002 and AC-017, merge into `main`, and the post-release check (T-010, AC-018) are open. Evidence: [ACCEPTANCE_CRITERIA.md](./ACCEPTANCE_CRITERIA.md#review-and-integration-evidence).
