@@ -4,8 +4,7 @@
 // Priced kinds reuse the feature 003 calculator with a plan built for the single part, so their
 // figures trace back to impact table entries. Options of kind `other` keep the AI's ranges only when
 // they pass the range checks, and are always labelled as AI estimates.
-import type { Assessment, CategoryOption, Difficulty, Impact, IntendedUse, OptionKind, Path, Range, Suitability } from '@leaaf/shared'
-import type { DeviceScan } from '@leaaf/shared'
+import type { Assessment, CategoryOption, DeviceScan, Difficulty, Impact, IntendedUse, OptionKind, Path, Range, Suitability } from '@leaaf/shared'
 import { calculateImpact, type ImpactIndex } from '../assessment/calculator.ts'
 import type { GateResult, PathPlan } from '../assessment/gates.ts'
 import { confidence, optionFeasibility, rubricScores } from '../assessment/scoring.ts'

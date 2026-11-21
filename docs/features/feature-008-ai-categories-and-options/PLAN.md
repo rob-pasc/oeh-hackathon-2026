@@ -83,7 +83,7 @@ Adopted during implementation (2026-11-21) unless marked otherwise:
 - **Server:** A new `server/src/categories/` module with the prompt builder, validation, the mapping from kind to calculator inputs (reusing `server/src/assessment/calculator.ts` and `scoring.ts`), the fallback that converts the assessment into five categories, and an additive SQLite table `category_cache` keyed by device, intended use and prompt hash.
 - **Ranking:** `shared/src/ranking.ts` gains functions to rank options and categories with the existing weights, so the browser toggle and the server agree.
 - **Web:** The toolbar builds its tabs from the categories; the Overview, category tab and option cards reuse the existing path card, summary block and option card components.
-- **ADR:** Letting AI output decide which options exist and their status changes the determinism constraint of feature 003. Record an ADR once this is implemented.
+- **ADR:** Letting AI output decide which options exist and their status changes the determinism constraint of feature 003. Recorded as [ADR-003](../../adr/adr-003-ai-chosen-options.md).
 - **Settled during implementation (2026-11-21, routine choices within scope):**
   - **Timeout and thinking:** The category call has its own deadline, `LLM_CATEGORY_TIMEOUT_MS` (default 40 s), covering transport retries and the repair attempt. One HTTP attempt may use the whole deadline. Thinking is off by default (`LLM_THINKING_CATEGORIES=disabled`), like the explanation.
   - **Feasibility per difficulty:** `diy_easy` 80, `diy_moderate` 60, `professional` 55, minus the existing conditional penalty of 20. Recorded in the [feature 003 rubric documentation](../feature-003-five-path-ranking/DESIGN.md#scoring-rubrics-0100-each).
@@ -116,8 +116,8 @@ Not applicable: no deployment exists yet (feature 005 owns it). The `category_ca
 
 - The five-path assessment stays computed for every report; it is the AI's context and the fallback.
 - The fixed list of priced kinds matches the current impact table (SSD, RAM, battery, hand-down, salvage, recycle). New kinds need new impact entries.
-- Open: category call timeout, and whether thinking is enabled (see the proposed approach).
-- Open: feasibility values per difficulty, to be recorded in the feature 003 rubric documentation.
+- ~~Open: category call timeout, and whether thinking is enabled.~~ Settled: 40 s, thinking off (see the proposed approach).
+- ~~Open: feasibility values per difficulty.~~ Settled and recorded in the feature 003 rubric documentation.
 
 ## Scope change log
 
@@ -128,7 +128,7 @@ Not applicable: no deployment exists yet (feature 005 owns it). The `category_ca
 
 ## Related and superseded features
 
-All replacements below are **planned**; none is effective until this feature is implemented.
+Implemented 2026-11-21 on branch `feat/ai-categories` (commits cf09cde "feat(server): build AI categories and options on the report stream" and c91862d "feat(web): show AI categories with option cards and tabs"). The replacements below are **effective on that branch** and not yet on `main`; reciprocal notes were added to the plans of features 003, 004 and 006. One addition to the original list: the report stream no longer sends feature 004's explained report, so 004 FR-003's report sections are replaced as well (see "Proposed technical approach").
 
 - [`feature-003-five-path-ranking`](../feature-003-five-path-ranking/PLAN.md): **FR-012** (ranked view of the five paths) is replaced on the result screen by FR-006 here when categories arrive, and stays in force for the fallback (FR-013). The constraint "Only fact extraction uses the LLM" is replaced for which options exist, their status, and AI-estimated figures. FR-002 to FR-011, FR-013 and FR-014 stay in force: the assessment is still computed, used as AI input and for the fallback, and its rubrics and weights score the options.
 - [`feature-004-explained-report`](../feature-004-explained-report/PLAN.md): **FR-001** (five paths in ranked order with the Recommended label) is replaced by FR-006 and FR-007 here when the AI is available. **FR-002** (impact summary for the recommended path) applies to the best option of the recommended category. **FR-009** (template fallback) is extended by FR-013. **FR-010** (caching) is extended by FR-014. FR-004 to FR-006 stay in force for the category call's text and citations.
@@ -139,5 +139,5 @@ All replacements below are **planned**; none is effective until this feature is 
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: [ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md) (LLM provider); a new ADR is expected at implementation (see the proposed approach)
+- Related ADRs: [ADR-002](../../adr/adr-002-llm-openai-compatible-deepseek.md) (LLM provider), [ADR-003](../../adr/adr-003-ai-chosen-options.md) (AI-chosen options)
 - Related features: [002](../feature-002-knowledge-base-retrieval/PLAN.md), [003](../feature-003-five-path-ranking/PLAN.md), [004](../feature-004-explained-report/PLAN.md), [006](../feature-006-web-app/PLAN.md), [009](../feature-009-concrete-step-plans/PLAN.md), [010](../feature-010-step-level-knowledge-base/PLAN.md)

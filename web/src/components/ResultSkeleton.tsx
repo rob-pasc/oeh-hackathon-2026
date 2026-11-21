@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Sk } from './ui'
 
 /**
- * Placeholder with the same layout as the result screen: five path cards on the left, gauge and specs on the
+ * Placeholder with the same layout as the result screen: five cards on the left, gauge and specs on the
  * right. `side` replaces the specs placeholder, e.g. with the live parts list on the scan screen.
  */
 export function ResultSkeleton({ side }: { side?: ReactNode } = {}) {

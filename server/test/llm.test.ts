@@ -183,6 +183,35 @@ describe('OpenAI-compatible client', () => {
     await expect(ask(client)).rejects.toMatchObject({ kind: 'timeout' })
   })
 
+  it('gives the category call its own, longer deadline and thinking setting (feature 008)', async () => {
+    const bodies: Record<string, any>[] = []
+    // Answers after 150 ms: longer than the 50 ms explanation deadline, shorter than the 400 ms category deadline.
+    const slow: typeof fetch = async (_url, init) => {
+      bodies.push(JSON.parse(String(init?.body)))
+      await new Promise((resolve) => setTimeout(resolve, 150))
+      if (init?.signal?.aborted) throw new DOMException('aborted', 'AbortError')
+      return Response.json({
+        id: 'c', object: 'chat.completion', created: 0, model: 'deepseek-flash',
+        choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: '{"status":"ok","count":3}' } }],
+        usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+      })
+    }
+    const client = createOpenAiCompatibleClient(
+      { ...config, timeoutMs: 50, categoryTimeoutMs: 400, thinking: { ...config.thinking, categories: 'enabled' } },
+      { fetch: slow, maxRetries: 0 },
+    )
+    const request = (task: 'explanation' | 'categories') => client.completeJson({ task, system: 'Count things.', user: 'Count to 3.', schema: Answer })
+    await expect(request('categories')).resolves.toMatchObject({ value: { status: 'ok', count: 3 } })
+    expect(bodies[0]!.thinking).toEqual({ type: 'enabled' })
+    await expect(request('explanation')).rejects.toMatchObject({ kind: 'timeout' })
+  })
+
+  it('stops the category call at its deadline', async () => {
+    const { client } = fakeProvider('hang')
+    await expect(client.completeJson({ task: 'categories', system: 'Count things.', user: 'Count to 3.', schema: Answer }))
+      .rejects.toMatchObject({ kind: 'timeout', message: 'Category deadline exceeded' })
+  })
+
   it('never puts the API key in error messages', async () => {
     const { client } = fakeProvider({ status: 401, body: { error: { message: 'bad key' } } })
     const error = (await ask(client).catch((e: unknown) => e)) as LlmError

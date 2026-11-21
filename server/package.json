@@ -14,6 +14,7 @@
     "test": "vitest run",
     "llm:smoke": "node --env-file-if-exists=.env scripts/llm-smoke.ts",
     "facts:smoke": "node --env-file-if-exists=.env scripts/facts-smoke.ts",
+    "categories:smoke": "node --env-file-if-exists=.env scripts/categories-smoke.ts",
     "corpus:ingest": "node --env-file-if-exists=.env scripts/corpus-ingest.ts"
   },
   "devDependencies": {

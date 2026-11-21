@@ -116,6 +116,7 @@ npm test -w server        # unit tests against a fake provider (no network, no k
 npm run typecheck -w server
 npm run llm:smoke -w server   # live call to the configured provider; needs server/.env
 npm run facts:smoke -w server # live fact extraction over shared/fixtures, compared with the expected facts
+npm run categories:smoke -w server # live category call for the three demo models, with the feature 008 AC-016 checks; needs the index
 npm run corpus:ingest -w server # build the retrieval index from corpus/ into data/corpus.sqlite
 ```
 

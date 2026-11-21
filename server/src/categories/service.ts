@@ -4,9 +4,8 @@
 // recomputed from the current assessment on every read, so they always match the impact table and
 // weights the assessment used (FR-003, FR-014).
 import type { DatabaseSync } from 'node:sqlite'
-import { usesWindowsRules, type Category, type CategoryResult, type DeviceScan } from '@leaaf/shared'
+import { createValidator, usesWindowsRules, type Category, type CategoryResult, type DeviceScan, type OptionKind } from '@leaaf/shared'
 import type { Static } from 'typebox'
-import { createValidator } from '@leaaf/shared'
 import { indexImpactTable } from '../assessment/calculator.ts'
 import { runGates } from '../assessment/gates.ts'
 import type { DeviceAssessment } from '../assessment/service.ts'
@@ -22,6 +21,17 @@ type Output = Static<typeof CategoryOutput>
 const validateOutput = createValidator(CategoryOutput)
 
 const NEUTRAL = 'See the status and figures of this option.'
+
+/** Replacement label when the AI's label fails the text checks, named after the first option's kind. */
+const KIND_LABEL: Record<OptionKind, string> = {
+  ssd: 'Storage',
+  ram: 'Memory',
+  battery: 'Battery',
+  hand_down: 'Hand it down',
+  salvage: 'Salvage for parts',
+  recycle: 'Recycle',
+  other: 'More options',
+}
 
 /** Thrown when an answer is well-formed but unusable after the server checks; triggers the fallback. */
 class UnusableAnswer extends Error {}
@@ -85,7 +95,7 @@ export function buildResult(scan: DeviceScan, input: DeviceAssessment, output: O
     )
     categories.push({
       category_id: c.category_id,
-      label: hasNoFigure(c.label) ? c.label : options[0]!.title.slice(0, 24),
+      label: allowed(c.label) ? c.label : KIND_LABEL[options[0]!.kind],
       summary: allowed(c.summary) ? c.summary : NEUTRAL,
       options,
     })

@@ -176,6 +176,14 @@ When a replacement is implemented and merged, record the date and implementing c
 
 **FR-002 and FR-014 extended by [feature 007](../feature-007-macos-linux-scanner/PLAN.md#related-and-superseded-features) FR-013 and FR-014** (implemented on `main` 2026-11-21, commit "feat(web): offer the scanner for the visitor's system"): **Download and Scan now** downloads the scanner for the detected system, with links to the other two, and the session request names the system. FR-010's security chip reads "Not applicable" for a Mac (007 FR-019). The session flow (FR-002 to FR-004) is unchanged.
 
+**Partly replaced by [feature 008](../feature-008-ai-categories-and-options/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on branch `feat/ai-categories` (commits cf09cde "feat(server): build AI categories and options on the report stream" and c91862d "feat(web): show AI categories with option cards and tabs"); effective on that branch, not yet on `main`):
+- **FR-005, FR-006** (left column lists the five path cards) are replaced by the ranked categories (008 FR-006). The path cards remain while the categories load.
+- **FR-015** (fixed path tags and the steps view) is replaced by one tab per category (008 FR-009). The tabs moved to their own row beside the priority toggle.
+- **FR-017** (option cards per path with a proposed payload) is replaced by option cards per category on the shared `CategoryResult` contract (008 FR-009, FR-010); this resolves T-016. The before/after spec lines of the proposed payload are gone with it.
+- **FR-039** (mode-change line) applies to categories.
+- **FR-022** (non-clickable summary block) and **FR-045** (thinking line) carry over.
+- **FR-030's** note "Only if the receiver would otherwise buy new" is still shown for every conditional CO₂e credit. On an AI-estimated option that may add no life, the wording fits only loosely; changing it needs a decision on FR-030.
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)

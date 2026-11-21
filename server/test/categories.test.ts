@@ -229,8 +229,10 @@ describe('the category call (AC-012)', () => {
     const mac = { ...scan, os: { ...scan.os, family: 'macos' as const } }
     const output = answer()
     output.categories[1].options[0].title = 'Upgrade to Windows 11'
+    output.categories[0].label = 'Windows 11 and storage'
     const result = build(output, mac)
     expect(result.categories.map((c) => c.category_id)).not.toContain('memory')
+    expect(result.categories[0]!.label).toBe('Storage')
     expect(JSON.stringify(result)).not.toMatch(/windows\s*11/i)
 
     for (const c of output.categories) for (const o of c.options) o.reason = 'Windows 11 runs on it.'

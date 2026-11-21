@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     title: 'AI Analysis',
-    text: 'We rank five paths: upgrade, repair, pass on, salvage, recycle.',
+    text: 'We rank the options that fit your laptop, from upgrades and repairs to passing it on.',
     icon: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z',
   },
   {
