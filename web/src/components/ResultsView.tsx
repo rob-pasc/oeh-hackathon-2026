@@ -1,30 +1,31 @@
 import type { Assessment } from '@leaaf/shared/assessment'
+import type { CategoryResult } from '@leaaf/shared/categories'
 import type { Mode } from '@leaaf/shared/common'
 import type { DeviceScan } from '@leaaf/shared/device'
-import type { Report } from '@leaaf/shared/report'
-import type { PathOption } from '../api/types'
 import { useEffect, useMemo, useState } from 'react'
 import { ApiClientError, useApi } from '../api'
-import { DEFAULT_USE, type PathTab, type UseTag } from '../lib/labels'
-import { buildOptionViews } from '../lib/optionView'
+import { buildCategoryViews, type CategoryView, type OptionView } from '../lib/categoryView'
+import { DEFAULT_USE, type ResultTab, type UseTag } from '../lib/labels'
 import { useFlip } from '../lib/motion'
-import { buildPathViews } from '../lib/pathView'
-import { ReportDetails } from './ReportDetails'
-import { explainModeChange } from '../lib/modeChange'
-import { formatEur, formatYears } from '../lib/impact'
+import { buildPathViews, type CardView } from '../lib/pathView'
+import { explainCategoryModeChange, explainModeChange } from '../lib/modeChange'
+import { formatAvoided, formatEur, formatYears } from '../lib/impact'
+import { CategoryTabView } from './CategoryTabView'
 import { Equivalents } from './Equivalents'
 import { Gauge } from './Gauge'
 import { PathCard } from './PathCard'
-import { PathTabView } from './PathTabView'
 import { ResultSkeleton } from './ResultSkeleton'
 import { Thinking } from './Thinking'
 import { SpecsCard } from './SpecsCard'
-import { Toolbar } from './Toolbar'
+import { Toolbar, type TabItem } from './Toolbar'
 import { ErrorCard } from './ui'
 
 type Load<T> = { state: 'loading' } | { state: 'ready'; value: T } | { state: 'error'; error: ApiClientError }
 
-/** The result screen: toolbar, five path cards (left), CO₂e gauge and scan specs (right). */
+/**
+ * The result screen: toolbar, ranked categories or one category's options (left), CO₂e gauge and scan
+ * specs (right). Until the categories arrive, the five assessed paths stand in for them (feature 008).
+ */
 export function ResultsView({ deviceId }: { deviceId: string }) {
   const api = useApi()
   const [use, setUse] = useState<UseTag>(DEFAULT_USE)
@@ -32,15 +33,13 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const [change, setChange] = useState<string[]>([])
   const [scan, setScan] = useState<Load<DeviceScan>>({ state: 'loading' })
   const [assessment, setAssessment] = useState<Assessment | null>(null)
-  const [report, setReport] = useState<Report | null>(null)
-  const [options, setOptions] = useState<PathOption[]>([])
+  const [categories, setCategories] = useState<CategoryResult | null>(null)
   const [streamError, setStreamError] = useState<ApiClientError | null>(null)
   const [streamEnded, setStreamEnded] = useState(false)
-  const [pathTab, setPathTab] = useState<PathTab>('overview')
-  const [selected, setSelected] = useState<string | null>(null)
-  const [open, setOpen] = useState<string | null>(null)
-  const [optionSelected, setOptionSelected] = useState<string | null>(null)
-  const [optionOpen, setOptionOpen] = useState<string | null>(null)
+  const [tab, setTab] = useState<ResultTab>('overview')
+  /** Key of the option the user last opened; the gauge follows it (FR-011). */
+  const [selectedOption, setSelectedOption] = useState<string | null>(null)
+  const [openOption, setOpenOption] = useState<string | null>(null)
 
   // Scan data: loaded once per device.
   useEffect(() => {
@@ -58,58 +57,54 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     }
   }, [api, deviceId])
 
-  // Assessment then report: restarted whenever the use tag changes. The previous ranking stays on screen
-  // until the new assessment arrives, so switching tags does not flash the skeleton.
+  // Assessment then categories: restarted whenever the use tag changes. The previous ranking stays on
+  // screen until the new assessment arrives, so switching tags does not flash the skeleton.
   useEffect(() => {
-    setReport(null)
-    setOptions([])
+    setCategories(null)
     setStreamError(null)
     setStreamEnded(false)
     return api.streamReport(deviceId, use, {
       onAssessment: value => { setAssessment(value); setChange([]) },
-      onReport: setReport,
-      onOptions: setOptions,
+      onCategories: value => { setCategories(value); setChange([]) },
       onEnd: () => setStreamEnded(true),
       onError: setStreamError,
     })
   }, [api, deviceId, use])
 
-  const views = useMemo(() => (assessment ? buildPathViews(assessment, report, mode) : []), [assessment, report, mode])
-
-  // Default selection follows the recommendation until the user picks a card themselves.
-  const recommendedId = views.find((v) => v.isRecommended)?.id ?? views[0]?.id ?? null
-  // A chosen path tag decides the selected path; in the overview it is the last clicked card.
-  const recommendation = views.find(v => v.isRecommended)
-  const explanations = new Map(report?.paths.map(p => [p.path, p]))
-  const impact = assessment?.paths.find(p => p.path === recommendation?.id)?.impact
-  const tabView = pathTab === 'overview' ? null : (views.find((v) => v.id === pathTab) ?? null)
-  const selectedView =
-    tabView ?? views.find((v) => v.id === selected) ?? views.find((v) => v.id === recommendedId) ?? null
-  // Older streams can end after the assessment alone.
-  const reportPending = report === null && streamError === null && !streamEnded
-
-  // Options of the selected path tag; the gauge follows the option the user last clicked.
-  const optionViews = useMemo(
-    () =>
-      tabView && assessment
-        ? buildOptionViews(
-            options.filter((o) => o.path === tabView.id),
-            assessment.baseline,
-          )
-        : [],
-    [options, tabView, assessment],
+  const categoryViews = useMemo(
+    () => (categories && assessment ? buildCategoryViews(categories, assessment, mode) : []),
+    [categories, assessment, mode],
   )
-  const selectedOption = optionViews.find((o) => o.key === optionSelected) ?? null
-  const gaugeItem = selectedOption ?? selectedView
-  const gaugeValue = gaugeItem?.gauge ?? null
-  // Path cards slide to their new places when the ranking changes (priority toggle or use tag).
-  const registerCard = useFlip(views.map((v) => v.key))
-  const gaugeTitle = selectedOption && tabView ? `${tabView.title} · ${selectedOption.title}` : (selectedView?.title ?? '')
+  const pathViews = useMemo(() => (assessment && !categories ? buildPathViews(assessment, mode) : []), [assessment, categories, mode])
+  const categoriesPending = categories === null && streamError === null && !streamEnded
 
-  function changePathTab(tab: PathTab) {
-    setPathTab(tab)
-    setOptionSelected(null)
-    setOptionOpen(null)
+  // A category tab that no longer exists (new use, new categories) falls back to the Overview.
+  const activeCategory = tab === 'overview' ? null : (categoryViews.find(c => c.id === tab) ?? null)
+  const activeTab: ResultTab = activeCategory ? activeCategory.id : 'overview'
+  const tabs: TabItem[] = [{ id: 'overview', label: 'Overview' }, ...categoryViews.map(c => ({ id: c.id, label: c.title }))]
+
+  const allOptions = categoryViews.flatMap(c => c.options)
+  const recommended = categoryViews.find(c => c.isRecommended) ?? null
+  // Before any option is opened, the gauge shows the best option of the first category (FR-011).
+  const gaugeOption: OptionView | null = allOptions.find(o => o.key === selectedOption) ?? categoryViews[0]?.best ?? null
+  const gaugeCategory = gaugeOption ? categoryViews.find(c => c.options.includes(gaugeOption)) : undefined
+  const gaugeItem: CardView | null = gaugeOption ?? pathViews.find(v => v.isRecommended) ?? pathViews[0] ?? null
+  // "Category · option", or just the name when a fallback category and its only option share it.
+  const gaugeTitle = gaugeOption && gaugeCategory
+    ? gaugeOption.title !== gaugeCategory.title ? `${gaugeCategory.title} · ${gaugeOption.title}` : gaugeOption.title
+    : (gaugeItem?.title ?? '')
+
+  // Cards slide to their new places when the ranking changes (priority toggle or use tag).
+  const registerCard = useFlip((categories ? categoryViews : pathViews).map(v => v.key))
+
+  function changeTab(next: ResultTab) {
+    setTab(next)
+    setOpenOption(null)
+  }
+
+  function toggleOption(key: string) {
+    setSelectedOption(key)
+    setOpenOption(current => (current === key ? null : key))
   }
 
   if (scan.state === 'error') {
@@ -130,14 +125,18 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
       <Toolbar
         use={use}
         mode={mode}
-        pathTab={pathTab}
+        tabs={tabs}
+        tab={activeTab}
         onUseChange={setUse}
         onModeChange={next => {
           if (next === mode) return
-          setChange(assessment ? explainModeChange(assessment, mode, next) : [])
+          setChange(
+            assessment && categories ? explainCategoryModeChange(categories, assessment, mode, next)
+              : assessment ? explainModeChange(assessment, mode, next) : [],
+          )
           setMode(next)
         }}
-        onPathTabChange={changePathTab}
+        onTabChange={changeTab}
       />
       {change.length > 0 && <div role="status" className="text-sm text-muted">{change.map(t => <p key={t}>{t}</p>)}</div>}
       {streamError && !assessment ? (
@@ -150,50 +149,53 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
       ) : (
         <div className="fade-up grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] items-start gap-7">
           <div className="relative flex flex-col gap-3.5">
-            {!tabView && <p className="px-1 text-sm text-muted" aria-label="Recommendation summary">
-              {recommendation && impact ? <>
-                <strong className="text-ink">{recommendation.title}</strong> · {formatEur(impact.cost_eur)} · {formatYears(impact.useful_life_years)} · {impact.co2e_kg.avoided_vs_baseline.low}–{impact.co2e_kg.avoided_vs_baseline.high} kg CO₂e avoided.
-                {' '}Baseline: {assessment.baseline.description}.
-              </> : 'No path is clearly recommended. Each is conditional or unsuitable for this use.'}
-            </p>}
-            {tabView ? (
-              <PathTabView
-                key={tabView.id}
-                path={tabView}
-                options={optionViews}
-                pending={reportPending}
-                selectedKey={optionSelected}
-                openKey={optionOpen}
-                onToggle={(key) => {
-                  setOptionSelected(key)
-                  setOptionOpen((current) => (current === key ? null : key))
-                }}
+            {activeCategory ? (
+              <CategoryTabView
+                key={activeCategory.id}
+                category={activeCategory}
+                selectedKey={selectedOption}
+                openKey={openOption}
+                onToggle={toggleOption}
               />
+            ) : categories ? (
+              <>
+                <RecommendationSummary recommended={recommended} baseline={assessment.baseline.description} />
+                {categoryViews.map(view => (
+                  <div key={view.key} ref={registerCard(view.key)}>
+                    <PathCard
+                      view={view}
+                      selected={gaugeCategory?.id === view.id}
+                      open={false}
+                      pending={false}
+                      navigates
+                      onToggle={() => changeTab(view.id)}
+                    />
+                  </div>
+                ))}
+              </>
             ) : (
-              views.map((view) => (
-                <div key={view.key} ref={registerCard(view.key)}>
-                <PathCard
-                  view={view}
-                  selected={selectedView?.id === view.id}
-                  open={open === view.id}
-                  reportPending={reportPending}
-                  onToggle={() => {
-                    setSelected(view.id)
-                    setOpen((current) => (current === view.id ? null : view.id))
-                  }}
-                >
-                  {report && <ReportDetails explanation={explanations.get(view.id)} passages={report.passages} />}
-                </PathCard>
-                </div>
-              ))
+              <>
+                {categoriesPending ? <Thinking label="Finding options for this computer…" className="px-1" /> : null}
+                {pathViews.map(view => (
+                  <div key={view.key} ref={registerCard(view.key)}>
+                    <PathCard
+                      view={view}
+                      selected={gaugeItem?.key === view.key}
+                      open={openOption === view.key}
+                      pending={categoriesPending}
+                      onToggle={() => setOpenOption(current => (current === view.key ? null : view.key))}
+                    />
+                  </div>
+                ))}
+              </>
             )}
-            {report && report.source === 'template' && report.notice ? (
-              <p className="m-0 rounded-[10px] bg-amber-tint px-3 py-2 text-[13px] text-amber-ink">{report.notice}</p>
+            {categories && categories.source === 'template' && categories.notice ? (
+              <p className="m-0 rounded-[10px] bg-amber-tint px-3 py-2 text-[13px] text-amber-ink">{categories.notice}</p>
             ) : null}
           </div>
           <div className="xl:sticky top-6 flex flex-col gap-5">
             <section aria-label="CO₂e gauge" className="rounded-[20px] bg-white p-6 shadow-card">
-              <Gauge value={gaugeValue} pathTitle={gaugeTitle} />
+              <Gauge value={gaugeItem?.gauge ?? null} pathTitle={gaugeTitle} estimate={gaugeItem?.aiEstimate ?? false} />
               <Equivalents avoided={gaugeItem?.co2?.avoided ?? null} conditional={gaugeItem?.co2?.conditional ?? false} />
             </section>
             <SpecsCard scan={scan.value} />
@@ -201,6 +203,25 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
         </div>
       )}
     </div>
+  )
+}
+
+/** The impact summary for the best option of the recommended category (feature 004 FR-002, 008 FR-007). */
+function RecommendationSummary({ recommended, baseline }: { recommended: CategoryView | null; baseline: string }) {
+  const impact = recommended?.best.option.impact ?? null
+  return (
+    <p className="px-1 text-sm text-muted" aria-label="Recommendation summary">
+      {recommended && impact ? (
+        <>
+          <strong className="text-ink">{recommended.title}</strong>
+          {recommended.best.title !== recommended.title ? ` · ${recommended.best.title}` : ''} · {formatEur(impact.cost_eur)} ·{' '}
+          {formatYears(impact.useful_life_years)} · {formatAvoided(impact)} CO₂e avoided
+          {recommended.best.aiEstimate ? ' (AI estimate)' : ''}. Baseline: {baseline}.
+        </>
+      ) : (
+        'No option is clearly recommended. Each one depends on something or is not a fit for this use.'
+      )}
+    </p>
   )
 }
 

@@ -3,8 +3,8 @@
 import type { Assessment } from '@leaaf/shared/assessment'
 import { API_ROUTES } from '@leaaf/shared/api'
 import type { DeviceRecord } from '@leaaf/shared/device'
-import type { Report } from '@leaaf/shared/report'
-import { ApiClientError, type ApiClient, type PathOption, type ScanSession, type ScanSessionEvent } from './types'
+import type { CategoryResult } from '@leaaf/shared/categories'
+import { ApiClientError, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
 
 async function readError(response: Response): Promise<ApiClientError> {
   try {
@@ -72,14 +72,9 @@ export const liveClient: ApiClient = {
       const data = parse<Assessment>(event)
       if (data) handlers.onAssessment(data)
     })
-    source.addEventListener('report', (event) => {
-      const data = parse<Report>(event)
-      if (data) handlers.onReport(data)
-    })
-    // Proposed event (not in shared/ yet): { "options": PathOption[] }.
-    source.addEventListener('options', (event) => {
-      const data = parse<{ options: PathOption[] }>(event)
-      if (data && Array.isArray(data.options)) handlers.onOptions?.(data.options)
+    source.addEventListener('categories', (event) => {
+      const data = parse<CategoryResult>(event)
+      if (data && Array.isArray(data.categories)) handlers.onCategories(data)
     })
     source.addEventListener('end', (event) => {
       const data = parse<{ status: 'complete' | 'fallback' }>(event)

@@ -1,7 +1,7 @@
-import type { Assessment, Impact } from '@leaaf/shared/assessment'
-import type { OsFamily, Path, Suitability } from '@leaaf/shared/common'
+import type { Assessment } from '@leaaf/shared/assessment'
+import type { CategoryResult } from '@leaaf/shared/categories'
+import type { OsFamily } from '@leaaf/shared/common'
 import type { DeviceRecord } from '@leaaf/shared/device'
-import type { Report } from '@leaaf/shared/report'
 import type { UseTag } from '../lib/labels'
 
 import type { ScanSessionEvent as SharedScanSessionEvent, ScanStepId } from '@leaaf/shared/session'
@@ -66,38 +66,10 @@ export class ApiClientError extends Error {
   }
 }
 
-/**
- * One concrete action inside a path, for example the SSD upgrade or the RAM upgrade inside "upgrade".
- * PROPOSED contract: shared/ delivers only one combined result per path today, so the web app shows options
- * only when the server sends them (feature-006 DESIGN.md). `impact` has the same shape and meaning as the path's
- * impact, and is null for options that are not suitable.
- */
-/** One spec line an option changes, e.g. Memory "8 GB" → "16 GB". Proposed, like the option itself. */
-export interface SpecChange {
-  label: string
-  before: string
-  after: string
-}
-
-export interface PathOption {
-  option_id: string
-  path: Path
-  title: string
-  status: Suitability
-  summary: string
-  impact: Impact | null
-  steps: string[]
-  why: string | null
-  unverified: string[]
-  /** Optional proposed field: what the option changes on the device, for the before/after view. */
-  changes?: SpecChange[]
-}
-
 export interface ReportStreamHandlers {
   onAssessment: (assessment: Assessment) => void
-  onReport: (report: Report) => void
-  /** Proposed `options` event; optional because the contract does not define it yet. */
-  onOptions?: (options: PathOption[]) => void
+  /** The AI categories, or the five-path fallback (feature 008; shared/src/categories.ts). */
+  onCategories: (result: CategoryResult) => void
   onEnd: (status: 'complete' | 'fallback') => void
   onError: (error: ApiClientError) => void
 }
@@ -109,6 +81,6 @@ export interface ApiClient {
   /** Subscribes to the scanner's progress; returns an unsubscribe function. */
   subscribeScanSession(sessionId: string, onEvent: (event: ScanSessionEvent) => void): () => void
   getDevice(deviceId: string): Promise<DeviceRecord>
-  /** Streams assessment, then report, then end (shared/src/report.ts); returns a cancel function. */
+  /** Streams assessment, then categories, then end (shared/src/report.ts); returns a cancel function. */
   streamReport(deviceId: string, use: UseTag, handlers: ReportStreamHandlers): () => void
 }

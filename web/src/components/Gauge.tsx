@@ -5,13 +5,15 @@ import { Co2e } from './ui'
 
 interface Props {
   value: GaugeValue | null
-  /** Title of the selected path, shown under the number. */
+  /** Title of the selected path or option, shown under the number. */
   pathTitle: string
+  /** The figure is an AI estimate (feature 008 FR-010). */
+  estimate?: boolean
 }
 
 const TICKS = [0, 25, 50, 75, 100]
 
-export function Gauge({ value, pathTitle }: Props) {
+export function Gauge({ value, pathTitle, estimate = false }: Props) {
   const range = value ? arcPath(value.low, value.high) : null
   const mid = value?.mid ?? 0
   const center = `${GAUGE.cx}px ${GAUGE.cy}px`
@@ -74,11 +76,16 @@ export function Gauge({ value, pathTitle }: Props) {
             </>
           ) : (
             <>
-              No <Co2e /> figure for this path
+              No <Co2e /> figure for this option
             </>
           )}
         </div>
         <div className="mt-0.5 text-[13px] font-semibold text-leaf">{pathTitle}</div>
+        {value && estimate ? (
+          <div className="mt-1 inline-block rounded-full border border-current px-2.5 py-[2px] text-xs font-bold text-amber-ink">
+            AI estimate
+          </div>
+        ) : null}
         {value && value.high - value.low >= 2 ? (
           <div className="mt-0.5 text-xs text-muted">
             Likely {value.low}–{value.high}%

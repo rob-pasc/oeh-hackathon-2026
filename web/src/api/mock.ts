@@ -2,14 +2,13 @@
 // skeleton, the live status, and the streamed report can be seen without a backend. Never shown as real data:
 // the UI marks mock mode with a "Sample data" badge.
 import type { Assessment } from '@leaaf/shared/assessment'
+import type { CategoryResult } from '@leaaf/shared/categories'
 import type { DeviceRecord, DeviceScan } from '@leaaf/shared/device'
-import type { Report } from '@leaaf/shared/report'
 import desktopAssessmentJson from '@leaaf/fixtures/assessment.example-desktop-unknown.development.json'
 import laptopAssessmentJson from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
 import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
 import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
-import laptopReportJson from '@leaaf/fixtures/report.example-laptop-14.office.json'
-import { LAPTOP_OPTIONS } from './mockOptions'
+import { fallbackCategories, LAPTOP_CATEGORIES } from './mockCategories'
 import { MOCK_LOOKUPS } from './mockParts'
 import { partsFromScan, STEP_KINDS } from '../lib/parts'
 import { ApiClientError, SCAN_STEPS, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
@@ -26,7 +25,7 @@ export interface MockOptions {
   stepMs?: number
   /** Delay until the assessment event (ms). */
   assessmentMs?: number
-  /** Delay between the assessment and the report event (ms). */
+  /** Delay between the assessment and the categories event (ms). */
   reportMs?: number
 }
 
@@ -73,35 +72,10 @@ function assessmentFor(deviceId: string, use: UseTag): Assessment {
   return assessment
 }
 
-/** Template text built from the assessment reasons, like the server's fallback (feature 004 FR-009). */
-function templateReport(assessment: Assessment): Report {
-  return {
-    device_id: assessment.device_id,
-    intended_use: assessment.intended_use,
-    generated_at: new Date().toISOString(),
-    source: 'template',
-    notice: 'AI explanation unavailable. Showing standard text.',
-    paths: assessment.paths.map((p) => ({
-      path: p.path,
-      summary: p.reasons[0]?.text ?? 'No details available.',
-      next_steps: [],
-      why: p.reasons.map((r) => r.text).join(' '),
-      assumptions: [],
-      safety: [],
-      unverified: p.status === 'viable' ? [] : p.reasons.map((r) => r.text),
-      claims: [],
-    })),
-    passages: [],
-  }
-}
-
-function reportFor(deviceId: string, assessment: Assessment): Report {
-  if (deviceId === MOCK_DEVICE_IDS.laptop) {
-    const report = clone(laptopReportJson as unknown as Report)
-    report.intended_use = assessment.intended_use
-    return report
-  }
-  return templateReport(assessment)
+/** Sample categories for the laptop; the five-path fallback, with its notice, for the desktop. */
+function categoriesFor(deviceId: string, assessment: Assessment): CategoryResult {
+  if (deviceId !== MOCK_DEVICE_IDS.laptop) return fallbackCategories(assessment)
+  return { ...clone(LAPTOP_CATEGORIES), device_id: deviceId, intended_use: assessment.intended_use }
 }
 
 export function createMockClient(options: MockOptions = {}): ApiClient {
@@ -149,14 +123,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         return () => timers.forEach((timer) => clearTimeout(timer))
       }
       const assessment = assessmentFor(deviceId, use)
-      const report = reportFor(deviceId, assessment)
+      const categories = categoriesFor(deviceId, assessment)
       timers.push(setTimeout(() => handlers.onAssessment(assessment), assessmentMs))
       timers.push(
         setTimeout(() => {
-          handlers.onReport(report)
-          // Options exist for the laptop fixture only; the desktop fixture shows the path-level steps instead.
-          if (deviceId === MOCK_DEVICE_IDS.laptop) handlers.onOptions?.(clone(LAPTOP_OPTIONS))
-          handlers.onEnd(report.source === 'llm' ? 'complete' : 'fallback')
+          handlers.onCategories(categories)
+          handlers.onEnd(categories.source === 'llm' ? 'complete' : 'fallback')
         }, assessmentMs + reportMs),
       )
       return () => timers.forEach((timer) => clearTimeout(timer))

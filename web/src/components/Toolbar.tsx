@@ -1,24 +1,21 @@
 import type { Mode } from '@leaaf/shared/common'
 import { useLayoutEffect, useState } from 'react'
-import {
-  MODE_LABELS,
-  MODE_ORDER,
-  PATH_TABS,
-  PATH_TAB_LABELS,
-  USE_LABELS,
-  USE_TAGS,
-  isUseTag,
-  type PathTab,
-  type UseTag,
-} from '../lib/labels'
+import { MODE_LABELS, MODE_ORDER, USE_LABELS, USE_TAGS, isUseTag, type ResultTab, type UseTag } from '../lib/labels'
+
+export interface TabItem {
+  id: ResultTab
+  label: string
+}
 
 interface Props {
   use: UseTag
   mode: Mode
-  pathTab: PathTab
+  /** Overview first, then one tab per category in the Overview's order (feature 008 FR-009). */
+  tabs: readonly TabItem[]
+  tab: ResultTab
   onUseChange: (use: UseTag) => void
   onModeChange: (mode: Mode) => void
-  onPathTabChange: (tab: PathTab) => void
+  onTabChange: (tab: ResultTab) => void
   disabled?: boolean
 }
 
@@ -70,14 +67,14 @@ function MeasuredHighlight({ container, index, className }: { container: HTMLEle
   )
 }
 
-export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathTabChange, disabled = false }: Props) {
+export function Toolbar({ use, mode, tabs: items, tab: activeTab, onUseChange, onModeChange, onTabChange, disabled = false }: Props) {
   // The tag bar is held in state (not a ref object) so the highlight measures it once it exists.
   const [tabs, setTabs] = useState<HTMLDivElement | null>(null)
   return (
-    // Same two columns as the result screen, so the tag bar ends exactly where the cards end and the priority
-    // toggle lines up with the gauge and specs column.
-    <div className="grid grid-cols-1 xl:grid-cols-[1fr_400px] items-center gap-7">
-      <div className="flex min-w-0 flex-col items-stretch gap-4 md:flex-row md:items-center">
+    // Same two columns as the result screen: the tab bar ends exactly where the cards end, and the priority
+    // toggle beside it lines up with the gauge and specs column.
+    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] items-center gap-x-7 gap-y-4">
+      <div className="flex min-w-0 items-center">
         <label className="flex flex-none items-center gap-3 text-sm font-semibold">
           <span className="text-muted">Intended use</span>
           <span className="relative inline-flex">
@@ -110,28 +107,32 @@ export function Toolbar({ use, mode, pathTab, onUseChange, onModeChange, onPathT
             </svg>
           </span>
         </label>
+      </div>
 
-        <div role="group" aria-label="Show steps for" className="flex min-w-0 flex-1 overflow-x-auto rounded-full bg-white p-1 shadow-card">
-          <div ref={setTabs} className="relative flex min-w-[32rem] flex-1 xl:min-w-0 gap-1">
-          <MeasuredHighlight container={tabs} index={PATH_TABS.indexOf(pathTab)} className="bg-leaf-tint" />
-          {PATH_TABS.map((tab) => {
-            const active = tab === pathTab
-            return (
-              <button
-                key={tab}
-                type="button"
-                aria-pressed={active}
-                disabled={disabled}
-                onClick={() => onPathTabChange(tab)}
-                className={`relative flex-auto cursor-pointer rounded-full border-0 bg-transparent px-2 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-default ${
-                  active ? 'text-leaf-deep' : 'text-muted hover:text-ink'
-                }`}
-              >
-                {PATH_TAB_LABELS[tab]}
-              </button>
-            )
-          })}
-          </div>
+      {/* Keeps the Use dropdown alone on the first row, so the gauge column starts level with the tab bar. */}
+      <div aria-hidden="true" className="hidden xl:block" />
+
+      {/* Category tabs get their own row above the cards: AI labels are longer than the old path names. */}
+      <div role="group" aria-label="Show options for" className="flex min-w-0 overflow-x-auto rounded-full bg-white p-1 shadow-card">
+        <div ref={setTabs} className="relative flex min-w-max flex-1 gap-1">
+        <MeasuredHighlight key={items.map((t) => t.id).join('|')} container={tabs} index={items.findIndex((t) => t.id === activeTab)} className="bg-leaf-tint" />
+        {items.map((tab) => {
+          const active = tab.id === activeTab
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              aria-pressed={active}
+              disabled={disabled}
+              onClick={() => onTabChange(tab.id)}
+              className={`relative flex-auto cursor-pointer rounded-full border-0 bg-transparent px-3 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:cursor-default ${
+                active ? 'text-leaf-deep' : 'text-muted hover:text-ink'
+              }`}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
         </div>
       </div>
 
