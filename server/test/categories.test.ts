@@ -153,6 +153,71 @@ describe('figures (AC-003, AC-004)', () => {
   })
 })
 
+describe('statuses capped by the gates (feature 011 AC-005 to AC-009)', () => {
+  const gaming = { ...input, assessment: { ...assessment, intended_use: 'gaming' as const } }
+  const buildFor = (device: DeviceScan, use: typeof gaming | typeof input, output = answer()) => buildResult(device, use, output, NOW, impactTable)
+  const desktop: DeviceScan = { ...scan, identity: { ...scan.identity, form_factor: 'desktop' }, battery: { ...scan.battery, present: false } }
+
+  it('lowers a Good fit SSD option to Depends when the upgrade gate depends, and keeps it with a viable gate (AC-005)', () => {
+    expect(runGates({ scan, use: 'gaming', modelEvidence: assessment.model_evidence, facts: facts.facts }).find((g) => g.path === 'upgrade')!.status).toBe('conditional')
+    expect(option(buildFor(scan, gaming), 'ssd-swap').status).toBe('conditional')
+    expect(option(build(), 'ssd-swap').status).toBe('viable')
+  })
+
+  it('never raises an option the AI rated lower than its gate (AC-005)', () => {
+    const output = answer()
+    output.categories.find((c: { category_id: string }) => c.category_id === 'memory').options[0].status = 'conditional'
+    expect(option(build(output), 'ram-add').status).toBe('conditional')
+  })
+
+  it('makes a battery option Not a fit on a desktop and leaves other kinds to the AI (AC-006, AC-007)', () => {
+    const output = answer()
+    const handDown = output.categories.find((c: { category_id: string }) => c.category_id === 'hand-down')
+    handDown.options[1].kind = 'salvage' // the salvage gate is conditional for this laptop
+    const result = buildFor(desktop, input, output)
+    const battery = option(result, 'battery-swap')
+    expect(battery).toMatchObject({ status: 'not_suitable', impact: null, scores: null })
+    expect(battery.reason).toBe('No battery was detected, so there is no battery to repair.')
+    expect(option(result, 'recycle').status).toBe('viable')
+    expect(option(result, 'clean-install').status).toBe('conditional')
+    expect(option(result, 'donate').status).toBe('viable')
+    valid(result)
+  })
+
+  it('replaces the reason of a lowered option with the gate’s limiting reason (AC-007)', () => {
+    const ssd = option(buildFor(scan, gaming), 'ssd-swap')
+    expect(ssd.reason).toMatch(/integrated graphics/)
+    expect(ssd.impact).not.toBeNull()
+    expect(ssd.scores!.feasibility).toBe(DIFFICULTY_FEASIBILITY[ssd.difficulty] - 20)
+    expect(option(build(), 'ssd-swap').reason).toBe(answer().categories[0].options[0].reason)
+  })
+
+  it('caps a cached answer as well, without another call (AC-008)', async () => {
+    const { db, completeJson, categorize } = setup()
+    await categorize(scan, gaming)
+    const cached = await createCategoryService(db, null, { impactTable })(scan, gaming)
+    expect(cached.source).toBe('llm')
+    expect(option(cached, 'ssd-swap').status).toBe('conditional')
+    expect(completeJson).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not recommend an SSD upgrade for gaming on the tested 4 GB / i3 mini PC (AC-009)', () => {
+    // From the team's scan of 2026-11-21 (MSI MS-B09611): no recognized graphics, 4 GB DDR3, 128 GB SSD.
+    const miniPc: DeviceScan = {
+      ...desktop,
+      identity: { ...desktop.identity, manufacturer: 'MICRO-STAR INTERNATIONAL CO., LTD', model: 'MS-B09611' },
+      cpu: { name: 'Intel(R) Core(TM) i3-5005U CPU @ 2.00GHz', cores: 2, threads: 4 },
+      memory: { total_gb: 4, type: 'ddr3', speed_mts: 1333, slots_total: 4, slots_used: 1 },
+      storage: [{ media: 'ssd', bus: 'sata', capacity_gb: 128, health: 'healthy' }],
+      gpus: [],
+    }
+    const result = buildFor(miniPc, gaming)
+    const ssd = option(result, 'ssd-swap')
+    expect(ssd.status).not.toBe('viable')
+    expect(result.categories.flatMap((c) => c.options).filter((o) => ['ssd', 'ram', 'battery'].includes(o.kind) && o.status === 'viable')).toEqual([])
+  })
+})
+
 describe('scores and confidence (AC-005)', () => {
   it('scores an option with the rubrics and its difficulty', () => {
     const ram = option(build(), 'ram-add')

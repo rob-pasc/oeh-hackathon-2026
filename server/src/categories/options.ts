@@ -6,7 +6,7 @@
 // they pass the range checks, and are always labelled as AI estimates.
 import type { Assessment, CategoryOption, DeviceScan, Difficulty, Impact, IntendedUse, OptionKind, Path, Range, Suitability } from '@leaaf/shared'
 import { calculateImpact, type ImpactIndex } from '../assessment/calculator.ts'
-import type { GateResult, PathPlan } from '../assessment/gates.ts'
+import { atMost, type GateResult, type PathPlan } from '../assessment/gates.ts'
 import { confidence, optionFeasibility, rubricScores } from '../assessment/scoring.ts'
 
 type Baseline = Assessment['baseline']
@@ -130,8 +130,30 @@ export function estimatedImpact(estimate: AiEstimate, use: IntendedUse, baseline
   }
 }
 
-/** Adds figures, scores and confidence to an AI option (FR-002 to FR-005). */
-export function finishOption(draft: OptionDraft, ctx: OptionContext): CategoryOption {
+/** Kinds whose status may not be better than their path's gate (feature 011 FR-004). */
+const CAPPED_KINDS = new Set<OptionKind>(['ssd', 'ram', 'battery'])
+
+/** Gate reasons that describe what the plan does or why it is possible, not what limits it. */
+const ENABLING_REASONS = new Set(['ssd_slot_available', 'ram_upgradeable', 'drive_failing', 'battery_worn', 'os_supported'])
+
+/**
+ * The AI chooses an option's status (ADR-003), but an SSD, RAM or battery option is never rated better
+ * than the feature 003 gate of its path, so "Good fit" and "Recommended" cannot contradict the rules
+ * (feature 011 FR-004, FR-005). A lowered option takes the gate's first limiting reason, so its text
+ * agrees with its status.
+ */
+export function capDraft(draft: OptionDraft, ctx: OptionContext): OptionDraft {
+  if (!CAPPED_KINDS.has(draft.kind)) return draft
+  const gate = gateFor(ctx, KIND_PATH[draft.kind as Exclude<OptionKind, 'other'>])
+  const status = atMost(draft.status, gate.status)
+  if (status === draft.status) return draft
+  const limit = gate.reasons.find((r) => !ENABLING_REASONS.has(r.code)) ?? gate.reasons[0]
+  return { ...draft, status, reason: limit?.text ?? draft.reason }
+}
+
+/** Adds figures, scores and confidence to an AI option (FR-002 to FR-005), after the gate cap. */
+export function finishOption(aiDraft: OptionDraft, ctx: OptionContext): CategoryOption {
+  const draft = capDraft(aiDraft, ctx)
   const { estimate: _estimate, ...base } = draft
   const unscored = (reasons: string[]): CategoryOption => ({
     ...base,

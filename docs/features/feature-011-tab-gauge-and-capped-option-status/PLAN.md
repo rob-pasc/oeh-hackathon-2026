@@ -37,7 +37,7 @@ Two corrections to the result screen of feature 008, both found when the team te
 - **FR-002:** Opening an option moves the gauge to that option, as before.
 - **FR-003:** Selecting Overview moves the gauge to the option last opened on the Overview, or, when none was opened there, to the best option of the first category.
 - **FR-004:** For an option of kind `ssd` or `ram`, the server sets the status to the worse of the AI's status and the `upgrade` gate's status (`viable` better than `conditional` better than `not_suitable`); for kind `battery`, the same with the `repair` gate.
-- **FR-005:** When FR-004 lowers an option's status, its reason is replaced by the first reason of the gate that caused it, so the card does not say "Good fit" in words while showing "Depends". When the status becomes `not_suitable`, the option has no figures and no score (feature 008 FR-002).
+- **FR-005:** When FR-004 lowers an option's status, its reason is replaced by the first limiting reason of the gate that caused it (a reason that is not about what the plan does, such as "the RAM can be upgraded"; the gate's first reason when none is limiting), so the card does not say "Good fit" in words while showing "Depends". When the status becomes `not_suitable`, the option has no figures and no score (feature 008 FR-002).
 - **FR-006:** The cap applies equally to fresh and cached category answers, without a new AI call.
 
 ## Non-functional requirements and constraints
@@ -57,7 +57,7 @@ Two corrections to the result screen of feature 008, both found when the team te
 ## Proposed technical approach
 
 - **Web:** In `web/src/components/ResultsView.tsx`, track the opened option per tab instead of one `selectedOption`; derive the gauge option from the active tab (FR-001 to FR-003). Extend `app.test.tsx`.
-- **Server:** In `server/src/categories/options.ts` `finishOption`, compute the effective status with an `atMost(draft.status, gate.status)` helper (the gates already have one) before pricing and scoring; replace the reason when lowered. Because the cache stores the AI answer and finishes options on each read (`server/src/categories/service.ts`), FR-006 needs no cache change. Extend `server/test/categories.test.ts`.
+- **Server (implemented):** `capDraft` in `server/src/categories/options.ts` runs first in `finishOption`. It applies the gates' `atMost` (now exported from `server/src/assessment/gates.ts`) and, when it lowers a status, takes the first gate reason not in a short list of enabling codes (`ssd_slot_available`, `ram_upgradeable`, `drive_failing`, `battery_worn`, `os_supported`). Because the cache stores the AI answer and finishes options on each read (`server/src/categories/service.ts`), FR-006 needs no cache change. Extend `server/test/categories.test.ts`.
 - **Tradeoff (proposed, not yet adopted):** The `upgrade` gate covers SSD and RAM together, so an SSD option can be capped by a RAM-only finding, for example "cannot verify whether the RAM can be upgraded". This is conservative (it can only make an option look less fit) and keeps the change small. Splitting the gate per part is possible later.
 - **ADR:** After implementation, record the adopted change to ADR-003's "the server does not re-check options against the gates" in a new ADR that partly supersedes ADR-003.
 
@@ -80,6 +80,7 @@ Completion boundary: locally verified handoff with self-review, committed on `ma
 | Date       | Change                 | User approval |
 | ---------- | ---------------------- | ------------- |
 | 2026-11-21 | Initial approved scope | User answered "accept" on 2026-11-21 to the proposal for points 1 (gauge follows the tab) and 2a (cap SSD, RAM and battery statuses at the gate status), after reporting that the gauge did not follow the "Pass it on" tab and that gaming on a 4 GB / i3 device recommended an SSD upgrade |
+| 2026-11-21 | Clarification during implementation: FR-005 names the gate's first *limiting* reason instead of its first reason. The first reason is often enabling (for example "the RAM can be upgraded") and would not explain the lower status. Same intent as approved (the card shows the rules' reason); no new requirement. | Within the approved scope; reported to the user with the implementation |
 
 ## Related and superseded features
 

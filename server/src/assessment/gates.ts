@@ -95,7 +95,7 @@ function graphicsGate(scan: DeviceScan, use: IntendedUse, path: 'upgrade' | 'rep
 }
 
 /** Caps a status: `conditional` turns viable into conditional, never the other way. */
-const atMost = (status: Suitability, cap: Suitability): Suitability =>
+export const atMost = (status: Suitability, cap: Suitability): Suitability =>
   status === 'not_suitable' || cap === 'not_suitable' ? 'not_suitable' : status === 'conditional' ? status : cap
 
 const isLaptopLike = (scan: DeviceScan) => scan.identity.form_factor !== 'desktop'
