@@ -25,3 +25,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 - 2026-11-21: Specified after the user accepted the scope in the conversation.
 - 2026-11-21: Implemented (verification pending); waiting for the ingest and test run on Node 24.
+- 2026-11-21 (second round): gap research after the first push. Four documents added: `ms-back-up-with-file-history`, `at-repaircafes-plattform`, `at-carla-elektrogeraete-reuse`, `at-carla-reparaturcafe` (41 documents, 245 passages in the substitute check). A Vorarlberg donation offer for laptops was not found; the finding is recorded in [RESEARCH.md](./RESEARCH.md). T-005 stays open for the same reason as above.

@@ -480,3 +480,47 @@ documents:
   topic: software-support
   applies_to: generic
   file: docs/ms-create-installation-media.md
+
+- id: ms-back-up-with-file-history
+  title: Backup and restore with File History
+  url: https://support.microsoft.com/en-us/windows/experience/backup-recovery/backup-and-restore-with-file-history
+  publisher: Microsoft
+  accessed_on: '2026-11-21'
+  terms: Microsoft Support content under Microsoft's terms of use; short verbatim quotations with a link,
+    as permitted quotation (Austrian UrhG §42f / fair use).
+  topic: software-support
+  applies_to: generic
+  file: docs/ms-back-up-with-file-history.md
+
+- id: at-repaircafes-plattform
+  title: Repair Café Österreich – Gemeinsam reparieren statt wegwerfen
+  url: https://www.repaircafes.at/
+  publisher: Re-Use Austria (Verein zur Förderung der Wiederverwendung, Reparatur und Ressourcenschonung)
+  accessed_on: '2026-11-21'
+  terms: Website of an association with all rights reserved and no licence stated, so we store only short
+    verbatim German quotations with a link, as permitted quotation (Austrian UrhG §42f).
+  topic: circular-economy
+  applies_to: generic
+  file: docs/at-repaircafes-plattform.md
+
+- id: at-carla-elektrogeraete-reuse
+  title: Elektrogeräte Re-Use mit carla Vorarlberg
+  url: https://www.carla-vorarlberg.at/re-use/elektrogeraete-reuse/
+  publisher: carla Vorarlberg (soziales Unternehmen der Caritas Vorarlberg)
+  accessed_on: '2026-11-21'
+  terms: Website of a charitable organisation with no licence stated, so we store only short verbatim German
+    quotations with a link, as permitted quotation (Austrian UrhG §42f).
+  topic: circular-economy
+  applies_to: generic
+  file: docs/at-carla-elektrogeraete-reuse.md
+
+- id: at-carla-reparaturcafe
+  title: Reparaturcafé (carla Vorarlberg)
+  url: https://www.carla-vorarlberg.at/re-use/reparaturcafe/
+  publisher: carla Vorarlberg (soziales Unternehmen der Caritas Vorarlberg)
+  accessed_on: '2026-11-21'
+  terms: Website of a charitable organisation with no licence stated, so we store only short verbatim German
+    quotations with a link, as permitted quotation (Austrian UrhG §42f).
+  topic: circular-economy
+  applies_to: generic
+  file: docs/at-carla-reparaturcafe.md
