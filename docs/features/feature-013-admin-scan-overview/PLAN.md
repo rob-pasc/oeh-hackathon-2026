@@ -34,7 +34,8 @@ Because the site is public and a device ID is the only key to a scan's result pa
 - Deleting, editing or exporting scans; charts or statistics beyond the total count.
 - More than one admin, roles, self-service password change, two-factor login.
 - Hashed passwords in `.env` (user choice: plain password; see risks).
-- Showing anything other than the listed fields of a scan on the admin page (the full scan stays on the result page).
+- Showing anything other than the listed fields of a scan on the admin page (the full scan stays on the result page). *(Replaced 2026-11-21 by FR-013 to FR-017: the Details view shows the full scan JSON and the AI status. The rest of this page stays read-only.)*
+- Server logs on the admin page; IP addresses (still excluded after the 2026-11-21 revision).
 
 ## Functional requirements
 
@@ -51,10 +52,16 @@ Because the site is public and a device ID is the only key to a scan's result pa
 - **FR-011:** Apart from the authenticated admin list, the public API still offers no route that lists or enumerates devices (feature-001-device-scan-and-upload / FR-011 for everyone else).
 - **FR-012:** Visitors who do not open `/admin` receive no cookie. The privacy notice (German and English) says that only the admin login sets a strictly necessary session cookie, for the team, and that visitors receive none.
 
+- **FR-013** *(added 2026-11-21)*: Each row of the scan list has a **Details** control. It shows the complete stored scan as formatted JSON with a **Copy JSON** button. The details are fetched only when opened, from an admin route that answers 401 without a session and 404 for an unknown or malformed device ID.
+- **FR-014** *(added 2026-11-21)*: The details show the AI status of the scan for each intended use it was viewed with: whether the result categories came from the AI and when they were generated, and how many step plans came from the AI.
+- **FR-015** *(added 2026-11-21)*: The details list the recorded AI fallbacks of the scan, newest first: time, which call (categories or steps), intended use, option for step plans, and the reason.
+- **FR-016** *(added 2026-11-21)*: The server records each fallback of the category call and of the step call to a template: time, device ID, intended use, call, option ID for steps, and a reason from a fixed list (no AI configured, the provider's error kinds such as timeout or rate limit, or an answer the server rejected). It stores no prompt, answer, or message text. A step template shown because the categories already fell back is not recorded again.
+- **FR-017** *(added 2026-11-21)*: The scan list shows today's AI calls (UTC day) against the daily cap `LLM_DAILY_CALLS`.
+
 ## Non-functional requirements and constraints
 
 - **Security:** HTTPS only in production (Caddy). The password is compared in constant time (hash both values first, then `timingSafeEqual`). Sessions are not stored in SQLite and not written to disk. The admin bundle in the web app contains no secret; all protection is on the server.
-- **Privacy:** No new personal data is collected. The list exposes device IDs, which act as access keys to result pages, so only an authenticated admin may see them.
+- **Privacy:** No new personal data is collected. The fallback records (FR-016) hold no personal data, only technical reasons; they belong to their scan and must be deleted together with it once scan deletion exists (the 30-day deletion promised by the privacy notice is not implemented in `server/` yet, see feature 006 T-042). The list exposes device IDs, which act as access keys to result pages, so only an authenticated admin may see them.
 - **Compatibility:** Works with the existing Caddy routes (`/api/*` to the server, everything else to the web app). `Secure` cookies work on `http://localhost` in current browsers, so local development needs no exception.
 - **Performance:** The list query reads one page at a time and uses SQLite's JSON functions for the displayed fields; a few thousand scans need no index.
 - **Design:** The login form and the table follow `docs/VISUAL_DESIGN.md` and the existing components.
@@ -84,6 +91,8 @@ Proposal based on repository inspection on 2026-11-21; not adopted yet.
 - **Store:** `DeviceStore` gains `list(offset, limit)` and `count()`, selecting `device_id`, `created_at` and `json_extract` of the displayed fields.
 - **Web:** a new `admin` route in `web/src/app/router.ts` and `web/src/pages/Admin.tsx` (login form, table, pagination, log out). `index.html` stays shared; the admin page sets `<meta name="robots" content="noindex">` at runtime, and the server or nginx adds `X-Robots-Tag: noindex` for `/admin` (open: nginx config change versus meta tag only). The live client gets admin calls with `credentials: 'same-origin'`; the mock client offers a sample list and accepts a fixed demo login for UI work.
 - **Tests:** server tests for disabled admin (404), short password, wrong credentials (generic 401), per-client and global 429 with `Retry-After`, cookie flags, expiry, logout, 401 without a session, list order and paging, no-store header, JSON-only login, and the route inventory (the public list routes still do not exist; admin routes exist only when configured). Web tests for the form, the generic error, the table, pagination and log out.
+
+- **Details and AI status (2026-11-21 revision):** `GET /api/admin/scans/:id` → `AdminScanDetail` with the `DeviceRecord` and an `ai` object (category results per use, step plan counts per use, fallbacks). `AdminScanPage` gains `ai_usage { day, used, cap }`. An `AdminInsights` module reads `category_cache`, `step_cache`, `llm_daily_usage` and a new additive table `ai_fallbacks`; a table that does not exist yet counts as empty. The category and step services get an optional `onFallback` callback, wired to the fallback log in `main.ts`. In the web app, Details opens below the row; the JSON is shown with `JSON.stringify(…, null, 2)` in a scrollable `<pre>`.
 
 ## Dependencies and risks
 
@@ -116,6 +125,7 @@ Proposal based on repository inspection on 2026-11-21; not adopted yet.
 | Date       | Change                 | User approval                                                                                                                                                               |
 | ---------- | ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-11-21 | Initial approved scope | User asked for an admin page on `feat/adminpage`, chose "No IP", "Plain password in .env", "Login form + session" and "View only", and replied "accept", 2026-11-21 |
+| 2026-11-21 | Revision before release (the feature is implemented on `feat/adminpage` but not merged or released): the exclusion "only the listed fields" is replaced by FR-013 to FR-017 (Details with the full scan JSON, AI status per scan, recorded AI fallbacks, AI calls today). The server records fallbacks in a new additive table. AC-020 to AC-026 and T-011 to T-015 added; all earlier requirements stay valid. | User chose "Full scan JSON" and "AI status", "Record fallbacks", and "Accept and implement", 2026-11-21 |
 
 ## Related and superseded features
 
