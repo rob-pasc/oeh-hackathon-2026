@@ -154,6 +154,8 @@ This feature builds the web surface that features 001, 003, and 004 describe and
 
 When a replacement is implemented and merged, record the date and implementing commit here and add a reciprocal note to the earlier plans, as described in `docs/workflow/CHANGE_HISTORY.md`.
 
+**FR-002 and FR-014 extended by [feature 007](../feature-007-macos-linux-scanner/PLAN.md#related-and-superseded-features) FR-013 and FR-014** (implemented on `main` 2026-11-21, commit "feat(web): offer the scanner for the visitor's system"): **Download and Scan now** downloads the scanner for the detected system, with links to the other two, and the session request names the system. FR-010's security chip reads "Not applicable" for a Mac (007 FR-019). The session flow (FR-002 to FR-004) is unchanged.
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)

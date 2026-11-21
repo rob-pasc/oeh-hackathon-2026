@@ -1,7 +1,7 @@
 # Acceptance Criteria: macOS and Linux scanner
 
 - **Feature ID:** `feature-007-macos-linux-scanner`
-- **Verification status:** Not started
+- **Verification status:** In progress: automated checks pass; real-hardware runs (T-011) and the first CI run are open
 
 Defines the feature’s acceptance criteria and records how each criterion was verified, including results and evidence.
 
@@ -25,7 +25,7 @@ When release or recovery checks are part of the approved scope, include rows for
 | AC-012 | FR-008         | Fixtures with planted serial numbers, hardware UUIDs, host and user names, MAC addresses and memory module serials, for macOS, Linux and the root helper, produce payloads that contain none of the planted values.               | Automated privacy tests                                                         | Not run | None yet                     |
 | AC-013 | FR-008         | The payloads saved by the real Mac and Linux scans contain none of the machine's serial number, hardware UUID, host name or user name.                                                                                        | Manual search of the saved JSON for the machine's real identifiers              | Not run | None yet                     |
 | AC-014 | FR-009         | Fixtures with a USB stick, an SD card, an external Thunderbolt drive, a loop device and a disk image list only the internal drives.                                                                                            | Automated normalization tests for both systems                                  | Not run | None yet                     |
-| AC-015 | FR-010         | Windows, macOS and Linux payloads carry the matching `os.family`; a payload without the field is still accepted by the server.                                                                                                 | Automated scanner and server validation tests                                   | Not run | None yet                     |
+| AC-015 | FR-010         | Windows, macOS and Linux payloads carry the matching `os.family`; a payload without the field is still accepted by the server.                                                                                                 | Automated scanner and server validation tests                                   | Pass | 2026-11-21: `TestNormalizeCompleteLaptop` (golden file with `"family": "windows"`), `TestReadLinuxLaptop` and `TestDarwinAppleSilicon` check the family; server upload tests still post the shared fixtures without `os.family` and get 201. |
 | AC-016 | FR-011         | The macOS and Linux scanners save the JSON before uploading and the window shows its path; on macOS no privacy permission prompt appears.                                                                                       | Automated run-flow test, plus the manual runs of AC-001 and AC-002              | Not run | None yet                     |
 | AC-017 | FR-012         | Each system's download route serves its artifact (404 while missing); a session download carries the session ID, and the scanner started from it reports to that session on macOS and Linux; the Windows URL is unchanged.      | Automated server tests, plus a manual session run on a Mac and on Linux         | Not run | None yet                     |
 | AC-018 | FR-013         | With Windows, macOS, Linux and an unknown user agent, the landing page starts the matching download (or offers all three when unknown), and links to the other downloads are present.                                           | Automated web tests                                                             | Pass | 2026-11-21: `web/src/test/lib.test.ts` "system detection" (11 user agents, including an iPad asking for the desktop site, Android, Chromebook and iPhone) and `app.test.tsx` Landing tests for each system, the other-system links, and all three downloads on a phone. |
@@ -35,7 +35,7 @@ When release or recovery checks are part of the approved scope, include rows for
 | AC-022 | FR-017         | CI vets and tests the scanner for Windows, macOS and Linux and builds all three artifacts; a release publishes three downloads built against the public URL.                                                                    | CI run on a branch; release check per feature 005's deployment guide            | Not run | None yet                     |
 | AC-024 | FR-018         | A `macos` scan whose only `null` fields are the listed not-applicable ones (including slots on Apple Silicon) and a `linux` scan with only `os.display_version` `null` are `complete` in both the Go normalizer and `checkDeviceScan`; any other `null`, and the same fields on a `windows` scan or a scan without `os.family`, still give `partial`. | Automated tests in Go and in `shared/` on the same fixtures | Pass | 2026-11-21: `shared/test/contracts.test.ts` ("fields that do not exist on a system") and `scanner/internal/payload/status_test.go` check the macOS (Apple Silicon and Intel), Linux, Windows and no-family cases; the Go test also agrees with every `shared/fixtures/device-scan.*.json`. `npm test -w shared` 78 passed, `go test ./...` ok. |
 | AC-025 | FR-019         | The specs card shows "Not applicable" for the security chip of a `macos` device and keeps "Unknown", "No TPM" and "TPM 2.0" for other devices.                                                                                  | Automated web test                                                              | Pass | 2026-11-21: `web/src/test/lib.test.ts` "says a Mac has no TPM to report instead of \"Unknown\"" covers macOS, Linux, Windows, unknown and absent TPMs. |
-| AC-023 | Review         | Self-review of the final diff against the plan, covering the privacy allowlist and the root helper, is recorded below with findings and their resolution.                                                                       | Review record in this document                                                  | Not run | None yet                     |
+| AC-023 | Review         | Self-review of the final diff against the plan, covering the privacy allowlist and the root helper, is recorded below with findings and their resolution.                                                                       | Review record in this document                                                  | Pass | 2026-11-21: self-review recorded below; its three findings were fixed in commit "fix(scanner): give macOS its own save message and harden Mac downloads". |
 
 ## Result legend
 
@@ -50,7 +50,18 @@ If a later feature supersedes this behavior, preserve these criteria, results, a
 
 ## Review and integration evidence
 
-Completion boundary: locally verified handoff with self-review, plus real scans on a Mac and a Linux laptop ([plan](./PLAN.md#review-and-integration)). No review has been performed yet.
+Completion boundary: locally verified handoff with self-review, plus real scans on a Mac and a Linux laptop ([plan](./PLAN.md#review-and-integration)).
+
+**2026-11-21, self-review** by the implementing agent (not independent) of `a576671..97c19d6` on `main`, against the plan, with the privacy allowlist and the root helper checked in particular:
+
+- Privacy: the Linux reader opens only named files and never the DMI serial or UUID files; macOS decoders name only allowed keys; the SMBIOS parser reads numeric fields only; the helper's output is decoded with unknown fields rejected and disk names checked against a pattern. Each has a planted-identifier test. No finding.
+- Root helper: accepts exactly one argument, runs `smartctl` by absolute path only, opens only `/dev/<name>` for names matching `scan.HelperDisk`, writes no files and opens no network connection. The window and browser never run as root. No finding.
+- Finding 1 (fixed): the save-failure message told macOS users to move the scanner, which does not help when it saves to the home folder.
+- Finding 2 (fixed): the server read the whole macOS zip on every session download, and downloads are not rate-limited; it is now cached per file version.
+- Finding 3 (fixed): a Mac archive the renamer cannot handle (for example Zip64 from `ditto`) caused a 500; it is now served without the session and the failure is logged.
+- Open, not a defect: whether `ditto`'s output needs Zip64, whether macOS keeps the renamed bundle's signature valid, and whether Gatekeeper offers Open Anyway for the ad-hoc signed app can only be confirmed on the MacBook (T-002, T-011).
+
+Checks after the fixes: `npm run typecheck`, `npm test` (shared 79, server 244, web 67), `npm run build`, and in `scanner/` `go vet` (Linux window and console, Windows, macOS console) and `go test ./...` all pass. CI has not run on GitHub; independent review is recommended for the root helper but not required by policy.
 
 ## Verification notes
 

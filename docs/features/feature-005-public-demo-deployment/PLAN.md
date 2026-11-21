@@ -136,6 +136,8 @@ Partly adopted (2026-11-20): the packaging, the host type, and the CI below. The
 
 None superseded. Deploys features [001](../feature-001-device-scan-and-upload/PLAN.md)–[004](../feature-004-explained-report/PLAN.md). FR-006 relies on [feature 004](../feature-004-explained-report/PLAN.md) FR-009 (template fallback) without changing it.
 
+**FR-002 extended by [feature 007](../feature-007-macos-linux-scanner/PLAN.md#related-and-superseded-features) FR-012 and FR-017** (implemented on `main` 2026-11-21, commits "feat(server): serve the scanner for Windows, macOS and Linux" and "ci(scanner): build and ship the macOS and Linux scanners"): the server image also serves a Linux scanner built in the Dockerfile and a macOS app built by a CI macOS job. The Windows build and its URL are unchanged.
+
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)

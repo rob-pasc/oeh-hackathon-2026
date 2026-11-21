@@ -147,7 +147,7 @@ Proposal based on repository inspection on 2026-11-21; none of it is adopted yet
 
 ## Related and superseded features
 
-All replacements below are **planned**; none is effective until implemented.
+All replacements below were **implemented on `main` on 2026-11-21** (commits from "feat(shared): add os.family and system-aware scan status" to "ci(scanner): build and ship the macOS and Linux scanners"), with reciprocal notes in the earlier plans. They are effective in the code; real-hardware verification (T-011) and a public release are still open.
 
 - [`feature-001-device-scan-and-upload`](../feature-001-device-scan-and-upload/PLAN.md): its out-of-scope entry "macOS, Linux, or bootable-USB scanning" and the deferral note under "Assumptions and open questions" are replaced for macOS and Linux scanning (bootable USB stays excluded). FR-001 to FR-016 stay in force for the Windows scanner. FR-004, FR-005 and FR-014 to FR-016 are reused here for the new systems by reference. The schema gains `os.family`, which the Windows scanner also reports (FR-010 here).
 - `feature-001-device-scan-and-upload` / FR-012 (landing page download and disclosure): extended by FR-013 and FR-014 here with per-system downloads and disclosures; the Windows disclosure is unchanged.

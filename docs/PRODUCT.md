@@ -1,12 +1,12 @@
 # Product Context
 
-**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. The local result journey covers assessment, ranking and explained reports, including a template fallback. See the [README status](../README.md). The scanner has completed one elevated scan on a real Windows 11 laptop. The other Windows checks are still open. This document records the agreed direction from the approved MVP specification (2026-11-20).
+**leaaf** (Lifecycle Evaluation and Action Finder) is an ÖH Hackathon 2026 project for the theme **AI for Green**. The local result journey covers assessment, ranking and explained reports, including a template fallback. See the [README status](../README.md). The scanner has completed one elevated scan on a real Windows 11 laptop. The other Windows checks are still open. Scanners for macOS and Linux ([feature 007](features/feature-007-macos-linux-scanner/PLAN.md)) are implemented and pass their automated tests, but have not scanned a real Mac or Linux laptop yet. This document records the agreed direction from the approved MVP specification (2026-11-20).
 
 ## Purpose and users
 
-Most of a laptop's carbon footprint comes from manufacturing, so extending its use avoids emissions, but old devices usually end up in a drawer or as e-waste because checking their options takes time and know-how. leaaf scans an old Windows laptop and ranks five possible next lives (upgrade, repair, pass it on, salvage for parts, recycle) with sourced evidence and honest cost and CO₂e ranges.
+Most of a laptop's carbon footprint comes from manufacturing, so extending its use avoids emissions, but old devices usually end up in a drawer or as e-waste because checking their options takes time and know-how. leaaf scans an old Windows, Mac or Linux laptop and ranks five possible next lives (upgrade, repair, pass it on, salvage for parts, recycle) with sourced evidence and honest cost and CO₂e ranges.
 
-- **Primary user:** an individual owner of an old Windows laptop or PC.
+- **Primary user:** an individual owner of an old Windows laptop or PC, and since feature 007 of an old Mac or Linux laptop.
 - **Other stakeholders:** hackathon judges and demo audience. IT departments and refurbishers are possible future users and are not targeted by the MVP.
 
 ## Core journeys (approved; journey 1 built and partly verified on Windows, journey 2 built for six intended uses, journey 3 locally verified)
@@ -21,7 +21,7 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 - **Honest impact:** CO₂e is shown as ranges against an explicit baseline and never summed across alternative paths. Weights are illustrative.
 - **Safety first:** infeasible or unsafe paths are marked, never scored attractively, and hazardous self-repair is never recommended.
 - **Data minimization:** only the hardware facts needed are collected, with no accounts, serial numbers, or personal files.
-- **Narrow and deep:** one OS (Windows) and 2–3 demo laptop models, supported well. *(2026-11-21: scanning on macOS and Linux was approved as [feature 007](features/feature-007-macos-linux-scanner/PLAN.md); it is specified, not implemented, so the scanner is still Windows-only.)*
+- **Narrow and deep:** 2–3 demo laptop models, supported well. *(2026-11-21: originally also one OS, Windows. [Feature 007](features/feature-007-macos-linux-scanner/PLAN.md) adds macOS 12+ and x64 Linux scanning; the knowledge base still has no Mac sources, so Mac-specific evidence reads "cannot verify".)*
 
 ## Deliberate non-goals (MVP)
 
