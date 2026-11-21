@@ -49,7 +49,9 @@ describe('Landing', () => {
     expect(line).toHaveTextContent('Lifecycle Evaluation and Action Finder')
     // The line is uppercased by CSS, so the second a (from "and") is lowercase in the text.
     expect(Array.from(line.children).map((c) => c.textContent).join('').toUpperCase()).toBe('LEAAF')
-    expect(screen.getByRole('contentinfo')).toHaveTextContent('leaaf = Lifecycle Evaluation and Action Finder')
+    // The footer no longer repeats the name (FR-035, revised 2026-11-21).
+    expect(screen.getByRole('contentinfo')).not.toHaveTextContent('Lifecycle Evaluation')
+    expect(screen.getByRole('contentinfo')).toHaveTextContent('Questions? contact@leaaf.green')
   })
 
   it('shows the contact address as a mailto link', () => {

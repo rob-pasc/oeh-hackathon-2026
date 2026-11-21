@@ -42,6 +42,12 @@ select {
   font-family: inherit;
 }
 
+/* Selected text in the brand green (feature 006 FR-043; contrast 5.4:1). */
+::selection {
+  background: var(--color-leaf-soft);
+  color: var(--color-leaf-deep);
+}
+
 :focus-visible {
   outline: 3px solid var(--color-leaf-soft);
   outline-offset: 2px;
