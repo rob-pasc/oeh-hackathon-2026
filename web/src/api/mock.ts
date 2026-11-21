@@ -9,6 +9,7 @@ import laptopAssessmentJson from '@leaaf/fixtures/assessment.example-laptop-14.o
 import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
 import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import { fallbackCategories, LAPTOP_CATEGORIES } from './mockCategories'
+import { laptopPlan, templatePlan } from './mockSteps'
 import { MOCK_LOOKUPS } from './mockParts'
 import { partsFromScan, STEP_KINDS } from '../lib/parts'
 import { ApiClientError, SCAN_STEPS, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
@@ -27,6 +28,8 @@ export interface MockOptions {
   assessmentMs?: number
   /** Delay between the assessment and the categories event (ms). */
   reportMs?: number
+  /** Delay until a step plan arrives (ms). */
+  stepsMs?: number
 }
 
 /** 22-character base64url ID from 128 random bits, the same shape as a device ID (feature 001 FR-008). */
@@ -79,7 +82,7 @@ function categoriesFor(deviceId: string, assessment: Assessment): CategoryResult
 }
 
 export function createMockClient(options: MockOptions = {}): ApiClient {
-  const { stepMs = 900, assessmentMs = 1400, reportMs = 1600 } = options
+  const { stepMs = 900, assessmentMs = 1400, reportMs = 1600, stepsMs = 1500 } = options
   const known = new Set<string>(Object.values(MOCK_DEVICE_IDS))
 
   return {
@@ -132,6 +135,17 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
         }, assessmentMs + reportMs),
       )
       return () => timers.forEach((timer) => clearTimeout(timer))
+    },
+
+    async getSteps(deviceId, use, optionId) {
+      if (!known.has(deviceId)) throw new ApiClientError('not_found', 'Device not found')
+      const plan =
+        deviceId === MOCK_DEVICE_IDS.laptop
+          ? laptopPlan(deviceId, use, optionId)
+          : templatePlan(categoriesFor(deviceId, assessmentFor(deviceId, use)), optionId)
+      await new Promise((resolve) => setTimeout(resolve, stepsMs))
+      if (!plan) throw new ApiClientError('not_found', 'Option not found')
+      return plan
     },
   }
 }

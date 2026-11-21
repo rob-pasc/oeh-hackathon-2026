@@ -1,0 +1,414 @@
+{
+  "ssd": [
+    {
+      "tools": [
+        "External drive or cloud storage"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 90
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Back up your files",
+      "detail": "Copy your documents, photos and other personal files to an external drive or a cloud storage service before you start.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [
+        "SSD that matches the drive slot"
+      ],
+      "minutes": {
+        "low": 10,
+        "high": 20
+      },
+      "safety": "professional",
+      "warning": null,
+      "title": "Check which drive fits",
+      "detail": "Look up the drive slot and interface of this model in its service manual, and buy an SSD that matches them. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [
+        "Precision screwdriver set",
+        "Plastic opening tool"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 10,
+        "high": 20
+      },
+      "safety": "professional",
+      "warning": null,
+      "title": "Shut down and remove the bottom cover",
+      "detail": "Shut the computer down, unplug the charger, and follow the service manual to disconnect the battery and remove the bottom cover. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [
+        "Precision screwdriver set"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 10,
+        "high": 20
+      },
+      "safety": "professional",
+      "warning": null,
+      "title": "Swap the drive",
+      "detail": "Remove the old drive as the service manual describes and install the new SSD in its place. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [
+        "USB stick with installation media"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 60,
+        "high": 120
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Reinstall the system and restore your files",
+      "detail": "Reattach the cover, install the operating system from installation media, and copy your files back.",
+      "kind": "general",
+      "passage_ids": []
+    }
+  ],
+  "ram": [
+    {
+      "tools": [],
+      "parts": [
+        "Memory module that matches the slot"
+      ],
+      "minutes": {
+        "low": 10,
+        "high": 20
+      },
+      "safety": "professional",
+      "warning": null,
+      "title": "Check which memory fits",
+      "detail": "Look up the memory slots, type and maximum of this model in its service manual, and buy a module that matches them. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [
+        "Precision screwdriver set",
+        "Plastic opening tool"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 10,
+        "high": 20
+      },
+      "safety": "professional",
+      "warning": null,
+      "title": "Shut down and remove the bottom cover",
+      "detail": "Shut the computer down, unplug the charger, and follow the service manual to disconnect the battery and remove the bottom cover. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 5,
+        "high": 10
+      },
+      "safety": "professional",
+      "warning": null,
+      "title": "Insert the memory module",
+      "detail": "Insert the module into the free slot at an angle and press it down until the clips lock, as the service manual shows. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 5,
+        "high": 10
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Reattach the cover and check the memory",
+      "detail": "Reattach the bottom cover, start the computer, and check that the system shows the larger amount of memory.",
+      "kind": "general",
+      "passage_ids": []
+    }
+  ],
+  "battery": [
+    {
+      "tools": [
+        "External drive or cloud storage"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 90
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Back up your files",
+      "detail": "Copy your documents, photos and other personal files to an external drive or a cloud storage service before you start.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 15,
+        "high": 30
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Find a repair offer",
+      "detail": "Look for a service provider or repair café near you and ask for a quote first. In Austria, a repair bonus may cover part of the cost.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": null,
+      "safety": "professional",
+      "warning": null,
+      "title": "Have the battery replaced",
+      "detail": "Internal lithium-ion batteries are not owner work unless the manual says so. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": null,
+      "safety": "none",
+      "warning": null,
+      "title": "Recycle the old battery",
+      "detail": "If you get the old battery back, take it to a battery collection point. Never put it in household waste.",
+      "kind": "general",
+      "passage_ids": []
+    }
+  ],
+  "hand_down": [
+    {
+      "tools": [
+        "External drive or cloud storage"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 90
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Back up your files",
+      "detail": "Copy your documents, photos and other personal files to an external drive or a cloud storage service before you start.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 120
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Erase your data and reset the system",
+      "detail": "Sign out of your accounts, then reset the operating system and choose to remove everything, so no personal files remain. On Windows, use Reset this PC with Remove everything.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 60
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Hand it over",
+      "detail": "Give the computer to someone who needs one, or donate it to an organisation that refurbishes computers for reuse.",
+      "kind": "general",
+      "passage_ids": []
+    }
+  ],
+  "salvage": [
+    {
+      "tools": [
+        "External drive or cloud storage"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 90
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Back up your files",
+      "detail": "Copy your documents, photos and other personal files to an external drive or a cloud storage service before you start.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 120
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Erase your data and reset the system",
+      "detail": "Sign out of your accounts, then reset the operating system and choose to remove everything, so no personal files remain. On Windows, use Reset this PC with Remove everything.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [
+        "Precision screwdriver set",
+        "Plastic opening tool"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 10,
+        "high": 20
+      },
+      "safety": "professional",
+      "warning": null,
+      "title": "Shut down and remove the bottom cover",
+      "detail": "Shut the computer down, unplug the charger, and follow the service manual to disconnect the battery and remove the bottom cover. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [
+        "Precision screwdriver set",
+        "Antistatic bag"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 15,
+        "high": 30
+      },
+      "safety": "professional",
+      "warning": null,
+      "title": "Remove the reusable parts",
+      "detail": "Follow the service manual to remove parts such as the memory modules and the drive, and keep them in an antistatic bag. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": null,
+      "safety": "none",
+      "warning": null,
+      "title": "Offer the parts for reuse",
+      "detail": "Give the removed parts to a refurbisher, a repair café or someone who can use them.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 60
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Bring it to an e-waste collection point",
+      "detail": "Take the computer to a municipal collection point or a retailer that takes old devices back. Never put it or its battery in household waste.",
+      "kind": "general",
+      "passage_ids": []
+    }
+  ],
+  "recycle": [
+    {
+      "tools": [
+        "External drive or cloud storage"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 90
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Back up your files",
+      "detail": "Copy your documents, photos and other personal files to an external drive or a cloud storage service before you start.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 120
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Erase your data and reset the system",
+      "detail": "Sign out of your accounts, then reset the operating system and choose to remove everything, so no personal files remain. On Windows, use Reset this PC with Remove everything.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 60
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Bring it to an e-waste collection point",
+      "detail": "Take the computer to a municipal collection point or a retailer that takes old devices back. Never put it or its battery in household waste.",
+      "kind": "general",
+      "passage_ids": []
+    }
+  ],
+  "other": [
+    {
+      "tools": [
+        "External drive or cloud storage"
+      ],
+      "parts": [],
+      "minutes": {
+        "low": 30,
+        "high": 90
+      },
+      "safety": "none",
+      "warning": null,
+      "title": "Back up your files",
+      "detail": "Copy your documents, photos and other personal files to an external drive or a cloud storage service before you start.",
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "tools": [],
+      "parts": [],
+      "minutes": null,
+      "safety": "professional",
+      "warning": null,
+      "title": "Ask a service provider to confirm and do the work",
+      "detail": "Ask a service provider whether this option suits the computer and what it involves. Have a service provider do this step.",
+      "kind": "technical",
+      "passage_ids": []
+    }
+  ]
+}

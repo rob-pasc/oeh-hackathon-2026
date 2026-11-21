@@ -37,7 +37,7 @@ import {
   TEMPLATE_STEPS,
   templateSteps,
 } from '../src/steps/index.ts'
-import { exampleSteps, STEP_FIXTURE, STEP_OUTPUT } from '../scripts/step-fixture.ts'
+import { exampleSteps, STEP_FIXTURE, STEP_OUTPUT, TEMPLATE_FIXTURE, templateFixture } from '../scripts/step-fixture.ts'
 
 const FIXTURE_CORPUS = fileURLToPath(new URL('./fixtures/corpus/', import.meta.url))
 const read = <T>(url: URL): T => JSON.parse(readFileSync(url, 'utf8')) as T
@@ -112,6 +112,10 @@ const valid = (plan: StepPlanT | null): StepPlanT => {
 describe('the shared fixture', () => {
   it('is what the server builds from the sample answer (regenerate with scripts/step-fixture.ts)', () => {
     expect(read(STEP_FIXTURE)).toEqual(exampleSteps())
+  })
+
+  it('holds the template steps that mock mode shows for the fallback (regenerate with scripts/step-fixture.ts)', () => {
+    expect(read(TEMPLATE_FIXTURE)).toEqual(templateFixture())
   })
 })
 

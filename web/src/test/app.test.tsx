@@ -22,7 +22,7 @@ import { PATH_TITLES } from '../lib/labels'
 import { Landing } from '../pages/Landing'
 import { ScanSession } from '../pages/ScanSession'
 
-const fast = createMockClient({ stepMs: 5, assessmentMs: 5, reportMs: 5 })
+const fast = createMockClient({ stepMs: 5, assessmentMs: 5, reportMs: 5, stepsMs: 5 })
 
 function withApi(ui: React.ReactElement) {
   return <ApiContext.Provider value={fast}>{ui}</ApiContext.Provider>
@@ -371,11 +371,14 @@ describe('ResultsView', () => {
     expect(within(ssd).queryByText('AI estimate')).toBeNull()
     await userEvent.click(within(ssd).getByRole('button'))
     expect(within(ssd).getByText('Why')).toBeInTheDocument()
-    expect(within(ssd).queryByText('What to do')).toBeNull()
-    const links = within(ssd).getAllByRole('link')
+    // The option's own sources sit under "Why"; the step plan below brings its own (feature 009).
+    const why = within(ssd).getByText('Why').parentElement!
+    const links = within(why).getAllByRole('link')
     expect(links.length).toBeGreaterThan(0)
     expect(links.length).toBeLessThanOrEqual(2)
     expect(links[0]).toHaveTextContent(/^Source: /)
+    expect(within(ssd).getByText('What to do')).toBeInTheDocument()
+    expect(await within(ssd).findByRole('list', { name: 'Steps' })).toBeInTheDocument()
 
     await userEvent.click(within(group).getByRole('button', { name: 'Overview' }))
     expect(await screen.findByRole('region', { name: 'Graphics' })).toBeInTheDocument()

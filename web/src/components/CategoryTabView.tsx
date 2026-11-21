@@ -1,4 +1,5 @@
 import type { CategoryView } from '../lib/categoryView'
+import type { StepState } from '../lib/steps'
 import { PathCard } from './PathCard'
 import { PathHeader, SUMMARY_BLOCK } from './PathHeader'
 
@@ -7,19 +8,21 @@ interface Props {
   selectedKey: string | null
   openKey: string | null
   onToggle: (key: string) => void
+  /** The loaded step plan of an option, by option ID (feature 009). */
+  planOf: (optionId: string) => StepState | undefined
 }
 
 /**
  * Left column for a category tab (feature 008 FR-009): the category's non-clickable header, then one
  * card per option, already ranked Good fit, Depends, Not a fit and by score within each.
  */
-export function CategoryTabView({ category, selectedKey, openKey, onToggle }: Props) {
+export function CategoryTabView({ category, selectedKey, openKey, onToggle, planOf }: Props) {
   return (
     <div className="fade-up flex flex-col gap-3.5" data-testid="category-tab-view">
       <section aria-label={`${category.title} summary`} className={SUMMARY_BLOCK}>
         <PathHeader view={category} onTint />
       </section>
-      <p className="m-0 px-1 text-[13px] text-muted">Select an option to see why.</p>
+      <p className="m-0 px-1 text-[13px] text-muted">Select an option to see why and what to do.</p>
       {category.options.map((option) => (
         <PathCard
           key={option.key}
@@ -27,6 +30,7 @@ export function CategoryTabView({ category, selectedKey, openKey, onToggle }: Pr
           selected={selectedKey === option.key}
           open={openKey === option.key}
           pending={false}
+          plan={planOf(option.id) ?? { state: 'loading' }}
           onToggle={() => onToggle(option.key)}
         />
       ))}

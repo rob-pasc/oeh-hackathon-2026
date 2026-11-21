@@ -5,6 +5,7 @@ import {
   CategoryResult,
   checkCategoryResult,
   checkStepPlan,
+  OPTION_KINDS,
   StepPlan,
   DeviceScan,
   Fact,
@@ -387,5 +388,15 @@ describe('StepPlan (feature 009)', () => {
     const p = plan()
     p.steps[1] = { ...p.steps[1], passage_ids: [], safety: 'professional' }
     expect(checkStepPlan(p)).toEqual([])
+  })
+
+  it('accepts the template steps of every option kind as uncited template plans (FR-011, FR-013)', () => {
+    const templates = fixture<Record<string, unknown[]>>('steps.templates.json')
+    expect(Object.keys(templates).sort()).toEqual([...OPTION_KINDS].sort())
+    for (const steps of Object.values(templates)) {
+      const p = { ...plan(), source: 'template', notice: 'AI steps unavailable', steps, passages: [] }
+      expect(validatePlan(p).ok).toBe(true)
+      expect(checkStepPlan(p as never)).toEqual([])
+    }
   })
 })

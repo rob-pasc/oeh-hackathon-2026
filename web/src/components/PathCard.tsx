@@ -1,5 +1,7 @@
 import type { CardView } from '../lib/pathView'
+import type { StepState } from '../lib/steps'
 import { PathHeader } from './PathHeader'
+import { StepList } from './StepList'
 import { Thinking } from './Thinking'
 import { Sk } from './ui'
 
@@ -12,6 +14,8 @@ interface Props {
   /** True while the details are still on their way; the opened card then shows placeholders. */
   pending: boolean
   onToggle: () => void
+  /** An option's step plan (feature 009); when given, it fills a full-width "What to do" section below "Why". */
+  plan?: StepState
   /**
    * The card opens another view instead of expanding (a category on the Overview opens its tab),
    * so it shows a forward chevron and no details.
@@ -36,7 +40,7 @@ function Chevron({ className }: { className: string }) {
   )
 }
 
-export function PathCard({ view, selected, open, pending, onToggle, navigates = false }: Props) {
+export function PathCard({ view, selected, open, pending, onToggle, plan, navigates = false }: Props) {
   const expanded = open && !navigates
   return (
     <section
@@ -101,6 +105,12 @@ export function PathCard({ view, selected, open, pending, onToggle, navigates = 
               </a>
             ))}
           </div>
+          {plan ? (
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <span className={SECTION_LABEL}>What to do</span>
+              <StepList state={plan} />
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>

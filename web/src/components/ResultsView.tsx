@@ -7,6 +7,7 @@ import { ApiClientError, useApi } from '../api'
 import { buildCategoryViews, type CategoryView, type OptionView } from '../lib/categoryView'
 import { DEFAULT_USE, type ResultTab, type UseTag } from '../lib/labels'
 import { useFlip } from '../lib/motion'
+import { useStepPlans } from '../lib/useStepPlans'
 import { buildPathViews, type CardView } from '../lib/pathView'
 import { explainCategoryModeChange, explainModeChange } from '../lib/modeChange'
 import { formatAvoided, formatEur, formatYears } from '../lib/impact'
@@ -40,6 +41,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   /** Key of the option the user last opened; the gauge follows it (FR-011). */
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [openOption, setOpenOption] = useState<string | null>(null)
+  const plans = useStepPlans(deviceId, use)
 
   // Scan data: loaded once per device.
   useEffect(() => {
@@ -105,6 +107,9 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   function toggleOption(key: string) {
     setSelectedOption(key)
     setOpenOption(current => (current === key ? null : key))
+    // Opening an option for the first time requests its step plan (feature 009 FR-001).
+    const option = allOptions.find(o => o.key === key)
+    if (option && openOption !== key) plans.request(option.id)
   }
 
   if (scan.state === 'error') {
@@ -156,6 +161,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
                 selectedKey={selectedOption}
                 openKey={openOption}
                 onToggle={toggleOption}
+                planOf={plans.get}
               />
             ) : categories ? (
               <>
