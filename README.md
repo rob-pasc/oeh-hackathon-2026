@@ -21,6 +21,9 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: the hosting provider isn't chosen yet |
 | 006 | [Web app](docs/features/feature-006-web-app/PLAN.md) | Implemented, awaiting the team's browser review |
 | 007 | [macOS and Linux scanner](docs/features/feature-007-macos-linux-scanner/PLAN.md) | Implemented, awaiting real scans on a Mac and a Linux laptop |
+| 008 | [AI categories and options](docs/features/feature-008-ai-categories-and-options/PLAN.md) | Specified |
+| 009 | [Concrete step plans](docs/features/feature-009-concrete-step-plans/PLAN.md) | Specified |
+| 010 | [Step-level knowledge base](docs/features/feature-010-step-level-knowledge-base/PLAN.md) | Specified |
 
 The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP EliteBook 840 G5.
 
