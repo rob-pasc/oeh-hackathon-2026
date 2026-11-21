@@ -26,6 +26,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 010 | [Step-level knowledge base](docs/features/feature-010-step-level-knowledge-base/PLAN.md) | Implemented, awaiting its review (ingestion and corpus tests pass on `main`) |
 | 011 | [Gauge follows the tab, capped option statuses](docs/features/feature-011-tab-gauge-and-capped-option-status/PLAN.md) | Complete |
 | 012 | [Processor check for gaming](docs/features/feature-012-gaming-cpu-check/PLAN.md) | Specified: the threshold and its source are still open |
+| 013 | [Admin scan overview](docs/features/feature-013-admin-scan-overview/PLAN.md) | Specified, not started |
 
 The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP EliteBook 840 G5.
 
