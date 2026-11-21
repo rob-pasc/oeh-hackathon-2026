@@ -352,6 +352,56 @@ describe('CategoryResult (feature 008)', () => {
   })
 })
 
+describe('CategoryResult plan (feature 013 AC-010)', () => {
+  const result = () => clone(fixture<any>('categories.example-laptop-14.office.json'))
+  const baseline = fixture<AssessmentT>('assessment.example-laptop-14.office.json').baseline
+  const validate = createValidator(CategoryResult)
+  const optionOf = (r: any, id: string) => r.categories.flatMap((c: any) => c.options).find((o: any) => o.option_id === id)
+
+  it('validates results with and without a plan', () => {
+    const withPlan = result()
+    expect(withPlan.plan.steps.length).toBeGreaterThanOrEqual(2)
+    expect(validate(withPlan).ok).toBe(true)
+    expect(checkCategoryResult(withPlan, baseline)).toEqual([])
+    const without = result()
+    delete without.plan
+    expect(validate(without).ok).toBe(true)
+    expect(checkCategoryResult(without, baseline)).toEqual([])
+  })
+
+  it.each([
+    ['a single step', (r: any) => (r.plan.steps = r.plan.steps.slice(0, 1))],
+    ['seven steps', (r: any) => (r.plan.steps = Array.from({ length: 7 }, () => r.plan.steps[0]))],
+    ['a recycle step', (r: any) => (r.plan.steps[0].kind = 'recycle')],
+    ['a null plan', (r: any) => (r.plan = null)],
+  ])('rejects %s by schema', (_label, mutate) => {
+    const r = result()
+    mutate(r)
+    expect(validate(r).ok).toBe(false)
+  })
+
+  it.each([
+    ['an unknown option', (r: any) => (r.plan.steps[0].option_id = 'nope'), 'unknown option'],
+    ['a repeated step', (r: any) => (r.plan.steps[1] = { ...r.plan.steps[0] }), 'repeats'],
+    ['a Depends step', (r: any) => (optionOf(r, r.plan.steps[0].option_id).status = 'conditional'), 'only Good fit options'],
+    ['a mismatched kind', (r: any) => (r.plan.steps[0].kind = 'battery'), 'does not match'],
+    [
+      'hand_down before the last step',
+      (r: any) => {
+        r.plan.steps[0] = { category_id: 'hand-down', option_id: 'donate', title: 'Donate', kind: 'hand_down' }
+      },
+      'hand_down can only be the last step',
+    ],
+    ['a calculator source with an AI step', (r: any) => (r.plan.impact_source = 'calculator'), 'impact_source is ai_estimate exactly'],
+    ['low above high', (r: any) => (r.plan.impact.cost_eur = { low: 9, high: 1 }), 'low (9) exceeds high (1)'],
+    ['another baseline', (r: any) => (r.plan.impact.co2e_kg.baseline = { low: 1, high: 2 }), 'must equal the assessment baseline'],
+  ])('flags %s', (_label, mutate, message) => {
+    const r = result()
+    mutate(r)
+    expect(checkCategoryResult(r, baseline).join('\n')).toContain(message)
+  })
+})
+
 describe('StepPlan (feature 009)', () => {
   const plan = () => clone(fixture<any>('steps.example-laptop-14.office.json'))
   const validatePlan = createValidator(StepPlan)

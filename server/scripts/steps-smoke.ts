@@ -7,6 +7,9 @@
 // concrete and ordered, and internal battery work must be `professional`. The script lists
 // candidates to look at: battery plans without a professional step, and general steps that name
 // tools, parts or internal components, which may be technical steps marked general to avoid removal.
+//
+// With `-- --plan` (feature 014 AC-008) it skips the option plans and makes only the plan step call for
+// each model whose categories carry a plan, printing the one list for the whole plan.
 import { DatabaseSync } from 'node:sqlite'
 import type { DeviceRecord, IntendedUse, StepPlan } from '@leaaf/shared'
 import { createAssessmentService, loadWeights } from '../src/assessment/index.ts'
@@ -21,6 +24,7 @@ import { MODELS } from './demo-scans.ts'
 const INTERNAL = /screwdriver|bottom cover|base cover|back cover|motherboard|system board|so-?dimm|m\.2|ribbon|connector|unscrew|pry/i
 
 const use: IntendedUse = 'office'
+const planOnly = process.argv.includes('--plan')
 const config = loadLlmConfig()
 const llm = createOpenAiCompatibleClient(config)
 const impactTable = loadImpactTable()
@@ -56,6 +60,19 @@ for (const [index, { name, scan }] of MODELS.entries()) {
   const input = await assessments.assessDevice(record, use)
   const categories = await categorize(scan, input)
   console.log(`\n${name} (${use}): categories ${categories.source}, model evidence ${input.assessment.model_evidence}`)
+  if (categories.plan) {
+    console.log(`  PLAN: ${categories.plan.steps.map((s) => `${s.title} (${s.kind})`).join(' -> ')}`)
+    const started = performance.now()
+    const list = await steps.planSteps(record, use)
+    if (list) {
+      print(list, Math.round(performance.now() - started))
+      if (categories.plan.steps.some((s) => s.kind === 'battery') && !list.steps.some((s) => s.safety === 'professional'))
+        candidates.push(`${name}: plan list with a battery step but no professional step`)
+      for (const s of list.steps.filter((s) => s.kind === 'general'))
+        if (INTERNAL.test([s.title, s.detail, ...s.tools, ...s.parts].join(' '))) candidates.push(`${name}: general step naming internal work in the plan list: "${s.title}"`)
+    }
+  } else console.log('  PLAN: none')
+  if (planOnly) continue
   for (const c of categories.categories) {
     for (const o of c.options) {
       console.log(`  [${c.label}] ${o.title} | ${o.kind} | ${o.status} | ${o.difficulty}`)

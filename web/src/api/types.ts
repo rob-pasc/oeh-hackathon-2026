@@ -3,7 +3,7 @@ import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { OsFamily } from '@leaaf/shared/common'
 import type { DeviceRecord } from '@leaaf/shared/device'
-import type { StepPlan } from '@leaaf/shared/steps'
+import type { PlanStepList, StepPlan } from '@leaaf/shared/steps'
 import type { UseTag } from '../lib/labels'
 
 import type { ScanSessionEvent as SharedScanSessionEvent, ScanStepId } from '@leaaf/shared/session'
@@ -90,6 +90,8 @@ export interface ApiClient {
   streamReport(deviceId: string, use: UseTag, handlers: ReportStreamHandlers): () => void
   /** The step plan of one option of the shown categories (feature 009, shared/src/steps.ts). */
   getSteps(deviceId: string, use: UseTag, optionId: string): Promise<StepPlan>
+  /** One step list for the shown plan (feature 014); rejects with not_found when there is no plan. */
+  getPlanSteps(deviceId: string, use: UseTag): Promise<PlanStepList>
   /**
    * Admin area (feature 016, shared/src/admin.ts). `adminSession` resolves to null when logged out
    * and throws code `not_found` when the admin area is not set up.

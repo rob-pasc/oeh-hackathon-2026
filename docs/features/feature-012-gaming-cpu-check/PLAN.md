@@ -33,7 +33,7 @@ For the intended use `gaming`, feature 003 checks only RAM (16 GB) and a dedicat
 
 ## Functional requirements
 
-- **FR-001:** For the intended use `gaming`, when the scanned processor is classified as too weak for gaming (rule to be fixed under the blocking question below), the `upgrade` and `repair` gates are `not_suitable` with a reason that names the processor and says that upgrading or repairing other parts does not change it.
+- **FR-001:** For the intended use `gaming`, when the scanned processor is classified as too weak for gaming (fewer than 4 hardware threads, or at most 2 cores with a clock in its name below 3.3 GHz; see [RESEARCH](./RESEARCH.md)), the `upgrade` and `repair` gates are `not_suitable` with a reason that names the processor and says that upgrading or repairing other parts does not change it.
 - **FR-002:** When the processor cannot be classified (name, cores and threads missing or unrecognized), the gates are unchanged by this feature; no extra "cannot verify" reason is added.
 - **FR-003:** For every other intended use, and for pass it on, salvage and recycle under `gaming`, results are unchanged.
 - **FR-004:** The rule and its source are documented in the feature 003 gate rules ([DESIGN](../feature-003-five-path-ranking/DESIGN.md#gate-rules)).
@@ -52,7 +52,7 @@ For the intended use `gaming`, feature 003 checks only RAM (16 GB) and a dedicat
 
 ## Proposed technical approach
 
-- Add a `gamingCpuGate` next to `graphicsGate` in `server/src/assessment/gates.ts`, called from the upgrade and repair gates for `gaming`. Classify by thread or core count and, if the source supports it, by the low-power suffix in the name (for example Intel "U"/"Y"). Extend `server/test/assessment.test.ts` (or the existing gate tests).
+- **Implemented:** `gamingCpuShortfall` and `gamingCpuGate` in `server/src/assessment/gates.ts`. `runGates` applies the gate to the upgrade and repair results for `gaming`, putting the `cpu_below_gaming` reason first; a path already `not_suitable` for another reason keeps that reason first and gets the processor reason added after it. `gateRecycle` receives the results before this check, so recycling is unchanged (FR-003). The clock is read from the name (`clockFromName`, Intel's "@ X.XXGHz"). Tests in `server/test/assessment.test.ts` "gaming processor check (feature 012)". The low-power suffix idea was dropped: the clock rule covers the tested chip and has a direct source.
 - Whether a too weak CPU should be `not_suitable` or only `conditional` was proposed as "Not a fit" and accepted.
 
 ## Dependencies and risks
@@ -66,7 +66,8 @@ Completion boundary: locally verified handoff with self-review, committed on `ma
 
 ## Assumptions and open questions
 
-- **Blocking:** Which threshold counts as "clearly too weak for gaming", and which source supports it? Proposed starting point: fewer than 4 physical cores, citing the minimum system requirements of widely played current PC games or a platform survey. Research the source and confirm the threshold with the user before implementation.
+- **Resolved (2026-11-21):** The threshold is fewer than 4 hardware threads (Counter-Strike 2's stated minimum), or at most 2 cores with a clock below 3.3 GHz (Fortnite's minimum processor, the Core i3-3225, a 2-core, 4-thread chip at 3.3 GHz). The proposed "fewer than 4 physical cores" was dropped because Fortnite's own minimum is a dual-core. Evidence in [RESEARCH](./RESEARCH.md). The user delegated the choice by asking to research the threshold and implement the feature in full; the plan's step "confirm it with the user" was therefore not taken separately, and the threshold is reported with the implementation.
+- **Known limit:** The clock in an Intel name is the base clock, so recent dual-core laptop chips with a high turbo clock count as too weak although they can beat the i3-3225 in bursts. AMD and Apple names usually carry no clock, so only the thread rule applies to them.
 - Assumption: unclassifiable processors add no reason (FR-002), to avoid a second "cannot verify" next to the graphics one.
 
 ## Scope change log
@@ -74,14 +75,16 @@ Completion boundary: locally verified handoff with self-review, committed on `ma
 | Date       | Change                 | User approval |
 | ---------- | ---------------------- | ------------- |
 | 2026-11-21 | Initial approved scope | User answered "accept" on 2026-11-21 to the plan that point 2b (a too weak CPU makes upgrade and repair Not a fit for gaming) becomes its own feature, because the threshold needs a cited rule |
+| 2026-11-21 | Threshold decided and FR-001 completed with it (fewer than 4 threads, or at most 2 cores below 3.3 GHz); the blocking question is resolved. | User, 2026-11-21: "research the CPU threshold for 012 and implement feature 012 in full" |
 
 ## Related and superseded features
 
-- [Feature 003](../feature-003-five-path-ranking/PLAN.md) **FR-017** (gaming needs 16 GB RAM and a dedicated graphics card) is extended with the processor condition of FR-001 here. Planned extension, not yet implemented; 003 AC-018 stays valid for the graphics part.
+- [Feature 003](../feature-003-five-path-ranking/PLAN.md) **FR-017** (gaming needs 16 GB RAM and a dedicated graphics card) is extended with the processor condition of FR-001 here. Implemented 2026-11-21 on `main`; reciprocal note in the feature 003 plan. 003 AC-018 stays valid for the graphics part.
 - [Feature 011](../feature-011-tab-gauge-and-capped-option-status/PLAN.md) carries the new gate status into AI options of kind `ssd`, `ram` and `battery`.
 
 ## References
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: None yet
+- Related ADRs: None (a local rule; no ADR needed)
+- Research: [`RESEARCH.md`](./RESEARCH.md)

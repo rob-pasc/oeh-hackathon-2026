@@ -232,6 +232,26 @@ export function buildApp(options: AppOptions): FastifyInstance {
     },
   )
 
+  // One step list for the combined plan (feature 014), with the same per-client limit as option steps.
+  app.get<{ Params: { id: string }; Querystring: { intended_use?: string } }>(
+    '/api/devices/:id/plan/steps',
+    { onRequest: hourlyLimit(limits.stepsPerHour) },
+    async (req, reply) => {
+      const use = req.query.intended_use
+      if (!isIntendedUse(use).ok)
+        return reply.code(400).send(
+          apiError('invalid_payload', 'unknown intended use', [
+            { path: '/intended_use', message: `must be one of ${INTENDED_USES.join(', ')}` },
+          ]),
+        )
+      const record = options.devices.get(req.params.id)
+      if (!record) return reply.code(404).send(NOT_FOUND)
+      if (!options.steps) return reply.code(500).send(apiError('internal', 'step plans are not available'))
+      const list = await options.steps.planSteps(record, use as IntendedUse)
+      return list ? reply.header('cache-control', 'no-store').send(list) : reply.code(404).send(apiError('not_found', 'this result has no plan'))
+    },
+  )
+
   const scannerPaths: Partial<Record<OsFamily, string | undefined>> = { windows: options.scannerExePath, ...options.scannerPaths }
   for (const os of OS_FAMILIES) {
     app.get<{ Querystring: { session?: string } }>(SCANNER_DOWNLOADS[os], async (req, reply) => {

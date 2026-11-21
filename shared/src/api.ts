@@ -29,6 +29,8 @@ export const API_ROUTES = {
     `/api/devices/${id}/report?intended_use=${encodeURIComponent(use)}`,
   optionSteps: (id: DeviceId, optionId: string, use: IntendedUse) =>
     `/api/devices/${id}/options/${encodeURIComponent(optionId)}/steps?intended_use=${encodeURIComponent(use)}`,
+  /** The combined plan's step list (feature 014). */
+  planSteps: (id: DeviceId, use: IntendedUse) => `/api/devices/${id}/plan/steps?intended_use=${encodeURIComponent(use)}`,
   /** The Windows download; see SCANNER_DOWNLOADS for the others. */
   scannerDownload: SCANNER_DOWNLOADS.windows,
   createSession: '/api/sessions',

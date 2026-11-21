@@ -80,6 +80,61 @@
           "path": null
         },
         {
+          "option_id": "copy-system",
+          "title": "Copy the system to the new SSD",
+          "status": "viable",
+          "reason": "A USB adapter copies Windows and your files to the SSD, so nothing needs reinstalling.",
+          "kind": "other",
+          "difficulty": "diy_easy",
+          "why": "Copying the old disk to the SSD before swapping keeps your programs and settings. It needs a USB-to-SSD adapter and free cloning software, and the old disk must still be readable.",
+          "claims": [],
+          "impact": {
+            "cost_eur": {
+              "low": 10,
+              "high": 25
+            },
+            "useful_life_years": {
+              "low": 0,
+              "high": 0
+            },
+            "co2e_kg": {
+              "path": {
+                "low": 0.5,
+                "high": 1.5
+              },
+              "baseline": {
+                "low": 200,
+                "high": 350
+              },
+              "avoided_vs_baseline": {
+                "low": -1.5,
+                "high": -0.5
+              }
+            },
+            "displacement": "none",
+            "assumptions": [
+              {
+                "text": "AI estimate: the cost, extra life and CO₂e of this option come from the AI, not from the impact table.",
+                "impact_refs": []
+              }
+            ]
+          },
+          "impact_source": "ai_estimate",
+          "scores": {
+            "environment": 0,
+            "useful_life": 0,
+            "economic": 98,
+            "feasibility": 80
+          },
+          "confidence": {
+            "level": "medium",
+            "reasons": [
+              "The figures are an AI estimate, not calculated from the impact table"
+            ]
+          },
+          "path": null
+        },
+        {
           "option_id": "clean-install",
           "title": "Reinstall the operating system",
           "status": "conditional",
@@ -535,5 +590,79 @@
       "accessed_on": "2026-11-20",
       "text": "Before passing on a computer, reset the operating system and securely erase all drives."
     }
-  ]
+  ],
+  "plan": {
+    "summary": "Add memory, copy the system to an SSD and swap the drive, so this laptop stays fast for everyday work.",
+    "steps": [
+      {
+        "category_id": "memory",
+        "option_id": "ram-add",
+        "title": "Add an 8 GB DDR4 module",
+        "kind": "ram"
+      },
+      {
+        "category_id": "faster-storage",
+        "option_id": "copy-system",
+        "title": "Copy the system to the new SSD",
+        "kind": "other"
+      },
+      {
+        "category_id": "faster-storage",
+        "option_id": "ssd-swap",
+        "title": "Swap the hard disk for a 500 GB SSD",
+        "kind": "ssd"
+      }
+    ],
+    "impact": {
+      "cost_eur": {
+        "low": 198,
+        "high": 265
+      },
+      "useful_life_years": {
+        "low": 2,
+        "high": 4
+      },
+      "co2e_kg": {
+        "path": {
+          "low": 37.5,
+          "high": 95.5
+        },
+        "baseline": {
+          "low": 200,
+          "high": 350
+        },
+        "avoided_vs_baseline": {
+          "low": 104.5,
+          "high": 312.5
+        }
+      },
+      "displacement": "assumed",
+      "assumptions": [
+        {
+          "text": "The steps are priced as one plan: their costs and emissions add up, a new purchase is avoided at most once, and the extra life is that of the longest-lasting step.",
+          "impact_refs": []
+        },
+        {
+          "text": "Buys a 500 GB NVMe M.2 SSD and a 8 GB RAM module at sample retail prices; the owner installs them.",
+          "impact_refs": [
+            "part.ssd_500gb.price",
+            "part.ram_8gb_ddr4.price",
+            "part.ssd_500gb.production_co2e",
+            "part.ram_8gb_ddr4.production_co2e"
+          ]
+        },
+        {
+          "text": "Extra useful life after an SSD/RAM upgrade, office use",
+          "impact_refs": [
+            "life_extra.upgrade.office"
+          ]
+        },
+        {
+          "text": "AI estimate: the cost, extra life and CO₂e of this option come from the AI, not from the impact table.",
+          "impact_refs": []
+        }
+      ]
+    },
+    "impact_source": "ai_estimate"
+  }
 }

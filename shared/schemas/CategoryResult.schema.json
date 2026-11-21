@@ -539,6 +539,208 @@
         "description": "At least one of section or page is non-null (checked in invariants.ts)"
       },
       "description": "Every passage cited by any option claim"
+    },
+    "plan": {
+      "type": "object",
+      "required": [
+        "summary",
+        "steps",
+        "impact",
+        "impact_source"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "description": "One sentence"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "category_id",
+              "option_id",
+              "title",
+              "kind"
+            ],
+            "properties": {
+              "category_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+              },
+              "option_id": {
+                "type": "string",
+                "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              "kind": {
+                "enum": [
+                  "ssd",
+                  "ram",
+                  "battery",
+                  "other",
+                  "hand_down"
+                ]
+              }
+            },
+            "additionalProperties": false,
+            "description": "Refers to an option of the result. In the five-path fallback, the upgrade option is split into its ssd and ram steps, so one option can appear once per kind"
+          },
+          "minItems": 2,
+          "maxItems": 6
+        },
+        "impact": {
+          "type": "object",
+          "required": [
+            "cost_eur",
+            "useful_life_years",
+            "co2e_kg",
+            "displacement",
+            "assumptions"
+          ],
+          "properties": {
+            "cost_eur": {
+              "type": "object",
+              "required": [
+                "low",
+                "high"
+              ],
+              "properties": {
+                "low": {
+                  "type": "number"
+                },
+                "high": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            },
+            "useful_life_years": {
+              "type": "object",
+              "required": [
+                "low",
+                "high"
+              ],
+              "properties": {
+                "low": {
+                  "type": "number"
+                },
+                "high": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            },
+            "co2e_kg": {
+              "type": "object",
+              "required": [
+                "path",
+                "baseline",
+                "avoided_vs_baseline"
+              ],
+              "properties": {
+                "path": {
+                  "type": "object",
+                  "required": [
+                    "low",
+                    "high"
+                  ],
+                  "properties": {
+                    "low": {
+                      "type": "number"
+                    },
+                    "high": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "baseline": {
+                  "type": "object",
+                  "required": [
+                    "low",
+                    "high"
+                  ],
+                  "properties": {
+                    "low": {
+                      "type": "number"
+                    },
+                    "high": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "avoided_vs_baseline": {
+                  "type": "object",
+                  "required": [
+                    "low",
+                    "high"
+                  ],
+                  "properties": {
+                    "low": {
+                      "type": "number"
+                    },
+                    "high": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false,
+              "description": "path = emissions caused by this path (e.g. parts production). avoided_vs_baseline = credited baseline minus path; positive means less CO2e than buying new. How much of the baseline is credited depends on displacement."
+            },
+            "displacement": {
+              "enum": [
+                "assumed",
+                "conditional",
+                "none"
+              ],
+              "description": "How much avoided new-device production is credited: assumed = credited (owner keeps using the device instead of buying new); conditional = credited only in the high end of the range (pass_on: only if the recipient would otherwise buy new), so avoided_vs_baseline.low <= 0; none = not credited (e.g. recycle), so avoided_vs_baseline.high <= 0"
+            },
+            "assumptions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "text",
+                  "impact_refs"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "impact_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "minItems": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "impact_source": {
+          "enum": [
+            "calculator",
+            "ai_estimate"
+          ],
+          "description": "ai_estimate when any step has AI-estimated figures (FR-006)"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

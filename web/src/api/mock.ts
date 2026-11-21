@@ -10,7 +10,7 @@ import laptopAssessmentJson from '@leaaf/fixtures/assessment.example-laptop-14.o
 import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
 import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import { fallbackCategories, LAPTOP_CATEGORIES } from './mockCategories'
-import { laptopPlan, templatePlan } from './mockSteps'
+import { laptopPlan, laptopPlanSteps, templatePlan } from './mockSteps'
 import { MOCK_LOOKUPS } from './mockParts'
 import { partsFromScan, STEP_KINDS } from '../lib/parts'
 import { ApiClientError, SCAN_STEPS, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
@@ -148,6 +148,15 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await new Promise((resolve) => setTimeout(resolve, stepsMs))
       if (!plan) throw new ApiClientError('not_found', 'Option not found')
       return plan
+    },
+
+    async getPlanSteps(deviceId, use) {
+      if (!known.has(deviceId)) throw new ApiClientError('not_found', 'Device not found')
+      // Only the laptop's sample result has a plan; the desktop's mock fallback has none.
+      const list = deviceId === MOCK_DEVICE_IDS.laptop ? laptopPlanSteps(deviceId, use) : null
+      await new Promise((resolve) => setTimeout(resolve, stepsMs))
+      if (!list) throw new ApiClientError('not_found', 'This result has no plan')
+      return list
     },
 
     // Admin area (feature 016): a fixed sample login and a generated list, so the page can be

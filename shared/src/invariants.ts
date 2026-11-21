@@ -152,6 +152,42 @@ export function checkCategoryResult(result: CategoryResult, baseline?: Assessmen
         errors.push(`${label}.impact.co2e_kg.baseline must equal the assessment baseline`)
     }
   }
+  if (result.plan) errors.push(...checkPlan(result, baseline))
+  return errors
+}
+
+/** Feature 013: plan steps are distinct Good fit options, hand_down only last, figures consistent. */
+function checkPlan(result: CategoryResult, baseline?: Assessment['baseline']): string[] {
+  const plan = result.plan!
+  const errors: string[] = []
+  const seen = new Set<string>()
+  plan.steps.forEach((step, i) => {
+    const label = `plan.steps[${i}]`
+    const option = result.categories.find((c) => c.category_id === step.category_id)?.options.find((o) => o.option_id === step.option_id)
+    if (!option) return void errors.push(`${label}: unknown option ${step.category_id}/${step.option_id}`)
+    const key = `${step.category_id}/${step.option_id}/${step.kind}`
+    if (seen.has(key)) errors.push(`${label}: repeats ${key}`)
+    seen.add(key)
+    if (option.status !== 'viable') errors.push(`${label}: only Good fit options can be plan steps`)
+    // The fallback's upgrade option (kind other, path upgrade) stands for its ssd and ram steps.
+    const kindOk = option.kind === step.kind || (option.path === 'upgrade' && (step.kind === 'ssd' || step.kind === 'ram'))
+    if (!kindOk) errors.push(`${label}: kind ${step.kind} does not match the option's kind ${option.kind}`)
+    if (step.kind === 'hand_down' && i !== plan.steps.length - 1) errors.push(`${label}: hand_down can only be the last step`)
+  })
+  const ai = plan.steps.some(
+    (s) => result.categories.find((c) => c.category_id === s.category_id)?.options.find((o) => o.option_id === s.option_id)?.impact_source === 'ai_estimate',
+  )
+  if ((plan.impact_source === 'ai_estimate') !== ai) errors.push('plan.impact_source is ai_estimate exactly when a step has AI-estimated figures')
+  const { cost_eur, useful_life_years, co2e_kg } = plan.impact
+  errors.push(
+    ...checkRange(cost_eur, 'plan.impact.cost_eur'),
+    ...checkRange(useful_life_years, 'plan.impact.useful_life_years'),
+    ...checkRange(co2e_kg.path, 'plan.impact.co2e_kg.path'),
+    ...checkRange(co2e_kg.avoided_vs_baseline, 'plan.impact.co2e_kg.avoided_vs_baseline'),
+  )
+  if (cost_eur.low < 0 || useful_life_years.low < 0) errors.push('plan: cost and extra life must not be negative')
+  if (baseline && (co2e_kg.baseline.low !== baseline.co2e_kg.low || co2e_kg.baseline.high !== baseline.co2e_kg.high))
+    errors.push('plan.impact.co2e_kg.baseline must equal the assessment baseline')
   return errors
 }
 

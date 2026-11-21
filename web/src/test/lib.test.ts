@@ -156,7 +156,7 @@ describe('category views (feature 008)', () => {
     const storage = views.find((c) => c.id === 'faster-storage')!
     expect(storage.best.id).toBe('ssd-swap')
     expect(storage.metrics.slice(0, 3)).toEqual(storage.best.metrics.slice(0, 3))
-    expect(storage.options.map((o) => o.status)).toEqual(['viable', 'conditional'])
+    expect(storage.options.map((o) => o.status)).toEqual(['viable', 'viable', 'conditional'])
   })
 
   it('shows cost, extra life, CO₂e avoided and score on an option, and marks AI estimates (AC-010)', () => {

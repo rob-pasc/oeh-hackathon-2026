@@ -11,6 +11,7 @@ import { Footer } from '../components/Footer'
 import { Header } from '../components/Header'
 import { PRIMARY_BUTTON, Spinner } from '../components/ui'
 import { USE_LABELS } from '../lib/labels'
+import { PLAN_STEPS_ID } from '@leaaf/shared/steps'
 
 type View = { kind: 'loading' } | { kind: 'disabled' } | { kind: 'login' } | { kind: 'list'; username: string } | { kind: 'error' }
 
@@ -370,7 +371,7 @@ function ScanDetails({ deviceId, onLoggedOut }: { deviceId: string; onLoggedOut:
           <ul className="m-0 flex flex-col gap-1 pl-5 text-sm">
             {fallbacks.map((f, i) => (
               <li key={i}>
-                {new Date(f.created_at).toLocaleString()} · {f.call === 'categories' ? 'Result categories' : `Steps for ${f.option_id ?? 'an option'}`} ·{' '}
+                {new Date(f.created_at).toLocaleString()} · {f.call === 'categories' ? 'Result categories' : f.option_id === PLAN_STEPS_ID ? 'Steps for the plan' : `Steps for ${f.option_id ?? 'an option'}`} ·{' '}
                 {USE_LABELS[f.intended_use]} · {FALLBACK_REASONS[f.reason]}
               </li>
             ))}

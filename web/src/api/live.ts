@@ -5,7 +5,7 @@ import { ADMIN_ROUTES, type AdminScanDetail, type AdminScanPage, type AdminSessi
 import { API_ROUTES } from '@leaaf/shared/api'
 import type { DeviceRecord } from '@leaaf/shared/device'
 import type { CategoryResult } from '@leaaf/shared/categories'
-import type { StepPlan } from '@leaaf/shared/steps'
+import type { PlanStepList, StepPlan } from '@leaaf/shared/steps'
 import { ApiClientError, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
 
 async function readError(response: Response): Promise<ApiClientError> {
@@ -78,6 +78,12 @@ export const liveClient: ApiClient = {
     const response = await fetch(API_ROUTES.optionSteps(deviceId, optionId, use))
     if (!response.ok) throw await readError(response)
     return (await response.json()) as StepPlan
+  },
+
+  async getPlanSteps(deviceId, use): Promise<PlanStepList> {
+    const response = await fetch(API_ROUTES.planSteps(deviceId, use))
+    if (!response.ok) throw await readError(response)
+    return (await response.json()) as PlanStepList
   },
 
   streamReport(deviceId, use, handlers) {

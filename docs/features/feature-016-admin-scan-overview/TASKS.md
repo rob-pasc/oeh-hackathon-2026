@@ -43,6 +43,8 @@ This is the **authoritative progress checklist**. Draft ordered, independently v
 - 2026-11-21: Web page done. `ApiClientError` gains an optional `retryAfter` from the 429 header, so the form can say how long to wait. Mock mode accepts the sample login `admin` / `sample-admin-password` and shows it on the form; the live server never knows it. The page sets a `robots` meta tag while shown, and the server adds `X-Robots-Tag` to every admin API response.
 - 2026-11-21 (revision): The explanation report (feature 004) is no longer wired into the server, so only the category and step calls record fallbacks. A step template shown because the categories already fell back is not recorded twice. The fallback log is a new additive table `ai_fallbacks`; the insights module reads the service caches and treats a missing table as empty.
 
+- 2026-11-21 (merge of `main`): `main` added the plan step list (feature 014), a third AI call. Its fallbacks are recorded like an option's step fallbacks, with the option ID `#plan`, and the admin page shows them as "Steps for the plan". Its stored results are already counted, because the plan's step list lives in `step_cache` too.
+
 ## Lifecycle history
 
 - 2026-11-21: Implementation started after the user replied "ok lets go".

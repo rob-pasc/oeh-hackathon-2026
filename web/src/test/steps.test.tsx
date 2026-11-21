@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Step, StepPlan } from '@leaaf/shared/steps'
 import { createValidator } from '@leaaf/shared/validate'
 import { checkStepPlan } from '@leaaf/shared/invariants'
-import { StepPlan as StepPlanSchema } from '@leaaf/shared/steps'
+import { MAX_PLAN_STEPS, PLAN_STEPS_ID, PlanStepList as PlanStepListSchema, StepPlan as StepPlanSchema } from '@leaaf/shared/steps'
 import { USE_TAGS } from '../lib/labels'
 import { ApiContext } from '../api'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
@@ -208,5 +208,75 @@ describe('ResultsView step plans', () => {
     await userEvent.click(toggle)
     await waitFor(() => expect(within(ssd).getByRole('list', { name: 'Steps' })).toBeInTheDocument())
     expect(getSteps).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('the plan’s step list (feature 014)', () => {
+  const counting = (stepsMs = 5) => {
+    const base = createMockClient({ stepMs: 5, assessmentMs: 5, reportMs: 5, stepsMs })
+    const getPlanSteps = vi.fn(base.getPlanSteps)
+    return { api: { ...base, getPlanSteps } satisfies ApiClient, getPlanSteps }
+  }
+  const renderWith = (api: ApiClient) =>
+    render(
+      <ApiContext.Provider value={api}>
+        <ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />
+      </ApiContext.Provider>,
+    )
+
+  it('requests the list once when the plan card is opened, and shows it numbered with tools, parts and time (AC-001, AC-002, AC-007)', async () => {
+    const { api, getPlanSteps } = counting()
+    renderWith(api)
+    const card = await screen.findByRole('region', { name: 'Your plan' })
+    const toggle = within(card).getAllByRole('button')[0]!
+    expect(getPlanSteps).not.toHaveBeenCalled()
+    await userEvent.click(toggle)
+    const list = await within(card).findByRole('list', { name: 'Steps' })
+    const items = within(list).getAllByRole('listitem')
+    const sample = (await createMockClient({ stepsMs: 0 }).getPlanSteps(MOCK_DEVICE_IDS.laptop, 'general'))
+    expect(items).toHaveLength(sample.steps.length)
+    expect(card).toHaveTextContent('Tools')
+    expect(card).toHaveTextContent('Time')
+    // Closing and reopening, or switching tabs, does not ask again.
+    await userEvent.click(toggle)
+    await userEvent.click(toggle)
+    expect(await within(card).findByRole('list', { name: 'Steps' })).toBeInTheDocument()
+    expect(getPlanSteps).toHaveBeenCalledTimes(1)
+  })
+
+  it('closes the plan card when the intended use changes, and loads the new use’s list when reopened (AC-001)', async () => {
+    const { api, getPlanSteps } = counting()
+    renderWith(api)
+    let card = await screen.findByRole('region', { name: 'Your plan' })
+    await userEvent.click(within(card).getAllByRole('button')[0]!)
+    await within(card).findByRole('list', { name: 'Steps' })
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'office')
+    card = await screen.findByRole('region', { name: 'Your plan' })
+    await waitFor(() => expect(within(card).getAllByRole('button')[0]).toHaveAttribute('aria-expanded', 'false'))
+    await userEvent.click(within(card).getAllByRole('button')[0]!)
+    expect(await within(card).findByRole('list', { name: 'Steps' })).toBeInTheDocument()
+    expect(getPlanSteps.mock.calls.map((c) => c[1])).toEqual(['general', 'office'])
+  })
+
+  it('shows the thinking line while the list loads (AC-005)', async () => {
+    const { api } = counting(400)
+    renderWith(api)
+    const card = await screen.findByRole('region', { name: 'Your plan' })
+    await userEvent.click(within(card).getAllByRole('button')[0]!)
+    expect(within(card).getByRole('status')).toBeInTheDocument()
+    expect(await within(card).findByRole('list', { name: 'Steps' }, { timeout: 2000 })).toBeInTheDocument()
+  })
+
+  it('has a valid mock list for the laptop’s sample plan with shared steps named once, and none for the desktop (AC-007)', async () => {
+    const api = createMockClient({ stepsMs: 0 })
+    const list = await api.getPlanSteps(MOCK_DEVICE_IDS.laptop, 'office')
+    expect(createValidator(PlanStepListSchema)(list).ok).toBe(true)
+    expect(checkStepPlan(list as StepPlan)).toEqual([])
+    expect(list.option_id).toBe(PLAN_STEPS_ID)
+    expect(list.steps.length).toBeLessThanOrEqual(MAX_PLAN_STEPS)
+    const titles = list.steps.map((s) => s.title)
+    expect(new Set(titles).size).toBe(titles.length)
+    expect(titles.filter((t) => t === 'Back up your files')).toHaveLength(1)
+    await expect(api.getPlanSteps(MOCK_DEVICE_IDS.desktop, 'office')).rejects.toThrow(/no plan/)
   })
 })

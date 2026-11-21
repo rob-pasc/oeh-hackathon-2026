@@ -35,6 +35,8 @@ Completion boundary: locally verified handoff with self-review (see [PLAN.md § 
 
 ## Verification notes
 
+**2026-11-21, supersession note.** Feature 015 removes the impact summary, replacing FR-002 (AC-002). The AC-002 result stays as historical evidence; current evidence is in the [feature 015 plan](../feature-015-remove-recommendation-summary/PLAN.md) and [acceptance criteria](../feature-015-remove-recommendation-summary/ACCEPTANCE_CRITERIA.md).
+
 2026-11-20: Self-reviewed the T-001 diff against FR-004 at base `021b4e1`. The model response schema derives its fields from the shared path explanation, requires all five paths, and rejects server-owned report fields. The prompt inspection test uses instruction-like text inside a passage. Runtime citation and figure checks remain in T-002.
 
 2026-11-20: Self-reviewed the T-002 diff from `e985069` against FR-005 and FR-010. Rechecked the report service and SSE sequence with 216 passing server tests. Generation failures leave no cached result. The test provider is mocked; live output quality and fallback behavior have separate verification tasks.

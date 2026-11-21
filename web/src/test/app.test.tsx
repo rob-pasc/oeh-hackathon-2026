@@ -1,9 +1,8 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult } from '@leaaf/shared/categories'
-import { formatEur, formatYears } from '../lib/impact'
 import fixture from '@leaaf/fixtures/assessment.example-laptop-14.office.json'
 import sampleCategories from '@leaaf/fixtures/categories.example-laptop-14.office.json'
 import { rankCategories } from '@leaaf/shared/ranking'
@@ -289,20 +288,15 @@ describe('ResultsView', () => {
     expect(within(await tabGroup()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Overview'])
   })
 
-  it('summarizes the best option of the recommended category with its calculator ranges and the baseline', async () => {
+  it('shows no recommendation summary paragraph on the Overview (feature 015 AC-001)', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
-    const top = ranked(sample)[0]!
-    const impact = top.options[0]!.option.impact!
-    const summary = await screen.findByLabelText('Recommendation summary')
-    expect(summary).toHaveTextContent(top.category.label)
-    expect(summary).toHaveTextContent(top.options[0]!.option.title)
-    expect(summary).toHaveTextContent(formatEur(impact.cost_eur))
-    expect(summary).toHaveTextContent(formatYears(impact.useful_life_years))
-    expect(summary).toHaveTextContent(`${impact.co2e_kg.avoided_vs_baseline.low}–${impact.co2e_kg.avoided_vs_baseline.high} kg CO₂e avoided`)
-    expect(summary).toHaveTextContent(laptop.baseline.description)
+    await screen.findByRole('region', { name: 'Your plan' })
+    await screen.findByRole('region', { name: ranked(sample)[0]!.category.label })
+    expect(screen.queryByLabelText('Recommendation summary')).toBeNull()
+    expect(screen.queryByText(/Baseline:/)).toBeNull()
   })
 
-  it('says "no CO₂e avoided" in the summary and "None" on the card when nothing is credited (feature 006 AC-059)', async () => {
+  it('says "None" on the card when nothing is credited (feature 006 AC-059)', async () => {
     const uncredited = { low: 0.5, high: 2 }
     renderWith(withCategories((r) => ({
       ...r,
@@ -313,19 +307,17 @@ describe('ResultsView', () => {
         ),
       })),
     })))
-    const summary = await screen.findByLabelText('Recommendation summary')
-    await waitFor(() => expect(summary).toHaveTextContent('no CO₂e avoided'))
-    expect(summary).not.toHaveTextContent(/-\d/)
-    const first = screen.getByRole('region', { name: ranked(sample)[0]!.category.label })
-    expect(within(first).getByTitle(/Nothing is credited/)).toHaveTextContent('None')
+    const first = await screen.findByRole('region', { name: ranked(sample)[0]!.category.label })
+    await waitFor(() => expect(within(first).getByTitle(/Nothing is credited/)).toHaveTextContent('None'))
   })
 
-  it('labels nothing Recommended and says so when no option is a good fit (AC-007)', async () => {
+  it('labels nothing Recommended and shows no summary line when no option is a good fit (008 AC-007, feature 015 AC-002)', async () => {
     renderWith(withCategories((r) => ({
       ...r,
       categories: r.categories.map((c) => ({ ...c, options: c.options.map((o) => (o.status === 'viable' ? { ...o, status: 'conditional' as const } : o)) })),
     })))
-    expect(await screen.findByText(/no option is clearly recommended/i)).toBeVisible()
+    await screen.findByRole('region', { name: ranked(sample)[0]!.category.label })
+    expect(screen.queryByText(/no option is clearly recommended/i)).toBeNull()
     expect(screen.queryByText('Recommended')).toBeNull()
   })
 
@@ -406,7 +398,7 @@ describe('ResultsView', () => {
     expect(within(header).queryByRole('button')).toBeNull()
     const view = screen.getByTestId('category-tab-view')
     const optionNames = within(view).getAllByRole('region').map((r) => r.getAttribute('aria-label')).slice(1)
-    expect(optionNames).toEqual(['Swap the hard disk for a 500 GB SSD', 'Reinstall the operating system'])
+    expect(optionNames).toEqual(['Swap the hard disk for a 500 GB SSD', 'Copy the system to the new SSD', 'Reinstall the operating system'])
 
     const ssd = screen.getByRole('region', { name: 'Swap the hard disk for a 500 GB SSD' })
     for (const label of ['Cost', 'Extra life', 'CO₂e avoided', 'Score']) expect(within(ssd).getByText(label)).toBeInTheDocument()
@@ -429,12 +421,10 @@ describe('ResultsView', () => {
   it('shows "AI estimate" on an estimated option and on the gauge once it is opened (AC-010, AC-011)', async () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
     const gauge = await screen.findByRole('region', { name: 'CO₂e gauge' })
-    const first = ranked(sample)[0]!
-    // Before any option is opened, the gauge shows the best option of the first category.
-    await waitFor(() => expect(gauge).toHaveTextContent(`${first.category.label} · ${first.options[0]!.option.title}`))
-    expect(within(gauge).queryByText('AI estimate')).toBeNull()
-
+    // Since feature 013 the Overview gauge shows the sample plan; a category tab shows its best option first.
     await userEvent.click(screen.getByRole('region', { name: 'Faster storage' }).querySelector('button')!)
+    await waitFor(() => expect(gauge).toHaveTextContent('Faster storage · Swap the hard disk for a 500 GB SSD'))
+    expect(within(gauge).queryByText('AI estimate')).toBeNull()
     const estimate = await screen.findByRole('region', { name: 'Reinstall the operating system' })
     expect(within(estimate).getByText('AI estimate')).toBeInTheDocument()
     await userEvent.click(within(estimate).getByRole('button'))
@@ -447,8 +437,8 @@ describe('ResultsView', () => {
     const gauge = await screen.findByRole('region', { name: 'CO₂e gauge' })
     const byLabel = (label: string) => ranked(sample).find((r) => r.category.label === label)!
     const bestOf = (label: string) => `${label} · ${byLabel(label).options[0]!.option.title}`
-    const first = ranked(sample)[0]!.category.label
-    await waitFor(() => expect(gauge).toHaveTextContent(bestOf(first)))
+    // Feature 013 FR-008: with a plan, the Overview gauge shows the plan.
+    await waitFor(() => expect(gauge).toHaveTextContent('Your plan'))
     const group = await tabGroup()
 
     // AC-001: a tab with nothing opened shows its best option.
@@ -462,9 +452,40 @@ describe('ResultsView', () => {
     // AC-002: back in the first tab, the option opened there again.
     await userEvent.click(within(group).getByRole('button', { name: 'Faster storage' }))
     await waitFor(() => expect(gauge).toHaveTextContent('Faster storage · Reinstall the operating system'))
-    // AC-004: the Overview opens no options, so it shows the first category's best option.
+    // AC-004 (as replaced by feature 013 FR-008): back on the Overview, the plan again; without a plan, the
+    // first category's best option (see the plan tests).
     await userEvent.click(within(group).getByRole('button', { name: 'Overview' }))
-    await waitFor(() => expect(gauge).toHaveTextContent(bestOf(first)))
+    await waitFor(() => expect(gauge).toHaveTextContent('Your plan'))
+  })
+
+  it('shows "Your plan" above the categories with its steps in order, figures and no score (feature 013 AC-006, AC-009)', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
+    const card = await screen.findByRole('region', { name: 'Your plan' })
+    const plan = sample.plan!
+    expect(card).toHaveTextContent(plan.summary)
+    expect(within(within(card).getByRole('list', { name: 'Plan steps' })).getAllByRole('listitem').map((li) => li.textContent)).toEqual(
+      plan.steps.map((s) => s.title),
+    )
+    for (const label of ['Cost', 'Extra life', 'CO₂e avoided']) expect(within(card).getByText(label)).toBeInTheDocument()
+    expect(within(card).queryByText('Score')).toBeNull()
+    expect(within(card).getByText('AI estimate')).toBeInTheDocument()
+    // Above the categories.
+    const first = screen.getByRole('region', { name: ranked(sample)[0]!.category.label })
+    expect(card.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('shows the plan on the Overview gauge, and the first category without a plan (feature 013 AC-006, AC-007)', async () => {
+    render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
+    const gauge = await screen.findByRole('region', { name: 'CO₂e gauge' })
+    await waitFor(() => expect(gauge).toHaveTextContent('Your plan'))
+    expect(within(gauge).getByText('AI estimate')).toBeInTheDocument()
+    cleanup()
+
+    renderWith(withCategories(({ plan: _plan, ...rest }) => rest))
+    const first = ranked(sample)[0]!
+    const gauge2 = await screen.findByRole('region', { name: 'CO₂e gauge' })
+    await waitFor(() => expect(gauge2).toHaveTextContent(`${first.category.label} · ${first.options[0]!.option.title}`))
+    expect(screen.queryByRole('region', { name: 'Your plan' })).toBeNull()
   })
 
   it('stops waiting when the stream ends without categories', async () => {

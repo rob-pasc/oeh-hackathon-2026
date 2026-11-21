@@ -17,6 +17,8 @@ import {
   assess,
   avoided,
   baselineFor,
+  clockFromName,
+  gamingCpuShortfall,
   graphicsClass,
   indexImpactTable,
   loadWeights,
@@ -445,5 +447,73 @@ describe('general and gaming uses (feature 003 amendment)', () => {
       expect(LEVEL[g.level]).toBeGreaterThan(LEVEL[pathOf(office, path).confidence.level])
       expect(g.reasons).toContainEqual(expect.stringContaining('estimate the sources do not cover'))
     }
+  })
+})
+
+describe('gaming processor check (feature 012)', () => {
+  // The team's mini PC of 2026-11-21 (Intel ark: 2 cores, 4 threads, 2.00 GHz).
+  const i3_5005U = { name: 'Intel(R) Core(TM) i3-5005U CPU @ 2.00GHz', cores: 2, threads: 4 }
+  const withCpu = (cpu: DeviceScan['cpu'], gpus: string[] | null = ['NVIDIA GeForce GTX 1050']): DeviceScan => ({ ...laptop, cpu, gpus })
+  const keep = (a: Assessment, path: PathAssessment['path']) => ({ status: pathOf(a, path).status, reasons: pathOf(a, path).reasons })
+
+  it('reads the clock from Intel processor names', () => {
+    expect(clockFromName(i3_5005U.name)).toBe(2)
+    expect(clockFromName('Intel(R) Core(TM) i3-3225 CPU @ 3.30GHz')).toBe(3.3)
+    expect(clockFromName('AMD Ryzen 5 3500U with Radeon Vega Mobile Gfx')).toBeNull()
+    expect(clockFromName(null)).toBeNull()
+  })
+
+  it('makes upgrade and repair Not a fit for gaming on the tested i3-5005U, naming the processor (AC-001)', () => {
+    const a = run({ use: 'gaming', scan: withCpu(i3_5005U) })
+    for (const path of ['upgrade', 'repair'] as const) {
+      const p = pathOf(a, path)
+      expect(p.status).toBe('not_suitable')
+      expect(p.reasons[0]).toMatchObject({ code: 'cpu_below_gaming' })
+      expect(p.reasons[0]!.text).toContain('i3-5005U')
+      expect(p.reasons[0]!.text).toContain('does not change that')
+      expect(p.scores).toBeNull()
+    }
+    expect(gamingCpuShortfall({ name: null, cores: 2, threads: 2 })).toMatch(/2 threads, fewer than the 4/)
+  })
+
+  it('keeps the first reason of a path that is already Not a fit and adds the processor after it (AC-001)', () => {
+    const desktop: DeviceScan = { ...withCpu(i3_5005U), identity: { ...laptop.identity, form_factor: 'desktop' }, battery: { ...laptop.battery, present: false } }
+    const repair = pathOf(run({ use: 'gaming', scan: desktop }), 'repair')
+    expect(repair.status).toBe('not_suitable')
+    expect(repair.reasons.map((r) => r.code)).toEqual(['no_battery', 'cpu_below_gaming'])
+    expect(repair.reasons[1]!.text).not.toContain('battery repair')
+  })
+
+  it('leaves processors at or above the floor alone (AC-002)', () => {
+    for (const cpu of [
+      { name: 'Intel(R) Core(TM) i3-3225 CPU @ 3.30GHz', cores: 2, threads: 4 }, // Fortnite's minimum itself
+      { name: 'Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz', cores: 4, threads: 8 },
+      { name: 'AMD Ryzen 5 5600X 6-Core Processor', cores: 6, threads: 12 },
+    ]) {
+      expect(gamingCpuShortfall(cpu)).toBeNull()
+      const a = run({ use: 'gaming', scan: withCpu(cpu) })
+      for (const path of ['upgrade', 'repair'] as const) expect(pathOf(a, path).reasons.map((r) => r.code)).not.toContain('cpu_below_gaming')
+    }
+  })
+
+  it('changes nothing when the processor cannot be judged (AC-003)', () => {
+    for (const cpu of [
+      { name: null, cores: null, threads: null },
+      { name: 'AMD A6-9220 RADEON R4', cores: 2, threads: null }, // no clock in the name, threads unknown
+    ]) {
+      expect(gamingCpuShortfall(cpu)).toBeNull()
+      const unknown = run({ use: 'gaming', scan: withCpu(cpu) })
+      const baseline = run({ use: 'gaming', scan: withCpu(laptop.cpu) })
+      for (const path of PATHS) expect(keep(unknown, path)).toEqual(keep(baseline, path))
+    }
+  })
+
+  it('leaves other uses, and pass it on, salvage and recycle for gaming, unchanged (AC-004)', () => {
+    const scan = withCpu(i3_5005U)
+    for (const use of INTENDED_USES.filter((u) => u !== 'gaming'))
+      for (const path of PATHS) expect(pathOf(run({ use, scan }), path).reasons.map((r) => r.code)).not.toContain('cpu_below_gaming')
+    const gaming = run({ use: 'gaming', scan })
+    const capable = run({ use: 'gaming', scan: withCpu(laptop.cpu) })
+    for (const path of ['pass_on', 'salvage', 'recycle'] as const) expect(keep(gaming, path)).toEqual(keep(capable, path))
   })
 })

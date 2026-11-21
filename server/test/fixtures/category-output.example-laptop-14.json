@@ -14,9 +14,38 @@
           "difficulty": "diy_moderate",
           "why": "Office work mostly waits on the drive. An SSD in the free M.2 slot removes that wait, and the old disk can stay as extra storage.",
           "claims": [
-            { "text": "The laptop has one M.2 2280 slot for NVMe or SATA SSDs.", "passage_ids": ["ex14-hmm#storage-1"] }
+            {
+              "text": "The laptop has one M.2 2280 slot for NVMe or SATA SSDs.",
+              "passage_ids": [
+                "ex14-hmm#storage-1"
+              ]
+            }
           ],
           "estimate": null
+        },
+        {
+          "option_id": "copy-system",
+          "title": "Copy the system to the new SSD",
+          "status": "viable",
+          "reason": "A USB adapter copies Windows and your files to the SSD, so nothing needs reinstalling.",
+          "kind": "other",
+          "difficulty": "diy_easy",
+          "why": "Copying the old disk to the SSD before swapping keeps your programs and settings. It needs a USB-to-SSD adapter and free cloning software, and the old disk must still be readable.",
+          "claims": [],
+          "estimate": {
+            "cost_eur": {
+              "low": 10,
+              "high": 25
+            },
+            "useful_life_years": {
+              "low": 0,
+              "high": 0
+            },
+            "co2e_kg": {
+              "low": 0.5,
+              "high": 1.5
+            }
+          }
         },
         {
           "option_id": "clean-install",
@@ -28,9 +57,18 @@
           "why": "Only worth it if the laptop is slow because of old software. Back up your files first.",
           "claims": [],
           "estimate": {
-            "cost_eur": { "low": 0, "high": 0 },
-            "useful_life_years": { "low": 0, "high": 1 },
-            "co2e_kg": { "low": 0, "high": 0 }
+            "cost_eur": {
+              "low": 0,
+              "high": 0
+            },
+            "useful_life_years": {
+              "low": 0,
+              "high": 1
+            },
+            "co2e_kg": {
+              "low": 0,
+              "high": 0
+            }
           }
         }
       ]
@@ -49,7 +87,12 @@
           "difficulty": "diy_moderate",
           "why": "8 GB gets tight with many tabs and video calls. The free slot takes a second module without removing the first.",
           "claims": [
-            { "text": "The computer has two SO-DIMM DDR4 slots and supports up to 32 GB.", "passage_ids": ["ex14-hmm#memory-1"] }
+            {
+              "text": "The computer has two SO-DIMM DDR4 slots and supports up to 32 GB.",
+              "passage_ids": [
+                "ex14-hmm#memory-1"
+              ]
+            }
           ],
           "estimate": null
         }
@@ -69,7 +112,12 @@
           "difficulty": "diy_moderate",
           "why": "A worn battery shortens time away from the charger. The manual allows the owner to swap it.",
           "claims": [
-            { "text": "The battery is a customer-replaceable unit secured by two screws.", "passage_ids": ["ex14-hmm#battery-1"] }
+            {
+              "text": "The battery is a customer-replaceable unit secured by two screws.",
+              "passage_ids": [
+                "ex14-hmm#battery-1"
+              ]
+            }
           ],
           "estimate": null
         }
@@ -90,9 +138,18 @@
           "why": "An external graphics enclosure would cost more than the laptop is worth.",
           "claims": [],
           "estimate": {
-            "cost_eur": { "low": 200, "high": 400 },
-            "useful_life_years": { "low": 1, "high": 2 },
-            "co2e_kg": { "low": 30, "high": 60 }
+            "cost_eur": {
+              "low": 200,
+              "high": 400
+            },
+            "useful_life_years": {
+              "low": 1,
+              "high": 2
+            },
+            "co2e_kg": {
+              "low": 30,
+              "high": 60
+            }
           }
         }
       ]
@@ -111,7 +168,12 @@
           "difficulty": "diy_easy",
           "why": "Passing it on keeps it in use. Reset it and erase the drive before handing it over.",
           "claims": [
-            { "text": "Reset the operating system and securely erase all drives before passing it on.", "passage_ids": ["reuse-guide#data-wipe"] }
+            {
+              "text": "Reset the operating system and securely erase all drives before passing it on.",
+              "passage_ids": [
+                "reuse-guide#data-wipe"
+              ]
+            }
           ],
           "estimate": null
         },
@@ -128,5 +190,13 @@
         }
       ]
     }
-  ]
+  ],
+  "plan": {
+    "summary": "Add memory, copy the system to an SSD and swap the drive, so this laptop stays fast for everyday work.",
+    "option_ids": [
+      "ram-add",
+      "copy-system",
+      "ssd-swap"
+    ]
+  }
 }

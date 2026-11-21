@@ -20,7 +20,7 @@ import { ApiError, DeviceRecord, DeviceScan, UploadResponse } from './device.ts'
 import { Fact, FactSet } from './facts.ts'
 import { Report, StreamEnd } from './report.ts'
 import { Passage, RetrievalResult } from './retrieval.ts'
-import { StepPlan } from './steps.ts'
+import { StepPlan, PlanStepList } from './steps.ts'
 import { ScanSession, ScanSessionEvent, ScanSessionRequest, ScannerEvent } from './session.ts'
 
 /** Every top-level schema, exported to shared/schemas/<$id>.schema.json for non-TS consumers. */
@@ -41,6 +41,7 @@ export const TOP_LEVEL_SCHEMAS = {
   Report,
   CategoryResult,
   StepPlan,
+  PlanStepList,
   StreamEnd,
   ScanSession,
   ScanSessionRequest,

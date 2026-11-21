@@ -161,6 +161,7 @@ describe('GET /api/devices/:id', () => {
       ['GET', '/api/devices/:id'],
       ['GET', '/api/devices/:id/report'],
       ['GET', '/api/devices/:id/options/:optionId/steps'],
+      ['GET', '/api/devices/:id/plan/steps'],
       ['GET', '/downloads/leaaf-scanner.exe'],
       ['GET', '/downloads/leaaf-scanner-linux'],
       ['GET', '/downloads/leaaf-scanner-macos.zip'],
