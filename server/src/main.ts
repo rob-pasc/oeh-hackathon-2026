@@ -13,6 +13,7 @@ import { createOpenAiCompatibleClient, LlmError, loadLlmConfig } from './llm/ind
 import { DEFAULT_CORPUS_INDEX_PATH, IndexError, openRetriever, type Retriever } from './retrieval/index.ts'
 import { createCategoryService } from './categories/service.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
+import { createStepService } from './steps/service.ts'
 
 const env = process.env
 const limits = loadLimits(env)
@@ -55,12 +56,17 @@ try {
   console.warn(`fact extraction disabled, paths needing facts will read "cannot verify": ${error.message}`)
 }
 
+const warn = (message: string, details?: Record<string, unknown>) => app.log.warn(details ?? {}, message)
+const assessments = retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn }) : undefined
+const categorize = createCategoryService(db, llm, { impactTable, warn })
+
 const app = buildApp({
   limits,
   devices: createSqliteDeviceStore(db),
   sessions: createSqliteSessionStore(db),
-  assessments: retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn: (message, details) => app.log.warn(details ?? {}, message) }) : undefined,
-  categorize: createCategoryService(db, llm, { impactTable, warn: (message, details) => app.log.warn(details ?? {}, message) }),
+  assessments,
+  categorize,
+  steps: retriever && assessments ? createStepService(db, llm, { retriever, assessments, shownCategories: categorize.shown, warn }) : undefined,
   publicBaseUrl,
   scannerPaths,
   logger: {

@@ -4,6 +4,8 @@ import {
   Assessment,
   CategoryResult,
   checkCategoryResult,
+  checkStepPlan,
+  StepPlan,
   DeviceScan,
   Fact,
   FactSet,
@@ -47,6 +49,7 @@ describe('fixtures are valid examples', () => {
     ['assessment.example-desktop-unknown.development.json', validateAssessment, checkAssessment as never],
     ['report.example-laptop-14.office.json', validateReport, checkReport as never],
     ['categories.example-laptop-14.office.json', createValidator(CategoryResult), checkCategoryResult as never],
+    ['steps.example-laptop-14.office.json', createValidator(StepPlan), checkStepPlan as never],
   ]
   it.each(cases)('%s', (name, validate, check) => {
     const value = fixture(name)
@@ -345,5 +348,44 @@ describe('CategoryResult (feature 008)', () => {
     const r = result()
     mutate(r)
     expect(checkCategoryResult(r, baseline).join('\n')).toContain(message)
+  })
+})
+
+describe('StepPlan (feature 009)', () => {
+  const plan = () => clone(fixture<any>('steps.example-laptop-14.office.json'))
+  const validatePlan = createValidator(StepPlan)
+
+  it.each([
+    ['13 steps', (p: any) => (p.steps = Array.from({ length: 13 }, () => p.steps[0]))],
+    ['a title over 80 characters', (p: any) => (p.steps[0].title = 'x'.repeat(81))],
+    ['an unknown safety flag', (p: any) => (p.steps[0].safety = 'risky')],
+    ['an unknown step kind', (p: any) => (p.steps[0].kind = 'other')],
+  ])('rejects %s (FR-002, FR-004, FR-005)', (_label, mutate) => {
+    const p = plan()
+    mutate(p)
+    expect(validatePlan(p).ok).toBe(false)
+  })
+
+  it('accepts an empty plan, shown as "no verified steps" (FR-006)', () => {
+    expect(validatePlan({ ...plan(), steps: [], passages: [] }).ok).toBe(true)
+  })
+
+  it.each([
+    ['an uncited technical step', (p: any) => (p.steps[1].passage_ids = []), 'needs a citation'],
+    ['a citation of an unknown passage', (p: any) => (p.steps[1].passage_ids = ['nowhere#1']), 'unknown passage'],
+    ['a caution step without warning', (p: any) => (p.steps[2].warning = null), 'warning'],
+    ['a warning on a step without caution', (p: any) => (p.steps[0].warning = 'Careful.'), 'warning'],
+    ['a reversed time range', (p: any) => (p.steps[0].minutes = { low: 9, high: 3 }), 'exceeds'],
+    ['a notice on an AI plan', (p: any) => (p.notice = 'AI steps unavailable'), 'notice'],
+  ])('checkStepPlan reports %s', (_label, mutate, message) => {
+    const p = plan()
+    mutate(p)
+    expect(checkStepPlan(p)).toEqual([expect.stringContaining(message)])
+  })
+
+  it('allows an uncited technical step when it is professional (FR-011)', () => {
+    const p = plan()
+    p.steps[1] = { ...p.steps[1], passage_ids: [], safety: 'professional' }
+    expect(checkStepPlan(p)).toEqual([])
   })
 })

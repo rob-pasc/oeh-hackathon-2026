@@ -28,6 +28,7 @@ describe('exported schemas under strict Ajv (JSON Schema 2020-12)', () => {
     ['Assessment', 'assessment.example-laptop-14.office.json'],
     ['Assessment', 'assessment.example-desktop-unknown.development.json'],
     ['Report', 'report.example-laptop-14.office.json'],
+    ['StepPlan', 'steps.example-laptop-14.office.json'],
   ])('%s accepts fixtures/%s', (schema, file) => {
     const validate = ajv.getSchema(`${schema}.schema.json`)!
     expect(validate(JSON.parse(read(`fixtures/${file}`))), JSON.stringify(validate.errors)).toBe(true)

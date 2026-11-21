@@ -8,6 +8,8 @@ export interface LlmConfig {
   timeoutMs: number
   /** Deadline for the whole category call, including retries and the repair attempt (feature 008). */
   categoryTimeoutMs: number
+  /** Deadline for the whole step call, including retries and the repair attempt (feature 009). */
+  stepTimeoutMs: number
   thinking: Record<LlmTask, ThinkingMode>
 }
 
@@ -46,17 +48,25 @@ export function loadLlmConfig(env: NodeJS.ProcessEnv = process.env): LlmConfig {
   if (!Number.isInteger(categoryTimeoutMs) || categoryTimeoutMs <= 0)
     throw new LlmError('config', `LLM_CATEGORY_TIMEOUT_MS must be a positive integer (got "${categoryRaw}")`)
 
+  const stepRaw = env.LLM_STEP_TIMEOUT_MS?.trim() || '25000'
+  const stepTimeoutMs = Number(stepRaw)
+  if (!Number.isInteger(stepTimeoutMs) || stepTimeoutMs <= 0)
+    throw new LlmError('config', `LLM_STEP_TIMEOUT_MS must be a positive integer (got "${stepRaw}")`)
+
   return {
     baseUrl,
     apiKey,
     model: env.LLM_MODEL?.trim() || 'deepseek-flash',
     timeoutMs,
     categoryTimeoutMs,
+    stepTimeoutMs,
     thinking: {
       fact_extraction: thinkingMode(env, 'LLM_THINKING_FACT_EXTRACTION', 'disabled'),
       explanation: thinkingMode(env, 'LLM_THINKING_EXPLANATION', 'disabled'),
       // Off like the explanation: the category answer is larger and must stay within its deadline.
       categories: thinkingMode(env, 'LLM_THINKING_CATEGORIES', 'disabled'),
+      // Off as well: a plan is opened by a waiting owner and must stay within its deadline.
+      steps: thinkingMode(env, 'LLM_THINKING_STEPS', 'disabled'),
     },
   }
 }

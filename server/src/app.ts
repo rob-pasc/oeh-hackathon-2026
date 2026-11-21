@@ -1,5 +1,6 @@
 // HTTP API: device upload, lookup, and the scanner download (feature 001), scan sessions
-// (feature 006 FR-002 to FR-004), and the assessment and report stream (features 003 and 004).
+// (feature 006 FR-002 to FR-004), the assessment and report stream (features 003 and 004), and the
+// step plan of an opened option (feature 009).
 // Routes and bodies follow shared/src/api.ts; every non-2xx JSON response is an ApiError.
 //
 // There is deliberately no route that lists devices (FR-011): the unguessable device ID is the
@@ -32,8 +33,9 @@ import type { AssessmentService } from './assessment/service.ts'
 import type { DeviceStore } from './devices/store.ts'
 import { checkScan } from './devices/validate.ts'
 import { renameZipRoot, ZipError } from './downloads/zip.ts'
-import type { CategoryService } from './categories/service.ts'
+import type { Categorize } from './categories/service.ts'
 import type { SessionStore } from './sessions/store.ts'
+import type { StepService } from './steps/service.ts'
 
 export interface AppOptions {
   limits?: ReturnType<typeof loadLimits>
@@ -42,7 +44,9 @@ export interface AppOptions {
   /** Absent when the server cannot assess (no retrieval index); the report stream then fails. */
   assessments?: AssessmentService | undefined
   /** Builds the result screen's categories (feature 008); absent in tests that need the assessment only. */
-  categorize?: CategoryService | undefined
+  categorize?: Categorize | undefined
+  /** Builds an opened option's step plan (feature 009); the step route answers 500 without it. */
+  steps?: StepService | undefined
   /** Origin of the web app, used to build device page URLs, e.g. https://leaaf.green */
   publicBaseUrl: string
   /** Path of the Windows scanner executable; the download is 404 while it is missing. */
@@ -178,6 +182,27 @@ export function buildApp(options: AppOptions): FastifyInstance {
         clearInterval(heartbeat)
         res.end()
       }
+    },
+  )
+
+  // Step plan of one option (shared/src/steps.ts). JSON rather than a stream: the page shows its own
+  // thinking line while it waits, and the answer is one object.
+  app.get<{ Params: { id: string; optionId: string }; Querystring: { intended_use?: string } }>(
+    '/api/devices/:id/options/:optionId/steps',
+    { onRequest: hourlyLimit(limits.stepsPerHour) },
+    async (req, reply) => {
+      const use = req.query.intended_use
+      if (!isIntendedUse(use).ok)
+        return reply.code(400).send(
+          apiError('invalid_payload', 'unknown intended use', [
+            { path: '/intended_use', message: `must be one of ${INTENDED_USES.join(', ')}` },
+          ]),
+        )
+      const record = options.devices.get(req.params.id)
+      if (!record) return reply.code(404).send(NOT_FOUND)
+      if (!options.steps) return reply.code(500).send(apiError('internal', 'step plans are not available'))
+      const plan = await options.steps(record, use as IntendedUse, req.params.optionId)
+      return plan ? reply.header('cache-control', 'no-store').send(plan) : reply.code(404).send(apiError('not_found', 'option not found'))
     },
   )
 

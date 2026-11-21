@@ -132,25 +132,31 @@ export function createCategoryService(db: DatabaseSync, llm: LlmClient | null, d
   )
   const pending = new Map<string, Promise<{ output: Output; generated_at: string }>>()
 
-  return async function categorize(scan: DeviceScan, input: DeviceAssessment): Promise<CategoryResult> {
+  /** The categories built from a cached, still usable answer, or null. */
+  function cached(scan: DeviceScan, input: DeviceAssessment): CategoryResult | null {
+    const { device_id, intended_use } = input.assessment
+    const row = read.get(device_id, intended_use, CATEGORY_PROMPT_HASH)
+    if (!row) return null
+    const checked = validateOutput(JSON.parse(String(row.output)))
+    if (!checked.ok) return null
+    try {
+      return buildResult(scan, input, checked.value, String(row.generated_at), deps.impactTable)
+    } catch (error) {
+      if (!(error instanceof UnusableAnswer)) throw error
+      // A cached answer can become unusable, for example after a corpus change; ask again.
+      return null
+    }
+  }
+
+  async function categorize(scan: DeviceScan, input: DeviceAssessment): Promise<CategoryResult> {
     const { device_id, intended_use } = input.assessment
     const fallback = (reason: string, details: Record<string, unknown> = {}) => {
       deps.warn?.(`category call unavailable, showing the five paths: ${reason}`, details)
       return fallbackCategories(input)
     }
 
-    const row = read.get(device_id, intended_use, CATEGORY_PROMPT_HASH)
-    if (row) {
-      const checked = validateOutput(JSON.parse(String(row.output)))
-      if (checked.ok) {
-        try {
-          return buildResult(scan, input, checked.value, String(row.generated_at), deps.impactTable)
-        } catch (error) {
-          if (!(error instanceof UnusableAnswer)) throw error
-          // A cached answer can become unusable, for example after a corpus change; ask again.
-        }
-      }
-    }
+    const hit = cached(scan, input)
+    if (hit) return hit
 
     if (!llm) return fallback('no LLM configured')
     const key = JSON.stringify([device_id, intended_use])
@@ -177,6 +183,19 @@ export function createCategoryService(db: DatabaseSync, llm: LlmClient | null, d
       throw error
     }
   }
+
+  /**
+   * The categories the result screen shows, without a category call: the cached answer, or else
+   * the five-path fallback the screen got when there was none. The step route (feature 009) uses
+   * this to find an opened option, so opening a card never starts a category call.
+   */
+  function shown(scan: DeviceScan, input: DeviceAssessment): CategoryResult {
+    return cached(scan, input) ?? fallbackCategories(input)
+  }
+
+  return Object.assign(categorize, { shown })
 }
 
 export type CategoryService = ReturnType<typeof createCategoryService>
+/** What the report stream needs: the category service without its cache-only lookup. */
+export type Categorize = (scan: DeviceScan, input: DeviceAssessment) => Promise<CategoryResult>

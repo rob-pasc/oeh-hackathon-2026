@@ -11,9 +11,17 @@ import type { ChatCompletionMessageParam } from 'openai/resources/chat/completio
 import type { Static, TSchema } from 'typebox'
 import { createValidator } from '@leaaf/shared'
 import type { LlmConfig } from './config.ts'
-import { LlmError, type JsonRequest, type JsonResponse, type LlmClient, type LlmUsage } from './types.ts'
+import { LlmError, type JsonRequest, type JsonResponse, type LlmClient, type LlmTask, type LlmUsage } from './types.ts'
 
 const DEFAULT_MAX_TOKENS = 4096
+
+/** Tasks a waiting page depends on get a deadline for the whole call; fact extraction has none. */
+const DEADLINES: Partial<Record<LlmTask, (config: LlmConfig) => number>> = {
+  explanation: (c) => c.timeoutMs,
+  categories: (c) => c.categoryTimeoutMs,
+  steps: (c) => c.stepTimeoutMs,
+}
+const DEADLINE_NAMES: Record<LlmTask, string> = { fact_extraction: 'Fact extraction', explanation: 'Explanation', categories: 'Category', steps: 'Step' }
 
 export interface OpenAiCompatibleOptions {
   /** Injected in tests to simulate the provider. */
@@ -105,17 +113,15 @@ export function createOpenAiCompatibleClient(config: LlmConfig, options: OpenAiC
       const started = performance.now()
       let problems: string[] = []
 
-      const deadline =
-        request.task === 'explanation' ? AbortSignal.timeout(config.timeoutMs)
-          : request.task === 'categories' ? AbortSignal.timeout(config.categoryTimeoutMs)
-            : undefined
+      const deadlineMs = DEADLINES[request.task]?.(config)
+      const deadline = deadlineMs === undefined ? undefined : AbortSignal.timeout(deadlineMs)
       // Attempt 1, then at most one repair attempt that shows the model what was wrong.
       for (let attempt = 1; attempt <= 2; attempt++) {
         let result: Awaited<ReturnType<typeof call>>
         try {
           result = await call(request.task, messages, maxTokens, deadline)
         } catch (error) {
-          if (deadline?.aborted) throw new LlmError('timeout', `${request.task === 'categories' ? 'Category' : 'Explanation'} deadline exceeded`)
+          if (deadline?.aborted) throw new LlmError('timeout', `${DEADLINE_NAMES[request.task]} deadline exceeded`)
           throw toLlmError(error)
         }
         usage.prompt_tokens += result.usage.prompt_tokens

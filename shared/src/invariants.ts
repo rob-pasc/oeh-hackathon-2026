@@ -7,6 +7,7 @@ import { notApplicableFields, type DeviceScan } from './device.ts'
 import type { FactSet } from './facts.ts'
 import type { Report } from './report.ts'
 import type { CategoryResult } from './categories.ts'
+import type { StepPlan } from './steps.ts'
 import type { Passage } from './retrieval.ts'
 
 /** Whether any value below `value` is null, skipping the dotted paths in `skip`. */
@@ -151,5 +152,24 @@ export function checkCategoryResult(result: CategoryResult, baseline?: Assessmen
         errors.push(`${label}.impact.co2e_kg.baseline must equal the assessment baseline`)
     }
   }
+  return errors
+}
+
+/** Feature 009: citations resolve, technical steps are cited or professional, caution steps warn. */
+export function checkStepPlan(plan: StepPlan): string[] {
+  const errors = [...plan.passages.flatMap(checkPassage)]
+  const known = new Set(plan.passages.map((p) => p.passage_id))
+  if ((plan.source === 'template') !== (plan.notice !== null)) errors.push('notice must be set exactly when source is template')
+  plan.steps.forEach((step, i) => {
+    const label = `steps[${i}]`
+    for (const id of step.passage_ids) if (!known.has(id)) errors.push(`${label}: cites unknown passage ${id}`)
+    if (step.kind === 'technical' && step.passage_ids.length === 0 && step.safety !== 'professional')
+      errors.push(`${label}: a technical step needs a citation unless it is professional`)
+    if ((step.safety === 'caution') !== (step.warning !== null)) errors.push(`${label}: warning must be set exactly when safety is caution`)
+    if (step.minutes) {
+      errors.push(...checkRange(step.minutes, `${label}.minutes`))
+      if (step.minutes.low < 0) errors.push(`${label}.minutes must not be negative`)
+    }
+  })
   return errors
 }

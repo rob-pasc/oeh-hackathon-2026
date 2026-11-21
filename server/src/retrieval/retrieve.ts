@@ -170,10 +170,27 @@ export interface RetrieveOptions {
   k?: number
 }
 
+/**
+ * Passages for one option's step plan (feature 009 FR-009): the option's own facets first (for
+ * example its kind's procedure terms and the words of its title), then the facets of its closest
+ * path. Without a path, every topic may serve the option's facets.
+ */
+export interface OptionQuery {
+  path: Path | null
+  facets: readonly { name: string; terms: readonly string[] }[]
+}
+
+/** Default passages per option: more than per path, since a plan has several technical steps. */
+export const OPTION_K = 8
+
+const TOPICS: readonly Topic[] = ['repair-hardware', 'software-support', 'environmental', 'circular-economy']
+
 export interface Retriever {
   /** The canonical model the device matches, or null (FR-004). */
   matchModel: ModelMatcher
   retrieve(scan: DeviceScan, options?: RetrieveOptions): RetrievalResult
+  /** Same filters and ranking as `retrieve`, for one option (feature 009). */
+  retrieveOption(scan: DeviceScan, query: OptionQuery, options?: RetrieveOptions): Passage[]
   close(): void
 }
 
@@ -253,9 +270,12 @@ export function createRetriever(db: DatabaseSync): Retriever {
 
   /** Takes the best unused passage of each facet in turn until k passages are chosen. */
   function forPath(path: Path, scan: DeviceScan, model: ModelMatch | null, k: number): Passage[] {
-    const { topics } = PATH_QUERIES[path]
+    return interleave(PATH_QUERIES[path].topics, PATH_QUERIES[path].facets, scan, model, k)
+  }
+
+  function interleave(topics: readonly Topic[], allFacets: readonly Facet[], scan: DeviceScan, model: ModelMatch | null, k: number): Passage[] {
     // Macs and Linux machines do not depend on Windows 11 support (feature 007 FR-015).
-    const facets = PATH_QUERIES[path].facets.filter((f) => usesWindowsRules(scan) || !WINDOWS_11_FACETS.has(f))
+    const facets = allFacets.filter((f) => usesWindowsRules(scan) || !WINDOWS_11_FACETS.has(f))
     const ranked = facets.map((f) => facetRows(f, f.topics?.filter((t) => topics.includes(t)) ?? topics, scan, model))
     const chosen = new Map<string, Row>()
     for (let depth = 0; chosen.size < k && ranked.some((rows) => rows.length > depth); depth++)
@@ -274,6 +294,12 @@ export function createRetriever(db: DatabaseSync): Retriever {
       const passages_by_path = Object.fromEntries(PATHS.map((path) => [path, forPath(path, scan, model, k)])) as RetrievalResult['passages_by_path']
       // Every declared model has at least one document (manifest check), so a match means model evidence exists.
       return { model_evidence: model ? 'model_specific' : 'none', matched_model: model, passages_by_path }
+    },
+    retrieveOption(scan, query, options = {}) {
+      const model = matchModel(scan.identity)
+      const own: Facet[] = query.facets.filter((f) => f.terms.length > 0).map((f) => ({ name: f.name, terms: f.terms }))
+      const pathFacets = query.path ? PATH_QUERIES[query.path].facets : []
+      return interleave(query.path ? PATH_QUERIES[query.path].topics : TOPICS, [...own, ...pathFacets], scan, model, options.k ?? OPTION_K)
     },
     close: () => db.close(),
   }

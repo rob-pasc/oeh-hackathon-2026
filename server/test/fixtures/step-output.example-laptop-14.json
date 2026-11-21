@@ -1,0 +1,59 @@
+{
+  "steps": [
+    {
+      "title": "Back up your files",
+      "detail": "Copy your documents and photos to an external drive or cloud storage. The new SSD starts empty.",
+      "tools": ["External drive or cloud storage"],
+      "parts": [],
+      "minutes": { "low": 30, "high": 60 },
+      "safety": "none",
+      "warning": null,
+      "kind": "general",
+      "passage_ids": []
+    },
+    {
+      "title": "Buy an M.2 2280 NVMe SSD",
+      "detail": "The Example Laptop 14 has one M.2 2280 slot that takes NVMe or SATA SSDs. A 500 GB NVMe drive fits it.",
+      "tools": [],
+      "parts": ["500 GB M.2 2280 NVMe SSD"],
+      "minutes": null,
+      "safety": "none",
+      "warning": null,
+      "kind": "technical",
+      "passage_ids": ["ex14-hmm#storage-1"]
+    },
+    {
+      "title": "Remove the battery and the base cover",
+      "detail": "Shut down, unplug the charger, undo the two battery screws and lift the battery out, then remove the base cover.",
+      "tools": ["Phillips #0 screwdriver", "Plastic opening tool"],
+      "parts": [],
+      "minutes": { "low": 10, "high": 15 },
+      "safety": "caution",
+      "warning": "Touch grounded metal before you handle internal parts, to discharge static electricity.",
+      "kind": "technical",
+      "passage_ids": ["ex14-hmm#battery-1"]
+    },
+    {
+      "title": "Install the SSD in the M.2 slot",
+      "detail": "Insert the SSD into the M.2 slot at an angle, press it flat and fasten it with its screw.",
+      "tools": ["Phillips #0 screwdriver"],
+      "parts": ["500 GB M.2 2280 NVMe SSD"],
+      "minutes": { "low": 5, "high": 10 },
+      "safety": "none",
+      "warning": null,
+      "kind": "technical",
+      "passage_ids": ["ex14-hmm#storage-1"]
+    },
+    {
+      "title": "Reinstall the operating system and restore your files",
+      "detail": "Reattach the cover and battery, install the operating system from a USB stick, then copy your files back.",
+      "tools": ["USB stick with installation media"],
+      "parts": [],
+      "minutes": { "low": 60, "high": 120 },
+      "safety": "none",
+      "warning": null,
+      "kind": "general",
+      "passage_ids": []
+    }
+  ]
+}

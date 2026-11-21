@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "StepPlan.schema.json",
+  "title": "StepPlan",
+  "type": "object",
+  "required": [
+    "device_id",
+    "intended_use",
+    "option_id",
+    "generated_at",
+    "source",
+    "notice",
+    "steps",
+    "passages"
+  ],
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22}$",
+      "description": "22-character base64url string encoding 128 random bits"
+    },
+    "intended_use": {
+      "enum": [
+        "office",
+        "study",
+        "development",
+        "pass_on",
+        "general",
+        "gaming"
+      ],
+      "description": "office = office/browsing, study = school/university, development = programming, pass_on = pass to someone else, general = everyday use without a specific purpose, gaming = games"
+    },
+    "option_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "enum": [
+        "llm",
+        "template"
+      ],
+      "description": "template = a template plan for the option kind (FR-011, FR-012)"
+    },
+    "notice": {
+      "anyOf": [
+        {
+          "type": "string",
+          "description": "Shown when source is template: \"AI steps unavailable\""
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "detail",
+          "tools",
+          "parts",
+          "minutes",
+          "safety",
+          "warning",
+          "kind",
+          "passage_ids"
+        ],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "Imperative, e.g. \"Remove the bottom cover\""
+          },
+          "detail": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One to three sentences saying how to do it"
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "e.g. \"Phillips #0 screwdriver\"; empty when none"
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "With their specification, e.g. \"8 GB DDR4-2400 SO-DIMM\""
+          },
+          "minutes": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "low",
+                  "high"
+                ],
+                "properties": {
+                  "low": {
+                    "type": "number"
+                  },
+                  "high": {
+                    "type": "number"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "safety": {
+            "enum": [
+              "none",
+              "caution",
+              "professional"
+            ],
+            "description": "caution = shows the warning sentence; professional = \"Professional only\", the detail says to have a service provider do it (FR-004)"
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "description": "The warning sentence; set exactly when safety is caution"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "kind": {
+            "enum": [
+              "technical",
+              "general"
+            ],
+            "description": "technical = opening the device, handling internal parts, part specifications or compatibility; it needs a citation (FR-005)"
+          },
+          "passage_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxItems": 12,
+      "description": "Empty when the server removed every step; the card then says no verified steps exist yet (FR-006)"
+    },
+    "passages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "passage_id",
+          "document_id",
+          "title",
+          "url",
+          "publisher",
+          "topic",
+          "section",
+          "page",
+          "applicability",
+          "accessed_on",
+          "text"
+        ],
+        "properties": {
+          "passage_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "document_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1
+          },
+          "topic": {
+            "enum": [
+              "repair-hardware",
+              "software-support",
+              "environmental",
+              "circular-economy"
+            ]
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "applicability": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "manufacturer",
+                  "model"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "model"
+                  },
+                  "manufacturer": {
+                    "type": "string"
+                  },
+                  "model": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "generic"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "accessed_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "description": "At least one of section or page is non-null (checked in invariants.ts)"
+      },
+      "description": "Every passage cited by any step"
+    }
+  },
+  "additionalProperties": false
+}

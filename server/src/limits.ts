@@ -19,6 +19,8 @@ export function loadLimits(env: NodeJS.ProcessEnv = {}) {
     uploadBytes: integer('UPLOAD_MAX_BYTES', MAX_UPLOAD_BYTES, 1, MAX_UPLOAD_BYTES),
     uploadsPerHour: integer('UPLOADS_PER_HOUR', 10, 1),
     reportsPerHour: integer('REPORTS_PER_HOUR', 60, 1),
+    // Each opened option card asks for its step plan once (feature 009).
+    stepsPerHour: integer('STEPS_PER_HOUR', 120, 1),
     dailyCalls: integer('LLM_DAILY_CALLS', 200, 0),
   }
 }
