@@ -13,7 +13,7 @@ This is what lets the system know things rules alone cannot: soldered RAM, user-
 ## Problem and desired outcome
 
 - **Problem:** Generic advice such as "old HDD, so add an SSD" is wrong for many models (soldered RAM, proprietary storage, unsupported CPUs). An LLM without sources can invent compatibility claims.
-- **Desired outcome:** For each demo model and candidate path, the system retrieves citable, model-specific evidence, or states clearly that none exists.
+- **Desired outcome:** For each device model in the corpus and candidate path, the system retrieves citable, model-specific evidence, or states clearly that none exists.
 - **Target users / stakeholders:** Indirectly the device owner (trustworthy recommendations); directly features 003 and 004; judges who need to see what retrieval contributes.
 
 ## Approved scope
@@ -24,7 +24,7 @@ This is what lets the system know things rules alone cannot: soldered RAM, user-
 - An ingestion command that chunks documents, keeps section/page locations, and builds a searchable index.
 - Retrieval per device and per candidate path, filtered by model metadata before semantic ranking.
 - Citation metadata on every passage, and an explicit "no model-specific evidence" result.
-- A curated corpus of roughly 20–40 documents covering the 2–3 chosen demo models plus generic environmental, circular-economy, and OS-support sources (target, not a hard requirement).
+- A curated corpus of roughly 20–40 documents covering a few laptop models plus generic environmental, circular-economy, and OS-support sources (target, not a hard requirement).
 
 ### Out of scope
 
@@ -44,7 +44,7 @@ This is what lets the system know things rules alone cannot: soldered RAM, user-
 - **FR-006:** When no model-specific document matches the device, the retrieval result carries `model_evidence: "none"` and returns only generic passages.
 - **FR-007:** Every returned passage includes the document ID, title, URL, section or page, applicability (model or `generic`), access date, and passage text.
 - **FR-008:** Each candidate path uses its own path-specific query, so the five paths get different, relevant passages for the same device.
-- **FR-009:** For each chosen demo model, the corpus contains at least one model-specific repair/upgrade source and one OS-support source that covers its CPU.
+- ~~**FR-009:** For each chosen demo model, the corpus contains at least one model-specific repair/upgrade source and one OS-support source that covers its CPU.~~ *(Removed 2026-11-21: no demo models, see the scope change log.)*
 
 ## Non-functional requirements and constraints
 
@@ -80,10 +80,10 @@ Adopted during implementation (2026-11-20) unless marked otherwise.
 
 ## Dependencies and risks
 
-- **Resolved:** The demo models were chosen on 2026-11-20 (see Assumptions and open questions). Real scans are still needed to confirm their identity strings and aliases.
+- ~~**Resolved:** The demo models were chosen on 2026-11-20 (see Assumptions and open questions). Real scans are still needed to confirm their identity strings and aliases.~~ *(2026-11-21: no demo models.)*
 - **Dependency:** Feature 001 device schema (`manufacturer`, `model`).
 - **Risk:** Manufacturer documents may forbid redistribution. Mitigation: store only short extracts with links, or choose other sources; record this in the terms note.
-- **Risk:** Windows model strings are inconsistent (machine-type codes, OEM names). Mitigation: an explicit alias list built from real scans of the demo laptops.
+- **Risk:** Windows model strings are inconsistent (machine-type codes, OEM names). Mitigation: an explicit alias list, extended from real scans of the team's laptops.
 - **Risk:** Local embedding quality may be weak. Mitigation: metadata filtering does most of the work; add keyword scoring if needed.
 
 ## Review and integration
@@ -98,10 +98,10 @@ Not applicable to this feature: the index is shipped with the deployment owned b
 
 ## Assumptions and open questions
 
-- **Resolved (2026-11-20, user decision):** The demo models are Lenovo ThinkPad T480 (upgradeable: two SO-DIMM slots, 8th-gen CPU), Dell XPS 13 9360 (soldered memory, mostly 7th-gen CPUs), and HP EliteBook 840 G5 (upgradeable, 8th gen). Physical access for the live demo and real scans (AC-009) is not yet confirmed.
+- **Resolved (2026-11-20, user decision):** The demo models are Lenovo ThinkPad T480 (upgradeable: two SO-DIMM slots, 8th-gen CPU), Dell XPS 13 9360 (soldered memory, mostly 7th-gen CPUs), and HP EliteBook 840 G5 (upgradeable, 8th gen). Physical access for the live demo and real scans (AC-009) is not yet confirmed. *(2026-11-21: the demo models were dropped; the three models stay in the corpus as ordinary models. See the scope change log.)*
 - **Resolved (2026-11-20, user decision):** Keyword BM25 over built-in SQLite FTS5, no embeddings; and Markdown extracts, no PDF parsing.
 - **Adopted:** *k* = 5 per path (see the technical approach); revisit once fact extraction runs on the real corpus.
-- **Open (coverage gap):** No fetched source states whether Windows 11 supports the 7th-gen CPUs (i5-7200U, i5-7300U) that some EliteBook 840 G5 units shipped with. HP's Windows 11 tested list could not be fetched. Options: add HP's list once reachable, or accept the gap (those units get "cannot verify" for Windows 11). AC-008 fails until one is chosen.
+- **Accepted (coverage gap, 2026-11-21):** No fetched source states whether Windows 11 supports the 7th-gen CPUs (i5-7200U, i5-7300U) that some EliteBook 840 G5 units shipped with. HP's Windows 11 tested list could not be fetched. Options: add HP's list once reachable, or accept the gap (those units get "cannot verify" for Windows 11). AC-008 fails until one is chosen. *(2026-11-21: the gap is accepted, those units get "cannot verify" for Windows 11; AC-008 was removed with FR-009.)*
 - Assumption: Documents can be stored as text extracts in the repository where their terms allow; otherwise only metadata and a short quotation are stored.
 
 ## Scope change log
@@ -109,6 +109,7 @@ Not applicable to this feature: the index is shipped with the deployment owned b
 | Date       | Change                 | User approval                                                                                     |
 | ---------- | ---------------------- | ------------------------------------------------------------------------------------------------- |
 | 2026-11-20 | Initial approved scope | User replied "accept" to the five-feature MVP proposal in the specification conversation, 2026-11-20 |
+| 2026-11-21 | No demo models: FR-009, AC-008 and T-006 removed; AC-009 now uses real scans of the team's own laptops instead of the demo laptops. The 840 G5 7th-gen CPU gap is accepted. The three models stay in the corpus and its tests. | User replied "accept, just remove those entries for the demo models" to the proposal in the task review conversation, 2026-11-21 |
 
 ## Related and superseded features
 

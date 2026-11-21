@@ -15,8 +15,8 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | # | Feature | Status |
 |---|---|---|
 | 001 | [Device scan and upload](docs/features/feature-001-device-scan-and-upload/PLAN.md) | In progress: the remaining Windows checks |
-| 002 | [Knowledge base and retrieval](docs/features/feature-002-knowledge-base-retrieval/PLAN.md) | In progress: needs real scans of the demo models |
-| 003 | [Five-path assessment and ranking](docs/features/feature-003-five-path-ranking/PLAN.md) | In progress: sourcing the impact data for the demo models |
+| 002 | [Knowledge base and retrieval](docs/features/feature-002-knowledge-base-retrieval/PLAN.md) | In progress: self-review open |
+| 003 | [Five-path assessment and ranking](docs/features/feature-003-five-path-ranking/PLAN.md) | In progress: battery labour price and self-review open |
 | 004 | [Explained report](docs/features/feature-004-explained-report/PLAN.md) | Complete |
 | 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: `v0.5.0` is live; backup and rollback rehearsals are open |
 | 006 | [Web app](docs/features/feature-006-web-app/PLAN.md) | Implemented, awaiting the team's browser review |
@@ -96,7 +96,7 @@ cp web/.env.example web/.env         # VITE_API_MODE=mock (default) or live
 npm run corpus:ingest -w server   # corpus/ -> server/data/corpus.sqlite
 ```
 
-This validates [`corpus/manifest.yaml`](corpus/README.md), indexes the documents, and prints any coverage gaps for the demo models. Run it again after changing `corpus/`. Without an index, the server still starts (with a warning), but the report stream answers `500`.
+This validates [`corpus/manifest.yaml`](corpus/README.md), indexes the documents, and prints any coverage gaps for the corpus models. Run it again after changing `corpus/`. Without an index, the server still starts (with a warning), but the report stream answers `500`.
 
 ### 5. Run the app
 
@@ -121,7 +121,7 @@ curl -s -X POST http://127.0.0.1:3000/api/devices \
   --data @shared/fixtures/device-scan.laptop-complete.json
 ```
 
-The fixture is a fictional model, so retrieval finds no model-specific evidence and several paths read "cannot verify". The three demo models get model-specific evidence.
+The fixture is a fictional model, so retrieval finds no model-specific evidence and several paths read "cannot verify". The three corpus models (ThinkPad T480, XPS 13 9360, EliteBook 840 G5) get model-specific evidence.
 
 ### 6. Build and run the scanner
 

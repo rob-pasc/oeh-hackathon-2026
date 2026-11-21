@@ -90,9 +90,9 @@ The assessment pipeline and its adopted contracts are implemented. Real-device c
 ## Dependencies and risks
 
 - **Dependency:** Feature 001 (scan schema, device page) and feature 002 (retrieval results, `model_evidence`).
-- **Impact coverage:** Generic CO₂e sources and the three demo models are selected. T-008 still needs model-specific part prices and a sourced professional battery labour range.
-- **Risk:** The rubrics or weights could double-count lifespan, which is already part of the CO₂e estimate. Mitigation: document how each criterion is derived; adjust after testing on the demo devices.
-- **Risk:** LLM extraction may misread passages. Mitigation: required passage IDs, a deterministic schema, and manual checking of extracted facts for the demo models.
+- **Impact coverage:** Generic CO₂e sources are selected. T-008 still needs a sourced professional battery labour range. *(2026-11-21: model-specific entries for demo models dropped.)*
+- **Risk:** The rubrics or weights could double-count lifespan, which is already part of the CO₂e estimate. Mitigation: document how each criterion is derived; adjust after testing on real devices.
+- **Risk:** LLM extraction may misread passages. Mitigation: required passage IDs, a deterministic schema, and spot checks of extracted facts on real scans.
 - **Risk:** Size. With 14 requirements this exceeds the usual guideline of about 10 criteria; the user accepted it as one feature because the gates, calculator, and scoring are not verifiable without each other.
 
 ## Review and integration
@@ -122,6 +122,7 @@ Not applicable to this feature: deployment is owned by feature 005.
 | 2026-11-20 | Initial approved scope | User replied "accept" to the five-feature MVP proposal in the specification conversation, 2026-11-20 |
 | 2026-11-20 | Amendment: `general` and `gaming` intended uses (FR-015 to FR-018, AC-016 to AC-020, T-011 to T-014), plus the exclusion of GPU performance classes. FR-015 replaces FR-001's four-option list together with feature 006. Other requirements and exclusions are unchanged. | User chose "Add both to contract" when asked how the assessment route should handle the web app's `general` and `gaming` tags, then replied "accept" to the proposed scope, 2026-11-20 |
 | 2026-11-20 | Clarification during implementation: FR-018 and AC-019 marked every gaming life entry as an estimate, which contradicted FR-017 (pass it on, salvage, and recycle are assessed as for any other use, including their confidence). Only the upgrade and repair entries are estimates. Their values (1–2 years) are below development use (1–3 years). This resolves a conflict in the approved text and adds no scope. | Agent clarification, reported to the user in the implementation summary |
+| 2026-11-21 | No demo models: the manual demo-model checks of AC-005 and AC-007 and task T-009 are removed; T-008 keeps only the battery labour placeholder. | User replied "accept, just remove those entries for the demo models" to the proposal in the task review conversation, 2026-11-21 |
 
 ## Related and superseded features
 

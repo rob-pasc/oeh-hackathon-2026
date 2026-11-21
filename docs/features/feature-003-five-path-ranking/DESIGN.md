@@ -81,4 +81,4 @@ Each path starts at high and loses one level per finding (two for missing model 
 - Repair covers the battery only. A failing drive is handled by the upgrade path (replacing it with an SSD).
 - RAM is priced as DDR4 for every memory type; other types get an assumption saying so.
 - The team's component spreadsheet (v6) was used as a cross-check for the impact table, not as a source; see `data/impact.yaml`.
-- The scores are not yet checked on real demo devices (T-009).
+- The scores were not checked by hand on specific devices; that check (T-009) was removed with the demo models on 2026-11-21.
