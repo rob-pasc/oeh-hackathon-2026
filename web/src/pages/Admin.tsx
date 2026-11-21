@@ -63,6 +63,7 @@ export function Admin() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header
+        acronym
         right={
           view.kind === 'list' ? (
             <button type="button" onClick={logout} className={SECONDARY_BUTTON}>
@@ -71,7 +72,12 @@ export function Admin() {
           ) : undefined
         }
       />
-      <main className="mx-auto flex w-full max-w-[1312px] flex-1 flex-col gap-6 px-4 pt-6 pb-16 sm:px-8 xl:px-16">
+      {/* The login and status screens sit in the middle of the page; the scan list uses the full width. */}
+      <main
+        className={`mx-auto flex w-full max-w-[1312px] flex-1 flex-col gap-6 px-4 pt-6 pb-16 sm:px-8 xl:px-16 ${
+          view.kind === 'list' ? '' : 'items-center justify-center text-center'
+        }`}
+      >
         <h1 className="m-0 text-3xl font-extrabold">Admin</h1>
         {view.kind === 'loading' ? (
           <div className="flex items-center gap-3 text-muted">
@@ -128,7 +134,7 @@ function LoginForm({ onLogin, mock }: { onLogin: (username: string) => void; moc
   }
 
   return (
-    <form onSubmit={submit} className="flex w-full max-w-[400px] flex-col gap-4 rounded-[20px] bg-white p-7 shadow-card" aria-label="Admin login">
+    <form onSubmit={submit} className="flex w-full max-w-[400px] flex-col gap-4 rounded-[20px] bg-white p-7 text-left shadow-card" aria-label="Admin login">
       <label className="flex flex-col gap-1.5 text-sm font-semibold">
         Username
         <input className={INPUT} name="username" autoComplete="username" required value={username} onChange={(e) => setUsername(e.target.value)} />
