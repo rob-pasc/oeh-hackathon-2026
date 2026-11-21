@@ -12,7 +12,10 @@ import { describe, expect, it, vi } from 'vitest'
 import { liveClient } from '../api/live'
 import { USE_TAGS } from '../lib/labels'
 import { explainModeChange } from '../lib/modeChange'
+import { existsSync, readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { parseRoute } from '../app/router'
+import { legalDoc } from '../legal/content'
 import { GAUGE, TRACK_PATH, arcPath, needleAngle, polar } from '../lib/gauge'
 import { formatEur, formatYears, gaugeValue } from '../lib/impact'
 import { LAPTOP_OPTIONS } from '../api/mockOptions'
@@ -42,6 +45,10 @@ describe('router', () => {
     expect(parseRoute(`/d/${session}`)).toEqual({ name: 'not_found', device: true })
     expect(parseRoute('/s/0123456789ABCDEFGHJKMNPQRI')).toEqual({ name: 'not_found' })
     expect(parseRoute('/x')).toEqual({ name: 'not_found' })
+    expect(parseRoute('/imprint')).toEqual({ name: 'imprint' })
+    expect(parseRoute('/impressum/')).toEqual({ name: 'imprint' })
+    expect(parseRoute('/privacy')).toEqual({ name: 'privacy' })
+    expect(parseRoute('/datenschutz')).toEqual({ name: 'privacy' })
   })
 })
 
@@ -279,5 +286,32 @@ describe('mode change explanations', () => {
     expect(changes.join(' ')).toContain('moved above')
     const unchanged = { ...a, weights: { ...a.weights, money_first: a.weights.environment_first } }
     expect(explainModeChange(unchanged, 'environment_first', 'money_first')).toEqual([])
+  })
+})
+
+describe('legal texts and fonts (feature 006 FR-046)', () => {
+  it('keeps the German and English texts in step', () => {
+    for (const kind of ['imprint', 'privacy'] as const) {
+      const de = legalDoc(kind, 'de').blocks
+      const en = legalDoc(kind, 'en').blocks
+      expect(de.map((block) => block.type)).toEqual(en.map((block) => block.type))
+    }
+  })
+
+  it('formats the date of the last change per language', () => {
+    expect(legalDoc('privacy', 'en').updated).toMatch(/^\d{1,2} [A-Z][a-z]+ \d{4}$/)
+    expect(legalDoc('privacy', 'de').updated).toMatch(/^\d{1,2}\. \p{L}+ \d{4}$/u)
+  })
+
+  it('self-hosts Inter: no font provider in index.html and every @font-face file exists', () => {
+    // Read as plain files: with `css: false` Vitest would return an empty string for an imported .css file.
+    const indexHtml = readFileSync(fileURLToPath(new URL('../../index.html', import.meta.url)), 'utf8')
+    const indexCss = readFileSync(fileURLToPath(new URL('../index.css', import.meta.url)), 'utf8')
+    expect(indexHtml).not.toMatch(/googleapis|gstatic/)
+    const files = [...indexCss.matchAll(/url\('(\/fonts\/[^']+)'\)/g)].map((match) => match[1] as string)
+    expect(files.length).toBeGreaterThanOrEqual(5)
+    for (const file of files) {
+      expect(existsSync(fileURLToPath(new URL(`../../public${file}`, import.meta.url))), file).toBe(true)
+    }
   })
 })

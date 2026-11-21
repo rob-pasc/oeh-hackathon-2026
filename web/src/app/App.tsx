@@ -1,5 +1,6 @@
 import { DevicePage } from '../pages/DevicePage'
 import { Landing } from '../pages/Landing'
+import { LegalPage } from '../pages/Legal'
 import { NotFound } from '../pages/NotFound'
 import { ScanSession } from '../pages/ScanSession'
 import { useRoute } from './router'
@@ -14,6 +15,9 @@ export function App() {
       return <ScanSession key={route.id} sessionId={route.id} />
     case 'device':
       return <DevicePage key={route.id} deviceId={route.id} />
+    case 'imprint':
+    case 'privacy':
+      return <LegalPage kind={route.name} />
     default:
       return <NotFound device={route.name === 'not_found' && route.device === true} />
   }
