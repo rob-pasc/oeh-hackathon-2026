@@ -23,7 +23,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 007 | [macOS and Linux scanner](docs/features/feature-007-macos-linux-scanner/PLAN.md) | Implemented, awaiting real scans on a Mac and a Linux laptop |
 | 008 | [AI categories and options](docs/features/feature-008-ai-categories-and-options/PLAN.md) | Complete |
 | 009 | [Concrete step plans](docs/features/feature-009-concrete-step-plans/PLAN.md) | Complete |
-| 010 | [Step-level knowledge base](docs/features/feature-010-step-level-knowledge-base/PLAN.md) | Implemented, awaiting its review (ingestion and corpus tests pass on `main`) |
+| 010 | [Step-level knowledge base](docs/features/feature-010-step-level-knowledge-base/PLAN.md) | Complete |
 | 011 | [Gauge follows the tab, capped option statuses](docs/features/feature-011-tab-gauge-and-capped-option-status/PLAN.md) | Complete |
 | 012 | [Processor check for gaming](docs/features/feature-012-gaming-cpu-check/PLAN.md) | Complete |
 | 013 | [“Your plan” card](docs/features/feature-013-combined-plan-card/PLAN.md) | Complete |

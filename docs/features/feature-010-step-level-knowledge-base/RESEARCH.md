@@ -57,17 +57,16 @@ Generic, before this feature: reset with all data removed was covered (`ms-reset
 
 ## Coverage output (FR-005)
 
-`npm run corpus:ingest -w server` and `npm test -w server` could **not** be run in this session: the sandbox has Node 22 (the server needs 24 for `.ts` execution and a stable `node:sqlite`) and no `typebox` package. The ingestion rules were therefore checked with a substitute script that applies the same manifest rules (required fields, id and file patterns, ISO date, topic enum, undeclared models, models without documents, duplicate ids) and runs the repository's real `chunkMarkdown` on every extract:
+Real run on Node 24.15 on `main` at f0af68e, 2026-11-21:
 
 ```
-documents: 41, passages: 245
-lenovo|thinkpad t480 -> 6 docs
-dell|xps 13 9360 -> 5 docs
-hp|elitebook 840 g5 -> 4 docs
-no problems
+$ npm run corpus:ingest -w server
+indexed 41 documents, 245 passages -> server/data/corpus.sqlite
+corpus hash 03ea40420628a4537c3ca05f6da1dba0bcabfceab01eada8276ab8cc1c219137
+coverage: HP EliteBook 840 G5: no software-support document covers CPU i5-7200U, i5-7300U
 ```
 
-The substitute output above is the result after the second round. The new model document (`ifixit-t480-ssd-replacement`) is a repair-hardware document of a model that already had one; the OS-support and CPU coverage per model is unchanged. The user has to run `npm run corpus:ingest -w server` and `npm test -w server` before merging; the expected warning about the 840 G5 7th-generation CPUs is the one recorded in feature 002.
+The only coverage warning is the known 840 G5 7th-generation CPU gap from feature 002. The counts match the substitute check that was run first, when the session had no Node 24 (it applied the same manifest rules and the real `chunkMarkdown`): 41 documents and 245 passages, with 6 documents for the T480, 5 for the XPS 13 9360 and 4 for the 840 G5.
 
 ## Remaining gaps (FR-005)
 
