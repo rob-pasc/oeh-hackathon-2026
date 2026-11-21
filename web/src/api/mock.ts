@@ -1,6 +1,7 @@
 // Mock API for the web app. It serves the fictional fixtures from shared/fixtures/ with short delays so the
 // skeleton, the live status, and the streamed report can be seen without a backend. Never shown as real data:
 // the UI marks mock mode with a "Sample data" badge.
+import { ADMIN_PAGE_SIZE, type AdminScanRow } from '@leaaf/shared/admin'
 import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { DeviceRecord, DeviceScan } from '@leaaf/shared/device'
@@ -84,6 +85,7 @@ function categoriesFor(deviceId: string, assessment: Assessment): CategoryResult
 export function createMockClient(options: MockOptions = {}): ApiClient {
   const { stepMs = 900, assessmentMs = 1400, reportMs = 1600, stepsMs = 1500 } = options
   const known = new Set<string>(Object.values(MOCK_DEVICE_IDS))
+  let adminLoggedIn = false
 
   return {
     mode: 'mock',
@@ -147,7 +149,49 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       if (!plan) throw new ApiClientError('not_found', 'Option not found')
       return plan
     },
+
+    // Admin area (feature 013): a fixed sample login and a generated list, so the page can be
+    // built without a server. The first two rows link to the sample devices above.
+    async adminSession() {
+      return adminLoggedIn ? { username: MOCK_ADMIN.username } : null
+    },
+    async adminLogin(username, password) {
+      if (username !== MOCK_ADMIN.username || password !== MOCK_ADMIN.password)
+        throw new ApiClientError('unauthorized', 'Wrong username or password')
+      adminLoggedIn = true
+    },
+    async adminLogout() {
+      adminLoggedIn = false
+    },
+    async adminScans(page) {
+      if (!adminLoggedIn) throw new ApiClientError('unauthorized', 'Log in to see the admin area')
+      const start = (page - 1) * ADMIN_PAGE_SIZE
+      return { total: MOCK_ADMIN_SCANS.length, page, page_size: ADMIN_PAGE_SIZE, scans: MOCK_ADMIN_SCANS.slice(start, start + ADMIN_PAGE_SIZE) }
+    },
   }
 }
+
+/** Sample admin login for mock mode only; the live server takes ADMIN_USERNAME and ADMIN_PASSWORD. */
+export const MOCK_ADMIN = { username: 'admin', password: 'sample-admin-password' } as const
+
+const MOCK_ADMIN_SCANS: AdminScanRow[] = Array.from({ length: 73 }, (_, i) => {
+  const models = [
+    ['LENOVO', 'ThinkPad T480', 'windows'],
+    ['Dell Inc.', 'XPS 13 9360', 'windows'],
+    ['Apple Inc.', 'MacBook Air', 'macos'],
+    ['HP', 'HP EliteBook 840 G5', 'linux'],
+    [null, null, null],
+  ] as const
+  const [manufacturer, model, os] = models[i % models.length]!
+  const id = i === 0 ? MOCK_DEVICE_IDS.laptop : i === 1 ? MOCK_DEVICE_IDS.desktop : `mockScan${String(i).padStart(14, '0')}`
+  return {
+    device_id: id,
+    created_at: new Date(Date.UTC(2026, 10, 21, 18) - i * 47 * 60_000).toISOString(),
+    os_family: os,
+    manufacturer,
+    model,
+    scan_status: i % 3 === 0 ? 'complete' : 'partial',
+  }
+})
 
 export const mockClient = createMockClient()

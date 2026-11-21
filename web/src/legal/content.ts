@@ -127,7 +127,7 @@ function privacyDe(): Block[] {
   return [
     {
       type: 'p',
-      text: 'Kurzfassung: leaaf.green braucht kein Konto, setzt keine Cookies, verwendet kein Tracking und zeigt keine Werbung. Gespeichert werden technische Hardware-Daten deines Geräts, aber keine Namen, E-Mail-Adressen oder Seriennummern.',
+      text: 'Kurzfassung: leaaf.green braucht kein Konto, setzt dir keine Cookies, verwendet kein Tracking und zeigt keine Werbung. Gespeichert werden technische Hardware-Daten deines Geräts, aber keine Namen, E-Mail-Adressen oder Seriennummern.',
     },
     { type: 'h2', text: '1. Verantwortliche und Kontakt' },
     {
@@ -170,6 +170,10 @@ function privacyDe(): Block[] {
       type: 'p',
       text: 'Wir setzen keine Cookies und verwenden keine Analyse-, Werbe- oder Social-Media-Dienste. Nur wenn du die Laptop-Ansicht der Ergebnisse ein- oder ausschaltest, merkt sich dein Browser diese Einstellung lokal (Eintrag „leaaf.showLaptopView“ im lokalen Speicher). Der Eintrag verlässt dein Gerät nicht, ist für die von dir gewünschte Einstellung technisch erforderlich (§ 165 Abs. 3 TKG 2021) und kann jederzeit in den Browser-Einstellungen gelöscht werden.',
     },
+    {
+      type: 'p',
+      text: 'Die einzige Ausnahme ist der Verwaltungsbereich unter /admin, der nur für unser Projektteam gedacht ist: Nach der Anmeldung setzt er ein technisch notwendiges Sitzungs-Cookie („leaaf_admin“), das nur an die Verwaltungsschnittstelle gesendet wird und nach spätestens 12 Stunden oder beim Abmelden abläuft. Besucherinnen und Besucher, die sich dort nicht anmelden, erhalten kein Cookie.',
+    },
     { type: 'h2', text: '6. Schrift' },
     {
       type: 'p',
@@ -201,7 +205,7 @@ function privacyEn(): Block[] {
   return [
     {
       type: 'p',
-      text: 'In short: leaaf.green needs no account, sets no cookies, uses no tracking and shows no advertising. We store technical hardware data of your device, but no names, email addresses or serial numbers.',
+      text: 'In short: leaaf.green needs no account, sets no cookies for you, uses no tracking and shows no advertising. We store technical hardware data of your device, but no names, email addresses or serial numbers.',
     },
     { type: 'h2', text: '1. Controller and contact' },
     {
@@ -243,6 +247,10 @@ function privacyEn(): Block[] {
     {
       type: 'p',
       text: 'We set no cookies and use no analytics, advertising or social media services. Only when you switch the laptop view of the results on or off does your browser remember that setting locally (the entry "leaaf.showLaptopView" in local storage). The entry never leaves your device, is technically necessary for the setting you asked for (section 165(3) of the Austrian Telecommunications Act 2021) and can be deleted in your browser settings at any time.',
+    },
+    {
+      type: 'p',
+      text: 'The only exception is the admin area at /admin, which is meant for our project team only: after login it sets a strictly necessary session cookie ("leaaf_admin") that is sent only to the admin interface and expires after 12 hours at the latest or on logout. Visitors who do not log in there receive no cookie.',
     },
     { type: 'h2', text: '6. Typeface' },
     {

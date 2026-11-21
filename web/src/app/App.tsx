@@ -1,3 +1,4 @@
+import { Admin } from '../pages/Admin'
 import { DevicePage } from '../pages/DevicePage'
 import { Landing } from '../pages/Landing'
 import { LegalPage } from '../pages/Legal'
@@ -15,6 +16,8 @@ export function App() {
       return <ScanSession key={route.id} sessionId={route.id} />
     case 'device':
       return <DevicePage key={route.id} deviceId={route.id} />
+    case 'admin':
+      return <Admin />
     case 'imprint':
     case 'privacy':
       return <LegalPage kind={route.name} />

@@ -277,3 +277,18 @@ describe('admin scan list (FR-007, FR-008, FR-009)', () => {
     for (const secret of [PASSWORD, 'a-wrong-password', token, id, '203.0.113.1']) expect(log).not.toContain(secret)
   })
 })
+
+describe('cookies for visitors (FR-012)', () => {
+  it('sets no cookie on the public routes, even with the admin area on', async () => {
+    const { app, devices } = setup()
+    const id = devices.create(laptop).device_id
+    for (const res of [
+      await app.inject({ method: 'POST', url: '/api/sessions' }),
+      await app.inject({ method: 'GET', url: `/api/devices/${id}` }),
+      await app.inject({ method: 'POST', url: '/api/devices', payload: laptop }),
+      await app.inject({ method: 'GET', url: '/downloads/leaaf-scanner.exe' }),
+      await app.inject({ method: 'GET', url: '/nothing-here' }),
+    ])
+      expect(res.headers['set-cookie']).toBeUndefined()
+  })
+})

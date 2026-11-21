@@ -1,3 +1,4 @@
+import type { AdminScanPage, AdminSession } from '@leaaf/shared/admin'
 import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { OsFamily } from '@leaaf/shared/common'
@@ -60,10 +61,13 @@ export interface ScanSession {
 
 export class ApiClientError extends Error {
   readonly code: string
-  constructor(code: string, message: string) {
+  /** Seconds from a 429's Retry-After header, when the server sent one. */
+  readonly retryAfter: number | undefined
+  constructor(code: string, message: string, retryAfter?: number) {
     super(message)
     this.name = 'ApiClientError'
     this.code = code
+    this.retryAfter = retryAfter
   }
 }
 
@@ -86,4 +90,12 @@ export interface ApiClient {
   streamReport(deviceId: string, use: UseTag, handlers: ReportStreamHandlers): () => void
   /** The step plan of one option of the shown categories (feature 009, shared/src/steps.ts). */
   getSteps(deviceId: string, use: UseTag, optionId: string): Promise<StepPlan>
+  /**
+   * Admin area (feature 013, shared/src/admin.ts). `adminSession` resolves to null when logged out
+   * and throws code `not_found` when the admin area is not set up.
+   */
+  adminSession(): Promise<AdminSession | null>
+  adminLogin(username: string, password: string): Promise<void>
+  adminLogout(): Promise<void>
+  adminScans(page: number): Promise<AdminScanPage>
 }
