@@ -160,5 +160,5 @@ All replacements below were **implemented on `main` on 2026-11-21** (commits fro
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: None yet; [ADR-001](../../adr/adr-001-shared-contracts-typebox.md) governs the schema change
+- Related ADRs: [ADR-001](../../adr/adr-001-shared-contracts-typebox.md) governs the schema change; [ADR-005](../../adr/adr-005-scan-session-in-download.md) (session in the download, including the macOS bundle name)
 - Research: [`RESEARCH.md`](./RESEARCH.md)

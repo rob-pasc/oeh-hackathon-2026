@@ -90,5 +90,5 @@ Not applicable: corpus changes take effect after re-running ingestion; no deploy
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: None
+- Related ADRs: [ADR-004](../../adr/adr-004-keyword-retrieval-sqlite-fts5.md) (the corpus format and retrieval this feature extends)
 - Corpus conventions: [`corpus/README.md`](../../../corpus/README.md)

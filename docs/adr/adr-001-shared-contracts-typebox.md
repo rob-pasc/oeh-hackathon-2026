@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date adopted:** 2026-11-20
-- **Related feature(s):** [001](../features/feature-001-device-scan-and-upload/PLAN.md), [002](../features/feature-002-knowledge-base-retrieval/PLAN.md), [003](../features/feature-003-five-path-ranking/PLAN.md), [004](../features/feature-004-explained-report/PLAN.md)
+- **Related feature(s):** [001](../features/feature-001-device-scan-and-upload/PLAN.md), [002](../features/feature-002-knowledge-base-retrieval/PLAN.md), [003](../features/feature-003-five-path-ranking/PLAN.md), [004](../features/feature-004-explained-report/PLAN.md), [008](../features/feature-008-ai-categories-and-options/PLAN.md) (`CategoryResult`, added 2026-11-21 under this decision)
 - **Supersedes:** None
 
 ## Context

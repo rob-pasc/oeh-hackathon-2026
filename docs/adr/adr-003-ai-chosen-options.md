@@ -40,6 +40,7 @@ Feature 003 kept the LLM out of every decision: only fact extraction used it, an
 - Contract: `shared/src/categories.ts`, `checkCategoryResult` in `shared/src/invariants.ts`, ranking in `shared/src/ranking.ts`
 - Server: `server/src/categories/` (prompt, option pricing and scoring, fallback, cached service), route in `server/src/app.ts`
 - Tests: `server/test/categories.test.ts`, `shared/test/ranking.test.ts`, `shared/test/contracts.test.ts`, `web/src/test/app.test.tsx`
+- Merged into `main` on 2026-11-21 (merge commit 17c04b4)
 - Live review: `npm run categories:smoke -w server`, results in the [feature 008 acceptance criteria](../features/feature-008-ai-categories-and-options/ACCEPTANCE_CRITERIA.md)
 
 ## Supersession notes (if applicable)

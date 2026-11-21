@@ -143,4 +143,4 @@ None superseded. Deploys features [001](../feature-001-device-scan-and-upload/PL
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
 - Deployment guide: `docs/DEPLOYMENT.md` (to be created by this feature)
-- Related ADRs: None yet
+- Related ADRs: [ADR-006](../../adr/adr-006-images-ghcr-vps-caddy.md) (two images on GHCR, VPS behind an external Caddy)

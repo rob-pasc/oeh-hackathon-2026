@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date adopted:** 2026-11-20
-- **Related feature(s):** [003](../features/feature-003-five-path-ranking/PLAN.md) (fact extraction), [004](../features/feature-004-explained-report/PLAN.md) (explanations), [005](../features/feature-005-public-demo-deployment/PLAN.md) (secrets, LLM cap)
+- **Related feature(s):** [003](../features/feature-003-five-path-ranking/PLAN.md) (fact extraction), [004](../features/feature-004-explained-report/PLAN.md) (explanations), [005](../features/feature-005-public-demo-deployment/PLAN.md) (secrets, LLM cap), [008](../features/feature-008-ai-categories-and-options/PLAN.md) (category call)
 - **Supersedes:** None
 
 ## Context
@@ -20,6 +20,7 @@ Features 003 and 004 need an LLM that returns JSON, for extracted facts and for 
   - retries once with the validation errors (also on empty content, which DeepSeek documents);
   - then throws `invalid_output`.
 - Thinking mode is set per task through the non-standard `thinking` body field: `enabled` for fact extraction, `disabled` for explanations, or `omit` for providers without it.
+  - **Update 2026-11-21 (feature 008):** A third task, `categories`, uses the same interface. It has its own setting `LLM_THINKING_CATEGORIES` (default `disabled`) and its own deadline `LLM_CATEGORY_TIMEOUT_MS` (default 40 s), because its answer is larger than the explanation's; the explanation keeps `LLM_TIMEOUT_MS`. The live run took about 10–11 s per device. What the category call decides is recorded in [ADR-003](adr-003-ai-chosen-options.md).
   - **Update 2026-11-20 (user decision):** the fact extraction default is now `disabled` too. With thinking on, the first assessment of a ThinkPad T480 took 26.4 s against feature 003's 20 s target; with it off, 1.8 s, with the same eight extracted facts. The per-task setting and the rest of this decision are unchanged.
 - Configuration comes only from environment variables (`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_TIMEOUT_MS`, `LLM_THINKING_*`); see `server/.env.example`. The key is never logged, committed, or shipped in the scanner or web app.
 

@@ -118,5 +118,5 @@ None superseded. Depends on [feature 001](../feature-001-device-scan-and-upload/
 
 - Acceptance criteria: [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)
 - Implementation tasks: [`TASKS.md`](./TASKS.md)
-- Related ADRs: [ADR-001](../../adr/adr-001-shared-contracts-typebox.md) (contracts)
+- Related ADRs: [ADR-001](../../adr/adr-001-shared-contracts-typebox.md) (contracts), [ADR-004](../../adr/adr-004-keyword-retrieval-sqlite-fts5.md) (keyword retrieval over SQLite FTS5)
 - Terms: [`docs/GLOSSARY.md`](../../GLOSSARY.md)
