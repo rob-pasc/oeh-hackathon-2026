@@ -138,7 +138,7 @@ None superseded. Deploys features [001](../feature-001-device-scan-and-upload/PL
 
 **FR-002 extended by [feature 007](../feature-007-macos-linux-scanner/PLAN.md#related-and-superseded-features) FR-012 and FR-017** (implemented on `main` 2026-11-21, commits "feat(server): serve the scanner for Windows, macOS and Linux" and "ci(scanner): build and ship the macOS and Linux scanners"): the server image also serves a Linux scanner built in the Dockerfile and a macOS app built by a CI macOS job. The Windows build and its URL are unchanged.
 
-**Deployment settings extended by [feature 016](../feature-016-admin-scan-overview/PLAN.md#related-and-superseded-features)** (on `feat/adminpage`, 2026-11-21): `deploy/.env.example` and the deployment guide gain `ADMIN_USERNAME` and `ADMIN_PASSWORD` and admin post-release checks. The deployment itself is unchanged; without the variables the admin area stays off.
+**Deployment settings extended by [feature 016](../feature-016-admin-scan-overview/PLAN.md#related-and-superseded-features)** (merged into `main` on 2026-11-21 (commit "Merge branch 'feat/adminpage' into main")): `deploy/.env.example` and the deployment guide gain `ADMIN_USERNAME` and `ADMIN_PASSWORD` and admin post-release checks. The deployment itself is unchanged; without the variables the admin area stays off.
 
 ## References
 

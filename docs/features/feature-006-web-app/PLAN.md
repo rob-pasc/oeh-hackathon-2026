@@ -201,7 +201,7 @@ When a replacement is implemented and merged, record the date and implementing c
 
 **FR-049 partly replaced by [feature 015](../feature-015-remove-recommendation-summary/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on `main`): the recommendation summary is gone, so its "no CO₂e avoided" sentence no longer applies; the "None" figure and hover text stay in force.
 
-**FR-046's "no cookies" statement gains the admin-only exception from [feature 016](../feature-016-admin-scan-overview/PLAN.md#related-and-superseded-features) FR-012** (on `feat/adminpage`, 2026-11-21, commit "feat(web): add the admin login and scan list page"): the privacy notice (DE/EN) now says that only the admin login sets a strictly necessary session cookie, and visitors receive none. The rest of FR-046 is unchanged. The web app also gains the `/admin` route.
+**FR-046's "no cookies" statement gains the admin-only exception from [feature 016](../feature-016-admin-scan-overview/PLAN.md#related-and-superseded-features) FR-012** (commit "feat(web): add the admin login and scan list page", merged into `main` on 2026-11-21 (commit "Merge branch 'feat/adminpage' into main")): the privacy notice (DE/EN) now says that only the admin login sets a strictly necessary session cookie, and visitors receive none. The rest of FR-046 is unchanged. The web app also gains the `/admin` route.
 
 ## References
 

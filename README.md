@@ -29,7 +29,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 013 | [“Your plan” card](docs/features/feature-013-combined-plan-card/PLAN.md) | Complete |
 | 014 | [One step list for the plan](docs/features/feature-014-plan-step-list/PLAN.md) | Complete |
 | 015 | [Remove the recommendation summary](docs/features/feature-015-remove-recommendation-summary/PLAN.md) | Complete |
-| 016 | [Admin scan overview](docs/features/feature-016-admin-scan-overview/PLAN.md) | Implemented on `feat/adminpage`, awaiting merge and the check on the live site |
+| 016 | [Admin scan overview](docs/features/feature-016-admin-scan-overview/PLAN.md) | Implemented and merged into `main`, awaiting the browser check and the check on the live site |
 
 The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP EliteBook 840 G5.
 
