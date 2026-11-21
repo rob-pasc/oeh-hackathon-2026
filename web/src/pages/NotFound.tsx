@@ -9,8 +9,8 @@ export function NotFound({ device = false }: { device?: boolean }) {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
-      <main className="flex-1 mx-auto flex max-w-[640px] flex-col items-center gap-6 px-16 pt-24 text-center">
-        <h1 className="m-0 text-4xl font-extrabold">{device ? 'We could not find this scan' : 'Page not found'}</h1>
+      <main className="flex-1 mx-auto flex max-w-[640px] flex-col items-center gap-6 px-6 pt-16 text-center sm:px-16 sm:pt-24">
+        <h1 className="m-0 text-3xl font-extrabold sm:text-4xl">{device ? 'We could not find this scan' : 'Page not found'}</h1>
         <p className="m-0 text-lg text-muted">
           {device
             ? 'The link may be wrong or the result may have expired. Start a new scan from the home page.'

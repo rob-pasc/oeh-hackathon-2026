@@ -21,7 +21,7 @@ export function ErrorCard({ title, message, action }: { title: string; message: 
 
 /** Primary pill button style, shared by <button> and <a> call sites. */
 export const PRIMARY_BUTTON =
-  'inline-flex cursor-pointer items-center gap-3.5 rounded-full border-0 bg-leaf px-12 text-white no-underline shadow-button transition-colors hover:bg-leaf-dark'
+  'inline-flex cursor-pointer items-center gap-3.5 rounded-full border-0 bg-leaf px-6 text-white sm:px-12 no-underline shadow-button transition-colors hover:bg-leaf-dark'
 
 /** "CO₂e" with a hover explanation, for readers who do not know the term. */
 export function Co2e() {

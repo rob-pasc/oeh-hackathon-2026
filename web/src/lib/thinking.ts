@@ -1,4 +1,4 @@
-// Phrases for the thinking line shown while the page waits for the AI (feature 006 FR-044). They describe the
+// Phrases for the thinking line shown while the page waits for the AI (feature 006 FR-045). They describe the
 // kind of work the server does (retrieval, extraction, scoring) loosely and playfully; none claims a result.
 export const THINKING_PHRASES = [
   'Thinking…',

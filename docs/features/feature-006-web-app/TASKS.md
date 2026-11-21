@@ -44,7 +44,8 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-035:** Derive the zone states from step events (`done`, `skipped`, implicit done) and show skipped zones in amber (supports `AC-043`, `AC-044`)
 - [x] **T-036:** Pace the playback of the scan events with the 2 s limit and no pacing for reduced motion (supports `AC-045` to `AC-047`)
 - [x] **T-037:** Remove the name from the footer (FR-035 revision) and add the selection colour (supports `AC-037`, `AC-048`)
-- [x] **T-038:** Add the thinking line (leaf glyph SVG, rotating phrases) above the AI placeholders, with tests (supports `AC-049`–`AC-051`)
+- [x] **T-038:** Make the landing page and "Page not found" responsive (supports `AC-049`)
+- [x] **T-039:** Add the thinking line (leaf glyph SVG, rotating phrases) above the AI placeholders, with tests (supports `AC-050`–`AC-052`)
 
 ## Dependencies and blockers
 
@@ -75,6 +76,7 @@ The first version was written without network access. After the merge into `main
 - 2026-11-21: Tenth scope extension by amendment (FR-035 to FR-040, AC-037 to AC-042, T-032 to T-034); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
 - 2026-11-21: Eleventh scope extension by amendment (FR-041, FR-042, AC-043 to AC-047, T-035, T-036), together with feature 001 FR-017; see the plan's scope change log. Status set from `Implemented (verification pending)` to `In progress` for the implementation.
 - 2026-11-21: FR-035 revised (no name in the footer) and twelfth scope extension by amendment (FR-043, AC-048, T-037: selection colour); see the plan's scope change log.
+- 2026-11-21: Thirteenth scope extension by amendment (FR-044, AC-049, T-038); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
 - 2026-11-21: T-035 to T-037 implemented and verified (AC-043 to AC-048 pass; see the acceptance criteria). Status back to `Implemented (verification pending)`: the team browser review (T-009) and T-016 remain.
-- 2026-11-21: Thirteenth scope extension by amendment (FR-044, AC-049 to AC-051, T-038: thinking line while waiting for the AI); see the plan's scope change log. Status set from `Implemented (verification pending)` to `In progress` for the implementation.
-- 2026-11-21: T-038 implemented and verified (AC-049 to AC-051 pass; see the acceptance criteria). Status back to `Implemented (verification pending)`: the team browser review (T-009) and T-016 remain.
+- 2026-11-21: Fourteenth scope extension by amendment (FR-045, AC-050 to AC-052, T-039: thinking line while waiting for the AI); see the plan's scope change log. Status set from `Implemented (verification pending)` to `In progress` for the implementation.
+- 2026-11-21: T-039 implemented and verified (AC-050 to AC-052 pass; see the acceptance criteria). Status back to `Implemented (verification pending)`: the team browser review (T-009) and T-016 remain.

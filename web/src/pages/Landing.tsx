@@ -57,21 +57,21 @@ export function Landing() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <main className="flex flex-1 flex-col items-center justify-center px-16 py-12">
-        <div className="flex w-full max-w-[1100px] flex-col items-center gap-14 text-center">
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-10 sm:px-8 sm:py-12 xl:px-16">
+        <div className="flex w-full max-w-[1100px] flex-col items-center gap-10 text-center sm:gap-14">
           <div className="flex flex-col items-center gap-5">
             <div className="flex flex-col items-center gap-2">
               <Logo variant="hero" />
               <Acronym />
             </div>
-            <p className="m-0 max-w-[560px] text-[22px] leading-snug text-muted">
+            <p className="m-0 max-w-[560px] text-lg leading-snug text-muted sm:text-[22px]">
               Is your old computer ready for the bin? Find out what it can still do.
             </p>
           </div>
 
-          <ol className="m-0 grid w-full list-none grid-cols-3 gap-6 p-0">
+          <ol className="m-0 grid w-full max-w-[520px] list-none grid-cols-1 gap-4 p-0 md:max-w-none md:grid-cols-3 md:gap-6">
             {STEPS.map((step, index) => (
-              <li key={step.title} className="flex flex-col items-center gap-4 rounded-3xl bg-white px-7 py-9 shadow-card">
+              <li key={step.title} className="flex flex-col items-center gap-4 rounded-3xl bg-white px-6 py-7 shadow-card md:px-7 md:py-9">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-leaf-tint text-leaf">
                   <svg
                     viewBox="0 0 24 24"
@@ -110,7 +110,7 @@ export function Landing() {
               type="button"
               onClick={startScan}
               disabled={busy}
-              className={`${PRIMARY_BUTTON} mb-[15px] py-6 text-[26px] font-bold disabled:cursor-wait disabled:opacity-80`}
+              className={`${PRIMARY_BUTTON} mb-[15px] w-full justify-center py-5 text-lg font-bold sm:w-auto sm:py-6 sm:text-[26px] disabled:cursor-wait disabled:opacity-80`}
             >
               Download and Scan now
               <span aria-hidden="true">→</span>

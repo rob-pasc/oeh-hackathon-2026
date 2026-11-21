@@ -91,7 +91,7 @@ select {
   }
 }
 
-/* Thinking line (feature 006 FR-044): the glyph turns slowly while its petals brighten one after another. */
+/* Thinking line (feature 006 FR-045): the glyph turns slowly while its petals brighten one after another. */
 .thinking-glyph {
   animation: thinking-turn 6s linear infinite;
 }

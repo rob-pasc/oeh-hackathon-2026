@@ -23,7 +23,7 @@ function LeafGlyph() {
 }
 
 /**
- * Thinking line shown above placeholders while the page waits for the AI (feature 006 FR-044): an animated leaf
+ * Thinking line shown above placeholders while the page waits for the AI (feature 006 FR-045): an animated leaf
  * glyph and a phrase that changes to a random other phrase every few seconds. The changing phrase is hidden from
  * screen readers, which hear the steady `label` once instead.
  */

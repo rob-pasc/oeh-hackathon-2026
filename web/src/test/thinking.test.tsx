@@ -1,4 +1,4 @@
-// Thinking line while the page waits for the AI (feature 006 FR-044, AC-049, AC-050).
+// Thinking line while the page waits for the AI (feature 006 FR-045, AC-050, AC-051).
 import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
