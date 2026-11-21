@@ -1,0 +1,545 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "CategoryResult.schema.json",
+  "title": "CategoryResult",
+  "type": "object",
+  "required": [
+    "device_id",
+    "intended_use",
+    "generated_at",
+    "source",
+    "notice",
+    "categories",
+    "passages"
+  ],
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22}$",
+      "description": "22-character base64url string encoding 128 random bits"
+    },
+    "intended_use": {
+      "enum": [
+        "office",
+        "study",
+        "development",
+        "pass_on",
+        "general",
+        "gaming"
+      ],
+      "description": "office = office/browsing, study = school/university, development = programming, pass_on = pass to someone else, general = everyday use without a specific purpose, gaming = games"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "enum": [
+        "llm",
+        "template"
+      ],
+      "description": "template = the five-path fallback (FR-013)"
+    },
+    "notice": {
+      "anyOf": [
+        {
+          "type": "string",
+          "description": "Shown when source is template: \"AI explanation unavailable\""
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "category_id",
+          "label",
+          "summary",
+          "options"
+        ],
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 24,
+            "description": "Device-specific tab label, e.g. \"Faster storage\""
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1,
+            "description": "One sentence"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "option_id",
+                "title",
+                "status",
+                "reason",
+                "kind",
+                "difficulty",
+                "why",
+                "claims",
+                "impact",
+                "impact_source",
+                "scores",
+                "confidence",
+                "path"
+              ],
+              "properties": {
+                "option_id": {
+                  "type": "string",
+                  "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "status": {
+                  "enum": [
+                    "viable",
+                    "conditional",
+                    "not_suitable"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "One sentence shown on the card"
+                },
+                "kind": {
+                  "enum": [
+                    "ssd",
+                    "ram",
+                    "battery",
+                    "hand_down",
+                    "salvage",
+                    "recycle",
+                    "other"
+                  ]
+                },
+                "difficulty": {
+                  "enum": [
+                    "diy_easy",
+                    "diy_moderate",
+                    "professional"
+                  ],
+                  "description": "diy_easy = no tools or opening the device; diy_moderate = owner opens the device with common tools; professional = a service provider does it"
+                },
+                "why": {
+                  "type": "string",
+                  "description": "Shown when the card is opened; no euro or CO2e figures"
+                },
+                "claims": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "text",
+                      "passage_ids"
+                    ],
+                    "properties": {
+                      "text": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "passage_ids": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "minItems": 1
+                      }
+                    },
+                    "additionalProperties": false,
+                    "description": "A technical claim; uncited claims are removed by the server (FR-005)"
+                  },
+                  "maxItems": 2,
+                  "description": "Cited technical claims; at most two sources are shown (FR-010)"
+                },
+                "impact": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "cost_eur",
+                        "useful_life_years",
+                        "co2e_kg",
+                        "displacement",
+                        "assumptions"
+                      ],
+                      "properties": {
+                        "cost_eur": {
+                          "type": "object",
+                          "required": [
+                            "low",
+                            "high"
+                          ],
+                          "properties": {
+                            "low": {
+                              "type": "number"
+                            },
+                            "high": {
+                              "type": "number"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "useful_life_years": {
+                          "type": "object",
+                          "required": [
+                            "low",
+                            "high"
+                          ],
+                          "properties": {
+                            "low": {
+                              "type": "number"
+                            },
+                            "high": {
+                              "type": "number"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "co2e_kg": {
+                          "type": "object",
+                          "required": [
+                            "path",
+                            "baseline",
+                            "avoided_vs_baseline"
+                          ],
+                          "properties": {
+                            "path": {
+                              "type": "object",
+                              "required": [
+                                "low",
+                                "high"
+                              ],
+                              "properties": {
+                                "low": {
+                                  "type": "number"
+                                },
+                                "high": {
+                                  "type": "number"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "baseline": {
+                              "type": "object",
+                              "required": [
+                                "low",
+                                "high"
+                              ],
+                              "properties": {
+                                "low": {
+                                  "type": "number"
+                                },
+                                "high": {
+                                  "type": "number"
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "avoided_vs_baseline": {
+                              "type": "object",
+                              "required": [
+                                "low",
+                                "high"
+                              ],
+                              "properties": {
+                                "low": {
+                                  "type": "number"
+                                },
+                                "high": {
+                                  "type": "number"
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false,
+                          "description": "path = emissions caused by this path (e.g. parts production). avoided_vs_baseline = credited baseline minus path; positive means less CO2e than buying new. How much of the baseline is credited depends on displacement."
+                        },
+                        "displacement": {
+                          "enum": [
+                            "assumed",
+                            "conditional",
+                            "none"
+                          ],
+                          "description": "How much avoided new-device production is credited: assumed = credited (owner keeps using the device instead of buying new); conditional = credited only in the high end of the range (pass_on: only if the recipient would otherwise buy new), so avoided_vs_baseline.low <= 0; none = not credited (e.g. recycle), so avoided_vs_baseline.high <= 0"
+                        },
+                        "assumptions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "text",
+                              "impact_refs"
+                            ],
+                            "properties": {
+                              "text": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "impact_refs": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "minItems": 1
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "impact_source": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "calculator",
+                        "ai_estimate"
+                      ],
+                      "description": "calculator = impact table entries (FR-003); ai_estimate = ranges supplied by the AI and checked by the server (FR-004)"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "scores": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "environment",
+                        "useful_life",
+                        "economic",
+                        "feasibility"
+                      ],
+                      "properties": {
+                        "environment": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "useful_life": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "economic": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "feasibility": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "confidence": {
+                  "type": "object",
+                  "required": [
+                    "level",
+                    "reasons"
+                  ],
+                  "properties": {
+                    "level": {
+                      "enum": [
+                        "high",
+                        "medium",
+                        "low"
+                      ]
+                    },
+                    "reasons": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "path": {
+                  "anyOf": [
+                    {
+                      "enum": [
+                        "upgrade",
+                        "repair",
+                        "pass_on",
+                        "salvage",
+                        "recycle"
+                      ],
+                      "description": "One of the five next lives for a device"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "additionalProperties": false,
+              "description": "not_suitable options have impact, impact_source and scores all null. Others have all three, or all null when an AI estimate was rejected (invariants.ts)"
+            },
+            "minItems": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "minItems": 3,
+      "maxItems": 6
+    },
+    "passages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "passage_id",
+          "document_id",
+          "title",
+          "url",
+          "publisher",
+          "topic",
+          "section",
+          "page",
+          "applicability",
+          "accessed_on",
+          "text"
+        ],
+        "properties": {
+          "passage_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "document_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1
+          },
+          "topic": {
+            "enum": [
+              "repair-hardware",
+              "software-support",
+              "environmental",
+              "circular-economy"
+            ]
+          },
+          "section": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "applicability": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "kind",
+                  "manufacturer",
+                  "model"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "model"
+                  },
+                  "manufacturer": {
+                    "type": "string"
+                  },
+                  "model": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "const": "generic"
+                  }
+                },
+                "additionalProperties": false
+              }
+            ]
+          },
+          "accessed_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false,
+        "description": "At least one of section or page is non-null (checked in invariants.ts)"
+      },
+      "description": "Every passage cited by any option claim"
+    }
+  },
+  "additionalProperties": false
+}

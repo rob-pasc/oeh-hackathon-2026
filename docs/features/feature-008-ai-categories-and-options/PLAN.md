@@ -77,14 +77,23 @@ When the AI is unavailable, the screen falls back to today's five deterministic 
 
 ## Proposed technical approach
 
-Proposed, not yet adopted:
+Adopted during implementation (2026-11-21) unless marked otherwise:
 
 - **Contract:** A new `CategoryResult` in `shared/src/` with `categories[].options[]`, each option carrying `kind`, `difficulty`, `status`, `reason`, `why`, `claims`, `impact` (the existing `Impact` shape or `null`), `impact_source: 'calculator' | 'ai_estimate'`, and criterion scores. It is sent as a new `categories` event on the existing report stream (`/api/devices/:id/report`) after the `assessment` event, replacing the `report` event for the result screen. The web app's proposed `PathOption` type is replaced by the shared contract, which resolves feature 006 T-016.
 - **Server:** A new `server/src/categories/` module with the prompt builder, validation, the mapping from kind to calculator inputs (reusing `server/src/assessment/calculator.ts` and `scoring.ts`), the fallback that converts the assessment into five categories, and an additive SQLite table `category_cache` keyed by device, intended use and prompt hash.
 - **Ranking:** `shared/src/ranking.ts` gains functions to rank options and categories with the existing weights, so the browser toggle and the server agree.
 - **Web:** The toolbar builds its tabs from the categories; the Overview, category tab and option cards reuse the existing path card, summary block and option card components.
 - **ADR:** Letting AI output decide which options exist and their status changes the determinism constraint of feature 003. Record an ADR once this is implemented.
-- **Unresolved:** the category call's timeout and whether to enable thinking; the fixed feasibility values per difficulty; whether the tabs should keep their order when the mode changes (FR-009 currently says they follow the Overview).
+- **Settled during implementation (2026-11-21, routine choices within scope):**
+  - **Timeout and thinking:** The category call has its own deadline, `LLM_CATEGORY_TIMEOUT_MS` (default 40 s), covering transport retries and the repair attempt. One HTTP attempt may use the whole deadline. Thinking is off by default (`LLM_THINKING_CATEGORIES=disabled`), like the explanation.
+  - **Feasibility per difficulty:** `diy_easy` 80, `diy_moderate` 60, `professional` 55, minus the existing conditional penalty of 20. Recorded in the [feature 003 rubric documentation](../feature-003-five-path-ranking/DESIGN.md#scoring-rubrics-0100-each).
+  - **Tab order:** The tabs follow the Overview's current order, as FR-009 says.
+  - **Pricing a priced kind:** The plan for the single part follows the device's own gates: drive interface, RAM module size, and a professional battery job whenever the gate or the AI calls for one. So an AI option never gets cheaper figures than the gates allow.
+  - **AI estimate shape:** The AI's CO₂e range is what the option itself causes. The server derives the avoided CO₂e with the calculator's displacement convention: credited when the option adds life; only in the high end when it may add none or the device is passed on. A negative CO₂e is rejected along with FR-004's checks.
+  - **Fallback option kinds:** Each fallback option carries its `path`. The kinds are `battery`, `hand_down`, `salvage` and `recycle` for the matching paths, and `other` for upgrade, which may combine an SSD and RAM. Their figures are calculator figures.
+  - **Unusable answers:** Repeated IDs get a numbered suffix. On a Mac or Linux device, options whose title or reason is about Windows 11 are dropped. When fewer than three categories remain after the checks, the FR-013 fallback applies, and nothing is cached.
+  - **Cache:** `category_cache` stores the AI's checked answer keyed by device and use, plus a hash of the prompt version, system prompt and output schema. Figures and scores are recomputed on every read.
+  - **Report event:** The report stream sends `assessment`, `categories` and `end`; it no longer calls the explanation service or sends `report`. Until feature 009 delivers step plans, option cards show no "What to do" steps (FR-010 assigns that area to 009).
 
 ## Dependencies and risks
 

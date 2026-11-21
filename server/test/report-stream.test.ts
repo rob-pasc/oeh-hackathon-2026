@@ -20,7 +20,7 @@ import { createSqliteDeviceStore } from '../src/devices/store.ts'
 import { createFactExtractor, createMemoryFactCache } from '../src/facts/index.ts'
 import { loadImpactTable } from '../src/impact/table.ts'
 import { budgetedFetch } from '../src/limits.ts'
-import { createReportService } from '../src/report/service.ts'
+import { createCategoryService } from '../src/categories/service.ts'
 import { createOpenAiCompatibleClient, loadLlmConfig, LlmError, type LlmClient } from '../src/llm/index.ts'
 import { createRetriever, readCorpus, writeIndex, type Retriever } from '../src/retrieval/index.ts'
 import { createSqliteSessionStore } from '../src/sessions/store.ts'
@@ -145,10 +145,10 @@ afterEach(async () => {
   await Promise.all(servers.splice(0).map((s) => s.close()))
 })
 
-function setup(assessments?: AssessmentService, explain?: AppOptions['explain']) {
+function setup(assessments?: AssessmentService, categorize?: AppOptions['categorize']) {
   const db = new DatabaseSync(':memory:')
   const devices = createSqliteDeviceStore(db)
-  const app = buildApp({ devices, sessions: createSqliteSessionStore(db), assessments, explain, publicBaseUrl: 'https://leaaf.example' })
+  const app = buildApp({ devices, sessions: createSqliteSessionStore(db), assessments, categorize, publicBaseUrl: 'https://leaaf.example' })
   servers.push(app)
   return { app, device: devices.create(acmeScan) }
 }
@@ -168,13 +168,14 @@ async function readStream(url: string) {
 }
 
 describe('GET /api/devices/:id/report', () => {
-  it('delivers the generated report between assessment and end', async () => {
-    const sample = JSON.parse(readFileSync(new URL('../../shared/fixtures/report.example-laptop-14.office.json', import.meta.url), 'utf8'))
+  it('delivers the categories between assessment and end (feature 008)', async () => {
+    const sample = JSON.parse(readFileSync(new URL('../../shared/fixtures/categories.example-laptop-14.office.json', import.meta.url), 'utf8'))
     const { app, device } = setup(service(null), async (_scan, { assessment }) => ({ ...sample, device_id: assessment.device_id }))
     const base = await app.listen({ port: 0, host: '127.0.0.1' })
     const events = await readStream(base + API_ROUTES.reportStream(device.device_id, 'office'))
-    expect(events.map(e => e.name)).toEqual(['assessment', 'report', 'end'])
+    expect(events.map(e => e.name)).toEqual(['assessment', 'categories', 'end'])
     expect(events[1]!.data).toEqual({ ...sample, device_id: device.device_id })
+    expect(events[2]!.data).toEqual({ status: 'complete' })
   })
 
   it('streams the assessment, then end, and closes', async () => {
@@ -189,16 +190,16 @@ describe('GET /api/devices/:id/report', () => {
     expect(events[1]!.data).toEqual({ status: 'complete' })
   })
 
-  it('finishes a provider outage with a template report and fallback end status', async () => {
-    const { createReportService } = await import('../src/report/service.ts')
+  it('finishes a provider outage with the five fallback categories and fallback end status (AC-013)', async () => {
     const db = new DatabaseSync(':memory:')
     try {
-      const explain = createReportService(db, fakeLlm({ error: new LlmError('timeout', 'deadline') }).llm)
-      const { app, device } = setup(service(null), explain)
+      const categorize = createCategoryService(db, fakeLlm({ error: new LlmError('timeout', 'deadline') }).llm, { impactTable })
+      const { app, device } = setup(service(null), categorize)
       const base = await app.listen({ port: 0, host: '127.0.0.1' })
       const events = await readStream(base + API_ROUTES.reportStream(device.device_id, 'office'))
-      expect(events.map(e => e.name)).toEqual(['assessment', 'report', 'end'])
+      expect(events.map(e => e.name)).toEqual(['assessment', 'categories', 'end'])
       expect(events[1]!.data).toMatchObject({ source: 'template', notice: expect.stringContaining('AI explanation unavailable') })
+      expect(events[1]!.data.categories).toHaveLength(5)
       expect(events[2]!.data).toEqual({ status: 'fallback' })
     } finally {
       db.close()
@@ -212,10 +213,10 @@ describe('GET /api/devices/:id/report', () => {
       fetch: budgetedFetch(db, 0, transport),
     })
     try {
-      const { app, device } = setup(service(llm), createReportService(db, llm))
+      const { app, device } = setup(service(llm), createCategoryService(db, llm, { impactTable }))
       const base = await app.listen({ port: 0, host: '127.0.0.1' })
       const events = await readStream(base + API_ROUTES.reportStream(device.device_id, 'office'))
-      expect(events.map(e => e.name)).toEqual(['assessment', 'report', 'end'])
+      expect(events.map(e => e.name)).toEqual(['assessment', 'categories', 'end'])
       expect(events[1]!.data).toMatchObject({ source: 'template', notice: expect.stringContaining('AI explanation unavailable') })
       expect(events[2]!.data.status).toBe('fallback')
       expect(transport).not.toHaveBeenCalled()
@@ -234,7 +235,7 @@ describe('GET /api/devices/:id/report', () => {
     })
     const llm = createOpenAiCompatibleClient(loadLlmConfig({ LLM_API_KEY: key }), { fetch: transport })
     try {
-      const { app, device } = setup(service(llm), createReportService(db, llm))
+      const { app, device } = setup(service(llm), createCategoryService(db, llm, { impactTable }))
       const base = await app.listen({ port: 0, host: '127.0.0.1' })
       const stream = await (await fetch(base + API_ROUTES.reportStream(device.device_id, 'office'))).text()
       const lookup = await (await fetch(base + `/api/devices/${device.device_id}`)).text()

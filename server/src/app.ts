@@ -32,7 +32,7 @@ import type { AssessmentService } from './assessment/service.ts'
 import type { DeviceStore } from './devices/store.ts'
 import { checkScan } from './devices/validate.ts'
 import { renameZipRoot, ZipError } from './downloads/zip.ts'
-import type { createReportService } from './report/service.ts'
+import type { CategoryService } from './categories/service.ts'
 import type { SessionStore } from './sessions/store.ts'
 
 export interface AppOptions {
@@ -41,7 +41,8 @@ export interface AppOptions {
   sessions: SessionStore
   /** Absent when the server cannot assess (no retrieval index); the report stream then fails. */
   assessments?: AssessmentService | undefined
-  explain?: ReturnType<typeof createReportService> | undefined
+  /** Builds the result screen's categories (feature 008); absent in tests that need the assessment only. */
+  categorize?: CategoryService | undefined
   /** Origin of the web app, used to build device page URLs, e.g. https://leaaf.green */
   publicBaseUrl: string
   /** Path of the Windows scanner executable; the download is 404 while it is missing. */
@@ -129,7 +130,8 @@ export function buildApp(options: AppOptions): FastifyInstance {
     return record ? reply.send(record) : reply.code(404).send(NOT_FOUND)
   })
 
-  // Report stream (shared/src/report.ts): the assessment first, then the report, then `end`.
+  // Report stream (shared/src/report.ts): the assessment first, then the categories (feature 008),
+  // then `end`. The categories replace the explained report on the result screen.
   app.get<{ Params: { id: string }; Querystring: { intended_use?: string } }>(
     '/api/devices/:id/report',
     { onRequest: hourlyLimit(limits.reportsPerHour) },
@@ -165,10 +167,10 @@ export function buildApp(options: AppOptions): FastifyInstance {
       try {
         const input = await assessments.assessDevice(record, use as IntendedUse)
         send('assessment', input.assessment)
-        stage = 'report'
-        const report = await options.explain?.(record.scan, input)
-        if (report) send('report', report)
-        send('end', { status: report?.source === 'template' ? 'fallback' : 'complete' } satisfies StreamEnd)
+        stage = 'categories'
+        const categories = await options.categorize?.(record.scan, input)
+        if (categories) send('categories', categories)
+        send('end', { status: categories?.source === 'template' ? 'fallback' : 'complete' } satisfies StreamEnd)
       } catch (err) {
         app.log.error({ err: err instanceof Error ? err.message : String(err) }, `${stage} failed`)
         send('error', apiError('internal', `the ${stage} failed`))

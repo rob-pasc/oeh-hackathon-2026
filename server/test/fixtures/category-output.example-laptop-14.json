@@ -1,0 +1,132 @@
+{
+  "categories": [
+    {
+      "category_id": "faster-storage",
+      "label": "Faster storage",
+      "summary": "The slow hard disk is the main thing holding this laptop back.",
+      "options": [
+        {
+          "option_id": "ssd-swap",
+          "title": "Swap the hard disk for a 500 GB SSD",
+          "status": "viable",
+          "reason": "The M.2 slot takes an NVMe SSD, which is much faster than the old hard disk.",
+          "kind": "ssd",
+          "difficulty": "diy_moderate",
+          "why": "Office work mostly waits on the drive. An SSD in the free M.2 slot removes that wait, and the old disk can stay as extra storage.",
+          "claims": [
+            { "text": "The laptop has one M.2 2280 slot for NVMe or SATA SSDs.", "passage_ids": ["ex14-hmm#storage-1"] }
+          ],
+          "estimate": null
+        },
+        {
+          "option_id": "clean-install",
+          "title": "Reinstall the operating system",
+          "status": "conditional",
+          "reason": "A fresh install can remove years of clutter, but it does not fix a slow disk.",
+          "kind": "other",
+          "difficulty": "diy_easy",
+          "why": "Only worth it if the laptop is slow because of old software. Back up your files first.",
+          "claims": [],
+          "estimate": {
+            "cost_eur": { "low": 0, "high": 0 },
+            "useful_life_years": { "low": 0, "high": 1 },
+            "co2e_kg": { "low": 0, "high": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "category_id": "memory",
+      "label": "Memory",
+      "summary": "A second memory module doubles the RAM for many browser tabs.",
+      "options": [
+        {
+          "option_id": "ram-add",
+          "title": "Add an 8 GB DDR4 module",
+          "status": "viable",
+          "reason": "One of the two SO-DIMM slots is free.",
+          "kind": "ram",
+          "difficulty": "diy_moderate",
+          "why": "8 GB gets tight with many tabs and video calls. The free slot takes a second module without removing the first.",
+          "claims": [
+            { "text": "The computer has two SO-DIMM DDR4 slots and supports up to 32 GB.", "passage_ids": ["ex14-hmm#memory-1"] }
+          ],
+          "estimate": null
+        }
+      ]
+    },
+    {
+      "category_id": "battery",
+      "label": "Battery",
+      "summary": "The battery holds 72% of its design capacity.",
+      "options": [
+        {
+          "option_id": "battery-swap",
+          "title": "Replace the battery",
+          "status": "viable",
+          "reason": "The manual calls the battery customer-replaceable, held by two screws.",
+          "kind": "battery",
+          "difficulty": "diy_moderate",
+          "why": "A worn battery shortens time away from the charger. The manual allows the owner to swap it.",
+          "claims": [
+            { "text": "The battery is a customer-replaceable unit secured by two screws.", "passage_ids": ["ex14-hmm#battery-1"] }
+          ],
+          "estimate": null
+        }
+      ]
+    },
+    {
+      "category_id": "graphics",
+      "label": "Graphics",
+      "summary": "The graphics are built into the processor.",
+      "options": [
+        {
+          "option_id": "gpu-add",
+          "title": "Add a graphics card",
+          "status": "not_suitable",
+          "reason": "Laptops of this kind have no slot for a graphics card.",
+          "kind": "other",
+          "difficulty": "professional",
+          "why": "An external graphics enclosure would cost more than the laptop is worth.",
+          "claims": [],
+          "estimate": {
+            "cost_eur": { "low": 200, "high": 400 },
+            "useful_life_years": { "low": 1, "high": 2 },
+            "co2e_kg": { "low": 30, "high": 60 }
+          }
+        }
+      ]
+    },
+    {
+      "category_id": "hand-down",
+      "label": "Hand it down",
+      "summary": "Someone else can keep using it once your data is erased.",
+      "options": [
+        {
+          "option_id": "donate",
+          "title": "Give it to someone who needs a laptop",
+          "status": "viable",
+          "reason": "It still runs a supported operating system and works for office tasks.",
+          "kind": "hand_down",
+          "difficulty": "diy_easy",
+          "why": "Passing it on keeps it in use. Reset it and erase the drive before handing it over.",
+          "claims": [
+            { "text": "Reset the operating system and securely erase all drives before passing it on.", "passage_ids": ["reuse-guide#data-wipe"] }
+          ],
+          "estimate": null
+        },
+        {
+          "option_id": "recycle",
+          "title": "Bring it to an e-waste collection point",
+          "status": "viable",
+          "reason": "Certified collection recovers the materials once the laptop is no longer used.",
+          "kind": "recycle",
+          "difficulty": "diy_easy",
+          "why": "This is the right end only when nobody can use the laptop any more.",
+          "claims": [],
+          "estimate": null
+        }
+      ]
+    }
+  ]
+}

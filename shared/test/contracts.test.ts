@@ -2,6 +2,8 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   Assessment,
+  CategoryResult,
+  checkCategoryResult,
   DeviceScan,
   Fact,
   FactSet,
@@ -44,6 +46,7 @@ describe('fixtures are valid examples', () => {
     ['assessment.example-laptop-14.office.json', validateAssessment, checkAssessment as never],
     ['assessment.example-desktop-unknown.development.json', validateAssessment, checkAssessment as never],
     ['report.example-laptop-14.office.json', validateReport, checkReport as never],
+    ['categories.example-laptop-14.office.json', createValidator(CategoryResult), checkCategoryResult as never],
   ]
   it.each(cases)('%s', (name, validate, check) => {
     const value = fixture(name)
@@ -294,5 +297,53 @@ describe('scan sessions', () => {
     const complete = { type: 'complete', device_id: 'q3Xk9vT2mB7pLw0cZr1sEa' }
     expect(scanner(complete).ok).toBe(false)
     expect(stream(complete).ok).toBe(true)
+  })
+})
+
+describe('CategoryResult (feature 008)', () => {
+  const result = () => clone(fixture<any>('categories.example-laptop-14.office.json'))
+  const baseline = fixture<AssessmentT>('assessment.example-laptop-14.office.json').baseline
+  const validate = createValidator(CategoryResult)
+
+  it('fits the example assessment baseline', () => {
+    expect(checkCategoryResult(result(), baseline)).toEqual([])
+  })
+
+  it.each([
+    ['two categories', (r: any) => (r.categories = r.categories.slice(0, 2))],
+    ['seven categories', (r: any) => (r.categories = [...r.categories, ...r.categories.slice(0, 2)])],
+    ['a 25-character label', (r: any) => (r.categories[0].label = 'x'.repeat(25))],
+    ['a category without options', (r: any) => (r.categories[0].options = [])],
+    ['an unknown kind', (r: any) => (r.categories[0].options[0].kind = 'cpu')],
+    ['three claims', (r: any) => {
+      const claim = r.categories[0].options[0].claims[0]
+      r.categories[0].options[0].claims = [claim, claim, claim]
+    }],
+  ])('rejects %s', (_label, mutate) => {
+    const r = result()
+    mutate(r)
+    expect(validate(r).ok).toBe(false)
+  })
+
+  it.each([
+    ['figures on a not-a-fit option', (r: any) => {
+      const gpu = r.categories.find((c: any) => c.category_id === 'graphics').options[0]
+      const ssd = r.categories[0].options[0]
+      Object.assign(gpu, { impact: ssd.impact, impact_source: 'calculator', scores: ssd.scores })
+    }, 'not_suitable options have no figures'],
+    ['a score without figures', (r: any) => (r.categories[0].options[0].impact = null), 'all set or all null'],
+    ['an AI estimate on a priced kind', (r: any) => (r.categories[0].options[0].impact_source = 'ai_estimate'), 'only AI options of kind other'],
+    ['an AI estimate with high confidence', (r: any) => {
+      const estimate = r.categories[0].options.find((o: any) => o.impact_source === 'ai_estimate')
+      estimate.confidence.level = 'high'
+    }, 'at most medium confidence'],
+    ['low above high', (r: any) => (r.categories[0].options[0].impact.cost_eur = { low: 9, high: 1 }), 'low (9) exceeds high (1)'],
+    ['a claim citing an unknown passage', (r: any) => (r.categories[0].options[0].claims[0].passage_ids = ['nope']), 'unknown passage nope'],
+    ['a duplicate category id', (r: any) => (r.categories[1].category_id = r.categories[0].category_id), 'duplicate category ids'],
+    ['a template result without notice', (r: any) => (r.source = 'template'), 'notice must be set'],
+  ])('flags %s', (_label, mutate, message) => {
+    const r = result()
+    mutate(r)
+    expect(checkCategoryResult(r, baseline).join('\n')).toContain(message)
   })
 })

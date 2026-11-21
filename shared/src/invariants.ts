@@ -6,6 +6,7 @@ import { CRITERIA, type Assessment, type Weights } from './assessment.ts'
 import { notApplicableFields, type DeviceScan } from './device.ts'
 import type { FactSet } from './facts.ts'
 import type { Report } from './report.ts'
+import type { CategoryResult } from './categories.ts'
 import type { Passage } from './retrieval.ts'
 
 /** Whether any value below `value` is null, skipping the dotted paths in `skip`. */
@@ -108,5 +109,47 @@ export function checkReport(report: Report): string[] {
     for (const claim of p.claims)
       for (const id of claim.passage_ids)
         if (!known.has(id)) errors.push(`paths[${p.path}]: claim cites unknown passage ${id}`)
+  return errors
+}
+
+function duplicates(ids: readonly string[]): string[] {
+  return [...new Set(ids.filter((id, i) => ids.indexOf(id) !== i))]
+}
+
+/** Cross-field rules of feature 008 FR-001 to FR-004; `baseline` is the assessment's baseline. */
+export function checkCategoryResult(result: CategoryResult, baseline?: Assessment['baseline']): string[] {
+  const errors = [...result.passages.flatMap(checkPassage)]
+  const known = new Set(result.passages.map((p) => p.passage_id))
+  const dupeCategories = duplicates(result.categories.map((c) => c.category_id))
+  if (dupeCategories.length > 0) errors.push(`duplicate category ids: ${dupeCategories.join(', ')}`)
+  if ((result.source === 'template') !== (result.notice !== null))
+    errors.push('notice must be set exactly when source is template')
+  for (const c of result.categories) {
+    const dupeOptions = duplicates(c.options.map((o) => o.option_id))
+    if (dupeOptions.length > 0) errors.push(`categories[${c.category_id}]: duplicate option ids: ${dupeOptions.join(', ')}`)
+    for (const o of c.options) {
+      const label = `categories[${c.category_id}].options[${o.option_id}]`
+      for (const claim of o.claims)
+        for (const id of claim.passage_ids) if (!known.has(id)) errors.push(`${label}: claim cites unknown passage ${id}`)
+      const figures = [o.impact, o.impact_source, o.scores].filter((v) => v !== null).length
+      if (o.status === 'not_suitable' && figures > 0) errors.push(`${label}: not_suitable options have no figures or scores`)
+      if (figures !== 0 && figures !== 3) errors.push(`${label}: impact, impact_source and scores are all set or all null`)
+      if (o.impact_source === 'ai_estimate' && (o.kind !== 'other' || o.path !== null))
+        errors.push(`${label}: only AI options of kind other carry AI estimates`)
+      if (o.impact_source === 'ai_estimate' && o.confidence.level === 'high')
+        errors.push(`${label}: AI-estimated options have at most medium confidence`)
+      if (!o.impact) continue
+      const { cost_eur, useful_life_years, co2e_kg } = o.impact
+      errors.push(
+        ...checkRange(cost_eur, `${label}.impact.cost_eur`),
+        ...checkRange(useful_life_years, `${label}.impact.useful_life_years`),
+        ...checkRange(co2e_kg.path, `${label}.impact.co2e_kg.path`),
+        ...checkRange(co2e_kg.avoided_vs_baseline, `${label}.impact.co2e_kg.avoided_vs_baseline`),
+      )
+      if (cost_eur.low < 0 || useful_life_years.low < 0) errors.push(`${label}: cost and extra life must not be negative`)
+      if (baseline && (co2e_kg.baseline.low !== baseline.co2e_kg.low || co2e_kg.baseline.high !== baseline.co2e_kg.high))
+        errors.push(`${label}.impact.co2e_kg.baseline must equal the assessment baseline`)
+    }
+  }
   return errors
 }
