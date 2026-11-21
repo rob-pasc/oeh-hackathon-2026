@@ -67,7 +67,7 @@ The top recommendation is a single action today ("Swap the SSD"), but owners nee
 - **Prompt:** Ask for the plan in `server/src/categories/prompt.ts` and bump `CATEGORY_PROMPT_VERSION`.
 - **Server:** A `buildPlan` step after `finishOption` in `server/src/categories/` validates the plan (FR-002, FR-003) and prices it by building a combined feature 003 plan for `calculateImpact` plus the AI ranges (FR-004 to FR-006); `fallback.ts` builds the rule-based plan (FR-009).
 - **Web:** A `PlanCard` above the summary in `web/src/components/ResultsView.tsx`, a `planView` in `web/src/lib/`, the gauge default (FR-008), and a sample plan in the mock data.
-- **Open technical choice:** whether the combined calculator input is a new `PathPlan` variant or a sum of per-step impacts with one baseline credit; decide during implementation, keeping FR-004's outcome.
+- **Decided during implementation:** `server/src/categories/plan.ts` prices the plan as a sum of per-step impacts with one baseline credit: one `calculateImpact` run for the SSD and RAM steps together (the existing upgrade plan), one for a battery step, the AI ranges of `other` steps, and the hand-over for a final `hand_down`, then `avoided()` once over the summed own emissions. No new `PathPlan` variant was needed. Plan steps carry `category_id`, `option_id`, `title` and `kind`; in the fallback, the five-path upgrade option is referenced by both its SSD and RAM steps, so uniqueness is per option and kind.
 
 ## Dependencies and risks
 

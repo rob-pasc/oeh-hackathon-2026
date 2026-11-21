@@ -80,6 +80,40 @@ export const Category = Type.Object(
 )
 export type Category = Static<typeof Category>
 
+/** Plan steps are options; salvage and recycle are never part of a plan (feature 013 FR-003). */
+export const PLAN_STEP_KINDS = ['ssd', 'ram', 'battery', 'other', 'hand_down'] as const satisfies readonly OptionKind[]
+export const PLAN_MAX_STEPS = 6
+
+export const PlanStep = Type.Object(
+  {
+    category_id: Slug,
+    option_id: Slug,
+    title: Type.String({ minLength: 1, maxLength: 80 }),
+    kind: Type.Enum(PLAN_STEP_KINDS),
+  },
+  {
+    ...strict,
+    description:
+      'Refers to an option of the result. In the five-path fallback, the upgrade option is split into its ssd and ram steps, so one option can appear once per kind',
+  },
+)
+export type PlanStep = Static<typeof PlanStep>
+
+/**
+ * The combined top recommendation (feature 013): Good fit options in order, at most one hand_down
+ * step and only last, priced as one plan with the baseline credited once (FR-004). Not scored.
+ */
+export const Plan = Type.Object(
+  {
+    summary: Type.String({ minLength: 1, description: 'One sentence' }),
+    steps: Type.Array(PlanStep, { minItems: 2, maxItems: PLAN_MAX_STEPS }),
+    impact: Impact,
+    impact_source: Type.Enum(['calculator', 'ai_estimate'], { description: 'ai_estimate when any step has AI-estimated figures (FR-006)' }),
+  },
+  strict,
+)
+export type Plan = Static<typeof Plan>
+
 export const CategoryResult = Type.Object(
   {
     device_id: DeviceId,
@@ -89,6 +123,8 @@ export const CategoryResult = Type.Object(
     notice: Nullable(Type.String({ description: 'Shown when source is template: "AI explanation unavailable"' })),
     categories: Type.Array(Category, { minItems: 3, maxItems: 6 }),
     passages: Type.Array(Passage, { description: 'Every passage cited by any option claim' }),
+    // Optional rather than nullable, so results without a plan (older servers, cached payloads) stay valid.
+    plan: Type.Optional(Plan),
   },
   strict,
 )

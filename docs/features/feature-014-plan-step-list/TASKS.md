@@ -26,3 +26,4 @@ None yet.
 ## Lifecycle history
 
 - 2026-11-21: Specified after the user accepted the scope (see the plan's scope change log).
+- 2026-11-21: Readiness checked (no blockers besides those listed); the user asked to implement features 013 and 014. Starts after feature 013.
