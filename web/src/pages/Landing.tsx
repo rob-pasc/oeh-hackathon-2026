@@ -25,12 +25,46 @@ const STEPS = [
   },
 ] as const
 
-const LINK_BUTTON = 'cursor-pointer border-0 bg-transparent p-0 font-semibold text-leaf underline underline-offset-2 disabled:cursor-wait'
+// Small secondary download buttons for the other systems: they stay quiet next to the big button.
+const OTHER_BUTTON =
+  'inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-leaf-soft bg-white px-4 py-1.5 text-sm font-semibold text-leaf-deep transition-colors hover:border-leaf hover:bg-leaf-tint disabled:cursor-wait disabled:opacity-60'
+
+// Words in the run steps that get a style: commands and file names as code, buttons and menu names in bold.
+const STEP_MARKUP = /(leaaf-scanner\.exe|chmod \+x leaaf-scanner|More info|Run anyway|Start scan|Open Anyway|System Settings|Privacy & Security|X11|Wayland)/
+const STEP_CODE = /^(leaaf-scanner\.exe|chmod \+x leaaf-scanner)$/
+
+function StepText({ text }: { text: string }) {
+  // `split` with a capture group puts every match at an odd index.
+  return (
+    <>
+      {text.split(STEP_MARKUP).map((part, index) => {
+        if (index % 2 === 0) return part
+        return STEP_CODE.test(part) ? (
+          <code key={index} className="rounded-md bg-track px-1.5 py-0.5 font-mono text-[13px] whitespace-nowrap text-ink">
+            {part}
+          </code>
+        ) : (
+          <strong key={index} className="font-semibold text-ink">
+            {part}
+          </strong>
+        )
+      })}
+    </>
+  )
+}
+
+function DownloadIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="h-4 w-4">
+      <path d="M12 4v11M7 11l5 5 5-5M5 20h14" />
+    </svg>
+  )
+}
 
 export function Landing() {
   const api = useApi()
   const [detected] = useState<OsFamily | null>(() => (typeof navigator === 'undefined' ? null : detectOs(navigator)))
-  // The system whose steps are shown: the detected one, or the last one the visitor chose.
+  // The system whose steps are shown: the detected one, or the one the visitor picked in the steps card or downloaded.
   const [shown, setShown] = useState<OsFamily | null>(detected)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -129,17 +163,15 @@ export function Landing() {
                 <span className="text-sm text-muted">
                   Scanner for {PLATFORMS[detected].label}. Opens a new tab and downloads a small scanner.
                 </span>
-                <span className="text-sm text-muted">
-                  Other systems:{' '}
-                  {others.map((os, i) => (
-                    <span key={os}>
-                      {i > 0 ? ' · ' : null}
-                      <button type="button" onClick={() => startScan(os)} disabled={busy} className={LINK_BUTTON}>
-                        {PLATFORMS[os].label}
-                      </button>
-                    </span>
+                <div role="group" aria-label="Download for another system" className="flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-sm text-muted">Other systems</span>
+                  {others.map((os) => (
+                    <button key={os} type="button" onClick={() => startScan(os)} disabled={busy} className={OTHER_BUTTON}>
+                      {PLATFORMS[os].label}
+                      <DownloadIcon />
+                    </button>
                   ))}
-                </span>
+                </div>
               </>
             ) : (
               <>
@@ -160,11 +192,50 @@ export function Landing() {
               </>
             )}
             {platform ? (
-              <section aria-label={`How to run the scanner on ${platform.label}`} className="max-w-[580px] text-left text-sm text-muted">
-                <h3 className="m-0 mb-1 text-center text-sm font-semibold text-ink">How to run it on {platform.label}</h3>
-                <ol className="m-0 pl-5">
-                  {platform.steps.map((step) => (
-                    <li key={step}>{step}</li>
+              <section
+                aria-label={`How to run the scanner on ${platform.label}`}
+                id="run-steps"
+                className="mt-2 w-full max-w-[580px] rounded-2xl bg-white p-5 text-left shadow-card sm:p-6"
+              >
+                {/* Choosing a system here only changes what is shown; nothing is downloaded. */}
+                <div role="tablist" aria-label="Show the steps for" className="mb-4 inline-flex gap-1 rounded-full bg-track p-1">
+                  {PLATFORM_ORDER.map((os) => (
+                    <button
+                      key={os}
+                      type="button"
+                      role="tab"
+                      aria-selected={shown === os}
+                      aria-controls="run-steps"
+                      onClick={() => setShown(os)}
+                      className={`cursor-pointer rounded-full border-0 px-4 py-1.5 text-sm font-semibold transition-colors ${
+                        shown === os ? 'bg-leaf text-white' : 'bg-transparent text-muted hover:text-ink'
+                      }`}
+                    >
+                      {PLATFORMS[os].label}
+                    </button>
+                  ))}
+                </div>
+                <h3 className="m-0 mb-4 flex items-center gap-2 text-base font-bold text-ink">
+                  <span aria-hidden="true" className="flex h-7 w-7 items-center justify-center rounded-lg bg-leaf-tint text-leaf">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <path d="M5 4l14 8-14 8z" />
+                    </svg>
+                  </span>
+                  How to run it on {platform.label}
+                </h3>
+                <ol className="m-0 flex list-none flex-col gap-3 p-0">
+                  {platform.steps.map((step, index) => (
+                    <li key={step} className="flex items-start gap-3">
+                      <span
+                        aria-hidden="true"
+                        className="mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-leaf text-xs font-bold text-white"
+                      >
+                        {index + 1}
+                      </span>
+                      <span className="text-sm leading-relaxed text-muted">
+                        <StepText text={step} />
+                      </span>
+                    </li>
                   ))}
                 </ol>
               </section>

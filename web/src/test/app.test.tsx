@@ -88,9 +88,9 @@ describe('Landing', () => {
   })
 
   it.each([
-    ['macos', 'Mac', /Open Anyway/, /No password is needed/, 'Windows · Linux'],
-    ['linux', 'Linux', /chmod \+x leaaf-scanner/, /Your password lets it also read memory type/, 'Windows · Mac'],
-    ['windows', 'Windows', /SmartScreen/, /Windows asks for administrator access/, 'Mac · Linux'],
+    ['macos', 'Mac', /Open Anyway/, /No password is needed/, ['Windows', 'Linux']],
+    ['linux', 'Linux', /chmod \+x leaaf-scanner/, /Your password lets it also read memory type/, ['Windows', 'Mac']],
+    ['windows', 'Windows', /SmartScreen/, /Windows asks for administrator access/, ['Mac', 'Linux']],
   ] as const)('offers the %s scanner with its steps and disclosure (feature 007 FR-013, FR-014)', async (os, label, step, reads, others) => {
     useAgent(UA[os])
     render(withApi(<Landing />))
@@ -98,7 +98,18 @@ describe('Landing', () => {
     expect(screen.getByRole('region', { name: `How to run the scanner on ${label}` })).toHaveTextContent(step)
     await userEvent.click(screen.getByText('What does the scanner collect?'))
     expect(screen.getByText(reads)).toBeInTheDocument()
-    expect(screen.getByText(/Other systems:/)).toHaveTextContent(`Other systems: ${others}`)
+    const other = within(screen.getByRole('group', { name: 'Download for another system' }))
+    expect(other.getAllByRole('button').map((button) => button.textContent)).toEqual(others)
+  })
+
+  it('shows the run steps as a numbered card with commands and button names set apart (feature 006 FR-047)', () => {
+    useAgent(UA.linux)
+    render(withApi(<Landing />))
+    const card = screen.getByRole('region', { name: 'How to run the scanner on Linux' })
+    expect(within(card).getAllByRole('listitem')).toHaveLength(3)
+    expect(within(card).getByText('chmod +x leaaf-scanner').tagName).toBe('CODE')
+    expect(within(card).getByText('Start scan').tagName).toBe('STRONG')
+    expect(within(card).getByRole('heading', { name: 'How to run it on Linux' })).toBeInTheDocument()
   })
 
   it('asks the API for the system that was chosen', async () => {
@@ -112,6 +123,24 @@ describe('Landing', () => {
     await waitFor(() => expect(create).toHaveBeenLastCalledWith('linux'))
     // Choosing another system shows its steps.
     expect(screen.getByRole('region', { name: 'How to run the scanner on Linux' })).toBeInTheDocument()
+  })
+
+  it('lets the visitor read the steps of another system before downloading anything (feature 006 FR-048)', async () => {
+    useAgent(UA.windows)
+    const create = vi.spyOn(fast, 'createScanSession')
+    const open = vi.spyOn(window, 'open')
+    render(withApi(<Landing />))
+    const tabs = within(screen.getByRole('tablist', { name: 'Show the steps for' }))
+    expect(tabs.getByRole('tab', { name: 'Windows' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('region', { name: 'How to run the scanner on Windows' })).toBeInTheDocument()
+
+    await userEvent.click(tabs.getByRole('tab', { name: 'Linux' }))
+    expect(tabs.getByRole('tab', { name: 'Linux' })).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByRole('region', { name: 'How to run the scanner on Linux' })).toHaveTextContent(/chmod \+x leaaf-scanner/)
+    expect(create).not.toHaveBeenCalled()
+    expect(open).not.toHaveBeenCalled()
+    // The main button still downloads the detected system.
+    expect(screen.getByText('Scanner for Windows. Opens a new tab and downloads a small scanner.')).toBeInTheDocument()
   })
 
   it('offers all three downloads on a phone', async () => {
