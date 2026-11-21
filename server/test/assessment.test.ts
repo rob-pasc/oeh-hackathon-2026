@@ -191,6 +191,36 @@ describe('gates', () => {
   })
 })
 
+describe('Mac and Linux devices (feature 007 FR-015, FR-016)', () => {
+  const unsupported = withFacts(laptopFacts, { key: 'windows11_supported_cpu', value: false, source_passage_ids: ['os-cpu-list#intel-8th-gen'] })
+  const supported = withFacts(laptopFacts, { key: 'windows11_supported_cpu', value: true, source_passage_ids: ['os-cpu-list#intel-8th-gen'] })
+  const onSystem = (family: 'macos' | 'linux' | 'windows') => scanWith(laptop, { os: { family } })
+
+  it.each(['macos', 'linux'] as const)('ignores Windows 11 support on %s', (family) => {
+    const a = run({ scan: onSystem(family), facts: unsupported })
+    const texts = a.paths.flatMap((p) => p.reasons.map((r) => r.text))
+    expect(texts.filter((t) => /windows/i.test(t))).toEqual([])
+    // Upgrade and repair are assessed as if the CPU list did not exist.
+    const reference = run({ scan: onSystem(family), facts: supported })
+    for (const path of ['upgrade', 'repair'] as const) expect(pathOf(a, path).status).toBe(pathOf(reference, path).status)
+    expect(pathOf(a, 'upgrade').reasons.map((r) => r.code)).not.toContain('os_unsupported')
+    const passOn = pathOf(a, 'pass_on')
+    expect(passOn.status).toBe('conditional')
+    expect(passOn.reasons[0]).toMatchObject({ code: 'cannot_verify_os_support' })
+    expect(passOn.reasons[0]!.text).toMatch(family === 'macos' ? /security updates for macOS/ : /security updates for its Linux distribution/)
+  })
+
+  it('assesses Windows devices and devices without a system name exactly as before', () => {
+    const noFamily = structuredClone(laptop)
+    delete noFamily.os.family
+    for (const facts of [unsupported, supported, laptopFacts]) {
+      const before = run({ scan: noFamily, facts })
+      expect(run({ scan: onSystem('windows'), facts })).toEqual(before)
+    }
+    expect(pathOf(run({ scan: noFamily, facts: unsupported }), 'pass_on').status).toBe('not_suitable')
+  })
+})
+
 describe('calculator', () => {
   it('outputs ranges with the baseline for every viable or conditional path (AC-008)', () => {
     const a = run()

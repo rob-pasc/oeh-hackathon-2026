@@ -6,7 +6,7 @@
 // for that exact model. Ranking is keyword-only by decision (PLAN.md, T-002): the corpus is
 // small and the metadata filter does most of the work.
 import { DatabaseSync } from 'node:sqlite'
-import { PATHS, type DeviceScan, type ModelMatch, type Passage, type Path, type RetrievalResult } from '@leaaf/shared'
+import { PATHS, usesWindowsRules, type DeviceScan, type ModelMatch, type Passage, type Path, type RetrievalResult } from '@leaaf/shared'
 import { INDEX_SCHEMA_VERSION } from './ingest.ts'
 import { createModelMatcher, type ModelMatcher } from './normalize.ts'
 
@@ -46,6 +46,7 @@ const WINDOWS_11_TERMS = ['windows 11', 'supported processors', 'upgrade to wind
 const WINDOWS_11_DEVICE: Facet = { name: 'windows-11-device', terms: WINDOWS_11_TERMS, device: true, topics: ['software-support'] }
 /** General Windows 11 requirements, for any device. */
 const WINDOWS_11: Facet = { name: 'windows-11', terms: WINDOWS_11_TERMS, topics: ['software-support'] }
+const WINDOWS_11_FACETS: ReadonlySet<Facet> = new Set([WINDOWS_11_DEVICE, WINDOWS_11])
 
 /** Path-specific queries (FR-008). Changing them changes which passages each path cites. */
 export const PATH_QUERIES: Record<Path, PathQuery> = {
@@ -252,7 +253,9 @@ export function createRetriever(db: DatabaseSync): Retriever {
 
   /** Takes the best unused passage of each facet in turn until k passages are chosen. */
   function forPath(path: Path, scan: DeviceScan, model: ModelMatch | null, k: number): Passage[] {
-    const { topics, facets } = PATH_QUERIES[path]
+    const { topics } = PATH_QUERIES[path]
+    // Macs and Linux machines do not depend on Windows 11 support (feature 007 FR-015).
+    const facets = PATH_QUERIES[path].facets.filter((f) => usesWindowsRules(scan) || !WINDOWS_11_FACETS.has(f))
     const ranked = facets.map((f) => facetRows(f, f.topics?.filter((t) => topics.includes(t)) ?? topics, scan, model))
     const chosen = new Map<string, Row>()
     for (let depth = 0; chosen.size < k && ranked.some((rows) => rows.length > depth); depth++)

@@ -1,5 +1,5 @@
 import type { DatabaseSync } from 'node:sqlite'
-import { createValidator, PATHS, type DeviceScan, type Report } from '@leaaf/shared'
+import { createValidator, PATHS, usesWindowsRules, type DeviceScan, type Report } from '@leaaf/shared'
 import type { Static } from 'typebox'
 import type { DeviceAssessment } from '../assessment/service.ts'
 import { templateReport } from './template.ts'
@@ -27,20 +27,26 @@ function hasNoFigure(text: string): boolean {
 // citation cannot establish which baseline the calculator credited for this device.
 const calculatorClaim = /\b(?:displacement|credited baseline|avoided purchase|(?:avoid|displace)s? (?:a |the )?new purchase|calculat(?:or|ed) (?:output|impact|estimate)|(?:emissions|impact) estimate (?:in|from) (?:this|the|our) (?:data|table|calculator))\b/i
 
-function makeReport({ assessment, retrieval }: DeviceAssessment, output: Output, generated_at: string): Report {
+// A Mac or Linux report must not say a CPU is or is not supported by Windows 11 (feature 007
+// FR-015); the prompt asks for that, and this removes any text that still does.
+const windows11 = /\bwindows\s*11\b/iu
+
+function makeReport({ assessment, retrieval }: DeviceAssessment, output: Output, generated_at: string, scan: DeviceScan): Report {
   const sources = new Map(Object.values(retrieval.passages_by_path).flat().map(p => [p.passage_id, p]))
   const cited = new Set<string>()
+  const windows = usesWindowsRules(scan)
+  const allowed = (text: string) => hasNoFigure(text) && (windows || !windows11.test(text))
   const paths = PATHS.map(path => {
     const p = output.paths[path]
-    const claims = p.claims.filter(c => !calculatorClaim.test(c.text) && hasNoFigure(c.text) && c.passage_ids.every(id => sources.has(id)))
+    const claims = p.claims.filter(c => !calculatorClaim.test(c.text) && allowed(c.text) && c.passage_ids.every(id => sources.has(id)))
     for (const claim of claims) for (const id of claim.passage_ids) cited.add(id)
     const neutral = 'See the assessed status and impact ranges for this path.'
     return {
       path, claims,
-      summary: hasNoFigure(p.summary) ? p.summary : neutral,
-      why: hasNoFigure(p.why) ? p.why : neutral,
-      next_steps: p.next_steps.filter(hasNoFigure), safety: p.safety.filter(hasNoFigure),
-      assumptions: p.assumptions.filter(hasNoFigure), unverified: p.unverified.filter(hasNoFigure),
+      summary: allowed(p.summary) ? p.summary : neutral,
+      why: allowed(p.why) ? p.why : neutral,
+      next_steps: p.next_steps.filter(allowed), safety: p.safety.filter(allowed),
+      assumptions: p.assumptions.filter(allowed), unverified: p.unverified.filter(allowed),
     }
   })
   return {
@@ -63,7 +69,7 @@ export function createReportService(db: DatabaseSync, llm: LlmClient | null) {
     if (row) {
       const cached = JSON.parse(String(row.output))
       const checked = validateOutput(cached?.version === PROMPT_VERSION ? cached.explanation : null)
-      if (checked.ok) return makeReport(input, checked.value, String(row.generated_at))
+      if (checked.ok) return makeReport(input, checked.value, String(row.generated_at), scan)
     }
 
     if (!llm) return templateReport(input)
@@ -79,7 +85,7 @@ export function createReportService(db: DatabaseSync, llm: LlmClient | null) {
     }
     try {
       const { output, generated_at } = await generation
-      return makeReport(input, output, generated_at)
+      return makeReport(input, output, generated_at, scan)
     } catch (error) {
       if (error instanceof LlmError) return templateReport(input)
       throw error

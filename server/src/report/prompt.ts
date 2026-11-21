@@ -16,7 +16,8 @@ Do not infer that an owner can replace a battery from removal instructions. Dist
 Model-wide options do not establish which connector or part is installed in this unit. Qualify fit until the scan and sources identify the installed configuration.
 Keep technical claims exclusively in claims, citing supporting passage_ids exactly as supplied.
 Keep each field brief. Use at most two concise claims per path. A claim must be directly supported by the cited excerpt. Keep calculator estimates and displacement assumptions out of claims; collection and take-back sources do not establish emissions or avoided purchases. Use the other fields for a short summary, next steps, rationale, assumptions, safety, and what could not be verified.
-Never invent compatibility, recommend hazardous self-repair, or include numeric euro or CO₂e figures in explanation text.`
+Never invent compatibility, recommend hazardous self-repair, or include numeric euro or CO₂e figures in explanation text.
+When scan.os.family is "macos" or "linux", do not discuss Windows 11 or Microsoft's processor list.`
 
 export function buildExplanationRequest(
   scan: DeviceScan,

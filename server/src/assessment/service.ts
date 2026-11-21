@@ -1,7 +1,7 @@
 // Runs one assessment end to end (feature 003 T-007): retrieval, cached fact extraction, then the
 // pure assess(). Unlike the rest of this folder it has side effects (index reads, LLM calls), so the
 // route stays thin and tests can swap each dependency.
-import type { Assessment, DeviceRecord, FactSet, IntendedUse, RetrievalResult } from '@leaaf/shared'
+import { usesWindowsRules, type Assessment, type DeviceRecord, type FactSet, type IntendedUse, type RetrievalResult } from '@leaaf/shared'
 import { factModel, type FactExtractor } from '../facts/index.ts'
 import type { ImpactTable } from '../impact/table.ts'
 import { LlmError } from '../llm/index.ts'
@@ -35,7 +35,7 @@ export function createAssessmentService(deps: AssessmentServiceDeps): Assessment
   return {
     async assessDevice(record, use) {
       const retrieval = deps.retriever.retrieve(record.scan)
-      const facts = await extractFacts(record, retrieval)
+      const facts = withoutWindowsFacts(record.scan, await extractFacts(record, retrieval))
       const assessment = assess({
         deviceId: record.device_id,
         scan: record.scan,
@@ -48,6 +48,15 @@ export function createAssessmentService(deps: AssessmentServiceDeps): Assessment
       })
       return { assessment, retrieval, facts }
     },
+  }
+
+  /**
+   * Generic passages can still mention Microsoft's CPU list, so a Mac or Linux device drops that
+   * fact before the gates and the explanation see it (feature 007 FR-015).
+   */
+  function withoutWindowsFacts(scan: DeviceRecord['scan'], set: FactSet): FactSet {
+    if (usesWindowsRules(scan)) return set
+    return { ...set, facts: set.facts.filter((f) => f.key !== 'windows11_supported_cpu') }
   }
 
   /**

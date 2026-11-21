@@ -170,6 +170,15 @@ export const DeviceScan = Type.Object(
 export type DeviceScan = Static<typeof DeviceScan>
 
 /**
+ * Whether the Windows 11 rules apply (feature 007 FR-015, FR-016): Windows scans, and scans from
+ * before feature 007 that do not name their system. A Mac or Linux machine does not depend on
+ * Microsoft's CPU list, so the assessment neither credits nor penalizes it for that list.
+ */
+export function usesWindowsRules(scan: Pick<DeviceScan, 'os'>): boolean {
+  return scan.os.family === undefined || scan.os.family === 'windows'
+}
+
+/**
  * Fields that do not exist on the scanned system (feature 007 FR-018), as dotted paths. They are
  * always null there and do not make a scan partial. Windows scans and scans without
  * `os.family` have none, so feature 001 FR-004 is unchanged for them. The Go scanner mirrors

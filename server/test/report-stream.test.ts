@@ -86,6 +86,20 @@ function service(llm: LlmClient | null, warnings: string[] = []) {
 }
 
 describe('assessment service', () => {
+  it('drops a Windows 11 fact for a Mac or Linux device before assessing it (feature 007 FR-015)', async () => {
+    for (const family of ['macos', 'linux', 'windows'] as const) {
+      const { llm } = fakeLlm({
+        facts: (ids) => [{ key: 'windows11_supported_cpu', value: false, source_passage_ids: [ids[0]!] } as Fact],
+      })
+      const scan = { ...acmeScan, os: { ...acmeScan.os, family } }
+      const { facts, assessment } = await service(llm).assessDevice(record(scan), 'office')
+      const kept = facts.facts.some((f) => f.key === 'windows11_supported_cpu')
+      expect(kept).toBe(family === 'windows')
+      const passOn = assessment.paths.find((p) => p.path === 'pass_on')!
+      expect(passOn.status).toBe(family === 'windows' ? 'not_suitable' : 'conditional')
+    }
+  })
+
   it('assesses a matched model with the facts extracted from its retrieved passages', async () => {
     const { llm, calls } = fakeLlm({
       facts: (ids) => [{ key: 'ram_soldered', value: 'all', source_passage_ids: [ids[0]!] } as Fact],
