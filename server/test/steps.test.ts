@@ -7,7 +7,10 @@ import {
   API_ROUTES,
   checkStepPlan,
   createValidator,
+  MAX_PLAN_STEPS,
   OPTION_KINDS,
+  PLAN_STEPS_ID,
+  PlanStepList,
   StepPlan,
   type CategoryResult,
   type DeviceRecord,
@@ -28,6 +31,10 @@ import { createSqliteSessionStore } from '../src/sessions/store.ts'
 import {
   CONCRETE_RULE,
   createStepService,
+  joinedTemplates,
+  PLAN_STEP_SYSTEM,
+  PlanStepsOutput,
+  SHARED_STEPS_RULE,
   DEFAULT_WARNING,
   optionQuery,
   PROFESSIONAL_SENTENCE,
@@ -390,5 +397,150 @@ describe('GET /api/devices/:id/options/:optionId/steps', () => {
     const server = buildApp({ devices, sessions: createSqliteSessionStore(db), publicBaseUrl: 'https://leaaf.example' })
     const res = await server.inject({ method: 'GET', url: API_ROUTES.optionSteps(devices.create(acmeScan).device_id, 'ssd-swap', 'office') })
     expect(res.statusCode).toBe(500)
+  })
+})
+
+describe('one step list for the plan (feature 014)', () => {
+  const isList = createValidator(PlanStepList)
+  const isPlanOutput = createValidator(PlanStepsOutput)
+  const plan = sampleCategories.plan!
+  const validList = (list: unknown) => {
+    expect(list).not.toBeNull()
+    expect(isList(list).ok).toBe(true)
+    expect(checkStepPlan(list as StepPlanT)).toEqual([])
+    return list as StepPlanT
+  }
+  const noPlan = (scan: DeviceScan, input: DeviceAssessment) => {
+    const { plan: _plan, ...rest } = aiCategories(scan, input)
+    return rest
+  }
+
+  it('sends the plan’s options in order with the passages of all of them and the shared-steps rule (AC-003)', async () => {
+    const { steps, completeJson } = setup()
+    const list = validList(await steps.planSteps(record(), 'office'))
+    expect(list).toMatchObject({ option_id: PLAN_STEPS_ID, source: 'llm', notice: null })
+    const request = completeJson.mock.calls[0]![0]
+    expect(request.task).toBe('steps')
+    expect(request.system).toBe(PLAN_STEP_SYSTEM)
+    expect(request.system).toContain(SHARED_STEPS_RULE)
+    expect(request.system).toContain(CONCRETE_RULE)
+    for (const rule of SAFETY_RULES) expect(request.system).toContain(rule)
+    const user = JSON.parse(request.user)
+    expect(user.plan.summary).toBe(plan.summary)
+    expect(user.plan.options.map((o: { title: string; kind: string }) => [o.title, o.kind])).toEqual(plan.steps.map((s) => [s.title, s.kind]))
+    const ids: string[] = user.passages.map((p: Passage) => p.passage_id)
+    expect(new Set(ids).size).toBe(ids.length)
+    // The SSD step's own manual passage and the RAM step's category claim are both supplied.
+    expect(ids).toContain('acme-book14-manual#storage-drive-1')
+    const ramClaims = sampleCategories.categories.flatMap((c) => c.options).find((o) => o.option_id === 'ram-add')!.claims.flatMap((c) => c.passage_ids)
+    for (const id of ramClaims) expect(ids).toContain(id)
+    expect(request.user).not.toContain(DEVICE_ID)
+  })
+
+  it('makes one call per device, use and plan, and asks again for a changed plan (AC-001)', async () => {
+    const { db, completeJson, llm, make, steps } = setup()
+    const [first, second] = await Promise.all([steps.planSteps(record(), 'office'), steps.planSteps(record(), 'office')])
+    expect(second).toEqual(first)
+    expect(await make(llm).planSteps(record(), 'office')).toEqual(first)
+    expect(await make(null).planSteps(record(), 'office')).toEqual(first)
+    expect(completeJson).toHaveBeenCalledTimes(1)
+    // A single option's plan is cached apart from the plan list.
+    await steps(record(), 'office', 'ssd-swap')
+    expect(completeJson).toHaveBeenCalledTimes(2)
+
+    const reordered = (scan: DeviceScan, input: DeviceAssessment) => {
+      const result = aiCategories(scan, input)
+      result.plan!.steps = [...result.plan!.steps].reverse()
+      return result
+    }
+    await createStepService(db, llm, { retriever, assessments, shownCategories: reordered }).planSteps(record(), 'office')
+    expect(completeJson).toHaveBeenCalledTimes(3)
+  })
+
+  it('answers null without a call when the shown result has no plan (AC-001)', async () => {
+    const { steps, completeJson } = setup({ shown: noPlan })
+    expect(await steps.planSteps(record(), 'office')).toBeNull()
+    expect(completeJson).not.toHaveBeenCalled()
+  })
+
+  it('accepts up to 16 steps for a plan while a single option keeps 12 (AC-002)', () => {
+    const one = answer().steps[0]
+    const output = (n: number) => ({ steps: Array.from({ length: n }, () => one) })
+    expect(MAX_PLAN_STEPS).toBe(16)
+    expect(isPlanOutput(output(16)).ok).toBe(true)
+    expect(isPlanOutput(output(17)).ok).toBe(false)
+    expect(isOutput(output(13)).ok).toBe(false)
+    const list = (n: number) => ({ device_id: DEVICE_ID, intended_use: 'office', option_id: PLAN_STEPS_ID, generated_at: '2026-11-21T12:00:00Z', source: 'llm', notice: null, steps: Array.from({ length: n }, () => ({ ...one, passage_ids: [] , kind: 'general' })), passages: [] })
+    expect(isList(list(16)).ok).toBe(true)
+    expect(isList(list(17)).ok).toBe(false)
+  })
+
+  it('applies the step checks: unknown citations and uncited technical steps go, figures reject the answer (AC-004)', async () => {
+    const { steps, completeJson } = setup()
+    const output = answer()
+    output.steps[0].passage_ids = ['nope#1']
+    output.steps[0].kind = 'technical'
+    output.steps[1].passage_ids = ['nope#2']
+    output.steps[1].kind = 'general'
+    completeJson.mockResolvedValueOnce({ value: output, model: 'fake', attempts: 1, latency_ms: 1, usage: { prompt_tokens: 1, completion_tokens: 1 } })
+    const list = validList(await steps.planSteps(record(), 'office'))
+    expect(list.steps.map((s) => s.title)).not.toContain(output.steps[0].title)
+    expect(list.steps.find((s) => s.title === output.steps[1].title)!.passage_ids).toEqual([])
+
+    const { steps: steps2, completeJson: call2 } = setup()
+    const figure = answer()
+    figure.steps[0].detail = 'This costs 40 € in total.'
+    call2.mockResolvedValueOnce({ value: figure, model: 'fake', attempts: 1, latency_ms: 1, usage: { prompt_tokens: 1, completion_tokens: 1 } })
+    expect(validList(await steps2.planSteps(record(), 'office')).source).toBe('template')
+  })
+
+  it('joins the steps’ template plans without repeated titles, at most 16, with the notice (AC-006)', async () => {
+    const { steps, warnings } = setup({ llm: null })
+    const list = validList(await steps.planSteps(record(), 'office'))
+    expect(list).toMatchObject({ source: 'template', notice: STEPS_UNAVAILABLE })
+    const expected = [...new Set(plan.steps.flatMap((s) => TEMPLATE_STEPS[s.kind].map((t) => t.title)))].slice(0, MAX_PLAN_STEPS)
+    expect(list.steps.map((s) => s.title)).toEqual(expected)
+    expect(new Set(list.steps.map((s) => s.title)).size).toBe(list.steps.length)
+    expect(warnings).toEqual([expect.stringContaining('no LLM configured')])
+    // Many steps are cut at 16.
+    expect(joinedTemplates(['ssd', 'ram', 'battery', 'other', 'hand_down', 'salvage'], []).length).toBeLessThanOrEqual(MAX_PLAN_STEPS)
+  })
+
+  it('uses the joined templates for the fallback plan without a provider call (AC-006)', async () => {
+    const fallbackWithPlan = (scan: DeviceScan, input: DeviceAssessment): CategoryResult => ({
+      ...fallbackCategories(input),
+      plan: {
+        summary: 'From the assessment.',
+        steps: [
+          { category_id: 'upgrade', option_id: 'upgrade', title: 'Install a 500 GB NVMe M.2 SSD', kind: 'ssd' },
+          { category_id: 'repair', option_id: 'repair', title: 'Replace the battery', kind: 'battery' },
+        ],
+        impact: fallbackCategories(input).categories[0]!.options[0]!.impact!,
+        impact_source: 'calculator',
+      },
+    })
+    const { steps, completeJson } = setup({ shown: fallbackWithPlan })
+    const list = validList(await steps.planSteps(record(), 'office'))
+    expect(list.source).toBe('template')
+    expect(list.steps.map((s) => s.title)).toEqual(joinedTemplates(['ssd', 'battery'], []).map((s) => s.title))
+    expect(completeJson).not.toHaveBeenCalled()
+  })
+
+  it('serves the list at GET /api/devices/:id/plan/steps, and 404 without a plan', async () => {
+    const db = new DatabaseSync(':memory:')
+    databases.push(db)
+    const devices = createSqliteDeviceStore(db)
+    const device = devices.create(acmeScan)
+    const withPlan = buildApp({ devices, sessions: createSqliteSessionStore(db), steps: setup().steps, publicBaseUrl: 'https://leaaf.example' })
+    const res = await withPlan.inject({ method: 'GET', url: API_ROUTES.planSteps(device.device_id, 'office') })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['cache-control']).toBe('no-store')
+    validList(res.json())
+    expect((await withPlan.inject({ method: 'GET', url: `/api/devices/${device.device_id}/plan/steps?intended_use=mining` })).statusCode).toBe(400)
+
+    const without = buildApp({ devices, sessions: createSqliteSessionStore(db), steps: setup({ shown: noPlan }).steps, publicBaseUrl: 'https://leaaf.example' })
+    const none = await without.inject({ method: 'GET', url: API_ROUTES.planSteps(device.device_id, 'office') })
+    expect(none.statusCode).toBe(404)
+    expect(none.json()).toMatchObject({ error: 'not_found' })
   })
 })

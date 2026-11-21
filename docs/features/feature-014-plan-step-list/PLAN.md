@@ -57,7 +57,7 @@ Opening the "Your plan" card of [feature 013](../feature-013-combined-plan-card/
 - **Server:** Reuse `server/src/steps/` (prompt, checks, cache, templates) with a plan variant: a new route such as `/api/devices/:id/plan/steps?intended_use=…`, a cache key from the plan's option IDs and order, and `MAX_PLAN_STEPS = 16`. Retrieval merges the passages of each option (`retrieveOption`).
 - **Contract:** Allow a step plan of up to 16 steps for plans while single options keep 12 (`shared/src/steps.ts`).
 - **Web:** Reuse `StepList` and `useStepPlans` for the plan card.
-- **Open technical choice:** a separate cache table or the existing `step_cache` with a plan key; decide during implementation.
+- **Decided during implementation:** the existing `step_cache` holds the plan list under the option ID `#plan` (not a valid option slug, so it never collides with an option); the cache key hashes the plan prompt, the summary and every step's option fields in order. The contract is a separate `PlanStepList` (same shape as `StepPlan`, `option_id` `#plan`, up to 16 steps), so single-option plans keep their 12-step limit. The call uses the `steps` task and its timeout (`LLM_STEP_TIMEOUT_MS`); a timeout falls back to the joined templates. In the fallback, each plan step keeps its own kind and title, so the one upgrade option yields both the SSD and the RAM template.
 
 ## Dependencies and risks
 
