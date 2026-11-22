@@ -8,6 +8,10 @@ export interface SearchQuery {
   maxResults: number
   /** Page text characters to ask for per result. */
   maxChars: number
+  /** Only results from these domains and their subdomains (feature 019 FR-003). Callers still check hosts themselves. */
+  includeDomains?: readonly string[]
+  /** Country (ISO 3166-1 alpha-2) and language (ISO 639-1) of the results; providers without such a setting ignore it. */
+  locale?: { country: string; language: string }
   /**
    * Whether a hit is usable for the caller (for example: names the exact model). A provider chain
    * moves on to its fallback when no hit is usable; providers themselves ignore it.

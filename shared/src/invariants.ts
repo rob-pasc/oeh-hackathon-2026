@@ -9,6 +9,7 @@ import type { Report } from './report.ts'
 import type { CategoryResult } from './categories.ts'
 import type { StepPlan } from './steps.ts'
 import type { Passage } from './retrieval.ts'
+import type { WebPrice } from './prices.ts'
 
 /** Whether any value below `value` is null, skipping the dotted paths in `skip`. */
 function containsNull(value: unknown, skip: ReadonlySet<string> = new Set(), path = ''): boolean {
@@ -207,5 +208,15 @@ export function checkStepPlan(plan: StepPlan): string[] {
       if (step.minutes.low < 0) errors.push(`${label}.minutes must not be negative`)
     }
   })
+  return errors
+}
+
+/** A web price's range and count must describe its offers (feature 019 FR-001). */
+export function checkWebPrice(price: WebPrice): string[] {
+  const errors: string[] = []
+  const values = price.offers.map((o) => o.price_eur)
+  if (price.offer_count !== price.offers.length) errors.push(`${price.option_id}: offer_count must equal the number of offers`)
+  if (values.length > 0 && (price.low_eur !== Math.min(...values) || price.high_eur !== Math.max(...values)))
+    errors.push(`${price.option_id}: low_eur and high_eur must be the lowest and highest offer`)
   return errors
 }

@@ -12,6 +12,7 @@ export * from './ranking.ts'
 export * from './invariants.ts'
 export * from './validate.ts'
 export * from './admin.ts'
+export * from './prices.ts'
 
 import { AdminLogin, AdminScanDetail, AdminScanPage, AdminSession } from './admin.ts'
 import { Assessment } from './assessment.ts'
@@ -19,6 +20,7 @@ import { CategoryResult } from './categories.ts'
 import { ApiError, DeviceRecord, DeviceScan, UploadResponse } from './device.ts'
 import { Fact, FactSet } from './facts.ts'
 import { Report, ReportStatus, StreamEnd } from './report.ts'
+import { DeviceLocation, LocalOfferList, LocationRequest, WebPriceList } from './prices.ts'
 import { Passage, RetrievalResult } from './retrieval.ts'
 import { StepPlan, PlanStepList } from './steps.ts'
 import { ScanSession, ScanSessionEvent, ScanSessionRequest, ScannerEvent } from './session.ts'
@@ -48,4 +50,8 @@ export const TOP_LEVEL_SCHEMAS = {
   ScanSessionRequest,
   ScannerEvent,
   ScanSessionEvent,
+  WebPriceList,
+  LocalOfferList,
+  LocationRequest,
+  DeviceLocation,
 } as const

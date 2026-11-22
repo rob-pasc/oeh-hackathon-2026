@@ -67,6 +67,8 @@ export function loadLlmConfig(env: NodeJS.ProcessEnv = process.env): LlmConfig {
       categories: thinkingMode(env, 'LLM_THINKING_CATEGORIES', 'disabled'),
       // Off as well: a plan is opened by a waiting owner and must stay within its deadline.
       steps: thinkingMode(env, 'LLM_THINKING_STEPS', 'disabled'),
+      // Off: reading prices and offers off pages needs no reasoning, and the page waits for it.
+      web_extraction: thinkingMode(env, 'LLM_THINKING_WEB_EXTRACTION', 'disabled'),
     },
   }
 }

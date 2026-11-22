@@ -16,12 +16,13 @@ import { createOpenAiCompatibleClient, LlmError, loadLlmConfig } from './llm/ind
 import { DEFAULT_CORPUS_INDEX_PATH, IndexError, openRetriever, type Retriever } from './retrieval/index.ts'
 import { createCategoryService } from './categories/service.ts'
 import { schedulePurge } from './retention.ts'
-import { createSqliteSearchBudget, createSqliteSearchCache } from './search/cache.ts'
-import { createConfiguredSearch, loadSearchConfig } from './search/config.ts'
+import { createSqliteSearchBudget, createSqliteSearchCache, type SearchBudget } from './search/cache.ts'
+import { createConfiguredSearch, loadSearchConfig, type SearchConfig } from './search/config.ts'
 import { createWebEvidence, type WebEvidence } from './search/evidence.ts'
-import { SearchError } from './search/types.ts'
+import { SearchError, type SearchProvider } from './search/types.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
 import { createStepService } from './steps/service.ts'
+import { createPriceService, createSqlitePriceCache, loadPriceSources } from './prices/index.ts'
 
 const env = process.env
 const limits = loadLimits(env)
@@ -40,6 +41,7 @@ const corpusIndexPath = resolve(env.CORPUS_INDEX_PATH ?? DEFAULT_CORPUS_INDEX_PA
 // (feature 003 FR-011).
 const weights = loadWeights()
 const impactTable = loadImpactTable()
+const priceSources = loadPriceSources()
 
 mkdirSync(dirname(databasePath), { recursive: true })
 const db = new DatabaseSync(databasePath)
@@ -68,14 +70,17 @@ const warn = (message: string, details?: Record<string, unknown>) => app.log.war
 
 // Web search for models and topics the corpus does not cover (feature 017). Off without a key.
 let webEvidence: WebEvidence | null = null
+// Web prices and local offers (feature 019) use the same providers and daily cap.
+let webSearch: { config: SearchConfig; provider: SearchProvider; budget: SearchBudget } | null = null
 try {
   const search = loadSearchConfig(env)
   if (!search) console.warn('web search off: no LANGSEARCH_API_KEY or TINYFISH_API_KEY set')
   else {
+    webSearch = { config: search, provider: createConfiguredSearch(search, { warn }), budget: createSqliteSearchBudget(db, search.dailyCalls) }
     webEvidence = createWebEvidence({
-      search: createConfiguredSearch(search, { warn }),
+      search: webSearch.provider,
       cache: createSqliteSearchCache(db),
-      budget: createSqliteSearchBudget(db, search.dailyCalls),
+      budget: webSearch.budget,
       timeoutMs: search.timeoutMs,
       resultsPerQuery: search.resultsPerQuery,
       maxChars: search.maxChars,
@@ -91,6 +96,23 @@ const assessments = retriever ? createAssessmentService({ retriever, extractor, 
 // AI fallbacks are recorded for the admin page (feature 016 FR-016).
 const fallbackLog = createFallbackLog(db)
 const categorize = createCategoryService(db, llm, { impactTable, warn, onFallback: fallbackLog.record })
+const prices =
+  assessments && llm && webSearch
+    ? createPriceService({
+        search: webSearch.provider,
+        budget: webSearch.budget,
+        llm,
+        cache: createSqlitePriceCache(db),
+        domains: priceSources,
+        assessments,
+        shownCategories: categorize.shown,
+        impactTable,
+        timeoutMs: webSearch.config.timeoutMs,
+        resultsPerQuery: webSearch.config.resultsPerQuery,
+        maxChars: webSearch.config.maxChars,
+        warn,
+      })
+    : undefined
 
 const app = buildApp({
   limits,
@@ -101,6 +123,7 @@ const app = buildApp({
   assessments,
   categorize,
   steps: retriever && assessments ? createStepService(db, llm, { retriever, assessments, shownCategories: categorize.shown, warn, onFallback: fallbackLog.record }) : undefined,
+  prices,
   publicBaseUrl,
   scannerPaths,
   logger: {

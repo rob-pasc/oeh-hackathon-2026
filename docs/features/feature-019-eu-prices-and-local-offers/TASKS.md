@@ -1,14 +1,14 @@
 # Implementation Tasks: European prices and local offers
 
 - **Feature ID:** `feature-019-eu-prices-and-local-offers`
-- **Status:** Specified
+- **Status:** In progress
 
 This is the **authoritative progress checklist**. Check a task only after its work is actually complete.
 
 ## Tasks
 
-- [ ] **T-001:** Add `config/price-sources.yaml` with the allowlist confirmed by the user on 2026-11-22 (geizhals.eu, geizhals.at, idealo.at, idealo.de) and add the `WebPrice` and local offer contracts in `shared/` (supports `AC-001`, `AC-003`)
-- [ ] **T-002:** Build `server/src/prices/`: query building, allowlisted search, LLM price extraction with citations, range, cache; tests including "ranking untouched" (supports `AC-001`–`AC-004`)
+- [x] **T-001:** Add `config/price-sources.yaml` with the allowlist confirmed by the user on 2026-11-22 (geizhals.eu, geizhals.at, idealo.at, idealo.de) and add the `WebPrice` and local offer contracts in `shared/` (supports `AC-001`, `AC-003`)
+- [x] **T-002:** Build `server/src/prices/`: query building, allowlisted search, LLM price extraction with citations, range, cache; tests including "ranking untouched" (supports `AC-001`–`AC-004`)
 - [ ] **T-003:** Build `server/src/offers/`: per-path queries, LLM extraction of up to three offers, cache per town and path; tests (supports `AC-005`, `AC-010`)
 - [ ] **T-004:** Build the location route, Nominatim client with rate limit and cache, `device_locations` table and retention purge; tests for rounding, no persisted or logged coordinates, failures (supports `AC-006`–`AC-009`)
 - [ ] **T-005:** Web app: Web price on option cards, offers block in step plans, Share location button with its states, OSM attribution, mock data; component tests (supports `AC-001`, `AC-005`, `AC-006`, `AC-008`)
@@ -17,12 +17,13 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Dependencies and blockers
 
-- Blocked on feature 017 being implemented (search adapter, cap, labels).
+- Feature 017 is implemented (verification pending); this feature builds on its adapter and cap.
 
 ## Progress notes
 
-None yet.
+- 2026-11-22: T-001 and T-002 done. Prices are served on their own route, `GET /api/devices/:id/prices`, so the category result is untouched (FR-002). The part follows the plan the impact table prices: a 500 GB SSD with the gate's interface and the slot's M.2 length from the facts, the gate's RAM module with the memory type from the facts or the scan (LPDDR gets no price), and "<manufacturer> <model> Akku" for batteries, whose pages must name the exact model. The search interface gained `includeDomains` (LangSearch `includeDomains`, TinyFish `include_domains`) and an optional `locale` (TinyFish only); hosts are also checked on the server. One LLM call (new task `web_extraction`, thinking off) lists the offers; the server keeps an offer only from an allowlisted page, in EUR, within plausible bounds per kind, and when the exact amount appears in that page's text. Checked offers are cached per part for 7 days in `web_price_cache`, empty results included; failures are not cached.
 
 ## Lifecycle history
 
 - 2026-11-22: Specified after scope approval (see the [plan's scope change log](./PLAN.md#scope-change-log)).
+- 2026-11-22: Implementation started on branch `feat/pricesandoffers`.

@@ -1,6 +1,6 @@
 // HTTP API: device upload, lookup, and the scanner download (feature 001), scan sessions
 // (feature 006 FR-002 to FR-004), the assessment and report stream (features 003 and 004), and the
-// step plan of an opened option (feature 009).
+// step plan of an opened option (feature 009), and web prices and local offers (feature 019).
 // Routes and bodies follow shared/src/api.ts; every non-2xx JSON response is an ApiError.
 //
 // There is deliberately no public route that lists devices (FR-011): the unguessable device ID is
@@ -28,6 +28,7 @@ import {
   type ScanSessionEvent,
   type ReportStatus,
   type StreamEnd,
+  type WebPriceList,
 } from '@leaaf/shared'
 import { hourlyLimit, loadLimits } from './limits.ts'
 import type { AdminConfig } from './admin/config.ts'
@@ -40,6 +41,7 @@ import { renameZipRoot, ZipError } from './downloads/zip.ts'
 import type { Categorize } from './categories/service.ts'
 import type { SessionStore } from './sessions/store.ts'
 import type { StepService } from './steps/service.ts'
+import type { PriceService } from './prices/service.ts'
 
 export interface AppOptions {
   limits?: ReturnType<typeof loadLimits>
@@ -51,6 +53,8 @@ export interface AppOptions {
   categorize?: Categorize | undefined
   /** Builds an opened option's step plan (feature 009); the step route answers 500 without it. */
   steps?: StepService | undefined
+  /** Web prices of the shown options (feature 019); without it the prices route answers an empty list. */
+  prices?: PriceService | undefined
   /** Origin of the web app, used to build device page URLs, e.g. https://leaaf.green */
   publicBaseUrl: string
   /** Path of the Windows scanner executable; the download is 404 while it is missing. */
@@ -233,6 +237,29 @@ export function buildApp(options: AppOptions): FastifyInstance {
       if (!options.steps) return reply.code(500).send(apiError('internal', 'step plans are not available'))
       const plan = await options.steps(record, use as IntendedUse, req.params.optionId)
       return plan ? reply.header('cache-control', 'no-store').send(plan) : reply.code(404).send(apiError('not_found', 'option not found'))
+    },
+  )
+
+  // Web prices of the shown SSD, RAM and battery options (feature 019). A separate route, so the
+  // category result and everything ranked from it stay as they are (FR-002). Without web search or
+  // an LLM the list is empty, and the page shows only the impact table figures.
+  app.get<{ Params: { id: string }; Querystring: { intended_use?: string } }>(
+    '/api/devices/:id/prices',
+    { onRequest: hourlyLimit(limits.reportsPerHour) },
+    async (req, reply) => {
+      const use = req.query.intended_use
+      if (!isIntendedUse(use).ok)
+        return reply.code(400).send(
+          apiError('invalid_payload', 'unknown intended use', [
+            { path: '/intended_use', message: `must be one of ${INTENDED_USES.join(', ')}` },
+          ]),
+        )
+      const record = options.devices.get(req.params.id)
+      if (!record) return reply.code(404).send(NOT_FOUND)
+      const list: WebPriceList = options.prices
+        ? await options.prices(record, use as IntendedUse)
+        : { device_id: record.device_id, intended_use: use as IntendedUse, prices: [] }
+      return reply.header('cache-control', 'no-store').send(list)
     },
   )
 

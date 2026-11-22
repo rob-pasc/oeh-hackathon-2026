@@ -20,8 +20,9 @@ const DEADLINES: Partial<Record<LlmTask, (config: LlmConfig) => number>> = {
   explanation: (c) => c.timeoutMs,
   categories: (c) => c.categoryTimeoutMs,
   steps: (c) => c.stepTimeoutMs,
+  web_extraction: (c) => c.timeoutMs,
 }
-const DEADLINE_NAMES: Record<LlmTask, string> = { fact_extraction: 'Fact extraction', explanation: 'Explanation', categories: 'Category', steps: 'Step' }
+const DEADLINE_NAMES: Record<LlmTask, string> = { fact_extraction: 'Fact extraction', explanation: 'Explanation', categories: 'Category', steps: 'Step', web_extraction: 'Web extraction' }
 
 export interface OpenAiCompatibleOptions {
   /** Injected in tests to simulate the provider. */

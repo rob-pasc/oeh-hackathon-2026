@@ -1,7 +1,8 @@
 // TinyFish Search and Fetch (docs.tinyfish.ai, read 2026-11-22). Search
 // (GET https://api.search.tinyfish.ai?query=…) returns snippets only, so the top results' page text
 // comes from Fetch (POST https://api.fetch.tinyfish.ai, at most 10 URLs). Both use `X-API-Key`.
-// A failed fetch keeps the snippet: per-URL failures arrive with HTTP 200 in `errors[]`.
+// A failed fetch keeps the snippet: per-URL failures arrive with HTTP 200 in `errors[]`. Search
+// takes `include_domains` (comma-separated), `location` (country code) and `language`.
 import { isHttpUrl, SearchError, statusError, transportError, type SearchHit, type SearchProvider } from './types.ts'
 
 export const TINYFISH_SEARCH_URL = 'https://api.search.tinyfish.ai'
@@ -68,6 +69,11 @@ export function createTinyFishProvider(apiKey: string, transport: typeof fetch =
     name,
     async search(query, signal) {
       const params = new URLSearchParams({ query: query.text })
+      if (query.includeDomains?.length) params.set('include_domains', query.includeDomains.join(','))
+      if (query.locale) {
+        params.set('location', query.locale.country)
+        params.set('language', query.locale.language)
+      }
       const body = await call(`${TINYFISH_SEARCH_URL}?${params}`, { method: 'GET', ...(signal ? { signal } : {}) })
       const results = (body as { results?: unknown }).results
       if (results === undefined) return []

@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "WebPriceList.schema.json",
+  "title": "WebPriceList",
+  "type": "object",
+  "required": [
+    "device_id",
+    "intended_use",
+    "prices"
+  ],
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22}$",
+      "description": "22-character base64url string encoding 128 random bits"
+    },
+    "intended_use": {
+      "enum": [
+        "office",
+        "study",
+        "development",
+        "pass_on",
+        "general",
+        "gaming"
+      ],
+      "description": "office = office/browsing, study = school/university, development = programming, pass_on = pass to someone else, general = everyday use without a specific purpose, gaming = games"
+    },
+    "prices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "option_id",
+          "part",
+          "low_eur",
+          "high_eur",
+          "offer_count",
+          "offers",
+          "retrieved_on"
+        ],
+        "properties": {
+          "option_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+          },
+          "part": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The part that was searched, e.g. \"500 GB M.2 2280 NVMe SSD\""
+          },
+          "low_eur": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "high_eur": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "offer_count": {
+            "type": "integer",
+            "minimum": 2
+          },
+          "offers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "title",
+                "url",
+                "publisher",
+                "price_eur"
+              ],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Product or offer name as the page shows it"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "publisher": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Host of the page without \"www.\", e.g. \"geizhals.at\""
+                },
+                "price_eur": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "minItems": 2
+          },
+          "retrieved_on": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "additionalProperties": false,
+        "description": "low_eur and high_eur are the lowest and highest offer; offer_count equals offers.length"
+      },
+      "description": "Options without enough usable offers are left out"
+    }
+  },
+  "additionalProperties": false
+}
