@@ -109,9 +109,9 @@ Additive tables only. Location data is deleted with the scan (30 days) and can b
 
 ## Related and superseded features
 
-- **Planned replacement of a non-goal in [`docs/PRODUCT.md`](../../PRODUCT.md):** "live price scraping or purchasing" becomes "purchasing"; live price lookups are displayed alongside the impact table. Planned until implemented.
-- **Planned extension of [feature 009](../feature-009-concrete-step-plans/PLAN.md):** step plans of repair, pass it on and recycle options gain a local offers block; the steps themselves do not change.
-- **Planned extension of [feature 006](../feature-006-web-app/PLAN.md) FR-046** (legal pages): the privacy notice gains the location and Nominatim lines.
+- **Replacement of a non-goal in [`docs/PRODUCT.md`](../../PRODUCT.md):** "live price scraping or purchasing" becomes "purchasing"; live price lookups are displayed alongside the impact table. Implemented 2026-11-22 on `feat/pricesandoffers`; effective once merged.
+- **Extension of [feature 009](../feature-009-concrete-step-plans/PLAN.md):** step plans of repair, pass it on and recycle options gain a local offers block; the steps themselves do not change. Implemented 2026-11-22 on `feat/pricesandoffers`.
+- **Extension of [feature 006](../feature-006-web-app/PLAN.md) FR-046** (legal pages): the privacy notice gains the location and Nominatim lines. Implemented 2026-11-22 on `feat/pricesandoffers`.
 - **Unchanged:** [feature 003](../feature-003-five-path-ranking/PLAN.md) FR-007 (impact table) and the ranking and plan figures of features 008 and 013.
 - **Depends on:** [feature 017](../feature-017-web-evidence-for-model-facts/PLAN.md).
 

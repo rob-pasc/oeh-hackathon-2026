@@ -1,22 +1,22 @@
 # Acceptance Criteria: European prices and local offers
 
 - **Feature ID:** `feature-019-eu-prices-and-local-offers`
-- **Verification status:** Not started
+- **Verification status:** In progress: AC-001 to AC-010 pass locally; the live smoke run (AC-011), the browser check of AC-006 and CI on `main` (AC-012) are open
 
 Defines the feature’s acceptance criteria and records how each criterion was verified, including results and evidence.
 
 | ID     | Requirement | Scenario / expected outcome | Verification method | Result  | Evidence |
 | ------ | ----------- | --------------------------- | ------------------- | ------- | -------- |
-| AC-001 | FR-001      | Given an SSD option and at least two EUR offers from allowlisted sources, then its card shows a Web price range with the offer count, source links and date next to the impact table figures. | Automated test with fake search and LLM; component test | Not run | |
-| AC-002 | FR-002      | Given web prices far from the impact table, then scores, ranking, gauge and plan totals are identical to a run without web prices. | Automated test comparing both runs | Not run | |
-| AC-003 | FR-003      | Given offers in USD, from a non-allowlisted domain, or only one usable offer, then no Web price is shown. | Automated test | Not run | |
-| AC-004 | FR-004      | Given a cached price query, then a second request within 7 days makes no search call; after 7 days it does. | Automated test with a controlled clock | Not run | |
-| AC-005 | FR-005      | Given no shared location, then the step plan of a repair option lists up to three Austrian offers with name, town, link and the Web source · check label. | Automated test; component test | Not run | |
-| AC-006 | FR-006      | Given permission is granted, then the page sends coordinates rounded to two decimals, shows "Near <town>", lists offers for that town, and "Austria-wide" restores the default. | Component test with a mocked geolocation API; browser check | Not run | |
-| AC-007 | FR-007      | After a location is shared, the database and server log contain no coordinates; the town is stored only for that device and removed by the 30-day purge. | Automated test inspecting tables and captured logs; retention test | Not run | |
-| AC-008 | FR-008      | Given denied permission, unavailable location, or a failing Nominatim, then Austria-wide offers stay and a short message is shown. | Component and server tests | Not run | |
-| AC-009 | FR-009      | Given two location requests within one second, then Nominatim is called at most once per second, with the identifying User-Agent, and a repeated rounded pair uses the cache. | Automated test with fake Nominatim and simulated time | Not run | |
-| AC-010 | FR-010      | Search queries for offers contain the town name, never coordinates; the privacy notice (DE/EN) describes the optional location sharing, Nominatim and the retention. | Automated query inspection; read both texts in the browser | Not run | |
+| AC-001 | FR-001      | Given an SSD option and at least two EUR offers from allowlisted sources, then its card shows a Web price range with the offer count, source links and date next to the impact table figures. | Automated test with fake search and LLM; component test | Pass | `server/test/prices.test.ts` "gives each SSD, RAM and battery option a range…" and "searches only the part on the allowlisted sites"; `web/src/test/web-prices.test.tsx` "shows a Web price next to the impact table figures…" (2026-11-22, 3bc0cbc) |
+| AC-002 | FR-002      | Given web prices far from the impact table, then scores, ranking, gauge and plan totals are identical to a run without web prices. | Automated test comparing both runs | Pass | `server/test/prices.test.ts` "leaves the assessment and categories of the report exactly as without web prices": the report stream is byte-identical with and without a price service after prices were fetched; prices have their own route and never enter `CategoryResult` |
+| AC-003 | FR-003      | Given offers in USD, from a non-allowlisted domain, or only one usable offer, then no Web price is shown. | Automated test | Pass | `server/test/prices.test.ts` "shows no web price with only one usable offer, USD offers or pages off the allowlist", "keeps only EUR prices from allowlisted pages…", "accepts the domains and their subdomains only" |
+| AC-004 | FR-004      | Given a cached price query, then a second request within 7 days makes no search call; after 7 days it does. | Automated test with a controlled clock | Pass | `server/test/prices.test.ts` "reuses a part price for 7 days, then searches again" (controlled clock: no search at 7 days minus 1 hour, a new search after 7 days) |
+| AC-005 | FR-005      | Given no shared location, then the step plan of a repair option lists up to three Austrian offers with name, town, link and the Web source · check label. | Automated test; component test | Pass | `server/test/offers.test.ts` "lists up to three Austrian offers for a repair option…"; `web/src/test/web-prices.test.tsx` "lists Austrian places in the repair option, each labelled as a web source to check" |
+| AC-006 | FR-006      | Given permission is granted, then the page sends coordinates rounded to two decimals, shows "Near <town>", lists offers for that town, and "Austria-wide" restores the default. | Component test with a mocked geolocation API; browser check | Pass (component); browser check open | `web/src/test/web-prices.test.tsx` "sends coordinates rounded to two decimals, shows the town and its offers, and goes back to Austria-wide" with a mocked geolocation API (47.41237, 9.74391 → 47.41, 9.74); `server/test/offers.test.ts` location route tests. A check in a real browser is still open |
+| AC-007 | FR-007      | After a location is shared, the database and server log contain no coordinates; the town is stored only for that device and removed by the 30-day purge. | Automated test inspecting tables and captured logs; retention test | Pass | `server/test/offers.test.ts` "stores and logs no coordinates" (every table dumped and the captured request log searched for the coordinate digits), "turns the coordinates into a town, stores only the town…", "deletes the town with the scan after 30 days"; `server/test/retention.test.ts` includes `device_locations` |
+| AC-008 | FR-008      | Given denied permission, unavailable location, or a failing Nominatim, then Austria-wide offers stay and a short message is shown. | Component and server tests | Pass | `web/src/test/web-prices.test.tsx` denied, unavailable, server-finds-no-town and no-geolocation cases; `server/test/offers.test.ts` "keeps Austria-wide offers when no town is found or the lookup is off" and the Nominatim failure test |
+| AC-009 | FR-009      | Given two location requests within one second, then Nominatim is called at most once per second, with the identifying User-Agent, and a repeated rounded pair uses the cache. | Automated test with fake Nominatim and simulated time | Pass | `server/test/offers.test.ts` "calls at most once per second overall and answers a repeated rounded pair from the cache" (simulated clock: second call ≥ 1000 ms later, a repeated rounded pair makes no call) and "asks for the rounded pair with the identifying User-Agent…" |
+| AC-010 | FR-010      | Search queries for offers contain the town name, never coordinates; the privacy notice (DE/EN) describes the optional location sharing, Nominatim and the retention. | Automated query inspection; read both texts in the browser | Pass | `server/test/offers.test.ts` "searches the shared town, with the town name and nothing else"; `web/src/test/web-prices.test.tsx` "privacy notice (AC-010)" checks both languages. Reading both texts in the browser is still open |
 | AC-011 | All         | Live smoke run: one price search, one offer search and one Nominatim lookup with the team's keys return usable results. | Live run, output recorded | Not run | |
 | AC-012 | All         | Typecheck, tests and build pass locally, CI passes on the `main` push, and a self-review with location handling checked is recorded with findings and resolutions. | Commands; CI link; review record below | Not run | |
 
@@ -31,8 +31,23 @@ If the user approves changing or waiving a criterion, update the approved scope 
 
 ## Review and integration evidence
 
-Completion boundary: locally verified, merged into `main`, live smoke run (see the [plan](./PLAN.md#review-and-integration)). No review performed yet.
+Completion boundary: locally verified, merged into `main`, live smoke run (see the [plan](./PLAN.md#review-and-integration)).
+
+**Local checks (2026-11-22, 3bc0cbc):** `npm run typecheck`, `npm test` (shared 148, server 459, web 162 tests) and `npm run build` pass.
+
+**Self-review (2026-11-22)** of the branch diff against the plan, with location handling checked in particular. This is a self-review, not independent approval; a team member's look at the location handling is recommended by the plan.
+
+| # | Finding | Resolution |
+|---|---|---|
+| 1 | Coordinates: they reach only the location route's handler and the Nominatim client. The request log records method and route only, new warnings carry error kinds or HTTP status, and the Nominatim cache lives in memory. | No change needed; covered by the AC-007 test. |
+| 2 | The offer cache could have tied a town to a device link. | Keys are a hash of kind and town, with no device ID; only `device_locations` holds a town per link, and it joins the purge. |
+| 3 | The web price links first sat in the card's "Why" block, breaking feature 008's two-source limit there (an existing test failed). | Moved into their own "Web price" section of the opened card. |
+| 4 | The location bar's `role="status"` collided with the page's mode-change status region. | Uses `aria-live="polite"` instead. |
+| 5 | Austria-wide offers are not checked to be in Austria on the server; the query, the AT/de locale and the LLM instruction keep them there, and the server checks only that the page names the place (and its town). | Accepted for now; listed as a residual risk. |
+| 6 | When a new location lookup finds no town, the stored town is cleared rather than kept, so the page and the server agree on Austria-wide. | Intended (FR-008); documented in the server README. |
+| 7 | The privacy notice wording (consent as the legal basis, Nominatim as recipient) was drafted here. | Needs the team's confirmation before release. |
 
 ## Verification notes
 
-Not yet verified.
+- The live smoke run (AC-011) needs the team's search and LLM keys and calls external services; it has not been run.
+- CI on the `main` push (AC-012) follows the merge, which needs the user's request.
