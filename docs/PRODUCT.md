@@ -17,11 +17,11 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 
 ## Product principles and constraints
 
-- **Evidence over assertion:** technical claims need a cited source; when evidence is missing, the report says so ("cannot verify").
+- **Evidence over assertion:** technical claims need a cited source; when evidence is missing, the report says so ("cannot verify"). *(2026-11-22: since [feature 017](features/feature-017-web-evidence-for-model-facts/PLAN.md), a web page about the exact model can be that source when the corpus has nothing on a topic. It is always labelled "Web source", lowers confidence one level, and can never unlock self-replacement of a battery.)*
 - **Honest impact:** CO₂e is shown as ranges against an explicit baseline and never summed across alternative paths. Weights are illustrative. Figures the AI estimates (feature 008) are always labelled "AI estimate".
 - **Safety first:** infeasible or unsafe paths are marked, never scored attractively, and hazardous self-repair is never recommended. *(2026-11-21: for AI-chosen options of feature 008 this rests on the prompt and the demo review, not on server rules; see [ADR-003](adr/adr-003-ai-chosen-options.md). Since feature 011, SSD, RAM and battery options are capped at the rule-based status, see [ADR-007](adr/adr-007-gate-cap-for-ai-part-options.md).)*
 - **Data minimization:** only the hardware facts needed are collected, with no accounts, serial numbers, or personal files.
-- **Narrow and deep:** 2–3 demo laptop models, supported well. *(2026-11-21: originally also one OS, Windows. [Feature 007](features/feature-007-macos-linux-scanner/PLAN.md) adds macOS 12+ and x64 Linux scanning; the knowledge base still has no Mac sources, so Mac-specific evidence reads "cannot verify".)*
+- **Narrow and deep:** 2–3 demo laptop models, supported well. *(2026-11-21: originally also one OS, Windows. [Feature 007](features/feature-007-macos-linux-scanner/PLAN.md) adds macOS 12+ and x64 Linux scanning; the knowledge base still has no Mac sources, so Mac-specific evidence reads "cannot verify".)* *(2026-11-22: with web search on (feature 017), laptops outside the corpus, Macs included, can get labelled web evidence; the corpus stays narrow and is searched first.)*
 
 ## Deliberate non-goals (MVP)
 
@@ -36,5 +36,7 @@ Scanning on a bootable USB (macOS and Linux scanning moved into scope with featu
 - Terms: [GLOSSARY.md](GLOSSARY.md). Feature navigation: [features/INDEX.md](features/INDEX.md).
 
 ## Maintenance
+
+Approved on 2026-11-22 but not built yet: a part lookup on the result screen ([feature 018](features/feature-018-part-lookup/PLAN.md)) and European web prices with local offers and an optional location ([feature 019](features/feature-019-eu-prices-and-local-offers/PLAN.md)). Feature 019 will narrow the non-goal "live price scraping" to displayed prices that never change the ranking; until it is built, the non-goal stands as written.
 
 Update this reference when approved product direction or implemented core journeys change. Feature scope stays in each feature's `PLAN.md`.

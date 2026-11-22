@@ -8,7 +8,7 @@ The data contracts between the scanner, server, and web app. They are defined wi
 |---|---|---|---|
 | `DeviceScan` (v1) | `src/device.ts` | scanner → server | 001 |
 | `UploadResponse`, `DeviceRecord`, `ApiError` | `src/device.ts` | server → scanner and web | 001 |
-| `Passage`, `RetrievalResult` | `src/retrieval.ts` | retrieval → assessment and report (server-internal) | 002 |
+| `Passage`, `RetrievalResult` | `src/retrieval.ts` | retrieval → assessment and report (server-internal); `Passage.source: "web"` and `model_evidence: "web"` for web search results | 002, 017 |
 | `Fact`, `FactSet` | `src/facts.ts` | fact extraction → gates (server-internal) | 003 |
 | `Assessment` | `src/assessment.ts` | server → web | 003 |
 | `Report`, `StreamEnd`, SSE events | `src/report.ts` | server → web | 004 |
@@ -35,7 +35,7 @@ Helpers:
   - `conditional`: credited only at the high end, so `low <= 0`;
   - `none`: not credited, so `high <= 0`.
 - **Scan sessions:** `session_id` in `DeviceScan` is optional (absent, never `null`), so it does not affect `scan_status`. The server removes it before storing. The downloaded scanner ends with `SCANNER_SESSION_MARKER` + the session ID (37 bytes).
-- **The report stream** is `GET /api/devices/:id/report?intended_use=…`. It sends the events `assessment`, `categories` and `end`, or `error` instead. Since feature 008 the `categories` event replaces `report`; the `Report` contract stays for the explanation service. `rankCategories` and `rankOptions` in `src/ranking.ts` order categories and options for each mode, so the toggle needs no request.
+- **The report stream** is `GET /api/devices/:id/report?intended_use=…`. It sends the events `assessment`, `categories` and `end`, or `error` instead. Before the assessment it may send `status` (`ReportStatus`, `{"phase":"web_search"}`) while the server searches the web for the model (feature 017). Since feature 008 the `categories` event replaces `report`; the `Report` contract stays for the explanation service. `rankCategories` and `rankOptions` in `src/ranking.ts` order categories and options for each mode, so the toggle needs no request.
 - **Step plans** come from `GET /api/devices/:id/options/:optionId/steps?intended_use=…` (`API_ROUTES.optionSteps`), requested when an option card is first opened. `checkStepPlan` checks what the schema cannot: every citation is among `passages`, every technical step cites a passage unless it is `professional`, `warning` is set exactly on `caution` steps, and `notice` is set exactly on template plans.
 
 ## Fixtures

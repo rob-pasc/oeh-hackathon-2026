@@ -69,6 +69,7 @@ The total is the weighted sum with the illustrative weights (Environment first 4
 Each path starts at high and loses one level per finding (two for missing model evidence): 0 = high, 1 = medium, 2 or more = low. The findings are listed as reasons:
 
 - No model-specific documentation (upgrade, repair, and salvage only, counts twice).
+- Model-specific facts come only from web pages (`model_evidence: "web"`, [feature 017](../feature-017-web-evidence-for-model-facts/PLAN.md); upgrade, repair, and salvage only, counts once).
 - Unreadable scan fields the path depends on (for example RAM slots for upgrade, battery wear for repair).
 - A battery reporting exactly 100% (some firmware reports this regardless of wear).
 - A placeholder impact entry is used.

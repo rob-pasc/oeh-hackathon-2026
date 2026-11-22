@@ -1,8 +1,8 @@
 # server
 
-The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights), **retrieval** (`src/retrieval/`, feature 002), the **category service** (`src/categories/`, feature 008: the category call, its checks, option figures and scores, and the five-path fallback), and the **report stream** that combines them (003 T-007). The explained report request builder and model output schema are in `src/report/prompt.ts` (004 T-001).
+The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights), **retrieval** (`src/retrieval/`, feature 002), the **category service** (`src/categories/`, feature 008: the category call, its checks, option figures and scores, and the five-path fallback), **web search** (`src/search/`, feature 017), and the **report stream** that combines them (003 T-007). The explained report request builder and model output schema are in `src/report/prompt.ts` (004 T-001).
 
-The LLM API key is configured only here, through environment variables. It never ships in the scanner or the web app.
+The LLM and search API keys are configured only here, through environment variables. They never ship in the scanner or the web app.
 
 ## Device API
 
@@ -12,7 +12,7 @@ The LLM API key is configured only here, through environment variables. It never
 |---|---|
 | `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above the configured ceiling (default 32 KiB), or `429 rate_limited` |
 | `GET /api/devices/:id` | `200 DeviceRecord`; unknown and malformed IDs both get the same `404 not_found` |
-| `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `assessment` (the ranked `Assessment`), then `categories` (the AI's `CategoryResult` with an optional combined `plan`, feature 013, or the five-path fallback with a rule-based plan when the upgrade and repair support one), then `end` with `{"status":"complete"}`. The fallback ends with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `429 rate_limited` before opening the stream, or `500` when the server has no retrieval index |
+| `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `status` with `{"phase":"web_search"}` while a fresh web search for the model runs (feature 017; not sent for cached or corpus-covered models), `assessment` (the ranked `Assessment`), then `categories` (the AI's `CategoryResult` with an optional combined `plan`, feature 013, or the five-path fallback with a rule-based plan when the upgrade and repair support one), then `end` with `{"status":"complete"}`. The fallback ends with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `429 rate_limited` before opening the stream, or `500` when the server has no retrieval index |
 | `GET /api/devices/:id/options/:optionId/steps?intended_use=` | `200 StepPlan` (JSON, `cache-control: no-store`): the step plan of one option of the categories the result screen shows (feature 009). The route never starts a category call: it reads the cached categories, or the five-path fallback when none are cached. `400 invalid_payload` for an unknown use; `404` for an unknown device or option; `429 rate_limited`, or `500` when the server has no retrieval index |
 | `GET /api/devices/:id/plan/steps?intended_use=` | `200 PlanStepList` (JSON, `cache-control: no-store`): one step list of up to 16 steps for the combined plan of the shown categories (feature 014), with the option-step checks; the joined template plans when the AI is unavailable or for the fallback plan. `400` for an unknown use, `404` for an unknown device or a result without a plan, `429` after `STEPS_PER_HOUR` per client. |
 | `GET /downloads/leaaf-scanner.exe` | The Windows scanner at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
@@ -31,7 +31,7 @@ No route lists devices: the device ID (16 random bytes, base64url) is the only a
 
 ## Scan retention
 
-`src/retention.ts` deletes scan data after `SCAN_RETENTION_DAYS` (30), as the privacy notice states (feature 006 FR-046). `main.ts` runs it on start and then every hour. A run deletes devices whose `created_at` is older than that, together with their rows in `category_cache`, `step_cache`, `explanation_cache` and `ai_fallbacks`, and scan sessions older than that. The model `fact_cache` and the daily LLM counter are kept, because they hold no scan data. A deleted device link answers 404. The constant must match `scanRetentionDays` in `web/src/legal/provider.ts`, and a test checks this. The log line "deleted expired scan data" gives only the counts.
+`src/retention.ts` deletes scan data after `SCAN_RETENTION_DAYS` (30), as the privacy notice states (feature 006 FR-046). `main.ts` runs it on start and then every hour. A run deletes devices whose `created_at` is older than that, together with their rows in `category_cache`, `step_cache`, `explanation_cache` and `ai_fallbacks`, and scan sessions older than that. The model `fact_cache`, the `search_cache` (which expires on its own after 30 days) and the daily LLM and search counters are kept, because they hold no scan data. A deleted device link answers 404. The constant must match `scanRetentionDays` in `web/src/legal/provider.ts`, and a test checks this. The log line "deleted expired scan data" gives only the counts.
 
 ## Request limits
 
@@ -48,6 +48,25 @@ Each server process allows 10 upload attempts, 60 report requests and 120 step p
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD` | Empty (admin off) | The single admin login for `/admin` (feature 016). Both must be set and the password must have at least 16 characters; otherwise the admin routes are absent and a warning without the password is logged. Sessions live in memory, so a restart logs the admin out |
 
 The running API shares one SQLite counter per UTC day across extraction and the category call. It reserves a call before each provider attempt, including failed requests, transport retries and JSON repairs. Cache hits consume no allowance. After exhaustion, fresh assessments can use cached facts, and uncached category results use the five-path fallback with its unavailable notice.
+
+## Web search
+
+When retrieval has no model-specific passage for a fact topic (memory, storage, battery, software support), the assessment searches the web for the manufacturer, the model and the topic, and nothing else from the scan ([feature 017](../docs/features/feature-017-web-evidence-for-model-facts/PLAN.md), [ADR-008](../docs/adr/adr-008-web-search-adapter.md)). Without a key, search is off and assessments behave as before.
+
+- **Adapter:** `SearchProvider.search(query, signal)` in `src/search/types.ts`. `langsearch.ts` asks LangSearch for page text; `tinyfish.ts` uses TinyFish Search (snippets) and then Fetch for the top results' page text. `providerChain` in `config.ts` asks the next provider when one throws, uses up its half of `SEARCH_TIMEOUT_MS`, or returns no result naming the model. A new provider is one implementation plus an entry in `PROVIDERS`.
+- **Model match:** a result counts only when its title or text names the model as whole tokens (`modelMatcher` in `evidence.ts`): "T480" never matches "T480s". Model names without a digit are not searched. Kept results become passages with `source: "web"` and IDs `web:<url hash>:<topic>`; the fact extraction gets extra rules for them and lists web passages that are not about the exact model in `rejected_passage_ids`. Corpus-only fact prompts are unchanged.
+- **Trust:** facts from confirmed web passages count as model evidence (`model_evidence: "web"` when the corpus had none), which lowers confidence one level on upgrade, repair and salvage. A user-replaceable battery is never accepted from web pages alone. Web passages that no kept fact cites are dropped before the categories call.
+- **Cache and cap:** `search_cache` keeps the usable results per model and topic for 30 days; failures are not cached. `search_daily_usage` counts fresh searches per UTC day (one per query, whichever providers answer). Concurrent assessments of one model share a search.
+
+| Environment variable | Default | Allowed value |
+|---|---:|---|
+| `LANGSEARCH_API_KEY`, `TINYFISH_API_KEY` | Empty | Provider keys. Without any key, web search is off (logged once at startup) |
+| `SEARCH_PROVIDER` | `langsearch` | `langsearch`, `tinyfish` or `none`: asked first |
+| `SEARCH_FALLBACK` | `tinyfish` | `langsearch`, `tinyfish` or `none`: asked second. A provider without a key is skipped |
+| `SEARCH_DAILY_CALLS` | 200 | Nonnegative integer. Zero stops all fresh searches |
+| `SEARCH_TIMEOUT_MS` | 20000 | Positive integer: deadline for the whole search phase of one assessment; the first provider gets half |
+| `SEARCH_RESULTS_PER_QUERY` | 5 | Positive integer; at most 3 usable results per topic become passages |
+| `SEARCH_MAX_CHARS` | 6000 | At least 500: page text asked for per result; each passage keeps a 3,000-character window from the first mention of the topic |
 
 ## LLM adapter
 
@@ -136,6 +155,7 @@ npm run facts:smoke -w server # live fact extraction over shared/fixtures, compa
 npm run categories:smoke -w server # live category call for the three demo models, with the feature 008 AC-016 checks and each plan (or why it was dropped, feature 013); needs the index
 npm run steps:smoke -w server # live category and step calls for the three demo models, listing feature 009 AC-015 candidates; needs the index
 npm run steps:smoke -w server -- --plan # only the plan step call for models whose categories carry a plan (feature 014)
+npm run search:smoke -w server # live search with each configured provider (feature 017); optional: -- "<maker>" "<model>"
 npm run corpus:ingest -w server # build the retrieval index from corpus/ into data/corpus.sqlite
 ```
 
@@ -152,3 +172,10 @@ The smoke test sends one tiny non-personal prompt per thinking setting. It print
 | 2026-11-20 | `https://api.deepseek.com` / `deepseek-flash` | disabled (`facts:smoke`, new default) | Pass, matches fixture: 1 attempt, 1459 ms, 2151/264 tokens in/out |
 
 This confirms that DeepSeek accepts `thinking: { type: "disabled" }`, which its docs did not show explicitly.
+
+Web search (`search:smoke`, query "Lenovo ThinkPad T470 RAM memory slots maximum memory"):
+
+| Date | Provider | Result |
+|---|---|---|
+| 2026-11-22 | LangSearch | Pass: 5 results, 4 name "ThinkPad T470", 4524 ms |
+| 2026-11-22 | TinyFish (Search and Fetch) | Pass: 5 results, 4 name "ThinkPad T470" (including Lenovo's PSREF spec sheet), 8692 ms |

@@ -29,7 +29,7 @@ Every technical claim leaf makes must cite a passage from a curated knowledge ba
 - No new runtime dependency or external service; the index ships inside the server image.
 - **Weakness:** Queries must share words with the passage, so path queries are hand-tuned facets (`PATH_QUERIES` in `server/src/retrieval/retrieve.ts`). Synonyms or wording outside them can be missed.
 - **Upkeep:** The corpus is curated by hand. Each new document needs an extract and a manifest entry, and new demo models need aliases confirmed from real scans.
-- Exact matching means an unlisted model gets `model_evidence: "none"` and generic passages only.
+- Exact matching means an unlisted model gets `model_evidence: "none"` and generic passages only. *(Update 2026-11-22: since feature 017, topics without a model-specific passage are searched on the web when a search key is set; this retrieval still runs first and unchanged. See [ADR-008](adr-008-web-search-adapter.md).)*
 
 ## Implementation / validation references
 

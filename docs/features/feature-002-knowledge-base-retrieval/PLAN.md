@@ -28,7 +28,7 @@ This is what lets the system know things rules alone cannot: soldered RAM, user-
 
 ### Out of scope
 
-- Web-scale or automatic ingestion, crawling, or live web search.
+- Web-scale or automatic ingestion, crawling, or live web search. *(2026-11-22: "live web search" no longer holds; see the note under Related and superseded features. Ingestion and crawling stay excluded.)*
 - Fuzzy matching across model variants (for example treating "T480s" as "T480").
 - Extracting structured facts from passages (feature 003) and writing explanations (feature 004).
 - A user-facing search interface.
@@ -113,7 +113,9 @@ Not applicable to this feature: the index is shipped with the deployment owned b
 
 ## Related and superseded features
 
-None superseded. Depends on [feature 001](../feature-001-device-scan-and-upload/PLAN.md) (device schema). Consumed by [feature 003](../feature-003-five-path-ranking/PLAN.md) and [feature 004](../feature-004-explained-report/PLAN.md).
+**Exclusion "live web search" replaced by [feature 017](../feature-017-web-evidence-for-model-facts/PLAN.md#related-and-superseded-features)** (implemented 2026-11-22 on `main` in f1331e6 "feat(server): search the web for facts the corpus does not cover" and d3c9256 "feat(web): label web sources and show the web search line"; not pushed). When this retrieval finds no model-specific passage for a fact topic, the assessment searches the web for the exact model and adds labelled web passages. FR-001 to FR-008 stay in force: corpus retrieval runs first and unchanged, and web pages are never written into the corpus. ([ADR-008](../../adr/adr-008-web-search-adapter.md))
+
+Depends on [feature 001](../feature-001-device-scan-and-upload/PLAN.md) (device schema). Consumed by [feature 003](../feature-003-five-path-ranking/PLAN.md) and [feature 004](../feature-004-explained-report/PLAN.md).
 
 ## References
 

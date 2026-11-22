@@ -5,12 +5,12 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 ## How it works
 
 1. **Scan.** Download the scanner for your system (Windows, macOS or Linux) from the website and run it. It reads only the hardware facts it needs (no serial numbers, accounts or personal files) and uploads them.
-2. **Assess.** The server matches the laptop to a curated knowledge base of manufacturer manuals, repair guides and regulations. An LLM extracts facts from those sources, and fixed rules decide which paths are feasible and safe.
+2. **Assess.** The server matches the laptop to a curated knowledge base of manufacturer manuals, repair guides and regulations. Where that knowledge base has nothing on the model, it searches the web for pages about that exact model, labelled "Web source". An LLM extracts facts from those sources, and fixed rules decide which paths are feasible and safe.
 3. **Rank and explain.** Choose an intended use (for example office or gaming) and a priority (*Environment first* or *Money first*). An AI picks the categories and options that fit this laptop; the server prices them with the same calculator and ranks them. Each option is explained with its sources, AI-estimated figures are labelled, and when the AI is unavailable the five paths are shown instead. leaaf says "cannot verify" where evidence is missing.
 
 ## Status
 
-**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). A "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). A password-protected admin page at `/admin` lists the stored scans with their details and AI status (feature 016). The team has run the scanner from the live site on Windows, macOS and Linux, and all three scans worked; some edge paths are still unchecked (features 001 and 007). CI publishes release images to GHCR when a tag is pushed; the newest tag, `v0.5.0`, adds the admin page (feature 016) and is live at [leaaf.green](https://leaaf.green), on the team's own server. The backup and rollback rehearsals are still open (feature 005). Web search for laptops the knowledge base does not cover, a part lookup, and European prices with local offers are specified, not built yet (features 017 to 019).
+**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). A "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). A password-protected admin page at `/admin` lists the stored scans with their details and AI status (feature 016). The team has run the scanner from the live site on Windows, macOS and Linux, and all three scans worked; some edge paths are still unchecked (features 001 and 007). CI publishes release images to GHCR when a tag is pushed; the newest tag, `v0.5.0`, adds the admin page (feature 016) and is live at [leaaf.green](https://leaaf.green), on the team's own server. The backup and rollback rehearsals are still open (feature 005). Web search for laptops the knowledge base does not cover (feature 017) is implemented on `main` and checked live against both search providers, awaiting the team's browser check; it is not released yet. A part lookup and European prices with local offers are specified, not built yet (features 018 and 019).
 
 | # | Feature | Status |
 |---|---|---|
@@ -30,7 +30,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 014 | [One step list for the plan](docs/features/feature-014-plan-step-list/PLAN.md) | Complete |
 | 015 | [Remove the recommendation summary](docs/features/feature-015-remove-recommendation-summary/PLAN.md) | Complete |
 | 016 | [Admin scan overview](docs/features/feature-016-admin-scan-overview/PLAN.md) | Implemented and merged into `main`, awaiting the browser check and the admin login check on the live site |
-| 017 | [Web evidence for model facts](docs/features/feature-017-web-evidence-for-model-facts/PLAN.md) | Specified |
+| 017 | [Web evidence for model facts](docs/features/feature-017-web-evidence-for-model-facts/PLAN.md) | Implemented on `main`, awaiting the team's browser check; not released |
 | 018 | [Part lookup](docs/features/feature-018-part-lookup/PLAN.md) | Specified, depends on 017 |
 | 019 | [European prices and local offers](docs/features/feature-019-eu-prices-and-local-offers/PLAN.md) | Specified, depends on 017 |
 
@@ -42,6 +42,7 @@ The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP 
 - **Server:** TypeScript on Node 24, Fastify and SQLite (with full-text search for retrieval)
 - **Web app:** React, Vite and Tailwind CSS
 - **LLM:** DeepSeek `deepseek-flash`, called through an OpenAI-compatible adapter ([ADR-002](docs/adr/adr-002-llm-openai-compatible-deepseek.md))
+- **Web search:** LangSearch, with TinyFish as fallback, through a provider-neutral adapter ([ADR-008](docs/adr/adr-008-web-search-adapter.md)); optional
 
 ## Repository layout
 
@@ -69,6 +70,7 @@ All commands run from the repository root unless a step says otherwise.
 | Node.js 24 or later, with npm | `shared/`, `server/`, `web/` | The server runs its `.ts` sources directly on Node 24 and uses the built-in `node:sqlite`, so older versions don't work. |
 | Go 1.26 | `scanner/` only | `scanner/go.mod` pins Go 1.26.5. Not needed if you only work on the web app or server. |
 | A DeepSeek API key | Optional | Without it, the server assesses without extracted facts and explains with templates (see [step 3](#3-configure-the-environment)). |
+| LangSearch and TinyFish API keys | Optional | Without them, laptops outside the knowledge base get no web evidence and read "cannot verify" as before. Both have free plans without a credit card. |
 | Docker | Optional | Only to build or run the container images ([deployment guide](docs/DEPLOYMENT.md)). |
 | A Windows 10 or 11 x64 machine, a Mac with macOS 12 or later, or an x64 Linux desktop | Optional | Only to run the real scanner (see [step 6](#6-build-and-run-the-scanner)). Building the Linux or macOS window needs cgo and the [Gio libraries](https://gioui.org/doc/install); the macOS app can only be built on a Mac. |
 
@@ -90,7 +92,7 @@ cp server/.env.example server/.env   # then set LLM_API_KEY, if you have one
 cp web/.env.example web/.env         # VITE_API_MODE=mock (default) or live
 ```
 
-- **Server** (`server/.env`): the defaults work locally. The API listens on `127.0.0.1:3000`, stores SQLite files under `server/data/`, builds device links for `http://localhost:5173`, and serves the scanner from `scanner/dist/leaaf-scanner.exe`. `LLM_API_KEY` is the only value you would normally set. All variables, including request limits, are listed in [`server/README.md`](server/README.md#configuration).
+- **Server** (`server/.env`): the defaults work locally. The API listens on `127.0.0.1:3000`, stores SQLite files under `server/data/`, builds device links for `http://localhost:5173`, and serves the scanner from `scanner/dist/leaaf-scanner.exe`. `LLM_API_KEY` is the value you would normally set, plus `LANGSEARCH_API_KEY` and `TINYFISH_API_KEY` for web search. All variables, including request limits, are listed in [`server/README.md`](server/README.md#configuration).
 - **Web** (`web/.env`): `VITE_API_MODE=mock` runs on fictional sample data and needs no server. `live` talks to the real API. The dev server forwards `/api` and `/downloads` to `http://127.0.0.1:3000`. To use another address, set `VITE_API_PROXY` in the shell before `npm run dev -w web`. The Vite config reads it from the process environment, not from `web/.env`.
 
 ### 4. Build the retrieval index
@@ -160,6 +162,7 @@ The tests use a fake LLM provider, so they need no key and no network. CI ([`.gi
 |---|---|
 | Live call to the configured LLM (needs `server/.env`) | `npm run llm:smoke -w server` |
 | Live fact extraction compared with the fixture | `npm run facts:smoke -w server` |
+| Live search with each configured search provider | `npm run search:smoke -w server` |
 | Re-export the JSON Schemas after changing a contract | `npm run schemas -w shared`, then follow [changing a contract](shared/README.md#changing-a-contract) |
 | Production build of the web app, served locally | `npm run build -w web && npm run preview -w web` |
 | Container images | `docker build -f web/Dockerfile .` and `docker build -f server/Dockerfile .` ([deployment guide](docs/DEPLOYMENT.md)) |
@@ -172,7 +175,7 @@ The tests use a fake LLM provider, so they need no key and no network. CI ([`.gi
 | The report stream answers `500` | No retrieval index: run step 4. |
 | **Scan now** or a `/downloads/…` link gives `404` | That system's scanner isn't built: run step 6, or set `SCANNER_EXE_PATH`, `SCANNER_LINUX_PATH` or `SCANNER_MACOS_PATH`. |
 | The landing page shows "Sample data" | The web app is in mock mode: set `VITE_API_MODE=live` and restart `npm run dev -w web`. |
-| Every path that depends on compatibility reads "cannot verify" | No `LLM_API_KEY`, the provider failed, or the daily allowance (`LLM_DAILY_CALLS`) is used up. The server log shows which. |
+| Every path that depends on compatibility reads "cannot verify" | No `LLM_API_KEY`, the provider failed, or the daily allowance (`LLM_DAILY_CALLS`) is used up. For a laptop outside the knowledge base, also no search key, no web page naming the exact model, or `SEARCH_DAILY_CALLS` used up. The server log shows which. |
 | `429 rate_limited` while testing | The per-client limits are per server process: restart the server, or raise `UPLOADS_PER_HOUR` and `REPORTS_PER_HOUR` in `server/.env`. |
 
 Further detail: [`shared/README.md`](shared/README.md) (contracts, fixtures), [`server/README.md`](server/README.md) (API, configuration, smoke tests), [`web/README.md`](web/README.md) (routes, mock and live mode), [`scanner/README.md`](scanner/README.md) (builds for each system), and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (images, CI, Compose).

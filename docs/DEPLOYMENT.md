@@ -59,6 +59,8 @@ docker compose up -d
 
 To use the admin page at `https://leaaf.green/admin` (feature 016), set `ADMIN_USERNAME` and a password of at least 16 characters as `ADMIN_PASSWORD` in `deploy/.env`, then run `docker compose up -d` again. Without them the admin area stays off. The password is stored in plain text, so keep `deploy/.env` readable by root only (`chmod 600 deploy/.env`). The per-client login limit needs `TRUSTED_PROXY_IP` (below); without it every visitor counts as Caddy and shares one counter.
 
+To search the web for laptops the knowledge base does not cover (feature 017), set `LANGSEARCH_API_KEY` and `TINYFISH_API_KEY` in `deploy/.env` and run `docker compose up -d` again. Without them web search stays off and results are as before. The server log then says `web search on: langsearch, then tinyfish`. Rotate a key by replacing it there and restarting; the search cache needs no reset. The privacy notice already names both services.
+
 Both containers publish their ports on all host interfaces (since 6c85995, as the production host needs). Keep `WEB_PORT` and `SERVER_PORT` closed to the outside in the host firewall: a reachable API port lets clients bypass Caddy, and if they appear as the trusted proxy address they could set their own forwarded address. The server's data lives in the named volume `leaaf_server-data`. `deploy/.env` both configures Compose and is passed to the server container. The server variables are described in [`server/README.md`](../server/README.md#configuration).
 
 ### Client IP configuration
@@ -103,6 +105,8 @@ curl -sS -D - -o /dev/null -X POST https://leaaf.green/api/admin/login -H 'conte
 ```
 
 With the admin area on, log in at `https://leaaf.green/admin` in a browser, check that the scans are listed, and look at the `leaaf_admin` cookie in the developer tools: `HttpOnly`, `Secure`, `SameSite=Strict`, path `/api/admin`. Six quick wrong logins from one client should end in 429.
+
+With web search on, `docker compose logs server | grep "web search"` shows `web search on: …`, and a scan of a laptop outside the knowledge base shows citations labelled "Web source" on the result page.
 
 Open `https://leaaf.green` in a browser and check that the landing page loads over HTTPS without the "Sample data" label. For the rate-limit smoke check, use a dedicated test client and repeatedly request the report for a missing device with a valid use. Expect 404 until the configured report allowance is spent, then 429 with a positive Retry-After. From a second client IP the first request should still return 404. Repeat on the upload route with an empty JSON object (400 until 429). This checks both client separation through Caddy and the limits without storing scans or calling the provider.
 

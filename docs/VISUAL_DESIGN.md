@@ -37,6 +37,7 @@ Calm, light, and friendly: mostly white and off-white surfaces with one fresh gr
 - **Step block:** same white card as a path card, with the step number in a light-green tile and one line of text.
 - **Loading:** grey shimmer blocks in the exact layout of the final screen; a spinner with a one-line status above them. While waiting for the AI, a thinking line instead: a small leaf glyph whose six petals light up in turn, and a rotating phrase ("Thinking…", "Evaluating…") in muted semibold text.
 - **Errors:** white card with a title and one explanatory sentence; amber notes for incomplete data.
+- **Source links:** green link text "Source: <title>". A page found by web search (feature 017) starts with a small amber "Web source" pill and ends with "· <site> · retrieved <date>" in muted text, so it reads as a source to check. Component: `web/src/components/SourceLink.tsx`.
 
 ## Responsive behavior, accessibility, and motion
 
