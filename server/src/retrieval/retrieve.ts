@@ -183,6 +183,9 @@ export interface OptionQuery {
 /** Default passages per option: more than per path, since a plan has several technical steps. */
 export const OPTION_K = 8
 
+/** Default passages per part lookup: the sentence needs one, the LLM picks from a few. */
+export const PART_K = 3
+
 const TOPICS: readonly Topic[] = ['repair-hardware', 'software-support', 'environmental', 'circular-economy']
 
 export interface Retriever {
@@ -191,6 +194,11 @@ export interface Retriever {
   retrieve(scan: DeviceScan, options?: RetrieveOptions): RetrievalResult
   /** Same filters and ranking as `retrieve`, for one option (feature 009). */
   retrieveOption(scan: DeviceScan, query: OptionQuery, options?: RetrieveOptions): Passage[]
+  /**
+   * Passages that name one of `terms` (feature 018 part lookup), from generic documents and the
+   * matched model's documents, any topic. Empty means the corpus says nothing about the part.
+   */
+  retrievePart(scan: DeviceScan, terms: readonly string[], options?: RetrieveOptions): Passage[]
   close(): void
 }
 
@@ -300,6 +308,10 @@ export function createRetriever(db: DatabaseSync): Retriever {
       const own: Facet[] = query.facets.filter((f) => f.terms.length > 0).map((f) => ({ name: f.name, terms: f.terms }))
       const pathFacets = query.path ? PATH_QUERIES[query.path].facets : []
       return interleave(query.path ? PATH_QUERIES[query.path].topics : TOPICS, [...own, ...pathFacets], scan, model, options.k ?? OPTION_K)
+    },
+    retrievePart(scan, terms, options = {}) {
+      if (terms.length === 0) return []
+      return interleave(TOPICS, [{ name: 'part', terms }], scan, matchModel(scan.identity), options.k ?? PART_K)
     },
     close: () => db.close(),
   }

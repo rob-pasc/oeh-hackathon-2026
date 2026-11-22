@@ -67,6 +67,8 @@ export function loadLlmConfig(env: NodeJS.ProcessEnv = process.env): LlmConfig {
       categories: thinkingMode(env, 'LLM_THINKING_CATEGORIES', 'disabled'),
       // Off as well: a plan is opened by a waiting owner and must stay within its deadline.
       steps: thinkingMode(env, 'LLM_THINKING_STEPS', 'disabled'),
+      // Off: one short sentence per part needs no reasoning.
+      part_lookup: thinkingMode(env, 'LLM_THINKING_PART_LOOKUP', 'disabled'),
     },
   }
 }

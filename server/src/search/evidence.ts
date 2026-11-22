@@ -78,7 +78,7 @@ export function topicQuery(model: ModelMatch, name: string, topic: SearchTopic):
 }
 
 /** A window of page text, starting shortly before the first mention of the topic (spec pages often open with navigation). */
-export function excerpt(text: string, topic: SearchTopic, chars = PASSAGE_CHARS): string {
+export function excerpt(text: string, topic: Pick<SearchTopic, 'covers'>, chars = PASSAGE_CHARS): string {
   const clean = text.replace(/\s+/g, ' ').trim()
   if (clean.length <= chars) return clean
   const at = clean.search(topic.covers)
@@ -86,7 +86,7 @@ export function excerpt(text: string, topic: SearchTopic, chars = PASSAGE_CHARS)
   return clean.slice(start, start + chars)
 }
 
-const urlHash = (url: string) => createHash('sha256').update(url).digest('hex').slice(0, 16)
+export const urlHash = (url: string) => createHash('sha256').update(url).digest('hex').slice(0, 16)
 
 export function webPassage(hit: SearchHit, topic: SearchTopic, model: ModelMatch, retrievedOn: string): Passage {
   const id = `web:${urlHash(hit.url)}`

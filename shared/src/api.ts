@@ -4,6 +4,7 @@
 // POST /api/devices                        body DeviceScan     -> 201 UploadResponse | 400/413/429 ApiError
 // GET  /api/devices/:id                                        -> 200 DeviceRecord   | 404 ApiError
 // GET  /api/devices/:id/report?intended_use=<IntendedUse>      -> text/event-stream (see report.ts) | 400/404/429 ApiError
+// GET  /api/devices/:id/parts                                  -> 200 PartLookupResult (parts.ts) | 404/429 ApiError
 // GET  /api/devices/:id/options/:optionId/steps?intended_use=<IntendedUse> -> 200 StepPlan (steps.ts) | 400/404/429 ApiError
 // GET  /downloads/leaaf-scanner.exe[?session=<SessionId>]       -> the Windows scanner, with the session appended
 // GET  /downloads/leaaf-scanner-linux[?session=<SessionId>]     -> the Linux scanner, with the session appended
@@ -29,6 +30,8 @@ export const API_ROUTES = {
     `/api/devices/${id}/report?intended_use=${encodeURIComponent(use)}`,
   optionSteps: (id: DeviceId, optionId: string, use: IntendedUse) =>
     `/api/devices/${id}/options/${encodeURIComponent(optionId)}/steps?intended_use=${encodeURIComponent(use)}`,
+  /** Part lookups for the scan specs (feature 018). */
+  deviceParts: (id: DeviceId) => `/api/devices/${id}/parts`,
   /** The combined plan's step list (feature 014). */
   planSteps: (id: DeviceId, use: IntendedUse) => `/api/devices/${id}/plan/steps?intended_use=${encodeURIComponent(use)}`,
   /** The Windows download; see SCANNER_DOWNLOADS for the others. */

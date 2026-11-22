@@ -1,6 +1,6 @@
 // HTTP API: device upload, lookup, and the scanner download (feature 001), scan sessions
 // (feature 006 FR-002 to FR-004), the assessment and report stream (features 003 and 004), and the
-// step plan of an opened option (feature 009).
+// step plan of an opened option (feature 009), and the part lookups of the scan specs (feature 018).
 // Routes and bodies follow shared/src/api.ts; every non-2xx JSON response is an ApiError.
 //
 // There is deliberately no public route that lists devices (FR-011): the unguessable device ID is
@@ -24,6 +24,7 @@ import {
   WEB_ROUTES,
   type ApiError,
   type OsFamily,
+  type PartLookupResult,
   type ScanSession,
   type ScanSessionEvent,
   type ReportStatus,
@@ -40,6 +41,7 @@ import { renameZipRoot, ZipError } from './downloads/zip.ts'
 import type { Categorize } from './categories/service.ts'
 import type { SessionStore } from './sessions/store.ts'
 import type { StepService } from './steps/service.ts'
+import type { PartLookupService } from './parts/service.ts'
 
 export interface AppOptions {
   limits?: ReturnType<typeof loadLimits>
@@ -51,6 +53,8 @@ export interface AppOptions {
   categorize?: Categorize | undefined
   /** Builds an opened option's step plan (feature 009); the step route answers 500 without it. */
   steps?: StepService | undefined
+  /** Part lookups for the scan specs (feature 018); absent without an LLM, then the route answers an empty list. */
+  parts?: PartLookupService | undefined
   /** Origin of the web app, used to build device page URLs, e.g. https://leaaf.green */
   publicBaseUrl: string
   /** Path of the Windows scanner executable; the download is 404 while it is missing. */
@@ -151,6 +155,8 @@ export function buildApp(options: AppOptions): FastifyInstance {
     // scan, so no device route can reveal it.
     const { session_id: sessionId, ...scan } = checked.scan
     const record = options.devices.create(scan)
+    // Part lookups start now, so they are usually done when the result screen asks (feature 018 FR-001).
+    options.parts?.start(record)
     if (sessionId) options.sessions.publish(sessionId, { type: 'complete', device_id: record.device_id })
     const deviceUrl = new URL(WEB_ROUTES.device(record.device_id), options.publicBaseUrl).toString()
     return reply.code(201).send({ device_id: record.device_id, device_url: deviceUrl })
@@ -159,6 +165,15 @@ export function buildApp(options: AppOptions): FastifyInstance {
   app.get<{ Params: { id: string } }>('/api/devices/:id', async (req, reply) => {
     const record = options.devices.get(req.params.id)
     return record ? reply.send(record) : reply.code(404).send(NOT_FOUND)
+  })
+
+  // Part lookups (shared/src/parts.ts). JSON rather than part of the report stream, so a slow lookup
+  // never delays the assessment (feature 018 FR-005); the page shows "Looking up…" while it waits.
+  app.get<{ Params: { id: string } }>('/api/devices/:id/parts', { onRequest: hourlyLimit(limits.reportsPerHour) }, async (req, reply) => {
+    const record = options.devices.get(req.params.id)
+    if (!record) return reply.code(404).send(NOT_FOUND)
+    const result: PartLookupResult = options.parts ? await options.parts.lookup(record) : { device_id: record.device_id, parts: [] }
+    return reply.header('cache-control', 'no-store').send(result)
   })
 
   // Report stream (shared/src/report.ts): an optional status while searching the web, the assessment first, then the categories (feature 008),

@@ -9,6 +9,7 @@ import type { Report } from './report.ts'
 import type { CategoryResult } from './categories.ts'
 import type { StepPlan } from './steps.ts'
 import type { Passage } from './retrieval.ts'
+import type { PartLookupResult } from './parts.ts'
 
 /** Whether any value below `value` is null, skipping the dotted paths in `skip`. */
 function containsNull(value: unknown, skip: ReadonlySet<string> = new Set(), path = ''): boolean {
@@ -205,6 +206,25 @@ export function checkStepPlan(plan: StepPlan): string[] {
     if (step.minutes) {
       errors.push(...checkRange(step.minutes, `${label}.minutes`))
       if (step.minutes.low < 0) errors.push(`${label}.minutes must not be negative`)
+    }
+  })
+  return errors
+}
+
+/** Part lookups (feature 018): a sentence and its source together, the badge matching the source. */
+export function checkPartLookupResult(result: PartLookupResult): string[] {
+  const errors: string[] = []
+  const ids = new Set<string>()
+  result.parts.forEach((part, i) => {
+    const label = `parts[${i}]`
+    if (ids.has(part.part_id)) errors.push(`${label}: duplicate part_id ${part.part_id}`)
+    ids.add(part.part_id)
+    const found = part.status !== 'no_match'
+    if (found !== (part.sentence !== null) || found !== (part.source !== null))
+      errors.push(`${label}: sentence and source must be set exactly when status is not no_match`)
+    if (part.source) {
+      errors.push(...checkPassage(part.source))
+      if ((part.status === 'web') !== (part.source.source === 'web')) errors.push(`${label}: status web must cite a web passage, knowledge_base a corpus passage`)
     }
   })
   return errors

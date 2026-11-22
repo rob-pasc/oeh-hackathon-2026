@@ -1,9 +1,9 @@
 // Provider-neutral LLM interface used by fact extraction (feature 003), report explanations
-// (feature 004), the category call (feature 008) and the step call (feature 009). Callers never see provider details; see ADR-002.
+// (feature 004), the category call (feature 008), the step call (feature 009) and the part lookup (feature 018). Callers never see provider details; see ADR-002.
 import type { Static, TSchema } from 'typebox'
 
 /** Each task has its own model settings (e.g. thinking mode). */
-export type LlmTask = 'fact_extraction' | 'explanation' | 'categories' | 'steps'
+export type LlmTask = 'fact_extraction' | 'explanation' | 'categories' | 'steps' | 'part_lookup'
 
 /** enabled/disabled send DeepSeek's `thinking` parameter; omit sends nothing (other providers). */
 export type ThinkingMode = 'enabled' | 'disabled' | 'omit'

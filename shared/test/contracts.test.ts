@@ -5,6 +5,8 @@ import {
   CategoryResult,
   checkCategoryResult,
   checkStepPlan,
+  checkPartLookupResult,
+  PartLookupResult,
   OPTION_KINDS,
   StepPlan,
   DeviceScan,
@@ -51,6 +53,7 @@ describe('fixtures are valid examples', () => {
     ['report.example-laptop-14.office.json', validateReport, checkReport as never],
     ['categories.example-laptop-14.office.json', createValidator(CategoryResult), checkCategoryResult as never],
     ['steps.example-laptop-14.office.json', createValidator(StepPlan), checkStepPlan as never],
+    ['parts.example-laptop-14.json', createValidator(PartLookupResult), checkPartLookupResult as never],
   ]
   it.each(cases)('%s', (name, validate, check) => {
     const value = fixture(name)
@@ -448,5 +451,31 @@ describe('StepPlan (feature 009)', () => {
       expect(validatePlan(p).ok).toBe(true)
       expect(checkStepPlan(p as never)).toEqual([])
     }
+  })
+})
+
+describe('part lookups (feature 018)', () => {
+  const result = () => clone(fixture<any>('parts.example-laptop-14.json'))
+  const validate = createValidator(PartLookupResult)
+
+  it.each([
+    ['a sentence without a source', (r: any) => (r.parts[0].source = null)],
+    ['no_match with a sentence', (r: any) => (r.parts[2].sentence = 'Something.')],
+    ['web status citing a corpus passage', (r: any) => (r.parts[0].status = 'web')],
+    ['knowledge_base citing a web page', (r: any) => (r.parts[1].status = 'knowledge_base')],
+    ['a duplicate part_id', (r: any) => (r.parts[2].part_id = 'cpu')],
+  ])('rejects %s', (_name, mutate) => {
+    const r = result()
+    mutate(r)
+    expect(validate(r).ok && checkPartLookupResult(r).length === 0).toBe(false)
+  })
+
+  it('rejects an unknown kind and an over-long sentence', () => {
+    const kind = result()
+    kind.parts[0].kind = 'keyboard'
+    expect(validate(kind).ok).toBe(false)
+    const long = result()
+    long.parts[0].sentence = 'x'.repeat(241)
+    expect(validate(long).ok).toBe(false)
   })
 })
