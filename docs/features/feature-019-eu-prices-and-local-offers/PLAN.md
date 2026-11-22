@@ -42,7 +42,7 @@ It is the third of three web search features approved together on 2026-11-22 and
 
 - **FR-001:** For each SSD, RAM and battery option on the result screen, the server searches European price sources for the matching part (from the option's facts, for example "M.2 2280 NVMe 1 TB" or the battery for the device's model) and extracts EUR prices. The option card shows a **Web price** range (lowest to highest found) with the number of offers, links to the sources, and the retrieval date.
 - **FR-002:** Web prices never change scores, the ranking, the gauge or the plan totals; the impact table figures stay as they are and stay visible.
-- **FR-003:** Only prices in EUR from an allowlist of European shops and price comparison sites count (configured in the repository, for example geizhals.eu, idealo.at, idealo.de). Fewer than two usable offers show no Web price.
+- **FR-003:** Only prices in EUR from an allowlist of European shops and price comparison sites count (configured in the repository; initially geizhals.eu, geizhals.at, idealo.at and idealo.de). Fewer than two usable offers show no Web price.
 - **FR-004:** Web prices are cached per part query for 7 days.
 - **FR-005:** The step plans of repair, pass it on and recycle options show up to three local offers (name, town, link) found by web search, labelled **Web source · check**. Without a shared location they are searched for Austria.
 - **FR-006:** The result page shows a **Share location** button. On press, the browser asks for location permission; when granted, the page sends the coordinates rounded to two decimals to the server, which turns them into a town name with Nominatim. The offers are then searched for that town, and the page shows "Near <town>" with a control to go back to Austria-wide offers.
@@ -98,7 +98,7 @@ Additive tables only. Location data is deleted with the scan (30 days) and can b
 
 - Assumption: "European standard" prices means EUR prices from European shops and price comparison sites, without a country preference (user, 2026-11-22).
 - Assumption: two decimals (about 1 km) is precise enough to find the town and coarse enough to protect the owner.
-- Open: the initial price source allowlist (proposal: geizhals.eu, geizhals.at, idealo.at, idealo.de, plus manufacturer part shops); to be confirmed during implementation.
+- Decided (user, 2026-11-22): the initial price source allowlist is geizhals.eu, geizhals.at, idealo.at and idealo.de.
 - Open: whether the admin details view (feature 016) should show the shared town (default: no).
 
 ## Scope change log

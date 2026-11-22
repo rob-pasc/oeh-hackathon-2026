@@ -7,7 +7,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Tasks
 
-- [ ] **T-001:** Confirm the price source allowlist with the user and add `config/price-sources.yaml`; add the `WebPrice` and local offer contracts in `shared/` (supports `AC-001`, `AC-003`)
+- [ ] **T-001:** Add `config/price-sources.yaml` with the allowlist confirmed by the user on 2026-11-22 (geizhals.eu, geizhals.at, idealo.at, idealo.de) the `WebPrice` and local offer contracts in `shared/` (supports `AC-001`, `AC-003`)
 - [ ] **T-002:** Build `server/src/prices/`: query building, allowlisted search, LLM price extraction with citations, range, cache; tests including "ranking untouched" (supports `AC-001`–`AC-004`)
 - [ ] **T-003:** Build `server/src/offers/`: per-path queries, LLM extraction of up to three offers, cache per town and path; tests (supports `AC-005`, `AC-010`)
 - [ ] **T-004:** Build the location route, Nominatim client with rate limit and cache, `device_locations` table and retention purge; tests for rounding, no persisted or logged coordinates, failures (supports `AC-006`–`AC-009`)
@@ -18,7 +18,6 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 ## Dependencies and blockers
 
 - Blocked on feature 017 being implemented (search adapter, cap, labels).
-- T-001 needs the user's confirmation of the price source allowlist.
 
 ## Progress notes
 
