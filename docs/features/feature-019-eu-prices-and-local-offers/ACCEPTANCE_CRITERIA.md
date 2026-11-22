@@ -1,7 +1,7 @@
 # Acceptance Criteria: European prices and local offers
 
 - **Feature ID:** `feature-019-eu-prices-and-local-offers`
-- **Verification status:** In progress: AC-001 to AC-010 pass locally; the live smoke run (AC-011), the browser check of AC-006 and CI on `main` (AC-012) are open
+- **Verification status:** In progress: AC-001 to AC-011 pass; the browser check of AC-006 and AC-010 and CI on `main` (AC-012) are open
 
 Defines the feature’s acceptance criteria and records how each criterion was verified, including results and evidence.
 
@@ -17,7 +17,7 @@ Defines the feature’s acceptance criteria and records how each criterion was v
 | AC-008 | FR-008      | Given denied permission, unavailable location, or a failing Nominatim, then Austria-wide offers stay and a short message is shown. | Component and server tests | Pass | `web/src/test/web-prices.test.tsx` denied, unavailable, server-finds-no-town and no-geolocation cases; `server/test/offers.test.ts` "keeps Austria-wide offers when no town is found or the lookup is off" and the Nominatim failure test |
 | AC-009 | FR-009      | Given two location requests within one second, then Nominatim is called at most once per second, with the identifying User-Agent, and a repeated rounded pair uses the cache. | Automated test with fake Nominatim and simulated time | Pass | `server/test/offers.test.ts` "calls at most once per second overall and answers a repeated rounded pair from the cache" (simulated clock: second call ≥ 1000 ms later, a repeated rounded pair makes no call) and "asks for the rounded pair with the identifying User-Agent…" |
 | AC-010 | FR-010      | Search queries for offers contain the town name, never coordinates; the privacy notice (DE/EN) describes the optional location sharing, Nominatim and the retention. | Automated query inspection; read both texts in the browser | Pass | `server/test/offers.test.ts` "searches the shared town, with the town name and nothing else"; `web/src/test/web-prices.test.tsx` "privacy notice (AC-010)" checks both languages. Reading both texts in the browser is still open |
-| AC-011 | All         | Live smoke run: one price search, one offer search and one Nominatim lookup with the team's keys return usable results. | Live run, output recorded | Not run | |
+| AC-011 | All         | Live smoke run: one price search, one offer search and one Nominatim lookup with the team's keys return usable results. | Live run, output recorded | Pass | `npm run prices:smoke -w server`, 2026-11-22, with the team's keys (LangSearch, TinyFish, DeepSeek) and public Nominatim: SSD "500 GB M.2 2280 NVMe SSD" €79.98–253.78 · 15 offers, RAM "8 GB DDR4 SO-DIMM" €71.90–137.93 · 3 offers, battery "Lenovo ThinkPad T480 Akku" €32.99 · 2 offers (all from idealo.de and geizhals.at, found by TinyFish), Nominatim 47.41, 9.74 → Dornbirn, repair offers Austria-wide (three repair cafés in Graz) and near Dornbirn (Reparaturcafe Dornbirn). The first runs found too little; the fixes are in the self-review (findings 8 to 11) |
 | AC-012 | All         | Typecheck, tests and build pass locally, CI passes on the `main` push, and a self-review with location handling checked is recorded with findings and resolutions. | Commands; CI link; review record below | Not run | |
 
 ## Result legend
@@ -46,8 +46,13 @@ Completion boundary: locally verified, merged into `main`, live smoke run (see t
 | 5 | Austria-wide offers are not checked to be in Austria on the server; the query, the AT/de locale and the LLM instruction keep them there, and the server checks only that the page names the place (and its town). | Accepted for now; listed as a residual risk. |
 | 6 | When a new location lookup finds no town, the stored town is cleared rather than kept, so the page and the server agree on Austria-wide. | Intended (FR-008); documented in the server README. |
 | 7 | The privacy notice wording (consent as the legal basis, Nominatim as recipient) was drafted here. | Needs the team's confirmation before release. |
+| 8 | Live run 1: the search chain moved to TinyFish only when LangSearch returned nothing, but LangSearch returned allowlisted pages without prices (forum threads, 1 TB products), so no price and no place passed. | `src/search/lookup.ts`: prices and offers ask providers one by one until enough results pass the server checks. In every live run LangSearch contributed nothing; TinyFish found all results. |
+| 9 | Pages often come back with a title and little text; geizhals titles carry the lowest price ("… ab € 96,70"). Forum subdomains were allowed. | The amount check reads title and text; the allowlist accepts the domain with or without `www.` only. |
+| 10 | SSD and battery lookups varied between runs. | Price queries add "Preisvergleich" and ask for 10 results; in a comparison run this raised allowlisted pages with prices from 1 to 8 for the SSD and from 2 to 7 for the battery. Offers need two places before the next provider is skipped. |
+| 11 | The same product at the same price on several listing pages was counted as several offers. | Offers are unique by product title and price. |
 
 ## Verification notes
 
-- The live smoke run (AC-011) needs the team's search and LLM keys and calls external services; it has not been run.
+- Web price ranges can be wide (the SSD range spans budget and high-end 500 GB drives) because every matching product counts; the impact table figures stay the basis for ranking.
+- LangSearch adds a search per lookup without results for prices or offers; asking TinyFish first for these lookups would save time and cap, but changes the provider order of ADR-008 and is left to the team.
 - CI on the `main` push (AC-012) follows the merge, which needs the user's request.

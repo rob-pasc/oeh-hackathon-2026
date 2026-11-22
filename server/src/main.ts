@@ -17,7 +17,8 @@ import { DEFAULT_CORPUS_INDEX_PATH, IndexError, openRetriever, type Retriever } 
 import { createCategoryService } from './categories/service.ts'
 import { schedulePurge } from './retention.ts'
 import { createSqliteSearchBudget, createSqliteSearchCache, type SearchBudget } from './search/cache.ts'
-import { createConfiguredSearch, loadSearchConfig, type SearchConfig } from './search/config.ts'
+import { createConfiguredSearch, createProviders, loadSearchConfig, type SearchConfig } from './search/config.ts'
+import type { WebLookup } from './search/lookup.ts'
 import { createWebEvidence, type WebEvidence } from './search/evidence.ts'
 import { SearchError, type SearchProvider } from './search/types.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
@@ -99,22 +100,22 @@ const assessments = retriever ? createAssessmentService({ retriever, extractor, 
 // AI fallbacks are recorded for the admin page (feature 016 FR-016).
 const fallbackLog = createFallbackLog(db)
 const categorize = createCategoryService(db, llm, { impactTable, warn, onFallback: fallbackLog.record })
-const prices =
-  assessments && llm && webSearch
-    ? createPriceService({
-        search: webSearch.provider,
+// Prices and offers ask the providers one by one rather than through the chain (search/lookup.ts).
+const webLookup: WebLookup | null =
+  llm && webSearch
+    ? {
+        providers: createProviders(webSearch.config),
         budget: webSearch.budget,
         llm,
-        cache: createSqlitePriceCache(db),
-        domains: priceSources,
-        assessments,
-        shownCategories: categorize.shown,
-        impactTable,
         timeoutMs: webSearch.config.timeoutMs,
         resultsPerQuery: webSearch.config.resultsPerQuery,
         maxChars: webSearch.config.maxChars,
         warn,
-      })
+      }
+    : null
+const prices =
+  assessments && webLookup
+    ? createPriceService({ web: webLookup, cache: createSqlitePriceCache(db), domains: priceSources, assessments, shownCategories: categorize.shown, impactTable })
     : undefined
 // The town shared on a device link narrows local offers (feature 019). NOMINATIM_URL=none turns the
 // lookup off; the button then always keeps Austria-wide offers.
@@ -123,16 +124,7 @@ const nominatimUrl = env.NOMINATIM_URL?.trim() || NOMINATIM_URL
 const geocoder = nominatimUrl === 'none' ? null : createNominatim({ baseUrl: nominatimUrl, userAgent: `leaaf (${publicBaseUrl})`, warn })
 const offers = assessments
   ? createOfferService(db, {
-      web: llm && webSearch
-        ? {
-            search: webSearch.provider,
-            budget: webSearch.budget,
-            llm,
-            timeoutMs: webSearch.config.timeoutMs,
-            resultsPerQuery: webSearch.config.resultsPerQuery,
-            maxChars: webSearch.config.maxChars,
-          }
-        : null,
+      web: webLookup,
       assessments,
       shownCategories: categorize.shown,
       townOf: locationStore.town,

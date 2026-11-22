@@ -96,9 +96,14 @@ export function providerChain(providers: readonly SearchProvider[], options: Cha
   }
 }
 
+/** The configured providers in order, without the chain (feature 019 asks them one by one). */
+export function createProviders(config: SearchConfig, transport?: typeof fetch): SearchProvider[] {
+  return config.providers.map(({ name, apiKey }) => PROVIDERS[name]!.create(apiKey, transport))
+}
+
 /** The configured provider chain; `transport` is injected in tests. */
 export function createConfiguredSearch(config: SearchConfig, options: Omit<ChainOptions, 'primaryTimeoutMs'> & { transport?: typeof fetch } = {}): SearchProvider {
-  const providers = config.providers.map(({ name, apiKey }) => PROVIDERS[name]!.create(apiKey, options.transport))
+  const providers = createProviders(config, options.transport)
   // The primary gets half of the deadline, so a hanging primary still leaves time for the fallback.
   return providerChain(providers, { primaryTimeoutMs: Math.max(1, Math.floor(config.timeoutMs / 2)), ...(options.warn ? { warn: options.warn } : {}) })
 }

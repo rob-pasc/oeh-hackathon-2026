@@ -22,7 +22,8 @@ import { LlmError, type JsonRequest, type LlmClient } from '../src/llm/index.ts'
 import { createNominatim, townOf, type Geocoder } from '../src/location/nominatim.ts'
 import { createSqliteLocationStore } from '../src/location/store.ts'
 import { checkLocalOffers, offerQuery } from '../src/offers/extract.ts'
-import { createOfferService, OFFER_CACHE_DAYS, offerKind, type OfferSearch } from '../src/offers/service.ts'
+import { createOfferService, OFFER_CACHE_DAYS, offerKind } from '../src/offers/service.ts'
+import type { WebLookup } from '../src/search/lookup.ts'
 import { purgeExpiredScans } from '../src/retention.ts'
 import { createRetriever, readCorpus, writeIndex } from '../src/retrieval/index.ts'
 import { SearchError, type SearchHit, type SearchProvider, type SearchQuery } from '../src/search/types.ts'
@@ -77,13 +78,13 @@ afterEach(() => {
   for (const db of databases.splice(0)) db.close()
 })
 
-function setup(opts: { search?: ReturnType<typeof fakeSearch>; llm?: ReturnType<typeof fakeLlm>; web?: false; now?: () => Date } = {}) {
+function setup(opts: { search?: ReturnType<typeof fakeSearch>; providers?: SearchProvider[]; llm?: ReturnType<typeof fakeLlm>; web?: false; now?: () => Date } = {}) {
   const db = new DatabaseSync(':memory:')
   databases.push(db)
   const search = opts.search ?? fakeSearch()
   const llm = opts.llm ?? fakeLlm()
   const locations = createSqliteLocationStore(db)
-  const web: OfferSearch = { search: search.provider, budget: { reserve: () => true }, llm: llm.llm, timeoutMs: 2000, resultsPerQuery: 5, maxChars: 6000 }
+  const web: WebLookup = { providers: opts.providers ?? [search.provider], budget: { reserve: () => true }, llm: llm.llm, timeoutMs: 2000, resultsPerQuery: 5, maxChars: 6000 }
   const offers = createOfferService(db, {
     web: opts.web === false ? null : web,
     assessments,
@@ -152,6 +153,16 @@ describe('local offers (AC-005, AC-010)', () => {
     expect(search.queries[0]!.text).toBe('Laptop spenden Dornbirn')
     expect(search.queries[0]!.locale).toBeUndefined()
     expect(llm.requests[0]!.system).toContain('in or near Dornbirn')
+  })
+
+  it('asks the next provider when the first names no place', async () => {
+    const news = fakeSearch(() => [page('https://news.example/repair', 'Repair Cafés boomen', 'Eine Studie zählt 95 Repair-Café-Initiativen in Österreich.')])
+    const listing = fakeSearch()
+    const llm = fakeLlm((r) => (r.user.includes('news.example') ? [] : austrianCafes))
+    const { offers } = setup({ providers: [news.provider, listing.provider], llm })
+    expect((await offers(record(), 'office', 'battery-swap'))!.offers).toHaveLength(3)
+    expect(news.queries).toHaveLength(1)
+    expect(listing.queries).toHaveLength(1)
   })
 
   it('answers null for an option without local offers or an unknown option', async () => {

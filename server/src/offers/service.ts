@@ -8,9 +8,8 @@ import type { DatabaseSync } from 'node:sqlite'
 import { createValidator, LocalOffer, OFFER_KINDS, type CategoryOption, type DeviceRecord, type DeviceScan, type CategoryResult, type IntendedUse, type LocalOfferList, type OfferKind } from '@leaaf/shared'
 import { Type } from 'typebox'
 import type { AssessmentService, DeviceAssessment } from '../assessment/service.ts'
-import { LlmError, type LlmClient } from '../llm/types.ts'
-import type { SearchBudget } from '../search/cache.ts'
-import { isHttpUrl, SearchError, type SearchProvider } from '../search/types.ts'
+import { lookUp, type WebLookup } from '../search/lookup.ts'
+import { isHttpUrl } from '../search/types.ts'
 import { closestPath } from '../steps/service.ts'
 import { checkLocalOffers, OfferAnswer, offerQuery, offerSystem, offerUserPrompt, PROMPT_VERSION } from './extract.ts'
 
@@ -24,18 +23,28 @@ export function offerKind(option: CategoryOption): OfferKind | null {
   return (OFFER_KINDS as readonly string[]).includes(path ?? '') ? (path as OfferKind) : null
 }
 
-export interface OfferSearch {
-  search: SearchProvider
-  budget: SearchBudget
-  llm: LlmClient
-  timeoutMs: number
-  resultsPerQuery: number
-  maxChars: number
+/**
+ * Checked places for a kind and town, asking providers in turn until one names at least two places.
+ * null when every provider failed (not cached). Also used by scripts/prices-smoke.ts.
+ */
+export function findLocalOffers(web: WebLookup, kind: OfferKind, town: string | null): Promise<LocalOffer[] | null> {
+  return lookUp(web, {
+    label: 'local offer',
+    // Only the kind's words and the town reach the provider (FR-010).
+    query: { text: offerQuery(kind, town), ...(town ? {} : { locale: { country: 'AT', language: 'de' } }) },
+    keep: (h) => isHttpUrl(h.url),
+    extract: async (hits) => {
+      const answer = await web.llm.completeJson({ task: 'web_extraction', system: offerSystem(kind, town), user: offerUserPrompt(hits), schema: OfferAnswer })
+      return checkLocalOffers(answer.value, hits)
+    },
+    // One place is a thin list; a second provider often finds the listing pages (smoke run 2026-11-22).
+    enough: (offers) => offers.length >= 2,
+  })
 }
 
 export interface OfferServiceDeps {
   /** null when web search or the LLM is off: every list is then empty. */
-  web: OfferSearch | null
+  web: WebLookup | null
   assessments: AssessmentService
   shownCategories: (scan: DeviceScan, input: DeviceAssessment) => CategoryResult
   /** The town shared on a device link, or null (location/store.ts). */
@@ -79,41 +88,12 @@ export function createOfferService(db: DatabaseSync, deps: OfferServiceDeps): Of
     return { offers, created_at }
   }
 
-  async function lookup(web: OfferSearch, key: string, kind: OfferKind, town: string | null) {
-    if (!web.budget.reserve()) {
-      deps.warn?.('daily web search limit reached; showing no local offers')
-      return null
-    }
-    let hits
-    try {
-      // Only the kind's words and the town reach the provider (FR-010).
-      hits = await web.search.search(
-        {
-          text: offerQuery(kind, town),
-          maxResults: web.resultsPerQuery,
-          maxChars: web.maxChars,
-          ...(town ? {} : { locale: { country: 'AT', language: 'de' } }),
-        },
-        AbortSignal.timeout(web.timeoutMs),
-      )
-    } catch (error) {
-      if (!(error instanceof SearchError)) throw error
-      deps.warn?.('local offer search failed', { kind: error.kind })
-      return null
-    }
-    hits = hits.filter((h) => isHttpUrl(h.url))
-    if (hits.length === 0) return store(key, [])
-    try {
-      const answer = await web.llm.completeJson({ task: 'web_extraction', system: offerSystem(kind, town), user: offerUserPrompt(hits), schema: OfferAnswer })
-      return store(key, checkLocalOffers(answer.value, hits))
-    } catch (error) {
-      if (!(error instanceof LlmError)) throw error
-      deps.warn?.('local offer extraction failed', { kind: error.kind })
-      return null
-    }
+  async function lookup(web: WebLookup, key: string, kind: OfferKind, town: string | null) {
+    const found = await findLocalOffers(web, kind, town)
+    return found ? store(key, found) : null
   }
 
-  function offers(web: OfferSearch, kind: OfferKind, town: string | null) {
+  function offers(web: WebLookup, kind: OfferKind, town: string | null) {
     const key = keyOf(kind, town)
     const hit = cached(key)
     if (hit) return Promise.resolve(hit)

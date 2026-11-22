@@ -3,22 +3,20 @@
 // Prices are read for the options the result screen already shows and are returned on their own
 // route: they never enter the category result, so scores, ranking, gauge and plan totals cannot
 // change (FR-002). Searches share feature 017's daily cap.
-import { MIN_WEB_PRICE_OFFERS, type CategoryResult, type DeviceRecord, type DeviceScan, type IntendedUse, type WebPrice, type WebPriceList } from '@leaaf/shared'
+import { MIN_WEB_PRICE_OFFERS, type CategoryResult, type DeviceRecord, type DeviceScan, type IntendedUse, type WebPrice, type WebPriceList, type WebPriceOffer } from '@leaaf/shared'
 import type { DeviceAssessment, AssessmentService } from '../assessment/service.ts'
 import { optionContext } from '../categories/service.ts'
 import type { ImpactTable } from '../impact/table.ts'
-import { LlmError, type LlmClient } from '../llm/types.ts'
-import type { SearchBudget } from '../search/cache.ts'
-import { SearchError, type SearchHit, type SearchProvider } from '../search/types.ts'
+import { lookUp, type WebLookup } from '../search/lookup.ts'
+import type { SearchHit } from '../search/types.ts'
 import type { CachedPrice, PriceCache } from './cache.ts'
 import { checkOffers, PRICE_SYSTEM, PriceAnswer, priceUserPrompt, PROMPT_VERSION } from './extract.ts'
 import { partFor, type PricePart } from './part.ts'
 import { onDomains } from './sources.ts'
 
 export interface PriceServiceDeps {
-  search: SearchProvider
-  budget: SearchBudget
-  llm: LlmClient
+  /** Providers, cap and LLM for the lookups. */
+  web: WebLookup
   cache: PriceCache
   /** The allowlist (config/price-sources.yaml). */
   domains: readonly string[]
@@ -26,12 +24,34 @@ export interface PriceServiceDeps {
   /** The categories the result screen shows, without a category call (categories/service.ts). */
   shownCategories: (scan: DeviceScan, input: DeviceAssessment) => CategoryResult
   impactTable: ImpactTable
-  /** Deadline for one part's search. */
-  timeoutMs: number
-  resultsPerQuery: number
-  maxChars: number
-  /** Receives failures (error kinds only), never device IDs or page text. */
-  warn?: (message: string, details?: Record<string, unknown>) => void
+}
+
+/**
+ * Results asked for per price search. Shop and comparison pages often come back with a title and
+ * little text, so more of them give a range more often (smoke run 2026-11-22). TinyFish fetches at
+ * most 10 pages.
+ */
+export const PRICE_RESULTS = 10
+
+/** FR-012 of feature 017 applies: the part and "Preisvergleich" (price comparison), nothing from the scan but the model. */
+export const priceQuery = (part: PricePart) => `${part.label} Preisvergleich`
+
+/**
+ * The checked offers for one part, asking providers in turn until one gives enough for a range.
+ * null when every provider failed (not cached). Also used by scripts/prices-smoke.ts.
+ */
+export function findPartOffers(web: WebLookup, part: PricePart, domains: readonly string[]): Promise<WebPriceOffer[] | null> {
+  const keep = (h: SearchHit) => onDomains(h.url, domains) && (part.accept?.(h) ?? true)
+  return lookUp(web, {
+    label: 'web price',
+    query: { text: priceQuery(part), maxResults: PRICE_RESULTS, includeDomains: domains, accept: keep },
+    keep,
+    extract: async (hits) => {
+      const answer = await web.llm.completeJson({ task: 'web_extraction', system: PRICE_SYSTEM, user: priceUserPrompt(part, hits), schema: PriceAnswer })
+      return checkOffers(answer.value, hits, part, domains)
+    },
+    enough: (offers) => offers.length >= MIN_WEB_PRICE_OFFERS,
+  })
 }
 
 export type PriceService = (record: DeviceRecord, use: IntendedUse) => Promise<WebPriceList>
@@ -43,33 +63,9 @@ export function createPriceService(deps: PriceServiceDeps): PriceService {
   const keyOf = (part: PricePart) => `${PROMPT_VERSION}\u001f${deps.domains.join(',')}\u001f${part.label}`.toLowerCase()
 
   async function lookup(part: PricePart): Promise<CachedPrice | null> {
-    if (!deps.budget.reserve()) {
-      deps.warn?.('daily web search limit reached; showing no web price')
-      return null
-    }
-    let hits: SearchHit[]
-    try {
-      const accept = (h: SearchHit) => onDomains(h.url, deps.domains) && (part.accept?.(h) ?? true)
-      const found = await deps.search.search(
-        { text: part.label, maxResults: deps.resultsPerQuery, maxChars: deps.maxChars, includeDomains: deps.domains, accept },
-        AbortSignal.timeout(deps.timeoutMs),
-      )
-      hits = found.filter(accept)
-    } catch (error) {
-      if (!(error instanceof SearchError)) throw error
-      // Failures are not cached; the next result page tries again.
-      deps.warn?.('web price search failed', { kind: error.kind })
-      return null
-    }
-    if (hits.length === 0) return deps.cache.set(keyOf(part), [])
-    try {
-      const answer = await deps.llm.completeJson({ task: 'web_extraction', system: PRICE_SYSTEM, user: priceUserPrompt(part, hits), schema: PriceAnswer })
-      return deps.cache.set(keyOf(part), checkOffers(answer.value, hits, part, deps.domains))
-    } catch (error) {
-      if (!(error instanceof LlmError)) throw error
-      deps.warn?.('web price extraction failed', { kind: error.kind })
-      return null
-    }
+    const offers = await findPartOffers(deps.web, part, deps.domains)
+    // Failures are not cached; the next result page tries again.
+    return offers ? deps.cache.set(keyOf(part), offers) : null
   }
 
   function partPrice(part: PricePart): Promise<CachedPrice | null> {

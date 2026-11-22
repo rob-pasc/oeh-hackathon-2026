@@ -21,9 +21,12 @@ export function loadPriceSources(path: string | URL = DEFAULT_PRICE_SOURCES_PATH
 /** Host of a page as shown to the owner, without "www.". */
 export const publisherOf = (url: string): string => new URL(url).hostname.toLowerCase().replace(/^www\./, '')
 
-/** Whether the URL is an http(s) page on one of the domains or a subdomain of one. */
+/**
+ * Whether the URL is an http(s) page on one of the domains, with or without "www.". Other
+ * subdomains (forum.geizhals.at) do not count: they hold discussions, not offers.
+ */
 export function onDomains(url: string, domains: readonly string[]): boolean {
   if (!isHttpUrl(url)) return false
-  const host = new URL(url).hostname.toLowerCase()
-  return domains.some((d) => host === d || host.endsWith(`.${d}`))
+  const host = new URL(url).hostname.toLowerCase().replace(/^www\./, '')
+  return domains.includes(host)
 }

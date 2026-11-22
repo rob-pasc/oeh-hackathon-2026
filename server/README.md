@@ -77,13 +77,16 @@ When retrieval has no model-specific passage for a fact topic (memory, storage, 
 
 The same search providers and daily cap serve web prices and local offers ([feature 019](../docs/features/feature-019-eu-prices-and-local-offers/PLAN.md)). Both are shown next to the impact table figures and never change scores, ranking or plan totals. Without a search key or an LLM, both lists are empty.
 
-- **Web prices** (`src/prices/`): the part an SSD, RAM or battery option would buy, named like the impact table prices it (`part.ts`), is searched on the domains in [`config/price-sources.yaml`](../config/price-sources.yaml) only. One LLM call (`web_extraction`) lists the offers. The server keeps only EUR offers from allowlisted pages, within plausible bounds, whose exact amount appears in the page text. At least two offers make a range. `web_price_cache` keeps the checked offers per part for 7 days.
+- **Providers one by one** (`src/search/lookup.ts`): unlike the fact search's chain, price and offer lookups ask the next provider when the first gives too few *checked* results (fewer than two offers or places), since providers differ a lot in how much text they return for shop and listing pages. Each provider call reserves one search from the daily cap.
+- **Web prices** (`src/prices/`): the part an SSD, RAM or battery option would buy, named like the impact table prices it (`part.ts`), is searched as "<part> Preisvergleich" with 10 results, on the domains in [`config/price-sources.yaml`](../config/price-sources.yaml) only (with or without `www.`, not other subdomains). One LLM call (`web_extraction`) lists the offers. The server keeps only EUR offers from allowlisted pages, within plausible bounds, whose exact amount appears in the page title or text (comparison titles carry a product's lowest price), counting a product at one price once. At least two offers make a range. `web_price_cache` keeps the checked offers per part for 7 days.
 - **Local offers** (`src/offers/`): a repair, pass it on or recycle option searches for repair cafés, donation or drop-off points in Austria, or in the town shared on the device link. Only the town, never coordinates, goes into the query. Up to three places are kept, each named on its page. `local_offer_cache` keeps them for 7 days per kind and town, keyed by a hash.
 - **Shared town** (`src/location/`): the page sends coordinates rounded to two decimals. The server rounds them again and asks Nominatim for the town: one request per second at most, with the User-Agent `leaaf (<PUBLIC_BASE_URL>)`, and lookups are cached in memory per rounded pair. Only the town is stored, in `device_locations`, which the retention purge empties with the scan. Coordinates are never written to the database or the log.
 
 | Environment variable | Default | Allowed value |
 |---|---:|---|
 | `NOMINATIM_URL` | `https://nominatim.openstreetmap.org` | Base URL of a Nominatim server, or `none` to turn the town lookup off |
+
+`npm run prices:smoke -w server` runs the live lookups once: prices for an SSD, a RAM module and a battery, Nominatim for the centre of Dornbirn, and repair offers Austria-wide and for that town. It uses the configured keys but not the cap or caches.
 
 ## LLM adapter
 

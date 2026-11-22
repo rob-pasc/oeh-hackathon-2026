@@ -108,25 +108,27 @@ afterEach(() => {
   for (const db of databases.splice(0)) db.close()
 })
 
-function setup(options: { search?: ReturnType<typeof fakeSearch>; llm?: ReturnType<typeof fakeLlm>; budget?: SearchBudget; now?: () => Date } = {}) {
+function setup(options: { search?: ReturnType<typeof fakeSearch>; providers?: SearchProvider[]; llm?: ReturnType<typeof fakeLlm>; budget?: SearchBudget; now?: () => Date } = {}) {
   const db = new DatabaseSync(':memory:')
   databases.push(db)
   const search = options.search ?? fakeSearch()
   const llm = options.llm ?? fakeLlm()
   const warnings: string[] = []
   const prices = createPriceService({
-    search: search.provider,
-    budget: options.budget ?? { reserve: () => true },
-    llm: llm.llm,
+    web: {
+      providers: options.providers ?? [search.provider],
+      budget: options.budget ?? { reserve: () => true },
+      llm: llm.llm,
+      timeoutMs: 2000,
+      resultsPerQuery: 5,
+      maxChars: 6000,
+      warn: (m) => warnings.push(m),
+    },
     cache: createSqlitePriceCache(db, options.now),
     domains: DOMAINS,
     assessments,
     shownCategories,
     impactTable,
-    timeoutMs: 2000,
-    resultsPerQuery: 5,
-    maxChars: 6000,
-    warn: (m) => warnings.push(m),
   })
   return { db, prices, search, llm, warnings }
 }
@@ -151,9 +153,10 @@ describe('price sources (FR-003)', () => {
     }
   })
 
-  it('accepts the domains and their subdomains only', () => {
+  it('accepts the domains with or without www only', () => {
     expect(onDomains('https://www.idealo.de/x', DOMAINS)).toBe(true)
     expect(onDomains('https://geizhals.at/a1.html', DOMAINS)).toBe(true)
+    expect(onDomains('https://forum.geizhals.at/t1.html', DOMAINS)).toBe(false)
     expect(onDomains('https://geizhals.at.evil.example/', DOMAINS)).toBe(false)
     expect(onDomains('https://notidealo.de/', DOMAINS)).toBe(false)
     expect(onDomains('ftp://geizhals.at/', DOMAINS)).toBe(false)
@@ -202,8 +205,15 @@ describe('price extraction checks (FR-003)', () => {
     expect(kept).toEqual([{ title: 'Kingston NV3', url: ssdPage.url, publisher: 'geizhals.at', price_eur: 39.9 }])
   })
 
-  it('drops implausible amounts such as shipping and duplicates of the same offer', () => {
-    expect(checkOffers({ offers: [offer(4.99), offer(39.9), offer(39.9)] }, [ssdPage], part, DOMAINS).map((o) => o.price_eur)).toEqual([39.9])
+  it('accepts a lowest price that only the page title shows', () => {
+    const titled = hit('https://geizhals.at/intenso-mi500-500gb-a2.html', 'Intenso MI500 SSD 500GB, M.2 2280, PCIe 3.0', 'Intenso MI500 SSD 500GB ab € 46,70 (2026)')
+    expect(checkOffers({ offers: [offer(46.7)] }, [titled], part, DOMAINS)).toEqual([{ title: 'Kingston NV3', url: titled.url, publisher: 'geizhals.at', price_eur: 46.7 }])
+  })
+
+  it('drops implausible amounts such as shipping, and counts a product at one price once across pages', () => {
+    const listing = hit('https://www.idealo.de/liste.html', 'Kingston NV3 500GB 39,90 € · Samsung 980 500GB 39,90 €')
+    const kept = checkOffers({ offers: [offer(4.99), offer(39.9), offer(39.9, 'EUR', 2), { page: 2, title: 'Samsung 980', price: 39.9, currency: 'EUR' }] }, [ssdPage, listing], part, DOMAINS)
+    expect(kept.map((o) => [o.title, o.price_eur])).toEqual([['Kingston NV3', 39.9], ['Samsung 980', 39.9]])
   })
 })
 
@@ -220,7 +230,8 @@ describe('web prices (AC-001, AC-003)', () => {
   it('searches only the part on the allowlisted sites', async () => {
     const { prices, search } = setup()
     await prices(record(), 'office')
-    expect(search.queries.map((q) => q.text)).toEqual(['500 GB 2.5" SATA SSD', '8 GB DDR4 SO-DIMM', 'Acme Book 14 Akku'])
+    expect(search.queries.map((q) => q.text)).toEqual(['500 GB 2.5" SATA SSD Preisvergleich', '8 GB DDR4 SO-DIMM Preisvergleich', 'Acme Book 14 Akku Preisvergleich'])
+    expect(search.queries.every((q) => q.maxResults === 10)).toBe(true)
     expect(search.queries.every((q) => q.includeDomains === DOMAINS)).toBe(true)
   })
 
@@ -242,6 +253,32 @@ describe('web prices (AC-001, AC-003)', () => {
     const { prices, llm } = setup({ search })
     expect((await prices(record(), 'office')).prices).toEqual([])
     expect(llm.requests).toHaveLength(0)
+  })
+})
+
+describe('providers one by one', () => {
+  it('asks the next provider when the first gives too few checked offers, and stops once one gives enough', async () => {
+    const thin = fakeSearch(() => [hit('https://forum.geizhals.at/t1.html', 'SSD um € 40,00?'), hit('https://geizhals.eu/1tb.html', 'Samsung 970 EVO Plus 1TB ab € 300,00')])
+    const rich = fakeSearch()
+    const third = fakeSearch()
+    const llm = fakeLlm((user) => (user.includes('geizhals.eu/1tb') ? [] : defaultOffers(user)))
+    const { prices } = setup({ providers: [thin.provider, rich.provider, third.provider], llm })
+    const list = valid(await prices(record(), 'office'))
+    expect(list.prices.map((p) => p.option_id)).toEqual(['ssd-swap', 'ram-add', 'battery-swap'])
+    expect(thin.queries).toHaveLength(3)
+    expect(rich.queries).toHaveLength(3)
+    expect(third.queries).toHaveLength(0)
+    // The forum page never reached the LLM.
+    expect(llm.requests.every((r) => !r.user.includes('forum.geizhals.at'))).toBe(true)
+  })
+
+  it('keeps going after a provider fails and reserves one search per provider call', async () => {
+    let reserved = 0
+    const down: SearchProvider = { name: 'down', search: async () => { throw new SearchError('unavailable', 'down') } }
+    const { prices, warnings } = setup({ providers: [down, fakeSearch().provider], budget: { reserve: () => (reserved++, true) } })
+    expect((await prices(record(), 'office')).prices).toHaveLength(3)
+    expect(reserved).toBe(6)
+    expect(warnings).toContain('web price search failed')
   })
 })
 
