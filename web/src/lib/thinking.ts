@@ -8,7 +8,7 @@ export const THINKING_PHRASES = [
   'Reading the repair manuals…',
   'Checking the sources…',
   'Counting the CO₂e…',
-  'Comparing the five paths…',
+  'Looking under the hood…',
   'Consulting the parts list…',
   'Mulling it over…',
   'Crunching the numbers…',
@@ -16,6 +16,11 @@ export const THINKING_PHRASES = [
   'Considering a second life…',
   'Sprouting ideas…',
   'Photosynthesizing…',
+  'Reading the spec sheet…',
+  'Pricing the parts…',
+  'Weighing repair against recycling…',
+  'Dusting off the fans…',
+  'Turning over a new leaf…',
 ] as const
 
 /** Shown, without rotating, while the server searches the web for the scanned model (feature 017 FR-013). */
