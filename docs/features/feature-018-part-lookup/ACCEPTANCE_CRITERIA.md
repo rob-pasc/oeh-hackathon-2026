@@ -17,7 +17,7 @@ Defines the feature’s acceptance criteria and records how each criterion was v
 | AC-008 | FR-008      | In mock mode, the result screen shows sample lookups with all four badges. | Browser check in mock mode | Pass | `web/src/test/parts.test.tsx` "AC-008": Looking up…, then 2 × Knowledge base, 2 × Web search · check, 1 × No match; same in the headless Chromium check |
 | AC-009 | FR-009      | The privacy notice (DE/EN) says that part names, and no other scan data, go to the search providers. | Read both texts in the browser | Not run | Texts added (DE/EN) and checked by `web/src/test/parts.test.tsx` "privacy notice (FR-009)"; the team's read in the browser is open |
 | AC-010 | All         | A live lookup with the team's keys returns at least one Web search · check result for a part outside the corpus. | Live smoke run, output recorded | Pass | `npm run parts:smoke -w server`, 2026-11-22: 5 parts in 6925 ms, 4 × Web search · check (CPU, DDR4, HD Graphics 620, NVMe SSD), battery Knowledge base; recorded in `server/README.md` |
-| AC-011 | All         | Typecheck, tests and build pass locally, CI passes on the `main` push, and a self-review is recorded with findings and resolutions. | Commands; CI link; review record below | Not run | Local typecheck, tests (shared 149, server 442, web 155) and build pass; self-review below. Merge into `main` and CI on the push need the user's request |
+| AC-011 | All         | Typecheck, tests and build pass locally, CI passes on the `main` push, and a self-review is recorded with findings and resolutions. | Commands; CI link; review record below | Not run | Local typecheck, tests (shared 149, server 442, web 155) and build pass; self-review below. Merged into `main` on 2026-11-22 (818161e, then bdf5537 with feature 019); typecheck, tests (shared 156, server 483, web 171) and build pass on the merge. CI on the `main` push is open |
 
 ## Result legend
 
@@ -44,7 +44,7 @@ Completion boundary: locally verified, merged into `main`, live smoke run (see t
 | Web page URLs reach the page as links | No change needed: both providers keep only http(s) URLs (`isHttpUrl`), and sentences render as text |
 | Exclusions | Checked: no scanner change, the scan page's live card unchanged, no effect on assessment or ranking, no prices |
 
-CI on the `main` push and the merge are not done (need the user's request).
+Merged into `main` on 2026-11-22 at the user's request (818161e; feature 019 merged after it in bdf5537, whose conflicts in the LLM task list, search wiring and privacy notice kept both features). CI on the `main` push is not done yet.
 
 ## Verification notes
 

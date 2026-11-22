@@ -2,7 +2,7 @@
 
 How leaaf is built, published, and run in production. Scope and open decisions are in [feature 005](features/feature-005-public-demo-deployment/PLAN.md). This guide does not authorize a deployment; each release to the public host needs the team's go-ahead.
 
-**Deployment status (updated 2026-11-21).** `https://leaaf.green` runs `v0.5.0` on the team's own server in Vorarlberg, operated by Marco Stadelmann, behind Caddy. The post-release smoke checks, the HTTPS check and the rate-limit check passed from outside on 2026-11-21 (feature 005 AC-001, AC-005). The repository and scanner secret scan passed (AC-007). Still open: the backup and restore procedure and its rehearsal, the rollback rehearsal, and the host-side port check (AC-014).
+**Deployment status (updated 2026-11-22).** `https://leaaf.green` runs `v0.5.2` (version read from the live Windows scanner download on 2026-11-22; `v0.5.0` was checked on 2026-11-21) on the team's own server in Vorarlberg, operated by Marco Stadelmann, behind Caddy. The post-release smoke checks, the HTTPS check and the rate-limit check passed from outside on 2026-11-21 (feature 005 AC-001, AC-005). The repository and scanner secret scan passed (AC-007). Still open: the backup and restore procedure and its rehearsal, the rollback rehearsal, and the host-side port check (AC-014).
 
 ## Release images
 

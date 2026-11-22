@@ -118,7 +118,7 @@ None superseded at specification. Builds on [feature 003](../feature-003-five-pa
 - **FR-004 to FR-006** stay in force for the category call's text and citations.
 - The explanation service (`server/src/report/`) remains in the code base but is no longer called by the report stream.
 
-**Partly replaced by [feature 009](../feature-009-concrete-step-plans/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on `main`, commits 22938bd "feat(server): build step plans for opened options" and bf1ed95 "feat(web): show step plans in opened option cards"; effective there, not pushed yet):
+**Partly replaced by [feature 009](../feature-009-concrete-step-plans/PLAN.md#related-and-superseded-features)** (implemented 2026-11-21 on `main`, commits 22938bd "feat(server): build step plans for opened options" and bf1ed95 "feat(web): show step plans in opened option cards"; effective there, released in `v0.5.0`):
 - **FR-003's** "What to do next" section (one-line `next_steps` without citations) is replaced, for options, by structured step plans with per-step sources (009 FR-002 to FR-007).
 - **FR-005's** figure rule carries over to step text (009 FR-008).
 - **FR-009** (template fallback) is extended by template step plans (009 FR-011).

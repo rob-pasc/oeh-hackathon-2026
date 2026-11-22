@@ -1,7 +1,7 @@
 # Acceptance Criteria: Web evidence for model facts
 
 - **Feature ID:** `feature-017-web-evidence-for-model-facts`
-- **Verification status:** Implemented; locally verified, CI and the team's browser read of the privacy notice pending
+- **Verification status:** Implemented; locally verified and CI passed on `main` (AC-017); the team's browser read of the privacy notice (AC-014) is pending
 
 Defines the feature’s acceptance criteria and records how each criterion was verified, including results and evidence.
 
@@ -25,7 +25,7 @@ Test names below are from `server/test/search.test.ts` (server) and `web/src/tes
 | AC-014 | FR-012         | The privacy notice in German and English names LangSearch and TinyFish, what is sent, and that no personal data is sent. | Read both texts in the browser | Not run | Texts added to section 4 of `web/src/legal/content.ts` (DE/EN), "Recipients" adjusted, `lastUpdated` 2026-11-22. Automated check "names both search services and what they receive, in German and English" passes. The read in the browser by the team is still open. |
 | AC-015 | FR-013         | Given the stream reports a running web search, when the result screen waits, then the thinking line shows "Searching the web…" (German „Suche im Web…“). | Automated component test | Pass | 2026-11-22: "shows "Searching the web…" after a web_search status until the assessment arrives", "keeps a fixed phrase instead of rotating", "does not show it without a status event"; server: "sends a web_search status before the assessment while searching", "sends no status when nothing is searched". Browser screenshot in mock mode shows the line. The German phrase is not implemented because the result screen has no German version (open question in the plan). |
 | AC-016 | FR-014         | With the team's keys in `server/.env`, `npm run search:smoke -w server` reports results and kept results for each provider and exits 0; with a wrong key it reports the error and exits non-zero. | Live run, output recorded | Pass | 2026-11-22: LangSearch 5 results, 4 naming "ThinkPad T470", 4524 ms; TinyFish 5 results, 4 naming it (including Lenovo's PSREF spec sheet), 8692 ms; "search smoke test passed", exit 0. The wrong-key path is covered by the provider tests ("maps HTTP and envelope errors…": 401 → `auth`) and the script sets exit code 1 on any provider error; not run live with a wrong key. |
-| AC-017 | All            | `npm run typecheck`, `npm test` and `npm run build` pass locally, and CI passes on the `main` push containing the feature. | Commands; CI run link | Not run | Local 2026-11-22: typecheck exit 0; `npm test` shared 141, server 422, web 148 tests pass; build exit 0. CI not run: the commits are not pushed (pushing needs the user's request). |
+| AC-017 | All            | `npm run typecheck`, `npm test` and `npm run build` pass locally, and CI passes on the `main` push containing the feature. | Commands; CI run link | Pass | Local 2026-11-22: typecheck exit 0; `npm test` shared 141, server 422, web 148 tests pass; build exit 0. CI 2026-11-22: [CI run 45013477022](https://github.com/rob-pasc/oeh-hackathon-2026/actions/runs/45013477022) on the `main` push of 6b06d55 (the feature's documentation commit) passed. |
 | AC-018 | All            | Self-review of the final diff against this plan is recorded with findings and resolutions, checking query privacy, the battery rule and the model-match filter in particular. | Review record below | Pass | See "Review and integration evidence". |
 | AC-019 | FR-015         | Given `model_evidence: "web"`, then upgrade, repair and salvage have confidence at most medium with the reason "Model-specific facts come from web pages, not from the curated knowledge base", and not the "No model-specific documentation" reason. | Automated assessment test | Pass | 2026-11-22: asserted in "uses web facts for the gates of an uncovered model…". Live: the T470's upgrade path was `medium`. |
 
@@ -54,7 +54,7 @@ Completion boundary: locally verified, merged into `main`, live smoke run (see t
 | Default deadline of 8 s (proposal) would cut LangSearch off at its 4 s share. | Changed to 20 s before commit; recorded in the plan. |
 | Behavior beyond the written requirements: confidence drops one level with web-only evidence. | Recorded as FR-015 with AC-019, pending the user's confirmation. |
 
-CI: not run (not pushed). Merge: the work is committed directly on `main`, as the team works without pull requests.
+CI: [CI run 45013477022](https://github.com/rob-pasc/oeh-hackathon-2026/actions/runs/45013477022) passed on the `main` push of 6b06d55 (2026-11-22); the tag runs of `v0.5.1` and `v0.5.2` passed too. Merge: the work is committed directly on `main`, as the team works without pull requests.
 
 ## Verification notes
 

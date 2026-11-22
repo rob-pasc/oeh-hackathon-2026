@@ -115,7 +115,7 @@ Not applicable: no deployment exists yet (feature 005 owns it). The `step_cache`
 
 ## Related and superseded features
 
-The replacements below were implemented 2026-11-21 on `main` (commits 22938bd "feat(server): build step plans for opened options" and bf1ed95 "feat(web): show step plans in opened option cards") and are effective there. They are not pushed yet.
+The replacements below were implemented 2026-11-21 on `main` (commits 22938bd "feat(server): build step plans for opened options" and bf1ed95 "feat(web): show step plans in opened option cards") and are effective there. They were released in `v0.5.0`.
 
 - [`feature-004-explained-report`](../feature-004-explained-report/PLAN.md): the "What to do next" section of **FR-003** (one-line `next_steps` strings without citations) is replaced, for options, by the structured step plans here. FR-005's figure rule carries over (FR-008 here). FR-009's template fallback is extended by FR-011.
 - [`feature-006-web-app`](../feature-006-web-app/PLAN.md): the step blocks of **FR-015** and the "What to do" steps of **FR-017** are replaced by the step blocks of FR-002 to FR-007 here. FR-045 (thinking line) applies unchanged (FR-010).
@@ -124,7 +124,7 @@ The replacements below were implemented 2026-11-21 on `main` (commits 22938bd "f
 
 **State before this feature (2026-11-21, after feature 008 was merged into `main`, 17c04b4).** The behaviour named above for replacement was already gone from the result screen. The report stream no longer sends feature 004's explained report, so its "What to do next" sections are not shown. Feature 006's path step blocks and proposed option cards were replaced by 008's option cards, which show "Why" and up to two sources but no steps. This feature fills that steps area. The fallback categories of 008 FR-013 carry `path` and the option kinds of `shared/src/categories.ts`, as FR-011 and FR-012 here expect.
 - [`feature-014-plan-step-list`](../feature-014-plan-step-list/PLAN.md) reuses this feature's step rules (FR-002 to FR-008, FR-011) for one step list of the combined plan, with up to 16 steps; single-option plans are unchanged. Implemented 2026-11-21 on `feat/combined-plan`.
-- [`feature-019-eu-prices-and-local-offers`](../feature-019-eu-prices-and-local-offers/PLAN.md) extends the opened cards of repair, pass it on and recycle options with a local offers block below the steps (019 FR-005), loaded from its own route; the steps and their rules here are unchanged. Implemented 2026-11-22 on `feat/pricesandoffers`, not merged yet.
+- [`feature-019-eu-prices-and-local-offers`](../feature-019-eu-prices-and-local-offers/PLAN.md) extends the opened cards of repair, pass it on and recycle options with a local offers block below the steps (019 FR-005), loaded from its own route; the steps and their rules here are unchanged. Implemented 2026-11-22 on `feat/pricesandoffers`, merged into `main` in bdf5537 (not released).
 
 ## References
 

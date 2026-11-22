@@ -55,4 +55,4 @@ Completion boundary: locally verified, merged into `main`, live smoke run (see t
 
 - Web price ranges can be wide (the SSD range spans budget and high-end 500 GB drives) because every matching product counts; the impact table figures stay the basis for ranking.
 - LangSearch adds a search per lookup without results for prices or offers; asking TinyFish first for these lookups would save time and cap, but changes the provider order of ADR-008 and is left to the team.
-- CI on the `main` push (AC-012) follows the merge, which needs the user's request.
+- Merged into `main` on 2026-11-22 at the user's request (bdf5537, after feature 018); typecheck, tests (shared 156, server 483, web 171) and build pass on the merge. CI on the `main` push (AC-012) is open.

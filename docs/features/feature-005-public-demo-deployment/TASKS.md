@@ -24,7 +24,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 
 ## Dependencies and blockers
 
-- ~~**Blocking:** VPS provider undecided (T-001).~~ Resolved 2026-11-21: the team's own server. `v0.5.0` is deployed; further deployments still need the team's go-ahead (T-008).
+- ~~**Blocking:** VPS provider undecided (T-001).~~ Resolved 2026-11-21: the team's own server. `v0.5.0` is deployed; further deployments still need the team's go-ahead (T-008). *(2026-11-22: the live scanner download reports `v0.5.2`, so the team has deployed since; its post-release checks are not recorded here.)*
 - AC-014 needs Marco to check the host: leaaf runs from `deploy/compose.yaml`, and its web and API ports are unreachable from outside (port 8080 on the public address is open).
 - The live web app uses the implemented assessment and explanation stream. Local request-limit verification is recorded in the acceptance criteria. Public verification awaits deployment.
 - ~~Seeding awaits real scans for the three selected demo models and the seed implementation.~~ Seeding dropped 2026-11-21.

@@ -12,17 +12,17 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-003:** Add the part lookup LLM call with the citation check and delivery to the result screen; tests (supports `AC-003`, `AC-005`)
 - [x] **T-004:** Web app: badges, sentence and link in the scan specs, mock data; component tests (supports `AC-004`, `AC-008`)
 - [ ] **T-005:** Privacy notice DE/EN, server README, README status (supports `AC-009`) *(2026-11-22: all written, plus `server/.env.example`, `deploy/.env.example`, `docs/DEPLOYMENT.md`, `docs/GLOSSARY.md` and `docs/PRODUCT.md`. Open: the team reads the privacy notice in the browser, AC-009.)*
-- [ ] **T-006:** Live smoke run, all checks, self-review, feature index update (supports `AC-010`, `AC-011`) *(2026-11-22: smoke run, local checks, self-review and index done. Open: merge into `main` and CI on the push, which need the user's request.)*
+- [ ] **T-006:** Live smoke run, all checks, self-review, feature index update (supports `AC-010`, `AC-011`) *(2026-11-22: smoke run, local checks, self-review and index done. Open: merge into `main` and CI on the push.)* *(2026-11-22: merged in 818161e; CI on the push is open.)*
 
 ## Dependencies and blockers
 
 - Feature 017 is implemented on `main` (the dependency is met).
 - AC-009 needs the team's read of the privacy notice.
-- AC-011 needs the merge into `main` and a push, which need the user's request.
+- AC-011 needs CI on the `main` push (merged 2026-11-22).
 
 ## Progress notes
 
-- Work is on the branch `feat/part-lookup` (from `main` at c981e7c): 0f76369 (server and contract), dcecae8 (web), then the documentation commit.
+- Work was done on the branch `feat/part-lookup` (from `main` at c981e7c): 0f76369 (server and contract), dcecae8 (web), 8f4ecb5 (documentation); merged into `main` in 818161e on 2026-11-22.
 - Release to leaaf.green is outside this feature's completion boundary; it needs the feature 017 keys in `deploy/.env` (see `docs/DEPLOYMENT.md`).
 
 ## Lifecycle history
@@ -30,3 +30,4 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - 2026-11-22: Specified after scope approval (see the [plan's scope change log](./PLAN.md#scope-change-log)).
 - 2026-11-22: Implementation started on `feat/part-lookup`; FR-001 clarified with the user (drives and battery by type).
 - 2026-11-22: Implemented and verified locally (AC-001 to AC-008 and AC-010 pass, see [ACCEPTANCE_CRITERIA.md](./ACCEPTANCE_CRITERIA.md)); status set to Implemented (verification pending) with AC-009 and AC-011 open.
+- 2026-11-22: Merged into `main` at the user's request (818161e); status unchanged, AC-009 and AC-011 (CI on `main`) open.

@@ -18,7 +18,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 002 | [Knowledge base and retrieval](docs/features/feature-002-knowledge-base-retrieval/PLAN.md) | In progress: self-review open |
 | 003 | [Five-path assessment and ranking](docs/features/feature-003-five-path-ranking/PLAN.md) | In progress: battery labour price and self-review open |
 | 004 | [Explained report](docs/features/feature-004-explained-report/PLAN.md) | Complete |
-| 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: `v0.5.0` is live; backup and rollback rehearsals are open |
+| 005 | [Public demo deployment](docs/features/feature-005-public-demo-deployment/PLAN.md) | In progress: `v0.5.2` is live; backup and rollback rehearsals are open |
 | 006 | [Web app](docs/features/feature-006-web-app/PLAN.md) | Implemented, awaiting the team's browser review |
 | 007 | [macOS and Linux scanner](docs/features/feature-007-macos-linux-scanner/PLAN.md) | Implemented; live Mac and Linux scans worked, edge paths open |
 | 008 | [AI categories and options](docs/features/feature-008-ai-categories-and-options/PLAN.md) | Complete |
@@ -30,7 +30,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 014 | [One step list for the plan](docs/features/feature-014-plan-step-list/PLAN.md) | Complete |
 | 015 | [Remove the recommendation summary](docs/features/feature-015-remove-recommendation-summary/PLAN.md) | Complete |
 | 016 | [Admin scan overview](docs/features/feature-016-admin-scan-overview/PLAN.md) | Implemented and merged into `main`, awaiting the browser check and the admin login check on the live site |
-| 017 | [Web evidence for model facts](docs/features/feature-017-web-evidence-for-model-facts/PLAN.md) | Implemented on `main`, awaiting the team's browser check; not released |
+| 017 | [Web evidence for model facts](docs/features/feature-017-web-evidence-for-model-facts/PLAN.md) | Implemented and released in `v0.5.1`; awaiting the team's privacy notice read and the user's confirmation of open questions |
 | 018 | [Part lookup](docs/features/feature-018-part-lookup/PLAN.md) | Merged into `main`, awaiting CI on `main` and the privacy notice read; not released |
 | 019 | [European prices and local offers](docs/features/feature-019-eu-prices-and-local-offers/PLAN.md) | Merged into `main`, smoke-tested live; browser check and CI on `main` open; not released |
 

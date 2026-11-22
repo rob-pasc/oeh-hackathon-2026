@@ -29,7 +29,7 @@ Scanning on a bootable USB (macOS and Linux scanning moved into scope with featu
 
 ## Uncertainty and references
 
-- Domain: `leaaf.green` (registered by the team). `v0.5.0` is live there since 2026-11-21, on the team's own server in Vorarlberg.
+- Domain: `leaaf.green` (registered by the team). `v0.5.0` went live there on 2026-11-21 and `v0.5.2` runs there since 2026-11-22, on the team's own server in Vorarlberg.
 - Demo laptop models (ThinkPad T480, XPS 13 9360, EliteBook 840 G5) and keyword-only retrieval were chosen on 2026-11-20 ([feature 002](features/feature-002-knowledge-base-retrieval/PLAN.md)). *(2026-11-21: the demo models were dropped; the three stay in the corpus.)*
 - Hosting: the team's own server behind an external Caddy ([feature 005](features/feature-005-public-demo-deployment/PLAN.md)). CO₂e sources were chosen on 2026-11-20 (see [`data/README.md`](../data/README.md)).
 - Source material: the team's `Idea.md` and `Suggestions.md` (outside this repository).
