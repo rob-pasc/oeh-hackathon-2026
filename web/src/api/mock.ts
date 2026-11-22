@@ -12,6 +12,8 @@ import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import { fallbackCategories, LAPTOP_CATEGORIES } from './mockCategories'
 import { laptopPlan, laptopPlanSteps, templatePlan } from './mockSteps'
 import { MOCK_LOOKUPS } from './mockParts'
+import { SAMPLE_PRICES, SAMPLE_TOWN, sampleOffers } from './mockPrices'
+import { offerKindOf } from '../lib/webPrices'
 import { partsFromScan, STEP_KINDS } from '../lib/parts'
 import { ApiClientError, SCAN_STEPS, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
 import type { UseTag } from '../lib/labels'
@@ -86,6 +88,12 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
   const { stepMs = 900, assessmentMs = 1400, reportMs = 1600, stepsMs = 1500 } = options
   const known = new Set<string>(Object.values(MOCK_DEVICE_IDS))
   let adminLoggedIn = false
+  /** The shared town per device link (feature 019). */
+  const towns = new Map<string, string>()
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+  const device = (deviceId: string) => {
+    if (!known.has(deviceId)) throw new ApiClientError('not_found', 'Device not found')
+  }
 
   return {
     mode: 'mock',
@@ -159,6 +167,42 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await new Promise((resolve) => setTimeout(resolve, stepsMs))
       if (!list) throw new ApiClientError('not_found', 'This result has no plan')
       return list
+    },
+
+    // Web prices and local offers (feature 019): sample data for the laptop; the desktop's
+    // fallback has no SSD, RAM or battery options to price.
+    async getPrices(deviceId, use) {
+      device(deviceId)
+      await wait(stepsMs)
+      return { device_id: deviceId, intended_use: use, prices: deviceId === MOCK_DEVICE_IDS.laptop ? structuredClone(SAMPLE_PRICES) : [] }
+    },
+
+    async getOffers(deviceId, use, optionId) {
+      device(deviceId)
+      const option = categoriesFor(deviceId, assessmentFor(deviceId, use)).categories.flatMap((c) => c.options).find((o) => o.option_id === optionId)
+      const kind = option ? offerKindOf(option) : null
+      if (!kind) throw new ApiClientError('not_found', 'option has no local offers')
+      await wait(stepsMs)
+      const town = towns.get(deviceId) ?? null
+      return { device_id: deviceId, option_id: optionId, kind, town, offers: sampleOffers(kind, town), retrieved_on: '2026-11-22' }
+    },
+
+    async getLocation(deviceId) {
+      device(deviceId)
+      return { town: towns.get(deviceId) ?? null }
+    },
+
+    async shareLocation(deviceId) {
+      device(deviceId)
+      await wait(stepsMs / 2)
+      towns.set(deviceId, SAMPLE_TOWN)
+      return { town: SAMPLE_TOWN }
+    },
+
+    async clearLocation(deviceId) {
+      device(deviceId)
+      towns.delete(deviceId)
+      return { town: null }
     },
 
     // Admin area (feature 016): a fixed sample login and a generated list, so the page can be

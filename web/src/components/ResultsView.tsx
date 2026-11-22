@@ -8,6 +8,8 @@ import { buildCategoryViews, type OptionView } from '../lib/categoryView'
 import { DEFAULT_USE, type ResultTab, type UseTag } from '../lib/labels'
 import { useFlip } from '../lib/motion'
 import { useStepPlans } from '../lib/useStepPlans'
+import { useLocalOffers, useSharedLocation, useWebPrices } from '../lib/useWebExtras'
+import { offerKindOf } from '../lib/webPrices'
 import { WEB_SEARCH_PHRASE } from '../lib/thinking'
 import { buildPathViews, type CardView } from '../lib/pathView'
 import { buildPlanView, PLAN_TITLE } from '../lib/planView'
@@ -22,6 +24,7 @@ import { Thinking } from './Thinking'
 import { SpecsCard } from './SpecsCard'
 import { Toolbar, type TabItem } from './Toolbar'
 import { ErrorCard } from './ui'
+import { LocationBar } from './WebExtras'
 
 type Load<T> = { state: 'loading' } | { state: 'ready'; value: T } | { state: 'error'; error: ApiClientError }
 
@@ -47,6 +50,10 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const [openOption, setOpenOption] = useState<string | null>(null)
   const [planOpen, setPlanOpen] = useState(false)
   const plans = useStepPlans(deviceId, use)
+  // Web prices and local offers (feature 019): shown next to the figures, never ranked.
+  const prices = useWebPrices(deviceId, use, categories !== null)
+  const location = useSharedLocation(deviceId)
+  const offers = useLocalOffers(deviceId, use, location.town)
 
   // Scan data: loaded once per device.
   useEffect(() => {
@@ -128,6 +135,13 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     if (option && openOption !== key) plans.request(option.id)
   }
 
+  // The open option's local offers load when it opens and again for a new town (feature 019).
+  const openOffersId = allOptions.find(o => o.key === openOption && offerKindOf(o.option))?.id ?? null
+  const requestOffers = offers.request
+  useEffect(() => {
+    if (openOffersId) requestOffers(openOffersId)
+  }, [openOffersId, requestOffers])
+
   if (scan.state === 'error') {
     return (
       <ErrorCard
@@ -174,6 +188,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
       ) : (
         <div className="fade-up grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_400px] items-start gap-7">
           <div className="relative flex flex-col gap-3.5">
+            {categories ? <LocationBar location={location} onShare={location.share} onClear={location.clear} /> : null}
             {activeCategory ? (
               <CategoryTabView
                 key={activeCategory.id}
@@ -182,6 +197,8 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
                 openKey={openOption}
                 onToggle={toggleOption}
                 planOf={plans.get}
+                prices={prices}
+                offersOf={offers.get}
               />
             ) : categories ? (
               <>

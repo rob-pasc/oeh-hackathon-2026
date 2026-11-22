@@ -5,6 +5,7 @@ import type { OsFamily } from '@leaaf/shared/common'
 import type { DeviceRecord } from '@leaaf/shared/device'
 import type { ReportStatus } from '@leaaf/shared/report'
 import type { PlanStepList, StepPlan } from '@leaaf/shared/steps'
+import type { DeviceLocation, LocalOfferList, WebPriceList } from '@leaaf/shared/prices'
 import type { UseTag } from '../lib/labels'
 
 import type { ScanSessionEvent as SharedScanSessionEvent, ScanStepId } from '@leaaf/shared/session'
@@ -95,6 +96,16 @@ export interface ApiClient {
   getSteps(deviceId: string, use: UseTag, optionId: string): Promise<StepPlan>
   /** One step list for the shown plan (feature 014); rejects with not_found when there is no plan. */
   getPlanSteps(deviceId: string, use: UseTag): Promise<PlanStepList>
+  /** Web prices of the shown SSD, RAM and battery options (feature 019); an empty list when the server has none. */
+  getPrices(deviceId: string, use: UseTag): Promise<WebPriceList>
+  /** Local offers of a repair, pass it on or recycle option, for the shared town or Austria-wide (feature 019). */
+  getOffers(deviceId: string, use: UseTag, optionId: string): Promise<LocalOfferList>
+  /** The town shared on this device link, or null. */
+  getLocation(deviceId: string): Promise<DeviceLocation>
+  /** Sends coordinates already rounded to two decimals; resolves to the town found, or null. */
+  shareLocation(deviceId: string, lat: number, lon: number): Promise<DeviceLocation>
+  /** Back to Austria-wide offers. */
+  clearLocation(deviceId: string): Promise<DeviceLocation>
   /**
    * Admin area (feature 016, shared/src/admin.ts). `adminSession` resolves to null when logged out
    * and throws code `not_found` when the admin area is not set up.
