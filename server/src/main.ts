@@ -23,6 +23,9 @@ import { SearchError, type SearchProvider } from './search/types.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
 import { createStepService } from './steps/service.ts'
 import { createPriceService, createSqlitePriceCache, loadPriceSources } from './prices/index.ts'
+import { createOfferService } from './offers/service.ts'
+import { createNominatim, NOMINATIM_URL } from './location/nominatim.ts'
+import { createSqliteLocationStore } from './location/store.ts'
 
 const env = process.env
 const limits = loadLimits(env)
@@ -113,6 +116,29 @@ const prices =
         warn,
       })
     : undefined
+// The town shared on a device link narrows local offers (feature 019). NOMINATIM_URL=none turns the
+// lookup off; the button then always keeps Austria-wide offers.
+const locationStore = createSqliteLocationStore(db)
+const nominatimUrl = env.NOMINATIM_URL?.trim() || NOMINATIM_URL
+const geocoder = nominatimUrl === 'none' ? null : createNominatim({ baseUrl: nominatimUrl, userAgent: `leaaf (${publicBaseUrl})`, warn })
+const offers = assessments
+  ? createOfferService(db, {
+      web: llm && webSearch
+        ? {
+            search: webSearch.provider,
+            budget: webSearch.budget,
+            llm,
+            timeoutMs: webSearch.config.timeoutMs,
+            resultsPerQuery: webSearch.config.resultsPerQuery,
+            maxChars: webSearch.config.maxChars,
+          }
+        : null,
+      assessments,
+      shownCategories: categorize.shown,
+      townOf: locationStore.town,
+      warn,
+    })
+  : undefined
 
 const app = buildApp({
   limits,
@@ -124,6 +150,8 @@ const app = buildApp({
   categorize,
   steps: retriever && assessments ? createStepService(db, llm, { retriever, assessments, shownCategories: categorize.shown, warn, onFallback: fallbackLog.record }) : undefined,
   prices,
+  offers,
+  locations: { store: locationStore, geocoder },
   publicBaseUrl,
   scannerPaths,
   logger: {

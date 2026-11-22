@@ -29,6 +29,8 @@ import {
   type ReportStatus,
   type StreamEnd,
   type WebPriceList,
+  LocationRequest,
+  type DeviceLocation,
 } from '@leaaf/shared'
 import { hourlyLimit, loadLimits } from './limits.ts'
 import type { AdminConfig } from './admin/config.ts'
@@ -42,6 +44,9 @@ import type { Categorize } from './categories/service.ts'
 import type { SessionStore } from './sessions/store.ts'
 import type { StepService } from './steps/service.ts'
 import type { PriceService } from './prices/service.ts'
+import type { OfferService } from './offers/service.ts'
+import type { Geocoder } from './location/nominatim.ts'
+import type { LocationStore } from './location/store.ts'
 
 export interface AppOptions {
   limits?: ReturnType<typeof loadLimits>
@@ -55,6 +60,10 @@ export interface AppOptions {
   steps?: StepService | undefined
   /** Web prices of the shown options (feature 019); without it the prices route answers an empty list. */
   prices?: PriceService | undefined
+  /** Local offers of an opened option (feature 019); the offers route answers 500 without it. */
+  offers?: OfferService | undefined
+  /** The shared town (feature 019); the location routes answer 500 without it. A null geocoder never finds a town. */
+  locations?: { store: LocationStore; geocoder: Geocoder | null } | undefined
   /** Origin of the web app, used to build device page URLs, e.g. https://leaaf.green */
   publicBaseUrl: string
   /** Path of the Windows scanner executable; the download is 404 while it is missing. */
@@ -103,6 +112,9 @@ async function readMacArchive(path: string): Promise<Buffer> {
   return macArchive.data
 }
 const isIntendedUse = createValidator(IntendedUse)
+const isLocationRequest = createValidator(LocationRequest)
+/** A location body is two numbers. */
+const LOCATION_BODY_BYTES = 256
 
 const sseFrame = (event: string, data: unknown) => `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
 
@@ -262,6 +274,59 @@ export function buildApp(options: AppOptions): FastifyInstance {
       return reply.header('cache-control', 'no-store').send(list)
     },
   )
+
+  // Local offers of an opened repair, pass it on or recycle option (feature 019 FR-005): for the
+  // device link's shared town, else Austria-wide. Empty without web search or an LLM.
+  app.get<{ Params: { id: string; optionId: string }; Querystring: { intended_use?: string } }>(
+    '/api/devices/:id/options/:optionId/offers',
+    { onRequest: hourlyLimit(limits.stepsPerHour) },
+    async (req, reply) => {
+      const use = req.query.intended_use
+      if (!isIntendedUse(use).ok)
+        return reply.code(400).send(
+          apiError('invalid_payload', 'unknown intended use', [
+            { path: '/intended_use', message: `must be one of ${INTENDED_USES.join(', ')}` },
+          ]),
+        )
+      const record = options.devices.get(req.params.id)
+      if (!record) return reply.code(404).send(NOT_FOUND)
+      if (!options.offers) return reply.code(500).send(apiError('internal', 'local offers are not available'))
+      const list = await options.offers(record, use as IntendedUse, req.params.optionId)
+      return list ? reply.header('cache-control', 'no-store').send(list) : reply.code(404).send(apiError('not_found', 'option has no local offers'))
+    },
+  )
+
+  // The shared town (feature 019 FR-006 to FR-008). The body's coordinates are rounded, turned into
+  // a town and dropped: only the town is stored. The request log shows the route, never the body.
+  app.get<{ Params: { id: string } }>('/api/devices/:id/location', async (req, reply) => {
+    if (!options.devices.get(req.params.id)) return reply.code(404).send(NOT_FOUND)
+    if (!options.locations) return reply.code(500).send(apiError('internal', 'location is not available'))
+    return reply.header('cache-control', 'no-store').send({ town: options.locations.store.town(req.params.id) } satisfies DeviceLocation)
+  })
+
+  app.post<{ Params: { id: string } }>(
+    '/api/devices/:id/location',
+    { bodyLimit: LOCATION_BODY_BYTES, onRequest: hourlyLimit(limits.reportsPerHour) },
+    async (req, reply) => {
+      const checked = isLocationRequest(req.body)
+      if (!checked.ok) return reply.code(400).send(apiError('invalid_payload', 'not a location', checked.errors))
+      if (!options.devices.get(req.params.id)) return reply.code(404).send(NOT_FOUND)
+      const locations = options.locations
+      if (!locations) return reply.code(500).send(apiError('internal', 'location is not available'))
+      const town = locations.geocoder ? await locations.geocoder.town(checked.value.lat, checked.value.lon) : null
+      // No town found: back to Austria-wide offers, which the page says (FR-008).
+      if (town) locations.store.set(req.params.id, town)
+      else locations.store.clear(req.params.id)
+      return reply.header('cache-control', 'no-store').send({ town } satisfies DeviceLocation)
+    },
+  )
+
+  app.delete<{ Params: { id: string } }>('/api/devices/:id/location', async (req, reply) => {
+    if (!options.devices.get(req.params.id)) return reply.code(404).send(NOT_FOUND)
+    if (!options.locations) return reply.code(500).send(apiError('internal', 'location is not available'))
+    options.locations.store.clear(req.params.id)
+    return reply.header('cache-control', 'no-store').send({ town: null } satisfies DeviceLocation)
+  })
 
   // One step list for the combined plan (feature 014), with the same per-client limit as option steps.
   app.get<{ Params: { id: string }; Querystring: { intended_use?: string } }>(

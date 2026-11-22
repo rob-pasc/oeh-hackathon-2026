@@ -16,6 +16,10 @@ The LLM and search API keys are configured only here, through environment variab
 | `GET /api/devices/:id/options/:optionId/steps?intended_use=` | `200 StepPlan` (JSON, `cache-control: no-store`): the step plan of one option of the categories the result screen shows (feature 009). The route never starts a category call: it reads the cached categories, or the five-path fallback when none are cached. `400 invalid_payload` for an unknown use; `404` for an unknown device or option; `429 rate_limited`, or `500` when the server has no retrieval index |
 | `GET /api/devices/:id/plan/steps?intended_use=` | `200 PlanStepList` (JSON, `cache-control: no-store`): one step list of up to 16 steps for the combined plan of the shown categories (feature 014), with the option-step checks; the joined template plans when the AI is unavailable or for the fallback plan. `400` for an unknown use, `404` for an unknown device or a result without a plan, `429` after `STEPS_PER_HOUR` per client. |
 | `GET /api/devices/:id/prices?intended_use=` | `200 WebPriceList` (JSON, `cache-control: no-store`): web price ranges in EUR for the shown SSD, RAM and battery options, from the sites in [`config/price-sources.yaml`](../config/price-sources.yaml) (feature 019). Options with fewer than two checked offers are left out; the list is empty without web search or an LLM. Prices never change the categories or ranking. `400` for an unknown use, `404` for an unknown device, `429` after `REPORTS_PER_HOUR` per client. |
+| `GET /api/devices/:id/options/:optionId/offers?intended_use=` | `200 LocalOfferList` (JSON, `cache-control: no-store`): up to three local offers for a repair, pass it on or recycle option, for the shared town or Austria-wide (`town: null`). Empty without web search or an LLM. `400` for an unknown use, `404` for an unknown device or an option without local offers, `429` after `STEPS_PER_HOUR` per client. |
+| `GET /api/devices/:id/location` | `200 DeviceLocation`: the town shared on this device link, or `town: null`. `404` for an unknown device. |
+| `POST /api/devices/:id/location` | Body `LocationRequest` (`lat`, `lon`). `200 DeviceLocation` with the town found by Nominatim, which is stored for this device link; `town: null` when none was found, which returns the link to Austria-wide offers. `400` for invalid coordinates, `404` for an unknown device, `429` after `REPORTS_PER_HOUR` per client. |
+| `DELETE /api/devices/:id/location` | `200 DeviceLocation` with `town: null`: removes the shared town. `404` for an unknown device. |
 | `GET /downloads/leaaf-scanner.exe` | The Windows scanner at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
 | `GET /downloads/leaaf-scanner-linux` | The Linux scanner at `SCANNER_LINUX_PATH`, with the same trailer for a session (feature 007) |
 | `GET /downloads/leaaf-scanner-macos.zip` | The zipped macOS app at `SCANNER_MACOS_PATH`. For a session, the bundle inside is renamed from `leaaf-scanner.app` to `leaaf-scanner-<id>.app`, which keeps its signature valid (feature 007) |
@@ -68,6 +72,18 @@ When retrieval has no model-specific passage for a fact topic (memory, storage, 
 | `SEARCH_TIMEOUT_MS` | 20000 | Positive integer: deadline for the whole search phase of one assessment; the first provider gets half |
 | `SEARCH_RESULTS_PER_QUERY` | 5 | Positive integer; at most 3 usable results per topic become passages |
 | `SEARCH_MAX_CHARS` | 6000 | At least 500: page text asked for per result; each passage keeps a 3,000-character window from the first mention of the topic |
+
+## Web prices and local offers
+
+The same search providers and daily cap serve web prices and local offers ([feature 019](../docs/features/feature-019-eu-prices-and-local-offers/PLAN.md)). Both are shown next to the impact table figures and never change scores, ranking or plan totals. Without a search key or an LLM, both lists are empty.
+
+- **Web prices** (`src/prices/`): the part an SSD, RAM or battery option would buy, named like the impact table prices it (`part.ts`), is searched on the domains in [`config/price-sources.yaml`](../config/price-sources.yaml) only. One LLM call (`web_extraction`) lists the offers. The server keeps only EUR offers from allowlisted pages, within plausible bounds, whose exact amount appears in the page text. At least two offers make a range. `web_price_cache` keeps the checked offers per part for 7 days.
+- **Local offers** (`src/offers/`): a repair, pass it on or recycle option searches for repair cafés, donation or drop-off points in Austria, or in the town shared on the device link. Only the town, never coordinates, goes into the query. Up to three places are kept, each named on its page. `local_offer_cache` keeps them for 7 days per kind and town, keyed by a hash.
+- **Shared town** (`src/location/`): the page sends coordinates rounded to two decimals. The server rounds them again and asks Nominatim for the town: one request per second at most, with the User-Agent `leaaf (<PUBLIC_BASE_URL>)`, and lookups are cached in memory per rounded pair. Only the town is stored, in `device_locations`, which the retention purge empties with the scan. Coordinates are never written to the database or the log.
+
+| Environment variable | Default | Allowed value |
+|---|---:|---|
+| `NOMINATIM_URL` | `https://nominatim.openstreetmap.org` | Base URL of a Nominatim server, or `none` to turn the town lookup off |
 
 ## LLM adapter
 

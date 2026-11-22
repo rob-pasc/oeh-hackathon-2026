@@ -7,6 +7,7 @@
 // GET  /api/devices/:id/options/:optionId/steps?intended_use=<IntendedUse> -> 200 StepPlan (steps.ts) | 400/404/429 ApiError
 // GET  /api/devices/:id/prices?intended_use=<IntendedUse>      -> 200 WebPriceList (prices.ts) | 400/404/429 ApiError
 // GET  /api/devices/:id/options/:optionId/offers?intended_use=<IntendedUse> -> 200 LocalOfferList (prices.ts) | 400/404/429 ApiError
+// GET  /api/devices/:id/location                              -> 200 DeviceLocation | 404 ApiError
 // POST /api/devices/:id/location         body LocationRequest -> 200 DeviceLocation (town null when no town was found) | 400/404/429 ApiError
 // DELETE /api/devices/:id/location                             -> 200 DeviceLocation (town null) | 404 ApiError
 // GET  /downloads/leaaf-scanner.exe[?session=<SessionId>]       -> the Windows scanner, with the session appended

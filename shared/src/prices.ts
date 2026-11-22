@@ -3,6 +3,7 @@
 //
 // GET    /api/devices/:id/prices?intended_use=<use>                       -> 200 WebPriceList
 // GET    /api/devices/:id/options/:optionId/offers?intended_use=<use>     -> 200 LocalOfferList
+// GET    /api/devices/:id/location                                        -> 200 DeviceLocation
 // POST   /api/devices/:id/location   body LocationRequest                 -> 200 DeviceLocation
 // DELETE /api/devices/:id/location                                        -> 200 DeviceLocation (town null)
 import { Type, type Static } from 'typebox'
