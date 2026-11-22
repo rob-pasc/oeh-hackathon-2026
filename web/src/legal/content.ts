@@ -122,6 +122,8 @@ function imprintEn(): Block[] {
 
 const DSB = 'Österreichische Datenschutzbehörde, Barichgasse 40–42, 1030 Wien, dsb@dsb.gv.at, www.dsb.gv.at'
 const DEEPSEEK_POLICY = 'https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html'
+const LANGSEARCH = 'LangSearch (langsearch.com)'
+const TINYFISH = 'TinyFish (tinyfish.ai)'
 
 function privacyDe(): Block[] {
   return [
@@ -156,7 +158,7 @@ function privacyDe(): Block[] {
       type: 'p',
       text: 'Zweck: dir eine Empfehlung für dein Gerät zu berechnen und anzuzeigen. Rechtsgrundlage: berechtigtes Interesse am Betrieb des von dir gewünschten Dienstes (Art. 6 Abs. 1 lit. f DSGVO). Die Daten sind keiner Person zugeordnet; wir können dich anhand dieser Daten nicht identifizieren, es sei denn, du nennst uns den Link zu deinem Ergebnis (Art. 11 DSGVO).',
     },
-    { type: 'h2', text: '4. KI-Dienst (DeepSeek)' },
+    { type: 'h2', text: '4. KI-Dienst (DeepSeek) und Websuche' },
     {
       type: 'p',
       text: 'Für Erklärungstexte und die Schätzung einzelner Bauteile senden wir technische Angaben an die Programmierschnittstelle (API) des KI-Dienstes DeepSeek, betrieben von Hangzhou DeepSeek Artificial Intelligence Co., Ltd., China. Übermittelt werden Hardware-Beschreibungen und Auszüge aus öffentlicher Dokumentation. Nicht übermittelt werden deine IP-Adresse, die Kennungen von Sitzung oder Gerät, Namen oder andere Angaben, die auf dich verweisen.',
@@ -164,6 +166,10 @@ function privacyDe(): Block[] {
     {
       type: 'p',
       text: `Wir gehen davon aus, dass es sich dabei nicht um personenbezogene Daten handelt, weil sie keiner Person zugeordnet werden können. DeepSeek verarbeitet Daten nach eigenen Angaben in der Volksrepublik China, für die kein Angemessenheitsbeschluss der EU besteht. Näheres steht in der Datenschutzerklärung von DeepSeek: ${DEEPSEEK_POLICY}. Die Empfehlung selbst wird nach festen Regeln berechnet; es gibt keine automatisierte Entscheidung mit rechtlicher Wirkung für dich (Art. 22 DSGVO).`,
+    },
+    {
+      type: 'p',
+      text: `Fehlt in unserer eigenen Dokumentensammlung etwas zu deinem Gerätemodell, suchen wir öffentliche Webseiten dazu, über die Suchdienste ${LANGSEARCH} und, falls dieser nicht antwortet, ${TINYFISH}. An diese Dienste senden wir nur den Hersteller, die Modellbezeichnung und ein Thema (zum Beispiel „Arbeitsspeicher“). Andere Scan-Daten, die Kennungen von Sitzung oder Gerät und deine IP-Adresse senden wir nicht. Diese Angaben sind keiner Person zugeordnet. Die gefundenen Seiten speichern wir 30 Tage lang pro Gerätemodell, nicht pro Gerät, und zeigen sie im Ergebnis als „Web source“ mit Link an.`,
     },
     { type: 'h2', text: '5. Cookies und Speicher im Browser' },
     {
@@ -182,7 +188,7 @@ function privacyDe(): Block[] {
     { type: 'h2', text: '7. Empfänger' },
     {
       type: 'p',
-      text: 'Wir geben deine Daten nicht an Dritte weiter und verkaufen sie nicht. Die einzige Ausnahme ist der KI-Dienst nach Abschnitt 4 mit den dort genannten Angaben. Behörden erhalten Daten nur, wenn eine gesetzliche Pflicht dazu besteht.',
+      text: 'Wir geben deine Daten nicht an Dritte weiter und verkaufen sie nicht. Die einzigen Ausnahmen sind der KI-Dienst und die Suchdienste nach Abschnitt 4 mit den dort genannten Angaben. Behörden erhalten Daten nur, wenn eine gesetzliche Pflicht dazu besteht.',
     },
     { type: 'h2', text: '8. Deine Rechte' },
     {
@@ -234,7 +240,7 @@ function privacyEn(): Block[] {
       type: 'p',
       text: 'Purpose: to calculate and show you a recommendation for your device. Legal basis: legitimate interest in running the service you asked for (Art. 6(1)(f) GDPR). The data is not linked to a person; we cannot identify you from it unless you give us the link to your result (Art. 11 GDPR).',
     },
-    { type: 'h2', text: '4. AI service (DeepSeek)' },
+    { type: 'h2', text: '4. AI service (DeepSeek) and web search' },
     {
       type: 'p',
       text: 'For explanatory text and the estimate of individual components, we send technical details to the programming interface (API) of the AI service DeepSeek, operated by Hangzhou DeepSeek Artificial Intelligence Co., Ltd., China. We send hardware descriptions and excerpts from public documentation. We do not send your IP address, the identifiers of the session or device, names or any other detail that points to you.',
@@ -242,6 +248,10 @@ function privacyEn(): Block[] {
     {
       type: 'p',
       text: `We assume this is not personal data because it cannot be linked to a person. According to its own statements, DeepSeek processes data in the People's Republic of China, for which the EU has no adequacy decision. Details are in DeepSeek's privacy policy: ${DEEPSEEK_POLICY}. The recommendation itself is calculated by fixed rules; there is no automated decision with legal effect for you (Art. 22 GDPR).`,
+    },
+    {
+      type: 'p',
+      text: `When our own document collection has nothing on your device model, we search public web pages for it, using the search services ${LANGSEARCH} and, if it does not answer, ${TINYFISH}. We send these services only the manufacturer, the model name and a topic (for example "memory"). We send no other scan data, no session or device identifiers and not your IP address. These details are not linked to a person. We keep the pages found for 30 days per device model, not per device, and show them in the result as "Web source" with a link.`,
     },
     { type: 'h2', text: '5. Cookies and browser storage' },
     {
@@ -260,7 +270,7 @@ function privacyEn(): Block[] {
     { type: 'h2', text: '7. Recipients' },
     {
       type: 'p',
-      text: 'We do not pass your data on to third parties and we do not sell it. The only exception is the AI service in section 4, with the details listed there. Authorities receive data only where the law requires it.',
+      text: 'We do not pass your data on to third parties and we do not sell it. The only exceptions are the AI service and the search services in section 4, with the details listed there. Authorities receive data only where the law requires it.',
     },
     { type: 'h2', text: '8. Your rights' },
     {

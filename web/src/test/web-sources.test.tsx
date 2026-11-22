@@ -13,6 +13,7 @@ import { formatRetrieved, SourceLink } from '../components/SourceLink'
 import { Thinking } from '../components/Thinking'
 import { sourceRef } from '../lib/pathView'
 import { THINKING_INTERVAL_MS, WEB_SEARCH_PHRASE } from '../lib/thinking'
+import { legalDoc } from '../legal/content'
 
 afterEach(() => {
   cleanup()
@@ -103,5 +104,17 @@ describe('web search thinking line (FR-013)', () => {
     render(<ApiContext.Provider value={api}><ResultsView deviceId={MOCK_DEVICE_IDS.desktop} /></ApiContext.Provider>)
     expect(await screen.findByText('Assessing your computer…')).toBeInTheDocument()
     expect(screen.queryByText(WEB_SEARCH_PHRASE)).toBeNull()
+  })
+})
+
+describe('privacy notice (FR-012)', () => {
+  it('names both search services and what they receive, in German and English (AC-014)', () => {
+    const text = (lang: 'de' | 'en') => legalDoc('privacy', lang).blocks.map((b) => ('text' in b ? b.text : '')).join(' ')
+    for (const lang of ['de', 'en'] as const) {
+      expect(text(lang)).toContain('LangSearch')
+      expect(text(lang)).toContain('TinyFish')
+    }
+    expect(text('en')).toContain('only the manufacturer, the model name and a topic')
+    expect(text('de')).toContain('nur den Hersteller, die Modellbezeichnung und ein Thema')
   })
 })

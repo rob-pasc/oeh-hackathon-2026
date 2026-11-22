@@ -16,5 +16,5 @@ export const PROVIDER = {
   /** How many days scan results are kept before they are deleted. The backend deletes them after this time. */
   scanRetentionDays: '30',
   /** Date of the last change to the legal texts, as year-month-day. */
-  lastUpdated: '2026-11-21',
+  lastUpdated: '2026-11-22',
 } as const
