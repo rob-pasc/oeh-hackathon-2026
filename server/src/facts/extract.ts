@@ -32,6 +32,8 @@ export interface FilterOptions {
   webIds?: ReadonlySet<string>
   /** Web passages the LLM said are not about this exact model. */
   rejectedIds?: ReadonlySet<string>
+  /** Curated corpus passages about the exact model (not generic, not web). */
+  modelCorpusIds?: ReadonlySet<string>
 }
 
 export interface DroppedFact {
@@ -84,7 +86,7 @@ export function cacheKey(model: ModelMatch, prompt: string): string {
 export function filterFacts(
   facts: readonly Fact[],
   retrievedIds: ReadonlySet<string>,
-  { webIds = new Set(), rejectedIds = new Set() }: FilterOptions = {},
+  { webIds = new Set(), rejectedIds = new Set(), modelCorpusIds = new Set() }: FilterOptions = {},
 ): { kept: Fact[]; dropped: DroppedFact[] } {
   const dropped: DroppedFact[] = []
   const cited: Fact[] = []
@@ -101,7 +103,9 @@ export function filterFacts(
       continue
     }
     // Web pages may make the battery path more cautious, never unlock self-replacement (feature 017 FR-006).
-    if (fact.key === 'battery_user_replaceable' && fact.value && ids.every((id) => webIds.has(id))) {
+    // A generic passage cited alongside cannot establish it for this model either, so a curated
+    // passage about the exact model is required as soon as a web page is cited.
+    if (fact.key === 'battery_user_replaceable' && fact.value && ids.some((id) => webIds.has(id)) && !ids.some((id) => modelCorpusIds.has(id))) {
       dropped.push({ fact, reason: 'a user-replaceable battery is not accepted from web pages alone' })
       continue
     }
@@ -130,6 +134,7 @@ export function createFactExtractor(deps: { llm: LlmClient; cache: FactCache }) 
 
   async function run(key: string, model: ModelMatch, passages: Passage[], user: string): Promise<ExtractionResult> {
     const webIds = new Set(passages.filter((p) => p.source === 'web').map((p) => p.passage_id))
+    const modelCorpusIds = new Set(passages.filter((p) => p.source !== 'web' && p.applicability.kind === 'model').map((p) => p.passage_id))
     const request = { task: 'fact_extraction' as const, system: FACT_EXTRACTION_SYSTEM, user }
     // Corpus-only requests keep their original schema, so their prompts and cache keys are unchanged.
     let rejectedIds = new Set<string>()
@@ -141,7 +146,7 @@ export function createFactExtractor(deps: { llm: LlmClient; cache: FactCache }) 
     } else {
       response = await deps.llm.completeJson({ ...request, schema: ExtractionAnswer })
     }
-    const { kept, dropped } = filterFacts(response.value.facts, new Set(passages.map((p) => p.passage_id)), { webIds, rejectedIds })
+    const { kept, dropped } = filterFacts(response.value.facts, new Set(passages.map((p) => p.passage_id)), { webIds, rejectedIds, modelCorpusIds })
     const facts: FactSet = { model, facts: kept }
     // Guards the contract: filterFacts must always produce a valid FactSet.
     const problems = [...(isFactSet(facts).ok ? [] : ['FactSet schema']), ...checkFactSet(facts)]

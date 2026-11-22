@@ -415,7 +415,12 @@ describe('fact extraction with web passages (FR-004, FR-006)', () => {
     expect(kept).toEqual([])
     expect(dropped[0]!.reason).toMatch(/battery/)
     expect(filterFacts([fact('battery_user_replaceable', false, 'web:b:battery')], retrieved, { webIds: web }).kept).toHaveLength(1)
-    expect(filterFacts([fact('battery_user_replaceable', true, 'web:b:battery', 'corpus#1')], retrieved, { webIds: web }).kept).toHaveLength(1)
+    // A generic passage beside the web page is not enough; a curated passage about the model is.
+    expect(filterFacts([fact('battery_user_replaceable', true, 'web:b:battery', 'corpus#1')], retrieved, { webIds: web }).kept).toHaveLength(0)
+    const modelCorpusIds = new Set(['corpus#1'])
+    expect(filterFacts([fact('battery_user_replaceable', true, 'web:b:battery', 'corpus#1')], retrieved, { webIds: web, modelCorpusIds }).kept).toHaveLength(1)
+    // Without web citations the rule does not apply (corpus-only behavior is unchanged).
+    expect(filterFacts([fact('battery_user_replaceable', true, 'corpus#1')], retrieved, { webIds: web }).kept).toHaveLength(1)
   })
 
   it('asks for rejected passages only when web passages are present, leaving corpus prompts unchanged (AC-012)', async () => {

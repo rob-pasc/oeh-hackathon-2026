@@ -1,6 +1,7 @@
 // Runs one assessment end to end (feature 003 T-007): retrieval, web evidence for topics the corpus
-// does not cover (feature 017), cached fact extraction, then the pure assess(). Unlike the rest of this folder it has side effects (index reads, LLM calls), so the
-// route stays thin and tests can swap each dependency.
+// does not cover (feature 017), cached fact extraction, then the pure assess(). Unlike the rest of
+// this folder it has side effects (index reads, web and LLM calls), so the route stays thin and
+// tests can swap each dependency.
 import { usesWindowsRules, type Assessment, type DeviceRecord, type FactSet, type IntendedUse, type RetrievalResult } from '@leaaf/shared'
 import { factModel, type FactExtractor } from '../facts/index.ts'
 import type { ImpactTable } from '../impact/table.ts'
