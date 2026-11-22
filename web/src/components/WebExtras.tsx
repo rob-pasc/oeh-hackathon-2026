@@ -1,7 +1,7 @@
 // Web prices, local offers and the Share location bar (feature 019).
 import type { OfferKind, WebPrice } from '@leaaf/shared/prices'
 import type { LocationState } from '../lib/useWebExtras'
-import { areaLabel, LOCATION_MESSAGES, OFFER_TITLES, OSM_COPYRIGHT, priceSites, webPriceLine, type OfferState } from '../lib/webPrices'
+import { areaLabel, cheapestOffers, formatPrice, LOCATION_MESSAGES, OFFER_TITLES, OSM_COPYRIGHT, webPriceLine, type OfferState } from '../lib/webPrices'
 import { formatRetrieved } from './SourceLink'
 import { Thinking } from './Thinking'
 
@@ -20,22 +20,26 @@ export function WebPriceTag({ price }: { price: WebPrice }) {
   )
 }
 
-/** The opened card's detail: what was searched, the sites with links, and the retrieval date. */
+/** The opened card's detail: the part searched, the three cheapest offers with links, and the retrieval date. */
 export function WebPriceDetail({ price }: { price: WebPrice }) {
   return (
     <div className="flex flex-col gap-1.5 sm:col-span-2" data-testid="web-price-detail">
       <span className={SECTION_LABEL}>Web price</span>
       <span className="text-sm leading-snug">
-        {webPriceLine(price)} for a {price.part}, found on the web on {formatRetrieved(price.retrieved_on)}. The cost above comes from our impact table;
-        web prices do not change the ranking.
+        {price.offer_count} offers for a {price.part} found on the web on {formatRetrieved(price.retrieved_on)}, the cheapest first. The cost above comes
+        from our impact table; web prices do not change the ranking.
       </span>
-      <span className="flex flex-wrap gap-x-3 text-[13px]">
-        {priceSites(price).map((site) => (
-          <a key={site.publisher} href={site.url} target="_blank" rel="noreferrer" className="font-medium text-leaf hover:text-leaf-dark">
-            {site.publisher}
-          </a>
+      <ul role="list" aria-label="Cheapest offers" className="m-0 flex list-none flex-col gap-1 p-0 text-[13px]">
+        {cheapestOffers(price).map((offer) => (
+          <li key={offer.url + offer.title + offer.price_eur}>
+            <strong>{formatPrice(offer.price_eur)}</strong>{' '}
+            <a href={offer.url} target="_blank" rel="noreferrer" className="font-medium text-leaf hover:text-leaf-dark">
+              {offer.title}
+            </a>
+            <span className="text-muted"> · {offer.publisher}</span>
+          </li>
         ))}
-      </span>
+      </ul>
     </div>
   )
 }

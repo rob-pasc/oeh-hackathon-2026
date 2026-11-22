@@ -60,8 +60,7 @@ try {
     const offers = await findPartOffers(web, part, domains)
     for (const o of offers ?? []) console.log(`    €${o.price_eur.toFixed(2)}  ${o.publisher}  ${o.title.slice(0, 70)}`)
     if (offers && offers.length >= MIN_WEB_PRICE_OFFERS) {
-      const values = offers.map((o) => o.price_eur)
-      console.log(`  web price €${Math.min(...values).toFixed(2)}–${Math.max(...values).toFixed(2)} · ${offers.length} offers`)
+      console.log(`  web price from €${Math.min(...offers.map((o) => o.price_eur)).toFixed(2)} · ${offers.length} offers`)
     } else {
       failed = true
       console.error(`  no web price (${offers === null ? 'every provider failed' : `${offers.length} checked offers`})`)

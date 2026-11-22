@@ -7,7 +7,7 @@ import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
 import { SAMPLE_PRICES, SAMPLE_TOWN } from '../api/mockPrices'
 import type { ApiClient } from '../api/types'
 import { ResultsView } from '../components/ResultsView'
-import { formatPrice, LOCATION_MESSAGES, offerKindOf, priceSites, webPriceLine } from '../lib/webPrices'
+import { cheapestOffers, formatPrice, LOCATION_MESSAGES, offerKindOf, webPriceLine } from '../lib/webPrices'
 import LAPTOP from '@leaaf/fixtures/categories.example-laptop-14.office.json'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import { legalDoc } from '../legal/content'
@@ -48,8 +48,12 @@ describe('display helpers', () => {
   it('formats prices with cents only where they exist', () => {
     expect(formatPrice(52)).toBe('€52')
     expect(formatPrice(39.9)).toBe('€39.90')
-    expect(webPriceLine(SAMPLE_PRICES[0]!)).toBe('€39.90–52 · 3 offers')
-    expect(priceSites(SAMPLE_PRICES[0]!).map((s) => s.publisher)).toEqual(['example.com', 'example.org'])
+    expect(webPriceLine(SAMPLE_PRICES[0]!)).toBe('from €39.90 · 3 offers')
+  })
+
+  it('lists the three cheapest offers, cheapest first', () => {
+    const price = { ...SAMPLE_PRICES[0]!, offers: [52, 39.9, 61, 44.99].map((p) => ({ ...SAMPLE_PRICES[0]!.offers[0]!, price_eur: p })) }
+    expect(cheapestOffers(price).map((o) => o.price_eur)).toEqual([39.9, 44.99, 52])
   })
 
   it('shows offers for repair, pass it on and recycle options, as the server does', () => {
@@ -59,14 +63,16 @@ describe('display helpers', () => {
 })
 
 describe('web prices (AC-001)', () => {
-  it('shows a Web price next to the impact table figures, with sites and date when opened', async () => {
+  it('shows "Web price from" next to the impact table figures, with the cheapest offers and date when opened', async () => {
     renderWith(fast())
     const card = await openOption('Memory', 'Add an 8 GB DDR4 module')
     expect(within(card).getByText('Cost')).toBeInTheDocument()
-    expect(await within(card).findByTestId('web-price')).toHaveTextContent('Web price€21.49–26.90 · 2 offers')
+    expect(await within(card).findByTestId('web-price')).toHaveTextContent('Web pricefrom €21.49 · 2 offers')
     const detail = within(card).getByTestId('web-price-detail')
-    expect(detail).toHaveTextContent('for a 8 GB DDR4 SO-DIMM, found on the web on 22 Nov 2026')
-    expect(within(detail).getAllByRole('link').map((a) => a.textContent)).toEqual(['example.com', 'example.org'])
+    expect(detail).toHaveTextContent('2 offers for a 8 GB DDR4 SO-DIMM found on the web on 22 Nov 2026, the cheapest first')
+    const offers = within(within(detail).getByRole('list', { name: 'Cheapest offers' })).getAllByRole('listitem')
+    expect(offers.map((o) => o.textContent)).toEqual(['€21.49 Sample SO-DIMM 8 GB · example.com', '€26.90 Sample SO-DIMM 8 GB · example.org'])
+    expect(within(offers[0]!).getByRole('link')).toHaveAttribute('href', SAMPLE_PRICES[1]!.offers[0]!.url)
   })
 
   it('shows no Web price when the server has none', async () => {

@@ -8,17 +8,17 @@ export function formatPrice(eur: number): string {
   return Number.isInteger(eur) ? `€${eur}` : `€${eur.toFixed(2)}`
 }
 
-/** "€39.90–52 · 3 offers" for the card header. */
+/** "from €39.90 · 3 offers" for the card header (FR-001 as amended 2026-11-22: the lowest price, not a range). */
 export function webPriceLine(price: WebPrice): string {
-  const range = price.low_eur === price.high_eur ? formatPrice(price.low_eur) : `${formatPrice(price.low_eur)}–${formatPrice(price.high_eur).slice(1)}`
-  return `${range} · ${price.offer_count} offers`
+  return `from ${formatPrice(price.low_eur)} · ${price.offer_count} offers`
 }
 
-/** One link per site, to its first offer, in the order the offers came. */
-export function priceSites(price: WebPrice): { publisher: string; url: string }[] {
-  const sites: { publisher: string; url: string }[] = []
-  for (const offer of price.offers) if (!sites.some((s) => s.publisher === offer.publisher)) sites.push({ publisher: offer.publisher, url: offer.url })
-  return sites
+/** Offers listed in the opened card. */
+export const SHOWN_OFFERS = 3
+
+/** The cheapest offers, cheapest first, for the opened card. */
+export function cheapestOffers(price: WebPrice, count = SHOWN_OFFERS): WebPrice['offers'] {
+  return [...price.offers].sort((a, b) => a.price_eur - b.price_eur).slice(0, count)
 }
 
 /** Which local offers an option shows, as the server decides it (server/src/offers/service.ts offerKind). */
