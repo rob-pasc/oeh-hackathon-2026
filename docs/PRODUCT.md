@@ -25,7 +25,7 @@ Most of a laptop's carbon footprint comes from manufacturing, so extending its u
 
 ## Deliberate non-goals (MVP)
 
-Scanning on a bootable USB (macOS and Linux scanning moved into scope with feature 007); user accounts; a fleet dashboard (deferred, may be specified later); live price scraping or purchasing; recycler or partner integrations; a full lifecycle assessment.
+Scanning on a bootable USB (macOS and Linux scanning moved into scope with feature 007); user accounts; a fleet dashboard (deferred, may be specified later); purchasing (live web prices for parts are shown next to the impact table figures and never change the ranking; see [feature 019](features/feature-019-eu-prices-and-local-offers/PLAN.md)); recycler or partner integrations; a full lifecycle assessment.
 
 ## Uncertainty and references
 
@@ -37,6 +37,6 @@ Scanning on a bootable USB (macOS and Linux scanning moved into scope with featu
 
 ## Maintenance
 
-Approved on 2026-11-22 but not built yet: a part lookup on the result screen ([feature 018](features/feature-018-part-lookup/PLAN.md)) and European web prices with local offers and an optional location ([feature 019](features/feature-019-eu-prices-and-local-offers/PLAN.md)). Feature 019 will narrow the non-goal "live price scraping" to displayed prices that never change the ranking; until it is built, the non-goal stands as written.
+Approved on 2026-11-22 but not built yet: a part lookup on the result screen ([feature 018](features/feature-018-part-lookup/PLAN.md)) and European web prices with local offers and an optional location ([feature 019](features/feature-019-eu-prices-and-local-offers/PLAN.md)). Feature 019 is implemented on its branch, not yet merged or released; it narrowed the non-goal above from "live price scraping or purchasing" to purchasing.
 
 Update this reference when approved product direction or implemented core journeys change. Feature scope stays in each feature's `PLAN.md`.

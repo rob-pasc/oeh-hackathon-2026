@@ -10,6 +10,7 @@ import { ResultsView } from '../components/ResultsView'
 import { formatPrice, LOCATION_MESSAGES, offerKindOf, priceSites, webPriceLine } from '../lib/webPrices'
 import LAPTOP from '@leaaf/fixtures/categories.example-laptop-14.office.json'
 import type { CategoryResult } from '@leaaf/shared/categories'
+import { legalDoc } from '../legal/content'
 
 const originalGeolocation = Object.getOwnPropertyDescriptor(navigator, 'geolocation')
 afterEach(() => {
@@ -151,5 +152,29 @@ describe('Share location (AC-006, AC-008)', () => {
   it('shows the town already shared on the device link', async () => {
     renderWith({ ...fast(), getLocation: async () => ({ town: 'Graz' }) })
     await waitFor(() => expect(screen.getByRole('region', { name: 'Location for local offers' })).toHaveTextContent('Near Graz'))
+  })
+})
+
+describe('privacy notice (AC-010)', () => {
+  const text = (lang: 'de' | 'en') => legalDoc('privacy', lang).blocks.map((b) => ('text' in b ? b.text : '')).join(' ')
+
+  it('describes optional location sharing, what Nominatim and the search services receive, and how long the town is kept', () => {
+    expect(text('en')).toContain('This is optional')
+    expect(text('en')).toContain('rounded to two decimals (to about 1 km)')
+    expect(text('en')).toContain('Nominatim')
+    expect(text('en')).toContain('The search services receive only the town name, never coordinates')
+    expect(text('en')).toContain('We delete it with the scan data after 30 days')
+    expect(text('de')).toContain('Das ist freiwillig')
+    expect(text('de')).toContain('auf zwei Nachkommastellen gerundet (auf etwa 1 km genau)')
+    expect(text('de')).toContain('Nominatim')
+    expect(text('de')).toContain('An die Suchdienste geht nur der Ortsname, nie Koordinaten')
+    expect(text('de')).toContain('Wir löschen ihn mit den Scan-Daten nach 30 Tagen')
+  })
+
+  it('numbers its sections without gaps in both languages', () => {
+    for (const lang of ['de', 'en'] as const) {
+      const numbers = legalDoc('privacy', lang).blocks.flatMap((b) => (b.type === 'h2' ? [Number.parseInt(b.text, 10)] : []))
+      expect(numbers).toEqual(numbers.map((_, i) => i + 1))
+    }
   })
 })
