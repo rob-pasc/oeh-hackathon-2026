@@ -3,6 +3,7 @@ import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { OsFamily } from '@leaaf/shared/common'
 import type { DeviceRecord } from '@leaaf/shared/device'
+import type { PartKind, PartLookupResult } from '@leaaf/shared/parts'
 import type { ReportStatus } from '@leaaf/shared/report'
 import type { PlanStepList, StepPlan } from '@leaaf/shared/steps'
 import type { UseTag } from '../lib/labels'
@@ -21,8 +22,8 @@ export const SCAN_STEPS: readonly { id: ScanStepId; running: string }[] = [
   { id: 'upload', running: 'Uploading & analysing…' },
 ]
 
-/** Kind of a hardware part the scanner reports; decides the icon and the zone in the laptop view. */
-export type PartKind = 'cpu' | 'memory' | 'gpu' | 'storage' | 'battery'
+/** Kind of a hardware part the scanner reports; decides the icon and the zone in the laptop view (shared/src/parts.ts). */
+export type { PartKind } from '@leaaf/shared/parts'
 
 /**
  * How far the server got in looking the part up: `pending` while it searches, `catalog` when the part was found
@@ -93,6 +94,8 @@ export interface ApiClient {
   streamReport(deviceId: string, use: UseTag, handlers: ReportStreamHandlers): () => void
   /** The step plan of one option of the shown categories (feature 009, shared/src/steps.ts). */
   getSteps(deviceId: string, use: UseTag, optionId: string): Promise<StepPlan>
+  /** Part lookups for the scan specs (feature 018); an empty list when the server has no lookup. */
+  getParts(deviceId: string): Promise<PartLookupResult>
   /** One step list for the shown plan (feature 014); rejects with not_found when there is no plan. */
   getPlanSteps(deviceId: string, use: UseTag): Promise<PlanStepList>
   /**

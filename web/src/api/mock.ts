@@ -11,7 +11,7 @@ import desktopScanJson from '@leaaf/fixtures/device-scan.desktop-partial.json'
 import laptopScanJson from '@leaaf/fixtures/device-scan.laptop-complete.json'
 import { fallbackCategories, LAPTOP_CATEGORIES } from './mockCategories'
 import { laptopPlan, laptopPlanSteps, templatePlan } from './mockSteps'
-import { MOCK_LOOKUPS } from './mockParts'
+import { laptopPartLookups, MOCK_LOOKUPS } from './mockParts'
 import { partsFromScan, STEP_KINDS } from '../lib/parts'
 import { ApiClientError, SCAN_STEPS, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
 import type { UseTag } from '../lib/labels'
@@ -31,6 +31,8 @@ export interface MockOptions {
   reportMs?: number
   /** Delay until a step plan arrives (ms). */
   stepsMs?: number
+  /** Delay until the part lookups arrive (ms); the scan specs show "Looking up…" until then. */
+  partsMs?: number
 }
 
 /** 22-character base64url ID from 128 random bits, the same shape as a device ID (feature 001 FR-008). */
@@ -83,7 +85,7 @@ function categoriesFor(deviceId: string, assessment: Assessment): CategoryResult
 }
 
 export function createMockClient(options: MockOptions = {}): ApiClient {
-  const { stepMs = 900, assessmentMs = 1400, reportMs = 1600, stepsMs = 1500 } = options
+  const { stepMs = 900, assessmentMs = 1400, reportMs = 1600, stepsMs = 1500, partsMs = assessmentMs + 2500 } = options
   const known = new Set<string>(Object.values(MOCK_DEVICE_IDS))
   let adminLoggedIn = false
 
@@ -150,6 +152,13 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       await new Promise((resolve) => setTimeout(resolve, stepsMs))
       if (!plan) throw new ApiClientError('not_found', 'Option not found')
       return plan
+    },
+
+    async getParts(deviceId) {
+      if (!known.has(deviceId)) throw new ApiClientError('not_found', 'Device not found')
+      await new Promise((resolve) => setTimeout(resolve, partsMs))
+      // The desktop shows the scan specs as without a lookup (no LLM on the server).
+      return deviceId === MOCK_DEVICE_IDS.laptop ? laptopPartLookups(deviceId) : { device_id: deviceId, parts: [] }
     },
 
     async getPlanSteps(deviceId, use) {

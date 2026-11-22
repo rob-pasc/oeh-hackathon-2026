@@ -1,6 +1,7 @@
 // Turns a DeviceScan into the short "Your device" rows. Unknown values stay visibly unknown ("Unknown"),
 // never guessed (feature 001 FR-004).
 import type { DeviceScan } from '@leaaf/shared/device'
+import type { PartKind } from '@leaaf/shared/parts'
 
 export type Tone = 'good' | 'warn' | 'bad' | 'neutral'
 
@@ -8,6 +9,8 @@ export interface SpecRow {
   label: string
   value: string
   tone: Tone
+  /** The part kind whose lookups belong under this row (feature 018); null when the value is unknown. */
+  kind?: PartKind
 }
 
 export interface SpecsSummary {
@@ -54,9 +57,9 @@ export function summarizeScan(scan: DeviceScan): SpecsSummary {
     if (battery.health_percent !== null) {
       batteryPercent = Math.min(100, Math.round(battery.health_percent))
       const cycles = battery.cycle_count !== null ? ` · ${battery.cycle_count} cycles` : ''
-      rows.push({ label: 'Battery health', value: `${batteryPercent}%${cycles}`, tone: batteryTone(batteryPercent) })
+      rows.push({ label: 'Battery health', value: `${batteryPercent}%${cycles}`, tone: batteryTone(batteryPercent), kind: 'battery' })
     } else {
-      rows.push({ label: 'Battery health', value: UNKNOWN, tone: 'neutral' })
+      rows.push({ label: 'Battery health', value: UNKNOWN, tone: 'neutral', ...(battery.present ? { kind: 'battery' as const } : {}) })
     }
   }
 
@@ -74,7 +77,7 @@ export function summarizeScan(scan: DeviceScan): SpecsSummary {
     const value = storage
       .map((d) => `${formatSize(d.capacity_gb)} ${MEDIA[d.media] ?? 'Drive'} · ${HEALTH_LABEL[d.health] ?? d.health}`)
       .join(', ')
-    rows.push({ label: 'Storage', value, tone: worst })
+    rows.push({ label: 'Storage', value, tone: worst, kind: 'storage' })
   }
 
   // Memory
@@ -84,14 +87,14 @@ export function summarizeScan(scan: DeviceScan): SpecsSummary {
   ].filter(Boolean)
   const slots =
     memory.slots_total !== null && memory.slots_used !== null ? ` · ${memory.slots_used}/${memory.slots_total} slots used` : ''
-  rows.push({ label: 'Memory', value: ramParts.length ? `${ramParts.join(' ')}${slots}` : UNKNOWN, tone: 'neutral' })
+  rows.push({ label: 'Memory', value: ramParts.length ? `${ramParts.join(' ')}${slots}` : UNKNOWN, tone: 'neutral', ...(memory.type ? { kind: 'memory' as const } : {}) })
 
   // Processor
   const cores = cpu.cores !== null ? ` · ${cpu.cores} cores` : ''
-  rows.push({ label: 'Processor', value: cpu.name ? `${cpu.name}${cores}` : UNKNOWN, tone: 'neutral' })
+  rows.push({ label: 'Processor', value: cpu.name ? `${cpu.name}${cores}` : UNKNOWN, tone: 'neutral', ...(cpu.name ? { kind: 'cpu' as const } : {}) })
 
   // Graphics
-  if (gpus !== null && gpus.length > 0) rows.push({ label: 'Graphics', value: gpus.join(', '), tone: 'neutral' })
+  if (gpus !== null && gpus.length > 0) rows.push({ label: 'Graphics', value: gpus.join(', '), tone: 'neutral', kind: 'gpu' })
 
   // Windows 11 readiness hint: only what the scan can show without claiming a verdict. Macs have
   // no TPM at all, so for them the row says so instead of "Unknown" (feature 007 FR-019).

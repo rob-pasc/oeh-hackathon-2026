@@ -4,6 +4,7 @@ import type { Assessment } from '@leaaf/shared/assessment'
 import { ADMIN_ROUTES, type AdminScanDetail, type AdminScanPage, type AdminSession } from '@leaaf/shared/admin'
 import { API_ROUTES } from '@leaaf/shared/api'
 import type { DeviceRecord } from '@leaaf/shared/device'
+import type { PartLookupResult } from '@leaaf/shared/parts'
 import type { ReportStatus } from '@leaaf/shared/report'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { PlanStepList, StepPlan } from '@leaaf/shared/steps'
@@ -79,6 +80,12 @@ export const liveClient: ApiClient = {
     const response = await fetch(API_ROUTES.optionSteps(deviceId, optionId, use))
     if (!response.ok) throw await readError(response)
     return (await response.json()) as StepPlan
+  },
+
+  async getParts(deviceId): Promise<PartLookupResult> {
+    const response = await fetch(API_ROUTES.deviceParts(deviceId))
+    if (!response.ok) throw await readError(response)
+    return (await response.json()) as PartLookupResult
   },
 
   async getPlanSteps(deviceId, use): Promise<PlanStepList> {
