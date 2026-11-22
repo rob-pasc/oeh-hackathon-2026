@@ -37,6 +37,6 @@ Scanning on a bootable USB (macOS and Linux scanning moved into scope with featu
 
 ## Maintenance
 
-Approved on 2026-11-22 but not built yet: a part lookup on the result screen ([feature 018](features/feature-018-part-lookup/PLAN.md)) and European web prices with local offers and an optional location ([feature 019](features/feature-019-eu-prices-and-local-offers/PLAN.md)). Feature 019 will narrow the non-goal "live price scraping" to displayed prices that never change the ranking; until it is built, the non-goal stands as written.
+Implemented on the branch `feat/part-lookup` on 2026-11-22, not merged yet: a part lookup on the result screen ([feature 018](features/feature-018-part-lookup/PLAN.md)), one cited sentence per scanned part, corpus first and the web second; drives and the battery are looked up by type. Approved but not built yet: European web prices with local offers and an optional location ([feature 019](features/feature-019-eu-prices-and-local-offers/PLAN.md)). Feature 019 will narrow the non-goal "live price scraping" to displayed prices that never change the ranking; until it is built, the non-goal stands as written.
 
 Update this reference when approved product direction or implemented core journeys change. Feature scope stays in each feature's `PLAN.md`.

@@ -1,6 +1,6 @@
 # server
 
-The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights), **retrieval** (`src/retrieval/`, feature 002), the **category service** (`src/categories/`, feature 008: the category call, its checks, option figures and scores, and the five-path fallback), **web search** (`src/search/`, feature 017), and the **report stream** that combines them (003 T-007). The explained report request builder and model output schema are in `src/report/prompt.ts` (004 T-001).
+The TypeScript/Node backend. Node 24 runs the `.ts` sources directly; there is no build step. It currently contains the **device API** (`src/app.ts`, `src/devices/`, feature 001), the **LLM adapter** (`src/llm/`), **fact extraction** (`src/facts/`, feature 003 T-001), the **impact table loader** (`src/impact/`, T-003), the **assessment core** (`src/assessment/`: gates, calculator, scoring, weights), **retrieval** (`src/retrieval/`, feature 002), the **category service** (`src/categories/`, feature 008: the category call, its checks, option figures and scores, and the five-path fallback), **web search** (`src/search/`, feature 017), the **part lookup** (`src/parts/`, feature 018), and the **report stream** that combines them (003 T-007). The explained report request builder and model output schema are in `src/report/prompt.ts` (004 T-001).
 
 The LLM and search API keys are configured only here, through environment variables. They never ship in the scanner or the web app.
 
@@ -13,6 +13,7 @@ The LLM and search API keys are configured only here, through environment variab
 | `POST /api/devices` | `201 UploadResponse`; `400 invalid_payload` with one `fields` entry per invalid field (JSON Pointer); `413 payload_too_large` above the configured ceiling (default 32 KiB), or `429 rate_limited` |
 | `GET /api/devices/:id` | `200 DeviceRecord`; unknown and malformed IDs both get the same `404 not_found` |
 | `GET /api/devices/:id/report?intended_use=` | Server-Sent Events: `status` with `{"phase":"web_search"}` while a fresh web search for the model runs (feature 017; not sent for cached or corpus-covered models), `assessment` (the ranked `Assessment`), then `categories` (the AI's `CategoryResult` with an optional combined `plan`, feature 013, or the five-path fallback with a rule-based plan when the upgrade and repair support one), then `end` with `{"status":"complete"}`. The fallback ends with `{"status":"fallback"}`. Internal assessment or storage failures send `error`. `400 invalid_payload` for a use outside the six shared intended uses; `404` like the device route; `429 rate_limited` before opening the stream, or `500` when the server has no retrieval index |
+| `GET /api/devices/:id/parts` | `200 PartLookupResult` (JSON, `cache-control: no-store`): one lookup per scanned part (processor, memory type, graphics, drive types, battery) with a badge status (`knowledge_base`, `web`, `no_match`), a cited sentence and its source (feature 018). The lookup starts in the background on upload; this route waits for it. Corpus first, then feature 017's web search, then one LLM call for the parts not cached; results are cached per part for 30 days (`part_cache`), failures read `no_match` and are retried on the next request. An empty list without an LLM. `404` like the device route; `429` after `REPORTS_PER_HOUR` per client (its own window) |
 | `GET /api/devices/:id/options/:optionId/steps?intended_use=` | `200 StepPlan` (JSON, `cache-control: no-store`): the step plan of one option of the categories the result screen shows (feature 009). The route never starts a category call: it reads the cached categories, or the five-path fallback when none are cached. `400 invalid_payload` for an unknown use; `404` for an unknown device or option; `429 rate_limited`, or `500` when the server has no retrieval index |
 | `GET /api/devices/:id/plan/steps?intended_use=` | `200 PlanStepList` (JSON, `cache-control: no-store`): one step list of up to 16 steps for the combined plan of the shown categories (feature 014), with the option-step checks; the joined template plans when the AI is unavailable or for the fallback plan. `400` for an unknown use, `404` for an unknown device or a result without a plan, `429` after `STEPS_PER_HOUR` per client. |
 | `GET /downloads/leaaf-scanner.exe` | The Windows scanner at `SCANNER_EXE_PATH`, or 404 while it does not exist. With `?session=<id>` the file is followed by the 37-byte trailer `LEAAFSCAN1:<id>`; an unknown session is 404 |
@@ -139,6 +140,7 @@ cp server/.env.example server/.env   # gitignored; then set LLM_API_KEY
 | `LLM_THINKING_CATEGORIES` | `disabled` | As above, for the category call |
 | `LLM_STEP_TIMEOUT_MS` | `25000` | Deadline for the whole step call (feature 009), including retries and the repair attempt |
 | `LLM_THINKING_STEPS` | `disabled` | As above, for the step call |
+| `LLM_THINKING_PART_LOOKUP` | `disabled` | As above, for the part lookup call (feature 018), whose deadline is `LLM_TIMEOUT_MS` |
 
 ## Container image
 
@@ -156,6 +158,7 @@ npm run categories:smoke -w server # live category call for the three demo model
 npm run steps:smoke -w server # live category and step calls for the three demo models, listing feature 009 AC-015 candidates; needs the index
 npm run steps:smoke -w server -- --plan # only the plan step call for models whose categories carry a plan (feature 014)
 npm run search:smoke -w server # live search with each configured provider (feature 017); optional: -- "<maker>" "<model>"
+npm run parts:smoke -w server  # live part lookup for ThinkPad T470 parts with the configured LLM and search (feature 018); needs the index
 npm run corpus:ingest -w server # build the retrieval index from corpus/ into data/corpus.sqlite
 ```
 
@@ -179,3 +182,9 @@ Web search (`search:smoke`, query "Lenovo ThinkPad T470 RAM memory slots maximum
 |---|---|---|
 | 2026-11-22 | LangSearch | Pass: 5 results, 4 name "ThinkPad T470", 4524 ms |
 | 2026-11-22 | TinyFish (Search and Fetch) | Pass: 5 results, 4 name "ThinkPad T470" (including Lenovo's PSREF spec sheet), 8692 ms |
+
+Part lookup (`parts:smoke`, ThinkPad T470 parts: Intel Core i5-7300U, DDR4, Intel HD Graphics 620, NVMe SSD, battery):
+
+| Date | Result |
+|---|---|
+| 2026-11-22 | Pass: 5 parts in 6925 ms; processor, memory, graphics and drive as Web search (notebookcheck.net via web.archive.org, starmicroinc.net, mobilexfiles.com, graphicscardhub.com), battery as Knowledge base (EPA's lithium-ion battery page). A second run after a prompt change took 12351 ms, with LangSearch failing once (`unavailable`) and TinyFish answering as fallback |

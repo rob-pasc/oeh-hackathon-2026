@@ -10,7 +10,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 
 ## Status
 
-**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). A "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). A password-protected admin page at `/admin` lists the stored scans with their details and AI status (feature 016). The team has run the scanner from the live site on Windows, macOS and Linux, and all three scans worked; some edge paths are still unchecked (features 001 and 007). CI publishes release images to GHCR when a tag is pushed; the newest tag, `v0.5.0`, adds the admin page (feature 016) and is live at [leaaf.green](https://leaaf.green), on the team's own server. The backup and rollback rehearsals are still open (feature 005). Web search for laptops the knowledge base does not cover (feature 017) is implemented on `main` and checked live against both search providers, awaiting the team's browser check; it is not released yet. A part lookup and European prices with local offers are specified, not built yet (features 018 and 019).
+**In progress.** The full journey works locally, from scan to ranked, explained options: the result screen shows AI-chosen categories and options (feature 008), with the five paths as fallback. Opening an option shows a concrete, sourced step plan (feature 009). SSD, RAM and battery options are never rated better than the rule-based assessment allows (feature 011), and for gaming a processor below the minimums of current games rules out upgrades and repairs (feature 012). A "Your plan" card combines the best options into one priced plan with one step list (features 013 and 014). A password-protected admin page at `/admin` lists the stored scans with their details and AI status (feature 016). The team has run the scanner from the live site on Windows, macOS and Linux, and all three scans worked; some edge paths are still unchecked (features 001 and 007). CI publishes release images to GHCR when a tag is pushed; the newest tag, `v0.5.0`, adds the admin page (feature 016) and is live at [leaaf.green](https://leaaf.green), on the team's own server. The backup and rollback rehearsals are still open (feature 005). Web search for laptops the knowledge base does not cover (feature 017) is implemented on `main` and checked live against both search providers, awaiting the team's browser check; it is not released yet. A part lookup in the result screen's scan specs (feature 018) is implemented on the branch `feat/part-lookup` and checked live, awaiting the merge into `main` and the team's read of the privacy notice. European prices with local offers are specified, not built yet (feature 019).
 
 | # | Feature | Status |
 |---|---|---|
@@ -31,7 +31,7 @@ Most of a laptop's carbon footprint comes from making it, so the greenest laptop
 | 015 | [Remove the recommendation summary](docs/features/feature-015-remove-recommendation-summary/PLAN.md) | Complete |
 | 016 | [Admin scan overview](docs/features/feature-016-admin-scan-overview/PLAN.md) | Implemented and merged into `main`, awaiting the browser check and the admin login check on the live site |
 | 017 | [Web evidence for model facts](docs/features/feature-017-web-evidence-for-model-facts/PLAN.md) | Implemented on `main`, awaiting the team's browser check; not released |
-| 018 | [Part lookup](docs/features/feature-018-part-lookup/PLAN.md) | Specified, depends on 017 |
+| 018 | [Part lookup](docs/features/feature-018-part-lookup/PLAN.md) | Implemented on `feat/part-lookup`, awaiting the merge into `main` and the privacy notice read |
 | 019 | [European prices and local offers](docs/features/feature-019-eu-prices-and-local-offers/PLAN.md) | Specified, depends on 017 |
 
 The demo focuses on three laptop models: ThinkPad T480, Dell XPS 13 9360 and HP EliteBook 840 G5.
@@ -163,6 +163,7 @@ The tests use a fake LLM provider, so they need no key and no network. CI ([`.gi
 | Live call to the configured LLM (needs `server/.env`) | `npm run llm:smoke -w server` |
 | Live fact extraction compared with the fixture | `npm run facts:smoke -w server` |
 | Live search with each configured search provider | `npm run search:smoke -w server` |
+| Live part lookup with the configured LLM and search providers | `npm run parts:smoke -w server` |
 | Re-export the JSON Schemas after changing a contract | `npm run schemas -w shared`, then follow [changing a contract](shared/README.md#changing-a-contract) |
 | Production build of the web app, served locally | `npm run build -w web && npm run preview -w web` |
 | Container images | `docker build -f web/Dockerfile .` and `docker build -f server/Dockerfile .` ([deployment guide](docs/DEPLOYMENT.md)) |
