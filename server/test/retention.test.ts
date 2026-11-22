@@ -9,6 +9,7 @@ import { loadImpactTable } from '../src/impact/table.ts'
 import { createReportService } from '../src/report/service.ts'
 import { purgeExpiredScans, SCAN_RETENTION_DAYS, schedulePurge } from '../src/retention.ts'
 import { createSqliteSessionStore } from '../src/sessions/store.ts'
+import { createSqliteLocationStore } from '../src/location/store.ts'
 import { createStepService, type StepServiceDeps } from '../src/steps/service.ts'
 
 const NOW = new Date('2026-12-31T12:00:00.000Z')
@@ -24,6 +25,7 @@ function database() {
   createCategoryService(db, null, { impactTable: loadImpactTable() })
   createStepService(db, null, {} as unknown as StepServiceDeps)
   createReportService(db, null)
+  createSqliteLocationStore(db)
   return db
 }
 
@@ -33,6 +35,7 @@ function addDevice(db: DatabaseSync, id: string, createdAt: string) {
   db.prepare("INSERT INTO step_cache VALUES (?, 'office', 'opt', 'h', '{}', ?)").run(id, createdAt)
   db.prepare("INSERT INTO explanation_cache VALUES (?, 'office', '{}', ?)").run(id, createdAt)
   db.prepare("INSERT INTO ai_fallbacks VALUES (?, 'office', 'categories', NULL, 'timeout', ?)").run(id, createdAt)
+  db.prepare("INSERT INTO device_locations VALUES (?, 'Dornbirn', ?)").run(id, createdAt)
 }
 
 const count = (db: DatabaseSync, table: string, id?: string) =>
@@ -51,7 +54,7 @@ describe('scan retention (feature 006 FR-046)', () => {
 
     expect(purgeExpiredScans(db, NOW)).toEqual({ devices: 1, sessions: 0 })
 
-    for (const table of ['devices', 'category_cache', 'step_cache', 'explanation_cache', 'ai_fallbacks']) {
+    for (const table of ['devices', 'category_cache', 'step_cache', 'explanation_cache', 'ai_fallbacks', 'device_locations']) {
       expect(count(db, table, 'old'), table).toBe(0)
       expect(count(db, table, 'new'), table).toBe(1)
     }

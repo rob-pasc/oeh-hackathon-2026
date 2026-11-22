@@ -10,7 +10,7 @@
 
 leaaf prices options from a fixed impact table (`data/impact.yaml`) and points to Austrian repair, donation and drop-off services only through a handful of corpus documents. This feature adds two uses of the web search adapter from [feature 017](../feature-017-web-evidence-for-model-facts/PLAN.md):
 
-1. **Web prices:** for SSD, RAM and battery options, current EUR price ranges from European shops and price comparison sites, shown as a labelled **Web price** next to the impact table figures. Ranking and plan totals keep using the impact table.
+1. **Web prices:** for SSD, RAM and battery options, current EUR prices ("from" the lowest offer) from European shops and price comparison sites, shown as a labelled **Web price** next to the impact table figures. Ranking and plan totals keep using the impact table.
 2. **Local offers:** repair cafés, repair shops, donation and drop-off points, searched for Austria by default. A new **Share location** button on the result page narrows them to the owner's town, using the browser's location turned into a town name with OpenStreetMap Nominatim. Coordinates are never stored.
 
 It is the third of three web search features approved together on 2026-11-22 and depends on feature 017.
@@ -25,7 +25,7 @@ It is the third of three web search features approved together on 2026-11-22 and
 
 ### In scope
 
-- Web price ranges in EUR for SSD, RAM and battery options, from an allowlist of European shops and price comparison sites, shown next to the impact table figures.
+- Web prices in EUR ("from" the lowest offer) for SSD, RAM and battery options, from an allowlist of European shops and price comparison sites, shown next to the impact table figures.
 - Local offers in the step plans of repair, pass it on and recycle options; Austria-wide by default.
 - A **Share location** button on the result page, browser geolocation, server-side rounding and reverse geocoding to a town with Nominatim, and town-level searches.
 - Caching, labels, failure handling, privacy notice lines for Nominatim and location, and documentation.
@@ -40,7 +40,7 @@ It is the third of three web search features approved together on 2026-11-22 and
 
 ## Functional requirements
 
-- **FR-001:** For each SSD, RAM and battery option on the result screen, the server searches European price sources for the matching part (from the option's facts, for example "M.2 2280 NVMe 1 TB" or the battery for the device's model) and extracts EUR prices. The option card shows a **Web price** range (lowest to highest found) with the number of offers, links to the sources, and the retrieval date.
+- **FR-001:** For each SSD, RAM and battery option on the result screen, the server searches European price sources for the matching part (from the option's facts, for example "M.2 2280 NVMe 1 TB" or the battery for the device's model) and extracts EUR prices. The option card shows a **Web price** as "from <lowest price found>" with the number of offers; the opened card lists the three cheapest offers (product, price, link) and the retrieval date. *(Amended 2026-11-22: was a range from lowest to highest; see the scope change log.)*
 - **FR-002:** Web prices never change scores, the ranking, the gauge or the plan totals; the impact table figures stay as they are and stay visible.
 - **FR-003:** Only prices in EUR from an allowlist of European shops and price comparison sites count (configured in the repository; initially geizhals.eu, geizhals.at, idealo.at and idealo.de). Fewer than two usable offers show no Web price.
 - **FR-004:** Web prices are cached per part query for 7 days.
@@ -60,7 +60,7 @@ It is the third of three web search features approved together on 2026-11-22 and
 
 ## User journeys and edge cases
 
-1. **Prices:** A T480 has an SSD upgrade option; its card shows "Web price €52–89 · 6 offers · geizhals.eu, idealo.at · 2026-11-22" next to the impact table range.
+1. **Prices:** A T480 has an SSD upgrade option; its card shows "Web price from €52 · 6 offers" next to the impact table range, and the opened card lists the three cheapest offers with links and the date 2026-11-22.
 2. **Too few offers:** Only one offer is found; no Web price is shown (FR-003).
 3. **Austria-wide offers:** A repair option's step plan lists three Austrian repair cafés from the web.
 4. **Share location:** The owner presses Share location, allows it, and the list changes to "Near Dornbirn" with offers there. Pressing "Austria-wide" returns to the default.
@@ -106,12 +106,13 @@ Additive tables only. Location data is deleted with the scan (30 days) and can b
 | Date       | Change                 | User approval |
 | ---------- | ---------------------- | ------------- |
 | 2026-11-22 | Initial approved scope | User chose "Accept" for the three-feature web search proposal (017–019), 2026-11-22, after choosing European standard prices from EU shops shown alongside the impact table, Austria as the default for local offers, and an optional Share location button using Nominatim |
+| 2026-11-22 | FR-001 amended: the card shows "from <lowest price>" with the offer count instead of a lowest-to-highest range, and the opened card lists the three cheapest offers with links. The minimum of two offers (FR-003) and the `WebPrice` contract stay. Reason: the first live smoke run gave wide ranges (SSD €79.98–253.78) that mix budget and high-end products | User proposed it and approved the amendment ("ok go"), 2026-11-22 |
 
 ## Related and superseded features
 
-- **Planned replacement of a non-goal in [`docs/PRODUCT.md`](../../PRODUCT.md):** "live price scraping or purchasing" becomes "purchasing"; live price lookups are displayed alongside the impact table. Planned until implemented.
-- **Planned extension of [feature 009](../feature-009-concrete-step-plans/PLAN.md):** step plans of repair, pass it on and recycle options gain a local offers block; the steps themselves do not change.
-- **Planned extension of [feature 006](../feature-006-web-app/PLAN.md) FR-046** (legal pages): the privacy notice gains the location and Nominatim lines.
+- **Replacement of a non-goal in [`docs/PRODUCT.md`](../../PRODUCT.md):** "live price scraping or purchasing" becomes "purchasing"; live price lookups are displayed alongside the impact table. Implemented 2026-11-22 on `feat/pricesandoffers`; effective once merged.
+- **Extension of [feature 009](../feature-009-concrete-step-plans/PLAN.md):** step plans of repair, pass it on and recycle options gain a local offers block; the steps themselves do not change. Implemented 2026-11-22 on `feat/pricesandoffers`.
+- **Extension of [feature 006](../feature-006-web-app/PLAN.md) FR-046** (legal pages): the privacy notice gains the location and Nominatim lines. Implemented 2026-11-22 on `feat/pricesandoffers`.
 - **Unchanged:** [feature 003](../feature-003-five-path-ranking/PLAN.md) FR-007 (impact table) and the ranking and plan figures of features 008 and 013.
 - **Depends on:** [feature 017](../feature-017-web-evidence-for-model-facts/PLAN.md).
 

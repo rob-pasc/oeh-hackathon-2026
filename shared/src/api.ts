@@ -6,6 +6,11 @@
 // GET  /api/devices/:id/report?intended_use=<IntendedUse>      -> text/event-stream (see report.ts) | 400/404/429 ApiError
 // GET  /api/devices/:id/parts                                  -> 200 PartLookupResult (parts.ts) | 404/429 ApiError
 // GET  /api/devices/:id/options/:optionId/steps?intended_use=<IntendedUse> -> 200 StepPlan (steps.ts) | 400/404/429 ApiError
+// GET  /api/devices/:id/prices?intended_use=<IntendedUse>      -> 200 WebPriceList (prices.ts) | 400/404/429 ApiError
+// GET  /api/devices/:id/options/:optionId/offers?intended_use=<IntendedUse> -> 200 LocalOfferList (prices.ts) | 400/404/429 ApiError
+// GET  /api/devices/:id/location                              -> 200 DeviceLocation | 404 ApiError
+// POST /api/devices/:id/location         body LocationRequest -> 200 DeviceLocation (town null when no town was found) | 400/404/429 ApiError
+// DELETE /api/devices/:id/location                             -> 200 DeviceLocation (town null) | 404 ApiError
 // GET  /downloads/leaaf-scanner.exe[?session=<SessionId>]       -> the Windows scanner, with the session appended
 // GET  /downloads/leaaf-scanner-linux[?session=<SessionId>]     -> the Linux scanner, with the session appended
 // GET  /downloads/leaaf-scanner-macos.zip[?session=<SessionId>] -> the zipped macOS app, bundle renamed for the session
@@ -34,6 +39,13 @@ export const API_ROUTES = {
   deviceParts: (id: DeviceId) => `/api/devices/${id}/parts`,
   /** The combined plan's step list (feature 014). */
   planSteps: (id: DeviceId, use: IntendedUse) => `/api/devices/${id}/plan/steps?intended_use=${encodeURIComponent(use)}`,
+  /** Web prices of the result's SSD, RAM and battery options (feature 019). */
+  prices: (id: DeviceId, use: IntendedUse) => `/api/devices/${id}/prices?intended_use=${encodeURIComponent(use)}`,
+  /** Local offers of a repair, pass it on or recycle option (feature 019). */
+  optionOffers: (id: DeviceId, optionId: string, use: IntendedUse) =>
+    `/api/devices/${id}/options/${encodeURIComponent(optionId)}/offers?intended_use=${encodeURIComponent(use)}`,
+  /** The shared town of a device link (feature 019). */
+  location: (id: DeviceId) => `/api/devices/${id}/location`,
   /** The Windows download; see SCANNER_DOWNLOADS for the others. */
   scannerDownload: SCANNER_DOWNLOADS.windows,
   createSession: '/api/sessions',

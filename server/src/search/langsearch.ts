@@ -1,6 +1,7 @@
 // LangSearch Web Search API (docs.langsearch.com/api/web-search-api.md, read 2026-11-22):
 // POST https://api.langsearch.com/v1/web-search with a Bearer key. `contents.text.maxCharacters`
-// makes each result carry page text (`text`) instead of a `snippet`.
+// makes each result carry page text (`text`) instead of a `snippet`; `includeDomains` restricts the
+// results to those domains. It has no country or language setting.
 import { isHttpUrl, SearchError, statusError, transportError, type SearchHit, type SearchProvider } from './types.ts'
 
 export const LANGSEARCH_URL = 'https://api.langsearch.com/v1/web-search'
@@ -27,6 +28,7 @@ export function createLangSearchProvider(apiKey: string, transport: typeof fetch
             query: query.text,
             count: Math.min(50, Math.max(1, query.maxResults)),
             contents: { text: { maxCharacters: query.maxChars } },
+            ...(query.includeDomains?.length ? { includeDomains: query.includeDomains } : {}),
           }),
           ...(signal ? { signal } : {}),
         })

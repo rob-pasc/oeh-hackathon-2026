@@ -1,9 +1,12 @@
+import type { OfferKind, WebPrice } from '@leaaf/shared/prices'
 import type { CardView } from '../lib/pathView'
+import type { OfferState } from '../lib/webPrices'
 import type { StepState } from '../lib/steps'
 import { PathHeader } from './PathHeader'
 import { SourceLink } from './SourceLink'
 import { StepList } from './StepList'
 import { Thinking } from './Thinking'
+import { OffersBlock, WebPriceDetail } from './WebExtras'
 import { Sk } from './ui'
 
 const SECTION_LABEL = 'text-xs font-bold tracking-wider text-leaf uppercase'
@@ -22,6 +25,10 @@ interface Props {
    * so it shows a forward chevron and no details.
    */
   navigates?: boolean
+  /** The option's web price (feature 019), shown next to its figures and in its details. */
+  webPrice?: WebPrice | undefined
+  /** Local offers of a repair, pass it on or recycle option (feature 019), below its steps. */
+  offers?: { kind: OfferKind; state: OfferState | undefined } | undefined
 }
 
 function Chevron({ className }: { className: string }) {
@@ -41,7 +48,7 @@ function Chevron({ className }: { className: string }) {
   )
 }
 
-export function PathCard({ view, selected, open, pending, onToggle, plan, navigates = false }: Props) {
+export function PathCard({ view, selected, open, pending, onToggle, plan, navigates = false, webPrice, offers }: Props) {
   const expanded = open && !navigates
   return (
     <section
@@ -56,7 +63,7 @@ export function PathCard({ view, selected, open, pending, onToggle, plan, naviga
         onClick={onToggle}
         className="flex w-full cursor-pointer items-center gap-4 border-0 bg-transparent px-5 py-[18px] text-left text-ink"
       >
-        <PathHeader view={view} />
+        <PathHeader view={view} webPrice={webPrice} />
         <Chevron className={navigates ? '-rotate-90' : expanded ? 'rotate-180' : ''} />
       </button>
 
@@ -98,12 +105,14 @@ export function PathCard({ view, selected, open, pending, onToggle, plan, naviga
               <SourceLink key={source.url + source.label} source={source} />
             ))}
           </div>
+          {webPrice ? <WebPriceDetail price={webPrice} /> : null}
           {plan ? (
             <div className="flex flex-col gap-2 sm:col-span-2">
               <span className={SECTION_LABEL}>What to do</span>
               <StepList state={plan} />
             </div>
           ) : null}
+          {offers ? <OffersBlock kind={offers.kind} state={offers.state} /> : null}
         </div>
       ) : null}
     </section>

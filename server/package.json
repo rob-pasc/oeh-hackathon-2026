@@ -18,6 +18,7 @@
     "steps:smoke": "node --env-file-if-exists=.env scripts/steps-smoke.ts",
     "search:smoke": "node --env-file-if-exists=.env scripts/search-smoke.ts",
     "parts:smoke": "node --env-file-if-exists=.env scripts/parts-smoke.ts",
+    "prices:smoke": "node --env-file-if-exists=.env scripts/prices-smoke.ts",
     "corpus:ingest": "node --env-file-if-exists=.env scripts/corpus-ingest.ts"
   },
   "devDependencies": {

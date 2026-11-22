@@ -1,7 +1,9 @@
 import type { Suitability } from '@leaaf/shared/common'
+import type { WebPrice } from '@leaaf/shared/prices'
 import type { CardView } from '../lib/pathView'
 import { AnimatedText } from './AnimatedText'
 import { PathIcon } from './PathIcon'
+import { WebPriceTag } from './WebExtras'
 
 const BADGE: Record<Suitability, string> = {
   viable: 'bg-leaf-tint text-leaf-deep',
@@ -14,9 +16,10 @@ export const SUMMARY_BLOCK = 'flex items-center gap-4 rounded-[20px] bg-leaf-tin
 
 /**
  * Icon, rank, name, labels, one-sentence reason, and key figures of a path, category or option.
- * `onTint` draws the icon tile white, for use on the tinted summary block.
+ * `onTint` draws the icon tile white, for use on the tinted summary block. An option's web price
+ * (feature 019) is shown next to its impact table figures.
  */
-export function PathHeader({ view, onTint = false }: { view: CardView; onTint?: boolean }) {
+export function PathHeader({ view, onTint = false, webPrice }: { view: CardView; onTint?: boolean; webPrice?: WebPrice | undefined }) {
   const muted = view.status === 'not_suitable'
   return (
     <>
@@ -57,6 +60,7 @@ export function PathHeader({ view, onTint = false }: { view: CardView; onTint?: 
             </span>
           ))}
         </div>
+        {webPrice ? <WebPriceTag price={webPrice} /> : null}
       </div>
     </>
   )

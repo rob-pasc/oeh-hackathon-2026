@@ -10,7 +10,7 @@ export const SCAN_RETENTION_DAYS = 30
 const DAY_MS = 24 * 60 * 60 * 1000
 
 /** Tables with per-device rows. Some are created only when their service is wired, so missing ones are skipped. */
-const DEVICE_TABLES = ['category_cache', 'step_cache', 'explanation_cache', 'ai_fallbacks'] as const
+const DEVICE_TABLES = ['category_cache', 'step_cache', 'explanation_cache', 'ai_fallbacks', 'device_locations'] as const
 
 export interface PurgeResult {
   devices: number

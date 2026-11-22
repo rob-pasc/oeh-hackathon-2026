@@ -1,0 +1,9 @@
+# Price sources for web prices (feature 019 FR-003). Only EUR offers on these sites count. A page
+# counts with or without "www.", but not on other subdomains such as forum.geizhals.at. The initial
+# list was confirmed by the user on 2026-11-22. Adding a site: append its domain; the server reads
+# this file at startup.
+domains:
+  - geizhals.eu
+  - geizhals.at
+  - idealo.at
+  - idealo.de

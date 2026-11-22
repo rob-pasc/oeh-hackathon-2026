@@ -124,6 +124,8 @@ const DSB = 'Österreichische Datenschutzbehörde, Barichgasse 40–42, 1030 Wie
 const DEEPSEEK_POLICY = 'https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html'
 const LANGSEARCH = 'LangSearch (langsearch.com)'
 const TINYFISH = 'TinyFish (tinyfish.ai)'
+const NOMINATIM = 'Nominatim (nominatim.openstreetmap.org), betrieben von der OpenStreetMap Foundation, Vereinigtes Königreich'
+const NOMINATIM_EN = 'Nominatim (nominatim.openstreetmap.org), run by the OpenStreetMap Foundation, United Kingdom'
 
 function privacyDe(): Block[] {
   return [
@@ -175,7 +177,20 @@ function privacyDe(): Block[] {
       type: 'p',
       text: `Auch zu den Bauteilen deines Geräts (Prozessor, Grafik, Speichertyp, Laufwerksart und Akku) suchen wir zuerst in unserer Dokumentensammlung und, wenn sie nichts dazu enthält, über dieselben Suchdienste. An die Suchdienste senden wir dabei nur die Bezeichnung des Bauteils (zum Beispiel „Intel Core i5-8250U“ oder „NVMe SSD“), keine anderen Scan-Daten, keine Kennungen von Sitzung oder Gerät und nicht deine IP-Adresse. Die Ergebnisse speichern wir 30 Tage lang pro Bauteil, nicht pro Gerät.`,
     },
-    { type: 'h2', text: '5. Cookies und Speicher im Browser' },
+    {
+      type: 'p',
+      text: 'Über dieselben Suchdienste suchen wir außerdem aktuelle Preise für SSD, Arbeitsspeicher und Akku auf Preisvergleichsseiten sowie Reparatur-, Spende- und Sammelstellen. Dafür senden wir nur die Bauteilbezeichnung (zum Beispiel „500 GB M.2 NVMe SSD“, beim Akku Hersteller und Modell) oder die Art der Stelle zusammen mit „Österreich“ oder dem Ort, den du freiwillig teilst (Abschnitt 5). Die gefundenen Preise und Stellen speichern wir 7 Tage lang pro Bauteil und pro Ort, nicht pro Gerät, und zeigen sie als „Web price“ und „Web source · check“ mit Link an.',
+    },
+    { type: 'h2', text: '5. Standort teilen (freiwillig)' },
+    {
+      type: 'p',
+      text: `Auf der Ergebnisseite kannst du mit „Share location“ deinen Standort teilen, damit wir Stellen in deiner Nähe suchen. Das ist freiwillig: Ohne Standort zeigen wir Stellen in ganz Österreich. Dein Browser fragt dich vorher um Erlaubnis und sendet die Koordinaten auf zwei Nachkommastellen gerundet (auf etwa 1 km genau) an unseren Server. Der Server sendet diese gerundeten Koordinaten an den Dienst ${NOMINATIM}, der daraus den Namen deines Orts ermittelt. Nominatim erhält dabei nicht deine IP-Adresse, sondern die unseres Servers.`,
+    },
+    {
+      type: 'p',
+      text: `Die Koordinaten speichern wir nicht und schreiben sie in keine Logdatei; sie liegen nur kurz im Arbeitsspeicher des Servers. Gespeichert wird nur der Ortsname, und nur für den Link dieses Ergebnisses. Wir löschen ihn mit den Scan-Daten nach ${PROVIDER.scanRetentionDays} Tagen oder sofort, wenn du „Austria-wide“ wählst. An die Suchdienste geht nur der Ortsname, nie Koordinaten. Rechtsgrundlage: deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du durch das Teilen gibst und jederzeit mit „Austria-wide“ widerrufen kannst. Ortsnamen: © OpenStreetMap contributors (ODbL).`,
+    },
+    { type: 'h2', text: '6. Cookies und Speicher im Browser' },
     {
       type: 'p',
       text: 'Wir setzen keine Cookies und verwenden keine Analyse-, Werbe- oder Social-Media-Dienste. Nur wenn du die Laptop-Ansicht der Ergebnisse ein- oder ausschaltest, merkt sich dein Browser diese Einstellung lokal (Eintrag „leaaf.showLaptopView“ im lokalen Speicher). Der Eintrag verlässt dein Gerät nicht, ist für die von dir gewünschte Einstellung technisch erforderlich (§ 165 Abs. 3 TKG 2021) und kann jederzeit in den Browser-Einstellungen gelöscht werden.',
@@ -184,17 +199,17 @@ function privacyDe(): Block[] {
       type: 'p',
       text: 'Die einzige Ausnahme ist der Verwaltungsbereich unter /admin, der nur für unser Projektteam gedacht ist: Nach der Anmeldung setzt er ein technisch notwendiges Sitzungs-Cookie („leaaf_admin“), das nur an die Verwaltungsschnittstelle gesendet wird und nach spätestens 12 Stunden oder beim Abmelden abläuft. Besucherinnen und Besucher, die sich dort nicht anmelden, erhalten kein Cookie.',
     },
-    { type: 'h2', text: '6. Schrift' },
+    { type: 'h2', text: '7. Schrift' },
     {
       type: 'p',
       text: 'Die Schrift Inter liegt auf unserem eigenen Server. Deshalb nimmt dein Browser keine Verbindung zu Google Fonts oder anderen Schriftanbietern auf.',
     },
-    { type: 'h2', text: '7. Empfänger' },
+    { type: 'h2', text: '8. Empfänger' },
     {
       type: 'p',
-      text: 'Wir geben deine Daten nicht an Dritte weiter und verkaufen sie nicht. Die einzigen Ausnahmen sind der KI-Dienst und die Suchdienste nach Abschnitt 4 mit den dort genannten Angaben. Behörden erhalten Daten nur, wenn eine gesetzliche Pflicht dazu besteht.',
+      text: 'Wir geben deine Daten nicht an Dritte weiter und verkaufen sie nicht. Die einzigen Ausnahmen sind der KI-Dienst und die Suchdienste nach Abschnitt 4 und, wenn du deinen Standort teilst, Nominatim nach Abschnitt 5, jeweils mit den dort genannten Angaben. Behörden erhalten Daten nur, wenn eine gesetzliche Pflicht dazu besteht.',
     },
-    { type: 'h2', text: '8. Deine Rechte' },
+    { type: 'h2', text: '9. Deine Rechte' },
     {
       type: 'p',
       text: 'Du hast das Recht auf Auskunft (Art. 15), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch (Art. 21 DSGVO). Schreib uns dazu an die oben genannte E-Mail-Adresse und nenne den Link zu deinem Ergebnis, damit wir deine Daten finden. Ohne diesen Link können wir Scan-Daten nicht zuordnen.',
@@ -203,7 +218,7 @@ function privacyDe(): Block[] {
       type: 'p',
       text: `Wenn du glaubst, dass wir Daten rechtswidrig verarbeiten, kannst du dich bei der Aufsichtsbehörde beschweren: ${DSB}.`,
     },
-    { type: 'h2', text: '9. Änderungen' },
+    { type: 'h2', text: '10. Änderungen' },
     {
       type: 'p',
       text: 'Wenn sich ändert, was leaaf.green speichert oder sendet, passen wir diese Erklärung an. Das Datum der letzten Änderung steht oben.',
@@ -261,7 +276,20 @@ function privacyEn(): Block[] {
       type: 'p',
       text: `We also look up the components of your device (processor, graphics, memory type, drive type and battery), first in our own document collection and, when it has nothing on them, with the same search services. To the search services we send only the component's name (for example "Intel Core i5-8250U" or "NVMe SSD"): no other scan data, no session or device identifiers and not your IP address. We keep the results for 30 days per component, not per device.`,
     },
-    { type: 'h2', text: '5. Cookies and browser storage' },
+    {
+      type: 'p',
+      text: 'Through the same search services we also look up current prices for SSDs, memory and batteries on price comparison sites, and places that repair, take donations or collect old devices. For this we send only the part name (for example "500 GB M.2 NVMe SSD", or the manufacturer and model for a battery), or the kind of place together with "Austria" or the town you choose to share (section 5). We keep the prices and places found for 7 days per part and per town, not per device, and show them as "Web price" and "Web source · check" with a link.',
+    },
+    { type: 'h2', text: '5. Sharing your location (optional)' },
+    {
+      type: 'p',
+      text: `On the results page you can share your location with "Share location" so that we search for places near you. This is optional: without a location we show places across Austria. Your browser asks for your permission first and sends the coordinates rounded to two decimals (to about 1 km) to our server. The server sends these rounded coordinates to the service ${NOMINATIM_EN}, which returns the name of your town. Nominatim receives our server's IP address, not yours.`,
+    },
+    {
+      type: 'p',
+      text: `We do not store the coordinates and do not write them to any log file; they are held briefly in the server's memory only. We store only the town name, and only for the link of this result. We delete it with the scan data after ${PROVIDER.scanRetentionDays} days, or at once when you choose "Austria-wide". The search services receive only the town name, never coordinates. Legal basis: your consent (Art. 6(1)(a) GDPR), which you give by sharing and can withdraw at any time with "Austria-wide". Town names: © OpenStreetMap contributors (ODbL).`,
+    },
+    { type: 'h2', text: '6. Cookies and browser storage' },
     {
       type: 'p',
       text: 'We set no cookies and use no analytics, advertising or social media services. Only when you switch the laptop view of the results on or off does your browser remember that setting locally (the entry "leaaf.showLaptopView" in local storage). The entry never leaves your device, is technically necessary for the setting you asked for (section 165(3) of the Austrian Telecommunications Act 2021) and can be deleted in your browser settings at any time.',
@@ -270,17 +298,17 @@ function privacyEn(): Block[] {
       type: 'p',
       text: 'The only exception is the admin area at /admin, which is meant for our project team only: after login it sets a strictly necessary session cookie ("leaaf_admin") that is sent only to the admin interface and expires after 12 hours at the latest or on logout. Visitors who do not log in there receive no cookie.',
     },
-    { type: 'h2', text: '6. Typeface' },
+    { type: 'h2', text: '7. Typeface' },
     {
       type: 'p',
       text: 'The typeface Inter is stored on our own server. Your browser therefore makes no connection to Google Fonts or any other font provider.',
     },
-    { type: 'h2', text: '7. Recipients' },
+    { type: 'h2', text: '8. Recipients' },
     {
       type: 'p',
-      text: 'We do not pass your data on to third parties and we do not sell it. The only exceptions are the AI service and the search services in section 4, with the details listed there. Authorities receive data only where the law requires it.',
+      text: 'We do not pass your data on to third parties and we do not sell it. The only exceptions are the AI service and the search services in section 4 and, if you share your location, Nominatim in section 5, each with the details listed there. Authorities receive data only where the law requires it.',
     },
-    { type: 'h2', text: '8. Your rights' },
+    { type: 'h2', text: '9. Your rights' },
     {
       type: 'p',
       text: 'You have the right of access (Art. 15), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and objection (Art. 21 GDPR). Write to the email address above and include the link to your result so that we can find your data. Without that link we cannot match scan data to you.',
@@ -289,7 +317,7 @@ function privacyEn(): Block[] {
       type: 'p',
       text: `If you believe we process data unlawfully, you can complain to the supervisory authority: ${DSB}.`,
     },
-    { type: 'h2', text: '9. Changes' },
+    { type: 'h2', text: '10. Changes' },
     {
       type: 'p',
       text: 'If what leaaf.green stores or sends changes, we update this notice. The date of the last change is shown at the top.',

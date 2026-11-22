@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "LocalOfferList.schema.json",
+  "title": "LocalOfferList",
+  "type": "object",
+  "required": [
+    "device_id",
+    "option_id",
+    "kind",
+    "town",
+    "offers",
+    "retrieved_on"
+  ],
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22}$",
+      "description": "22-character base64url string encoding 128 random bits"
+    },
+    "option_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,39}$"
+    },
+    "kind": {
+      "enum": [
+        "repair",
+        "pass_on",
+        "recycle"
+      ],
+      "description": "repair = repair cafés and shops; pass_on = donation; recycle = drop-off points"
+    },
+    "town": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "The shared town the offers were searched for; null = Austria-wide"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "offers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "town",
+          "url",
+          "publisher"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "town": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "publisher": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Host of the page without \"www.\", e.g. \"geizhals.at\""
+          }
+        },
+        "additionalProperties": false
+      },
+      "maxItems": 3
+    },
+    "retrieved_on": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

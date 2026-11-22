@@ -69,6 +69,8 @@ export function loadLlmConfig(env: NodeJS.ProcessEnv = process.env): LlmConfig {
       steps: thinkingMode(env, 'LLM_THINKING_STEPS', 'disabled'),
       // Off: one short sentence per part needs no reasoning.
       part_lookup: thinkingMode(env, 'LLM_THINKING_PART_LOOKUP', 'disabled'),
+      // Off: reading prices and offers off pages needs no reasoning, and the page waits for it.
+      web_extraction: thinkingMode(env, 'LLM_THINKING_WEB_EXTRACTION', 'disabled'),
     },
   }
 }

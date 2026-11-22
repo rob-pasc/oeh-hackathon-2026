@@ -11,7 +11,7 @@ const config: LlmConfig = {
   timeoutMs: 1000,
   categoryTimeoutMs: 1000,
   stepTimeoutMs: 1000,
-  thinking: { fact_extraction: 'enabled', explanation: 'disabled', categories: 'disabled', steps: 'disabled', part_lookup: 'disabled' },
+  thinking: { fact_extraction: 'enabled', explanation: 'disabled', categories: 'disabled', steps: 'disabled', part_lookup: 'disabled', web_extraction: 'disabled' },
 }
 
 const Answer = Type.Object({ status: Type.Literal('ok'), count: Type.Integer() }, { additionalProperties: false })
@@ -116,7 +116,7 @@ describe('OpenAI-compatible client', () => {
     const replies = [{ content: '{"status":"ok","count":1}' }]
     const requests: Record<string, unknown>[] = []
     const client = createOpenAiCompatibleClient(
-      { ...config, thinking: { fact_extraction: 'omit', explanation: 'omit', categories: 'omit', steps: 'omit', part_lookup: 'omit' } },
+      { ...config, thinking: { fact_extraction: 'omit', explanation: 'omit', categories: 'omit', steps: 'omit', part_lookup: 'omit', web_extraction: 'omit' } },
       {
         maxRetries: 0,
         fetch: (async (_url: unknown, init?: RequestInit) => {
@@ -236,7 +236,7 @@ describe('loadLlmConfig', () => {
       timeoutMs: 25000,
       categoryTimeoutMs: 40000,
       stepTimeoutMs: 25000,
-      thinking: { fact_extraction: 'disabled', explanation: 'disabled', categories: 'disabled', steps: 'disabled', part_lookup: 'disabled' },
+      thinking: { fact_extraction: 'disabled', explanation: 'disabled', categories: 'disabled', steps: 'disabled', part_lookup: 'disabled', web_extraction: 'disabled' },
     })
   })
 

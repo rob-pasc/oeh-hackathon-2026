@@ -16,13 +16,18 @@ import { createOpenAiCompatibleClient, LlmError, loadLlmConfig } from './llm/ind
 import { DEFAULT_CORPUS_INDEX_PATH, IndexError, openRetriever, type Retriever } from './retrieval/index.ts'
 import { createCategoryService } from './categories/service.ts'
 import { schedulePurge } from './retention.ts'
-import { createSqliteSearchBudget, createSqliteSearchCache } from './search/cache.ts'
-import { createConfiguredSearch, loadSearchConfig } from './search/config.ts'
+import { createSqliteSearchBudget, createSqliteSearchCache, type SearchBudget } from './search/cache.ts'
+import { createConfiguredSearch, createProviders, loadSearchConfig, type SearchConfig } from './search/config.ts'
+import type { WebLookup } from './search/lookup.ts'
 import { createWebEvidence, type WebEvidence } from './search/evidence.ts'
-import { SearchError } from './search/types.ts'
+import { SearchError, type SearchProvider } from './search/types.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
 import { createPartLookupService, createSqlitePartCache, type PartWebSearch } from './parts/service.ts'
 import { createStepService } from './steps/service.ts'
+import { createPriceService, createSqlitePriceCache, loadPriceSources } from './prices/index.ts'
+import { createOfferService } from './offers/service.ts'
+import { createNominatim, NOMINATIM_URL } from './location/nominatim.ts'
+import { createSqliteLocationStore } from './location/store.ts'
 
 const env = process.env
 const limits = loadLimits(env)
@@ -41,6 +46,7 @@ const corpusIndexPath = resolve(env.CORPUS_INDEX_PATH ?? DEFAULT_CORPUS_INDEX_PA
 // (feature 003 FR-011).
 const weights = loadWeights()
 const impactTable = loadImpactTable()
+const priceSources = loadPriceSources()
 
 mkdirSync(dirname(databasePath), { recursive: true })
 const db = new DatabaseSync(databasePath)
@@ -71,14 +77,17 @@ const warn = (message: string, details?: Record<string, unknown>) => app.log.war
 let webEvidence: WebEvidence | null = null
 // The part lookup (feature 018) shares the provider chain, cache and daily cap.
 let partSearch: PartWebSearch | null = null
+// Web prices and local offers (feature 019) use the same providers and daily cap.
+let webSearch: { config: SearchConfig; provider: SearchProvider; budget: SearchBudget } | null = null
 try {
   const search = loadSearchConfig(env)
   if (!search) console.warn('web search off: no LANGSEARCH_API_KEY or TINYFISH_API_KEY set')
   else {
+    webSearch = { config: search, provider: createConfiguredSearch(search, { warn }), budget: createSqliteSearchBudget(db, search.dailyCalls) }
     partSearch = {
-      search: createConfiguredSearch(search, { warn }),
+      search: webSearch.provider,
       cache: createSqliteSearchCache(db),
-      budget: createSqliteSearchBudget(db, search.dailyCalls),
+      budget: webSearch.budget,
       timeoutMs: search.timeoutMs,
       resultsPerQuery: search.resultsPerQuery,
       maxChars: search.maxChars,
@@ -94,6 +103,37 @@ const assessments = retriever ? createAssessmentService({ retriever, extractor, 
 // AI fallbacks are recorded for the admin page (feature 016 FR-016).
 const fallbackLog = createFallbackLog(db)
 const categorize = createCategoryService(db, llm, { impactTable, warn, onFallback: fallbackLog.record })
+// Prices and offers ask the providers one by one rather than through the chain (search/lookup.ts).
+const webLookup: WebLookup | null =
+  llm && webSearch
+    ? {
+        providers: createProviders(webSearch.config),
+        budget: webSearch.budget,
+        llm,
+        timeoutMs: webSearch.config.timeoutMs,
+        resultsPerQuery: webSearch.config.resultsPerQuery,
+        maxChars: webSearch.config.maxChars,
+        warn,
+      }
+    : null
+const prices =
+  assessments && webLookup
+    ? createPriceService({ web: webLookup, cache: createSqlitePriceCache(db), domains: priceSources, assessments, shownCategories: categorize.shown, impactTable })
+    : undefined
+// The town shared on a device link narrows local offers (feature 019). NOMINATIM_URL=none turns the
+// lookup off; the button then always keeps Austria-wide offers.
+const locationStore = createSqliteLocationStore(db)
+const nominatimUrl = env.NOMINATIM_URL?.trim() || NOMINATIM_URL
+const geocoder = nominatimUrl === 'none' ? null : createNominatim({ baseUrl: nominatimUrl, userAgent: `leaaf (${publicBaseUrl})`, warn })
+const offers = assessments
+  ? createOfferService(db, {
+      web: webLookup,
+      assessments,
+      shownCategories: categorize.shown,
+      townOf: locationStore.town,
+      warn,
+    })
+  : undefined
 
 // Part lookups need the corpus and an LLM; without the LLM the scan specs stay as before (feature 018 FR-007).
 const parts = retriever && llm ? createPartLookupService({ retriever, llm, cache: createSqlitePartCache(db), web: partSearch, warn }) : undefined
@@ -109,6 +149,9 @@ const app = buildApp({
   categorize,
   parts,
   steps: retriever && assessments ? createStepService(db, llm, { retriever, assessments, shownCategories: categorize.shown, warn, onFallback: fallbackLog.record }) : undefined,
+  prices,
+  offers,
+  locations: { store: locationStore, geocoder },
   publicBaseUrl,
   scannerPaths,
   logger: {

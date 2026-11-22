@@ -24,6 +24,9 @@ import {
   checkPassage,
   checkReport,
   createValidator,
+  checkWebPrice,
+  roundCoordinate,
+  WebPriceList,
   type Assessment as AssessmentT,
   type DeviceScan as DeviceScanT,
   type FactSet as FactSetT,
@@ -477,5 +480,28 @@ describe('part lookups (feature 018)', () => {
     const long = result()
     long.parts[0].sentence = 'x'.repeat(241)
     expect(validate(long).ok).toBe(false)
+  })
+})
+
+describe('web prices (feature 019)', () => {
+  const offer = (price_eur: number) => ({ title: 'Kingston NV3 500GB', url: 'https://geizhals.at/a1.html', publisher: 'geizhals.at', price_eur })
+  const price = { option_id: 'ssd', part: '500 GB M.2 2280 NVMe SSD', low_eur: 39.9, high_eur: 52, offer_count: 2, offers: [offer(52), offer(39.9)], retrieved_on: '2026-11-22' }
+  const isList = createValidator(WebPriceList)
+
+  it('accepts a consistent price list', () => {
+    expect(isList({ device_id: 'q3Xk9vT2mB7pLw0cZr1sEa', intended_use: 'office', prices: [price] }).ok).toBe(true)
+    expect(checkWebPrice(price)).toEqual([])
+  })
+
+  it('rejects a single offer and a range that does not match the offers', () => {
+    expect(isList({ device_id: 'q3Xk9vT2mB7pLw0cZr1sEa', intended_use: 'office', prices: [{ ...price, offer_count: 1, offers: [offer(52)] }] }).ok).toBe(false)
+    expect(checkWebPrice({ ...price, low_eur: 30 })).toEqual(['ssd: low_eur and high_eur must be the lowest and highest offer'])
+    expect(checkWebPrice({ ...price, offer_count: 3 })).toEqual(['ssd: offer_count must equal the number of offers'])
+  })
+
+  it('rounds coordinates to two decimals', () => {
+    expect(roundCoordinate(47.41234)).toBe(47.41)
+    expect(roundCoordinate(9.7461)).toBe(9.75)
+    expect(roundCoordinate(-0.005)).toBe(-0)
   })
 })

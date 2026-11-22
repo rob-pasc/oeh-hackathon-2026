@@ -8,6 +8,7 @@ import type { PartLookupResult } from '@leaaf/shared/parts'
 import type { ReportStatus } from '@leaaf/shared/report'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { PlanStepList, StepPlan } from '@leaaf/shared/steps'
+import type { DeviceLocation, LocalOfferList, WebPriceList } from '@leaaf/shared/prices'
 import { ApiClientError, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
 
 async function readError(response: Response): Promise<ApiClientError> {
@@ -92,6 +93,40 @@ export const liveClient: ApiClient = {
     const response = await fetch(API_ROUTES.planSteps(deviceId, use))
     if (!response.ok) throw await readError(response)
     return (await response.json()) as PlanStepList
+  },
+
+  async getPrices(deviceId, use): Promise<WebPriceList> {
+    const response = await fetch(API_ROUTES.prices(deviceId, use))
+    if (!response.ok) throw await readError(response)
+    return (await response.json()) as WebPriceList
+  },
+
+  async getOffers(deviceId, use, optionId): Promise<LocalOfferList> {
+    const response = await fetch(API_ROUTES.optionOffers(deviceId, optionId, use))
+    if (!response.ok) throw await readError(response)
+    return (await response.json()) as LocalOfferList
+  },
+
+  async getLocation(deviceId): Promise<DeviceLocation> {
+    const response = await fetch(API_ROUTES.location(deviceId))
+    if (!response.ok) throw await readError(response)
+    return (await response.json()) as DeviceLocation
+  },
+
+  async shareLocation(deviceId, lat, lon): Promise<DeviceLocation> {
+    const response = await fetch(API_ROUTES.location(deviceId), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ lat, lon }),
+    })
+    if (!response.ok) throw await readError(response)
+    return (await response.json()) as DeviceLocation
+  },
+
+  async clearLocation(deviceId): Promise<DeviceLocation> {
+    const response = await fetch(API_ROUTES.location(deviceId), { method: 'DELETE' })
+    if (!response.ok) throw await readError(response)
+    return (await response.json()) as DeviceLocation
   },
 
   streamReport(deviceId, use, handlers) {
