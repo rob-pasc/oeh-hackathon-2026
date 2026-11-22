@@ -54,6 +54,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-045:** Show "None" for a CO₂e avoided range that credits nothing, with the hover text and the summary wording, plus tests (supports `AC-059`)
 - [x] **T-046:** Show the name explanation in the loading and result headers, restyle the system switch as a segmented control with symbols, and move "What does the scanner collect?" below the run-steps card (supports `AC-060`, `AC-061`, `AC-062`)
 - [x] **T-047:** Make the category tab row scroll without scrollbar, with edge fades and rounded ends (supports `AC-063`)
+- [x] **T-048:** Show placeholder cards and a gauge placeholder instead of the five path cards while the AI categories load (supports `AC-064`)
 
 ## Dependencies and blockers
 
@@ -93,6 +94,7 @@ The first version was written without network access. After the merge into `main
 - 2026-11-21: Seventeenth scope extension by amendment (FR-048, AC-058, T-044: system switch in the run-steps card); see the plan's scope change log. Implemented the same day and looked at in headless Chrome; verification by the team pending.
 - 2026-11-21: Eighteenth scope extension by amendment (FR-049, AC-059, T-045: "None" instead of a negative CO₂e avoided range); see the plan's scope change log. Status set from `Implemented (verification pending)` to `In progress` for the implementation.
 - 2026-11-21: Nineteenth scope extension by amendment (FR-050 to FR-053, AC-060 to AC-063, T-046, T-047: name in the loading and result headers, segmented system switch, scanner disclosure moved down, category tab row without scrollbar); see the plan's scope change log. Implemented the same day; verification by the team pending.
+- 2026-11-22: Twentieth scope extension by amendment (FR-054, AC-064, T-048: placeholders instead of the five path cards while the categories load); see the plan's scope change log. Implemented the same day; verification by the team pending.
 - 2026-11-21: T-045 implemented and verified (AC-059 passes; see the acceptance criteria). Status back to `Implemented (verification pending)`: the team browser review (T-009) and T-016 remain.
 - 2026-11-21: T-016 closed as replaced by feature 008 (FR-017). Remaining: the team browser review (T-009) and the legal follow-ups T-041 and T-042.
 - 2026-11-21: The 30-day scan deletion promised by FR-046 is implemented as a fix (it restores the stated contract): `server/src/retention.ts`, run at start and hourly, with `server/test/retention.test.ts`. The user confirmed the rules: devices with their caches and fallback entries, and sessions, after 30 days; the model fact cache is kept. T-042 waits only for the host's log retention.

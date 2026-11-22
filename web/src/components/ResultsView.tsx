@@ -17,7 +17,7 @@ import { PlanCard } from './PlanCard'
 import { Equivalents } from './Equivalents'
 import { Gauge } from './Gauge'
 import { PathCard } from './PathCard'
-import { ResultSkeleton } from './ResultSkeleton'
+import { CardSkeletons, GaugeSkeleton, ResultSkeleton } from './ResultSkeleton'
 import { Thinking } from './Thinking'
 import { SpecsCard } from './SpecsCard'
 import { Toolbar, type TabItem } from './Toolbar'
@@ -27,7 +27,8 @@ type Load<T> = { state: 'loading' } | { state: 'ready'; value: T } | { state: 'e
 
 /**
  * The result screen: toolbar, ranked categories or one category's options (left), CO₂e gauge and scan
- * specs (right). Until the categories arrive, the five assessed paths stand in for them (feature 008).
+ * specs (right). While the categories are still being worked out, cards and gauge are placeholders; the five
+ * assessed paths only appear when no categories can be had (feature 008 FR-013, feature 006 FR-054).
  */
 export function ResultsView({ deviceId }: { deviceId: string }) {
   const api = useApi()
@@ -212,20 +213,26 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
                 ))}
               </>
             ) : (
-              <>
-                {categoriesPending ? <Thinking label="Finding options for this computer…" className="px-1" /> : null}
-                {pathViews.map(view => (
+              categoriesPending ? (
+                // The five assessed paths are only a fallback; showing them first and swapping them for the
+                // categories made the screen jump and the numbers change (feature 006 FR-054).
+                <>
+                  <Thinking label="Finding options for this computer…" className="px-1" />
+                  <CardSkeletons />
+                </>
+              ) : (
+                pathViews.map(view => (
                   <div key={view.key} ref={registerCard(view.key)}>
                     <PathCard
                       view={view}
                       selected={gaugeItem?.key === view.key}
                       open={openOption === view.key}
-                      pending={categoriesPending}
+                      pending={false}
                       onToggle={() => setOpenOption(current => (current === view.key ? null : view.key))}
                     />
                   </div>
-                ))}
-              </>
+                ))
+              )
             )}
             {categories && categories.source === 'template' && categories.notice ? (
               <p className="m-0 rounded-[10px] bg-amber-tint px-3 py-2 text-[13px] text-amber-ink">{categories.notice}</p>
@@ -233,8 +240,14 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
           </div>
           <div className="xl:sticky top-6 flex flex-col gap-5">
             <section aria-label="CO₂e gauge" className="rounded-[20px] bg-white p-6 shadow-card">
-              <Gauge value={gaugeItem?.gauge ?? null} pathTitle={gaugeTitle} estimate={gaugeItem?.aiEstimate ?? false} />
-              <Equivalents avoided={gaugeItem?.co2?.avoided ?? null} conditional={gaugeItem?.co2?.conditional ?? false} />
+              {categoriesPending ? (
+                <GaugeSkeleton />
+              ) : (
+                <>
+                  <Gauge value={gaugeItem?.gauge ?? null} pathTitle={gaugeTitle} estimate={gaugeItem?.aiEstimate ?? false} />
+                  <Equivalents avoided={gaugeItem?.co2?.avoided ?? null} conditional={gaugeItem?.co2?.conditional ?? false} />
+                </>
+              )}
             </section>
             <SpecsCard scan={scan.value} />
           </div>

@@ -1,6 +1,5 @@
 // Thinking line while the page waits for the AI (feature 006 FR-045, AC-050, AC-051).
-import { act, render, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ApiContext } from '../api'
 import { createMockClient, MOCK_DEVICE_IDS } from '../api/mock'
@@ -67,19 +66,20 @@ describe('thinking line on the result screen', () => {
     expect(screen.getByTestId('result-skeleton')).toBeInTheDocument()
   })
 
-  it('shows above the paths and in an opened card until the categories arrive, then disappears', async () => {
+  it('shows above the card placeholders until the categories arrive, then disappears', async () => {
     const api = createMockClient({ stepMs: 5, assessmentMs: 5, reportMs: 400 })
     render(
       <ApiContext.Provider value={api}>
         <ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />
       </ApiContext.Provider>,
     )
-    const upgrade = await screen.findByRole('region', { name: 'Upgrade' })
-    expect(screen.getAllByTestId('thinking')[0]).toHaveTextContent('Finding options for this computer…')
-    await userEvent.click(within(upgrade).getByRole('button'))
-    expect(within(upgrade).getByTestId('thinking')).toHaveTextContent('Writing the explanation…')
-    // The categories replace the paths, and nothing waits any more.
+    await waitFor(() => expect(screen.getByTestId('thinking')).toHaveTextContent('Finding options for this computer…'))
+    expect(screen.getByTestId('card-skeleton')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Upgrade' })).toBeNull()
+    // The categories replace the placeholders, and nothing waits any more.
     expect(await screen.findByRole('region', { name: 'Faster storage' }, { timeout: 3000 })).toBeInTheDocument()
     expect(screen.queryByTestId('thinking')).toBeNull()
+    expect(screen.queryByTestId('card-skeleton')).toBeNull()
+    expect(screen.queryByTestId('gauge-skeleton')).toBeNull()
   })
 })

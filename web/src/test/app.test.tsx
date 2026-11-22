@@ -279,12 +279,16 @@ describe('ResultsView', () => {
     expect(screen.getByRole('region', { name: 'Your device' })).toBeInTheDocument()
   })
 
-  it('shows the five assessed paths and a thinking line until the categories arrive', async () => {
+  it('shows card and gauge placeholders and a thinking line, not the five paths, until the categories arrive (feature 006 FR-054)', async () => {
     const slow = createMockClient({ stepMs: 5, assessmentMs: 5, reportMs: 60_000 })
     renderWith(slow)
+    expect(await screen.findByText(/Finding options/)).toBeInTheDocument()
+    expect(screen.getByTestId('card-skeleton')).toBeInTheDocument()
+    expect(screen.getByTestId('gauge-skeleton')).toBeInTheDocument()
     for (const name of ['Upgrade', 'Repair', 'Pass it on', 'Salvage for parts', 'Recycle'])
-      expect(await screen.findByRole('region', { name })).toBeInTheDocument()
-    expect(screen.getByText(/Finding options/)).toBeInTheDocument()
+      expect(screen.queryByRole('region', { name })).toBeNull()
+    expect(screen.queryByRole('img', { name: /CO₂e gauge/ })).toBeNull()
+    expect(await screen.findByRole('region', { name: 'Your device' })).toBeInTheDocument()
     expect(within(await tabGroup()).getAllByRole('button').map((b) => b.textContent)).toEqual(['Overview'])
   })
 
