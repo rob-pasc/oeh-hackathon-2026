@@ -275,6 +275,13 @@
           "text": {
             "type": "string",
             "minLength": 1
+          },
+          "source": {
+            "enum": [
+              "corpus",
+              "web"
+            ],
+            "description": "web = found by web search for this model (feature 017); absent = corpus"
           }
         },
         "additionalProperties": false,

@@ -3,7 +3,7 @@
 // Each criterion is 0–100 and computed from one source only, so lifespan is not counted twice:
 // environment from avoided CO2e, useful life from the extra-life range, economic from the owner's
 // cost, feasibility from a fixed table. The rubrics, with examples, are in DESIGN.md.
-import type { ConfidenceLevel, CriterionScores, DeviceScan, Difficulty, Impact, IntendedUse, Range, Suitability } from '@leaaf/shared'
+import type { ConfidenceLevel, CriterionScores, DeviceScan, Difficulty, Impact, IntendedUse, ModelEvidence, Range, Suitability } from '@leaaf/shared'
 import type { ImpactIndex } from './calculator.ts'
 import type { GateResult } from './gates.ts'
 
@@ -107,13 +107,13 @@ export interface ConfidenceInput {
   gate: GateResult
   impact: Impact | null
   scan: DeviceScan
-  modelEvidence: 'model_specific' | 'none'
+  modelEvidence: ModelEvidence
   impactIndex: ImpactIndex
 }
 
 /**
  * Starts at high and drops one level per penalty (two for missing model evidence on paths that
- * depend on it): 0 penalties = high, 1 = medium, 2 or more = low.
+ * depend on it, one for web-only evidence): 0 penalties = high, 1 = medium, 2 or more = low.
  */
 export function confidence({ gate, impact, scan, modelEvidence, impactIndex }: ConfidenceInput): {
   level: ConfidenceLevel
@@ -128,6 +128,9 @@ export function confidence({ gate, impact, scan, modelEvidence, impactIndex }: C
 
   if (modelEvidence === 'none' && COMPATIBILITY_PATHS.has(gate.path))
     flag('No model-specific documentation was found for this computer', 2)
+  // Web pages pass a model-name check and an LLM check (feature 017), but are not curated.
+  if (modelEvidence === 'web' && COMPATIBILITY_PATHS.has(gate.path))
+    flag('Model-specific facts come from web pages, not from the curated knowledge base')
 
   const missing = missingScanFields(gate.path, scan)
   if (missing.length > 0) flag(`Some scan readings were unavailable: ${missing.join(', ')}`)

@@ -15,6 +15,7 @@ import {
   Suitability,
 } from './common.ts'
 import { FACT_KEYS } from './facts.ts'
+import { ModelEvidence } from './retrieval.ts'
 
 const strict = { additionalProperties: false } as const
 
@@ -119,7 +120,7 @@ export const Assessment = Type.Object(
     device_id: DeviceId,
     intended_use: IntendedUse,
     created_at: IsoDateTime,
-    model_evidence: Type.Enum(['model_specific', 'none']),
+    model_evidence: ModelEvidence,
     weights: Type.Object(
       { environment_first: Weights, money_first: Weights },
       { ...strict, description: 'Illustrative defaults from config; see feature 003 FR-011' },

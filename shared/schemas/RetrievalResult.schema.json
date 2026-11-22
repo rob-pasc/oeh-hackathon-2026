@@ -12,9 +12,10 @@
     "model_evidence": {
       "enum": [
         "model_specific",
+        "web",
         "none"
       ],
-      "description": "none when no model-specific document matched (feature 002 FR-006)"
+      "description": "none when no model-specific document matched (feature 002 FR-006); web when only web pages did (feature 017)"
     },
     "matched_model": {
       "anyOf": [
@@ -162,6 +163,13 @@
               "text": {
                 "type": "string",
                 "minLength": 1
+              },
+              "source": {
+                "enum": [
+                  "corpus",
+                  "web"
+                ],
+                "description": "web = found by web search for this model (feature 017); absent = corpus"
               }
             },
             "additionalProperties": false,
@@ -281,6 +289,13 @@
               "text": {
                 "type": "string",
                 "minLength": 1
+              },
+              "source": {
+                "enum": [
+                  "corpus",
+                  "web"
+                ],
+                "description": "web = found by web search for this model (feature 017); absent = corpus"
               }
             },
             "additionalProperties": false,
@@ -400,6 +415,13 @@
               "text": {
                 "type": "string",
                 "minLength": 1
+              },
+              "source": {
+                "enum": [
+                  "corpus",
+                  "web"
+                ],
+                "description": "web = found by web search for this model (feature 017); absent = corpus"
               }
             },
             "additionalProperties": false,
@@ -519,6 +541,13 @@
               "text": {
                 "type": "string",
                 "minLength": 1
+              },
+              "source": {
+                "enum": [
+                  "corpus",
+                  "web"
+                ],
+                "description": "web = found by web search for this model (feature 017); absent = corpus"
               }
             },
             "additionalProperties": false,
@@ -638,6 +667,13 @@
               "text": {
                 "type": "string",
                 "minLength": 1
+              },
+              "source": {
+                "enum": [
+                  "corpus",
+                  "web"
+                ],
+                "description": "web = found by web search for this model (feature 017); absent = corpus"
               }
             },
             "additionalProperties": false,

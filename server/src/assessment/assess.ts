@@ -1,7 +1,7 @@
 // Builds the Assessment for one device and intended use (feature 003). Deterministic: the same
 // inputs and clock give the same output. The total score and order are left to the client
 // (shared/src/ranking.ts), so the mode toggle needs no request (FR-013).
-import type { Assessment, DeviceId, DeviceScan, Fact, IntendedUse } from '@leaaf/shared'
+import type { Assessment, DeviceId, DeviceScan, Fact, IntendedUse, ModelEvidence } from '@leaaf/shared'
 import type { ImpactTable } from '../impact/table.ts'
 import { baselineFor, calculateImpact, indexImpactTable } from './calculator.ts'
 import { runGates } from './gates.ts'
@@ -13,7 +13,7 @@ export interface AssessInput {
   scan: DeviceScan
   use: IntendedUse
   /** From retrieval (feature 002); `none` when no document matches the exact model. */
-  modelEvidence: 'model_specific' | 'none'
+  modelEvidence: ModelEvidence
   /** Facts extracted from the retrieved passages (server/src/facts/). */
   facts: readonly Fact[]
   impactTable: ImpactTable

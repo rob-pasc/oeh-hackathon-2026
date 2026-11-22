@@ -18,7 +18,7 @@ import { Assessment } from './assessment.ts'
 import { CategoryResult } from './categories.ts'
 import { ApiError, DeviceRecord, DeviceScan, UploadResponse } from './device.ts'
 import { Fact, FactSet } from './facts.ts'
-import { Report, StreamEnd } from './report.ts'
+import { Report, ReportStatus, StreamEnd } from './report.ts'
 import { Passage, RetrievalResult } from './retrieval.ts'
 import { StepPlan, PlanStepList } from './steps.ts'
 import { ScanSession, ScanSessionEvent, ScanSessionRequest, ScannerEvent } from './session.ts'
@@ -43,6 +43,7 @@ export const TOP_LEVEL_SCHEMAS = {
   StepPlan,
   PlanStepList,
   StreamEnd,
+  ReportStatus,
   ScanSession,
   ScanSessionRequest,
   ScannerEvent,

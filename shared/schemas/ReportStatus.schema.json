@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ReportStatus.schema.json",
+  "title": "ReportStatus",
+  "type": "object",
+  "required": [
+    "phase"
+  ],
+  "properties": {
+    "phase": {
+      "enum": [
+        "web_search"
+      ],
+      "description": "web_search = searching the web for this model"
+    }
+  },
+  "additionalProperties": false
+}

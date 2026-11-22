@@ -21,6 +21,19 @@ import { deviceContext, FACT_EXTRACTION_SYSTEM, factExtractionUserPrompt, passag
 /** What the LLM must return; `model` is set by the server, not the LLM. */
 export const ExtractionAnswer = Type.Object({ facts: Type.Array(Fact) }, { additionalProperties: false })
 
+/** With web passages (feature 017 FR-004): also the web passages that are not about this exact model. */
+export const WebExtractionAnswer = Type.Object(
+  { facts: Type.Array(Fact), rejected_passage_ids: Type.Array(Type.String()) },
+  { additionalProperties: false },
+)
+
+export interface FilterOptions {
+  /** IDs of passages found by web search. */
+  webIds?: ReadonlySet<string>
+  /** Web passages the LLM said are not about this exact model. */
+  rejectedIds?: ReadonlySet<string>
+}
+
 export interface DroppedFact {
   fact: Fact
   reason: string
@@ -68,13 +81,31 @@ export function cacheKey(model: ModelMatch, prompt: string): string {
  * - a fact citing any passage ID that was not retrieved is dropped (the citation is unverifiable);
  * - repeated keys with equal values are merged; repeated keys with different values are all dropped.
  */
-export function filterFacts(facts: readonly Fact[], retrievedIds: ReadonlySet<string>): { kept: Fact[]; dropped: DroppedFact[] } {
+export function filterFacts(
+  facts: readonly Fact[],
+  retrievedIds: ReadonlySet<string>,
+  { webIds = new Set(), rejectedIds = new Set() }: FilterOptions = {},
+): { kept: Fact[]; dropped: DroppedFact[] } {
   const dropped: DroppedFact[] = []
   const cited: Fact[] = []
   for (const fact of facts) {
     const unknown = fact.source_passage_ids.filter((id) => !retrievedIds.has(id))
-    if (unknown.length > 0) dropped.push({ fact, reason: `cites passages that were not retrieved: ${unknown.join(', ')}` })
-    else cited.push({ ...fact, source_passage_ids: [...new Set(fact.source_passage_ids)] } as Fact)
+    if (unknown.length > 0) {
+      dropped.push({ fact, reason: `cites passages that were not retrieved: ${unknown.join(', ')}` })
+      continue
+    }
+    // A rejected web passage supports nothing; the fact stays only with another citation (feature 017 FR-004).
+    const ids = [...new Set(fact.source_passage_ids)].filter((id) => !(webIds.has(id) && rejectedIds.has(id)))
+    if (ids.length === 0) {
+      dropped.push({ fact, reason: 'cites only web passages that are not about this model' })
+      continue
+    }
+    // Web pages may make the battery path more cautious, never unlock self-replacement (feature 017 FR-006).
+    if (fact.key === 'battery_user_replaceable' && fact.value && ids.every((id) => webIds.has(id))) {
+      dropped.push({ fact, reason: 'a user-replaceable battery is not accepted from web pages alone' })
+      continue
+    }
+    cited.push({ ...fact, source_passage_ids: ids } as Fact)
   }
 
   const byKey = new Map<string, Fact[]>()
@@ -98,13 +129,19 @@ export function createFactExtractor(deps: { llm: LlmClient; cache: FactCache }) 
   const inFlight = new Map<string, Promise<ExtractionResult>>()
 
   async function run(key: string, model: ModelMatch, passages: Passage[], user: string): Promise<ExtractionResult> {
-    const response = await deps.llm.completeJson({
-      task: 'fact_extraction',
-      system: FACT_EXTRACTION_SYSTEM,
-      user,
-      schema: ExtractionAnswer,
-    })
-    const { kept, dropped } = filterFacts(response.value.facts, new Set(passages.map((p) => p.passage_id)))
+    const webIds = new Set(passages.filter((p) => p.source === 'web').map((p) => p.passage_id))
+    const request = { task: 'fact_extraction' as const, system: FACT_EXTRACTION_SYSTEM, user }
+    // Corpus-only requests keep their original schema, so their prompts and cache keys are unchanged.
+    let rejectedIds = new Set<string>()
+    let response
+    if (webIds.size > 0) {
+      const web = await deps.llm.completeJson({ ...request, schema: WebExtractionAnswer })
+      rejectedIds = new Set(web.value.rejected_passage_ids)
+      response = web
+    } else {
+      response = await deps.llm.completeJson({ ...request, schema: ExtractionAnswer })
+    }
+    const { kept, dropped } = filterFacts(response.value.facts, new Set(passages.map((p) => p.passage_id)), { webIds, rejectedIds })
     const facts: FactSet = { model, facts: kept }
     // Guards the contract: filterFacts must always produce a valid FactSet.
     const problems = [...(isFactSet(facts).ok ? [] : ['FactSet schema']), ...checkFactSet(facts)]

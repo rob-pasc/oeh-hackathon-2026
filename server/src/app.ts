@@ -26,6 +26,7 @@ import {
   type OsFamily,
   type ScanSession,
   type ScanSessionEvent,
+  type ReportStatus,
   type StreamEnd,
 } from '@leaaf/shared'
 import { hourlyLimit, loadLimits } from './limits.ts'
@@ -160,7 +161,7 @@ export function buildApp(options: AppOptions): FastifyInstance {
     return record ? reply.send(record) : reply.code(404).send(NOT_FOUND)
   })
 
-  // Report stream (shared/src/report.ts): the assessment first, then the categories (feature 008),
+  // Report stream (shared/src/report.ts): an optional status while searching the web, the assessment first, then the categories (feature 008),
   // then `end`. The categories replace the explained report on the result screen.
   app.get<{ Params: { id: string }; Querystring: { intended_use?: string } }>(
     '/api/devices/:id/report',
@@ -195,7 +196,10 @@ export function buildApp(options: AppOptions): FastifyInstance {
       const send = (event: string, data: unknown) => write(sseFrame(event, data))
       let stage = 'assessment'
       try {
-        const input = await assessments.assessDevice(record, use as IntendedUse)
+        // A web search for an uncovered model takes seconds; the page says so (feature 017 FR-013).
+        const input = await assessments.assessDevice(record, use as IntendedUse, {
+          onWebSearch: () => send('status', { phase: 'web_search' } satisfies ReportStatus),
+        })
         send('assessment', input.assessment)
         stage = 'categories'
         const categories = await options.categorize?.(record.scan, input)

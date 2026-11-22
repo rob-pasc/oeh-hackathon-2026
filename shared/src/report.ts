@@ -1,6 +1,8 @@
 // Explained report and its Server-Sent Events stream (feature 004).
 //
 // Stream: GET /api/devices/:id/report?intended_use=<use>  (Content-Type: text/event-stream)
+//   event: status      -> ReportStatus   (optional, before the assessment: what the server is doing,
+//                                         for example a web search for the model, feature 017)
 //   event: assessment  -> Assessment     (sent immediately; ranking is visible at once)
 //   event: categories  -> CategoryResult (feature 008; categories.ts) — the result screen's content
 //   event: report      -> Report         (no longer sent by the report stream since feature 008;
@@ -54,5 +56,12 @@ export const StreamEnd = Type.Object(
 )
 export type StreamEnd = Static<typeof StreamEnd>
 
-export const REPORT_EVENTS = ['assessment', 'categories', 'report', 'end', 'error'] as const
+/** Progress before the assessment is ready (feature 017 FR-013). */
+export const ReportStatus = Type.Object(
+  { phase: Type.Enum(['web_search'], { description: 'web_search = searching the web for this model' }) },
+  { ...strict },
+)
+export type ReportStatus = Static<typeof ReportStatus>
+
+export const REPORT_EVENTS = ['status', 'assessment', 'categories', 'report', 'end', 'error'] as const
 export type ReportEvent = (typeof REPORT_EVENTS)[number]

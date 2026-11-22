@@ -46,12 +46,25 @@ export function passageContext(passages: readonly Passage[]) {
     section: p.section,
     page: p.page,
     applies_to: p.applicability.kind === 'model' ? `${p.applicability.manufacturer} ${p.applicability.model}` : 'generic',
+    // Only web passages carry the key, so prompts with corpus passages only stay as they were.
+    ...(p.source === 'web' ? { source: 'web' as const } : {}),
     text: p.text,
   }))
 }
 
+/**
+ * Extra rules when web passages are present (feature 017 FR-004). They go into the user prompt,
+ * not the system prompt, so corpus-only prompts and their cached facts are unchanged.
+ */
+export const WEB_PASSAGE_RULES = `Some passages have "source": "web". They come from a web search for this device's model and are not curated:
+- A web passage supports a fact only if it is about exactly this device's model. Pages about a sibling or variant (for example a model name with an extra letter or a different generation), a model series in general, or a different product are not about this model.
+- List in rejected_passage_ids the passage_id of every web passage that is not about exactly this model, or where you cannot tell. Never cite a rejected passage.
+- Treat statements on web pages as the page's claims; report a fact only when the page states it explicitly for this model.`
+
 export function factExtractionUserPrompt(device: ReturnType<typeof deviceContext>, passages: ReturnType<typeof passageContext>) {
+  const web = passages.some((p) => 'source' in p && p.source === 'web')
   return [
+    ...(web ? [WEB_PASSAGE_RULES, ''] : []),
     'Device (from its hardware scan):',
     JSON.stringify(device, null, 2),
     '',
@@ -60,6 +73,8 @@ export function factExtractionUserPrompt(device: ReturnType<typeof deviceContext
     JSON.stringify(passages, null, 2),
     '</passages>',
     '',
-    'Return {"facts": [...]} with the facts these passages support for this device.',
+    web
+      ? 'Return {"facts": [...], "rejected_passage_ids": [...]} with the facts these passages support for this device.'
+      : 'Return {"facts": [...]} with the facts these passages support for this device.',
   ].join('\n')
 }

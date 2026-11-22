@@ -26,6 +26,12 @@ export const Passage = Type.Object(
     applicability: Applicability,
     accessed_on: IsoDate,
     text: Type.String({ minLength: 1 }),
+    // Optional so that corpus passages and stored results from before feature 017 stay valid.
+    source: Type.Optional(
+      Type.Enum(['corpus', 'web'], {
+        description: 'web = found by web search for this model (feature 017); absent = corpus',
+      }),
+    ),
   },
   { ...strict, description: 'At least one of section or page is non-null (checked in invariants.ts)' },
 )
@@ -40,11 +46,18 @@ const byPath = Object.fromEntries(PATHS.map((p) => [p, Type.Array(Passage)])) as
   ReturnType<typeof Type.Array<typeof Passage>>
 >
 
+/**
+ * Where the device's model-specific evidence comes from: the corpus (feature 002), only web pages
+ * about the exact model (feature 017), or nowhere.
+ */
+export const ModelEvidence = Type.Enum(['model_specific', 'web', 'none'], {
+  description: 'none when no model-specific document matched (feature 002 FR-006); web when only web pages did (feature 017)',
+})
+export type ModelEvidence = Static<typeof ModelEvidence>
+
 export const RetrievalResult = Type.Object(
   {
-    model_evidence: Type.Enum(['model_specific', 'none'], {
-      description: 'none when no model-specific document matched (feature 002 FR-006)',
-    }),
+    model_evidence: ModelEvidence,
     matched_model: Nullable(ModelMatch),
     passages_by_path: Type.Object(byPath, strict),
   },

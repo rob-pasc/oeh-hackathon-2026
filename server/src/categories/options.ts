@@ -4,7 +4,7 @@
 // Priced kinds reuse the feature 003 calculator with a plan built for the single part, so their
 // figures trace back to impact table entries. Options of kind `other` keep the AI's ranges only when
 // they pass the range checks, and are always labelled as AI estimates.
-import type { Assessment, CategoryOption, DeviceScan, Difficulty, Impact, IntendedUse, OptionKind, Path, Range, Suitability } from '@leaaf/shared'
+import type { Assessment, CategoryOption, DeviceScan, Difficulty, Impact, IntendedUse, ModelEvidence, OptionKind, Path, Range, Suitability } from '@leaaf/shared'
 import { calculateImpact, type ImpactIndex } from '../assessment/calculator.ts'
 import { atMost, type GateResult, type PathPlan } from '../assessment/gates.ts'
 import { confidence, optionFeasibility, rubricScores } from '../assessment/scoring.ts'
@@ -35,7 +35,7 @@ export interface OptionContext {
   scan: DeviceScan
   use: IntendedUse
   baseline: Baseline
-  modelEvidence: 'model_specific' | 'none'
+  modelEvidence: ModelEvidence
   /** The feature 003 gate results for this device, one per path. */
   gates: readonly GateResult[]
   impactIndex: ImpactIndex

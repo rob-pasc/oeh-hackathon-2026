@@ -16,6 +16,10 @@ import { createOpenAiCompatibleClient, LlmError, loadLlmConfig } from './llm/ind
 import { DEFAULT_CORPUS_INDEX_PATH, IndexError, openRetriever, type Retriever } from './retrieval/index.ts'
 import { createCategoryService } from './categories/service.ts'
 import { schedulePurge } from './retention.ts'
+import { createSqliteSearchBudget, createSqliteSearchCache } from './search/cache.ts'
+import { createConfiguredSearch, loadSearchConfig } from './search/config.ts'
+import { createWebEvidence, type WebEvidence } from './search/evidence.ts'
+import { SearchError } from './search/types.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
 import { createStepService } from './steps/service.ts'
 
@@ -61,7 +65,29 @@ try {
 }
 
 const warn = (message: string, details?: Record<string, unknown>) => app.log.warn(details ?? {}, message)
-const assessments = retriever ? createAssessmentService({ retriever, extractor, impactTable, weights, warn }) : undefined
+
+// Web search for models and topics the corpus does not cover (feature 017). Off without a key.
+let webEvidence: WebEvidence | null = null
+try {
+  const search = loadSearchConfig(env)
+  if (!search) console.warn('web search off: no LANGSEARCH_API_KEY or TINYFISH_API_KEY set')
+  else {
+    webEvidence = createWebEvidence({
+      search: createConfiguredSearch(search, { warn }),
+      cache: createSqliteSearchCache(db),
+      budget: createSqliteSearchBudget(db, search.dailyCalls),
+      timeoutMs: search.timeoutMs,
+      resultsPerQuery: search.resultsPerQuery,
+      maxChars: search.maxChars,
+      warn,
+    })
+    console.log(`web search on: ${search.providers.map((p) => p.name).join(', then ')}`)
+  }
+} catch (error) {
+  if (!(error instanceof SearchError)) throw error
+  console.warn(`web search off: ${error.message}`)
+}
+const assessments = retriever ? createAssessmentService({ retriever, extractor, webEvidence, impactTable, weights, warn }) : undefined
 // AI fallbacks are recorded for the admin page (feature 016 FR-016).
 const fallbackLog = createFallbackLog(db)
 const categorize = createCategoryService(db, llm, { impactTable, warn, onFallback: fallbackLog.record })

@@ -36,8 +36,10 @@
     "model_evidence": {
       "enum": [
         "model_specific",
+        "web",
         "none"
-      ]
+      ],
+      "description": "none when no model-specific document matched (feature 002 FR-006); web when only web pages did (feature 017)"
     },
     "weights": {
       "type": "object",

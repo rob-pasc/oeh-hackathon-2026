@@ -3,7 +3,7 @@
 // Pure functions: the same scan, use, model evidence, and facts always give the same statuses.
 // Each path gets one status with at least one reason, plus the plan the calculator prices.
 // The rules are listed in DESIGN.md (docs/features/feature-003-five-path-ranking/DESIGN.md).
-import { usesWindowsRules, type DeviceScan, type Fact, type IntendedUse, type Path, type Suitability } from '@leaaf/shared'
+import { usesWindowsRules, type DeviceScan, type Fact, type IntendedUse, type ModelEvidence, type Path, type Suitability } from '@leaaf/shared'
 import { lookupFacts, reason, type FactLookup, type Reason } from './facts.ts'
 
 /**
@@ -62,7 +62,7 @@ export interface GateResult {
 export interface GateInput {
   scan: DeviceScan
   use: IntendedUse
-  modelEvidence: 'model_specific' | 'none'
+  modelEvidence: ModelEvidence
   facts: readonly Fact[]
 }
 
