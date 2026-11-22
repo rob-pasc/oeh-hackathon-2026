@@ -55,6 +55,7 @@ This is the **authoritative progress checklist**. Check a task only after its wo
 - [x] **T-046:** Show the name explanation in the loading and result headers, restyle the system switch as a segmented control with symbols, and move "What does the scanner collect?" below the run-steps card (supports `AC-060`, `AC-061`, `AC-062`)
 - [x] **T-047:** Make the category tab row scroll without scrollbar, with edge fades and rounded ends (supports `AC-063`)
 - [x] **T-048:** Show placeholder cards and a gauge placeholder instead of the five path cards while the AI categories load (supports `AC-064`)
+- [x] **T-049:** Show "Up to" for a CO₂e avoided range that starts at or below 0 kg, with the worst case in the hover text, plus tests (supports `AC-065`)
 
 ## Dependencies and blockers
 
@@ -99,3 +100,4 @@ The first version was written without network access. After the merge into `main
 - 2026-11-21: T-016 closed as replaced by feature 008 (FR-017). Remaining: the team browser review (T-009) and the legal follow-ups T-041 and T-042.
 - 2026-11-21: The 30-day scan deletion promised by FR-046 is implemented as a fix (it restores the stated contract): `server/src/retention.ts`, run at start and hourly, with `server/test/retention.test.ts`. The user confirmed the rules: devices with their caches and fallback entries, and sessions, after 30 days; the model fact cache is kept. T-042 waits only for the host's log retention.
 - 2026-11-21: T-009 done on the user's report that the screens look good. Remaining: T-041 and T-042.
+- 2026-11-22: Twenty-first scope extension by amendment (FR-055, AC-065, T-049: "Up to" instead of a CO₂e avoided range starting below 0 kg); see the plan's scope change log. Implemented and verified by automated tests the same day (AC-065 passes); status stays `Implemented (verification pending)` for T-041 and T-042.

@@ -68,12 +68,23 @@ export function formatCaused(impact: Impact): string {
 }
 
 /**
+ * The option's own CO₂e in the worst case, as "27 kg", when the avoided range starts below 0 kg; else null.
+ * The low end of `avoided_vs_baseline` is then the negated own emissions with nothing avoided.
+ */
+export function formatWorstCaseCaused(impact: Impact): string | null {
+  const low = impact.co2e_kg.avoided_vs_baseline.low
+  return low < 0 ? `${kgSmall(-low)} kg` : null
+}
+
+/**
  * CO₂e avoided against the baseline, as "120–322 kg". "None" when nothing is credited (feature 006 FR-049):
- * a negative range such as "−2–0 kg" under the label "avoided" reads like an error.
+ * a negative range such as "−2–0 kg" under the label "avoided" reads like an error. For the same reason a range
+ * that starts at or below 0 kg reads "Up to 200 kg" (FR-055); the hover text names the worst case.
  */
 export function formatAvoided(impact: Impact): string {
   if (avoidsNothing(impact)) return 'None'
   const low = round(impact.co2e_kg.avoided_vs_baseline.low)
   const high = round(impact.co2e_kg.avoided_vs_baseline.high)
+  if (low <= 0) return `Up to ${high} kg`
   return low === high ? `${low} kg` : `${low}–${high} kg`
 }

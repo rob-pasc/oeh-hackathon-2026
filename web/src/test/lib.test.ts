@@ -103,10 +103,21 @@ describe('impact formatting', () => {
     expect(formatAvoided(withCo2([0, 0], [0, 0]))).toBe('None')
   })
   it('keeps kg ranges whenever some CO₂e is avoided (AC-059)', () => {
-    const passOn = withCo2([10, 25], [-25, 320])
-    expect(formatAvoided(passOn)).toBe('-25–320 kg')
-    expect(formatAvoided(withCo2([8, 20], [180, 322]))).toBe('180–322 kg')
-    expect(avoidedHint(passOn)).toBe('Compared with buying a comparable new laptop now.')
+    const upgrade = withCo2([8, 20], [180, 322])
+    expect(formatAvoided(upgrade)).toBe('180–322 kg')
+    expect(avoidedHint(upgrade)).toBe('Compared with buying a comparable new laptop now.')
+  })
+  // Feature 006 FR-055 / AC-065: a range that starts at or below 0 kg shows no negative number.
+  it('shows "Up to" for a CO₂e avoided range starting at or below 0 kg and names the worst case (AC-065)', () => {
+    const passOn = withCo2([10, 27], [-27, 200])
+    expect(formatAvoided(passOn)).toBe('Up to 200 kg')
+    expect(avoidedHint(passOn)).toBe(
+      'Compared with buying a comparable new laptop now. In the worst case nothing is avoided and this option itself causes about 27 kg CO₂e.',
+    )
+    expect(avoidedHint(withCo2([0.5, 2], [-0.5, 40]))).toMatch(/causes about 0\.5 kg CO₂e\.$/)
+    const fromZero = withCo2([0, 0], [0, 150])
+    expect(formatAvoided(fromZero)).toBe('Up to 150 kg')
+    expect(avoidedHint(fromZero)).toBe('Compared with buying a comparable new laptop now. In the worst case nothing is avoided.')
   })
   it('keeps every gauge value within 0-100 and ordered', () => {
     for (const path of assessment.paths) {

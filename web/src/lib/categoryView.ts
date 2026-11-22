@@ -5,7 +5,7 @@ import type { Assessment, Impact } from '@leaaf/shared/assessment'
 import type { CategoryOption, CategoryResult } from '@leaaf/shared/categories'
 import type { Mode } from '@leaaf/shared/common'
 import { rankCategories, recommendedCategory, type RankedOption } from '@leaaf/shared/ranking'
-import { avoidsNothing, formatAvoided, formatCaused, formatEur, formatYears, gaugeValue } from './impact'
+import { avoidsNothing, formatAvoided, formatCaused, formatWorstCaseCaused, formatEur, formatYears, gaugeValue } from './impact'
 import { KIND_ICONS, STATUS_LABELS } from './labels'
 import { co2Of, scoreMetric, sourceRef, type CardView, type SourceRef } from './pathView'
 
@@ -29,9 +29,18 @@ const MAX_SOURCES = 2
 
 const AVOIDED_HINT = 'Compared with buying a comparable new laptop now.'
 
-/** Hover text of the CO₂e avoided figure; explains a "None" (FR-049) with the option's own emissions. */
+/**
+ * Hover text of the CO₂e avoided figure; explains a "None" (FR-049) with the option's own emissions, and the
+ * worst case of an "Up to" range (FR-055).
+ */
 export function avoidedHint(impact: Impact): string {
-  if (!avoidsNothing(impact)) return AVOIDED_HINT
+  if (!avoidsNothing(impact)) {
+    if (Math.round(impact.co2e_kg.avoided_vs_baseline.low) > 0) return AVOIDED_HINT
+    const caused = formatWorstCaseCaused(impact)
+    return caused
+      ? `${AVOIDED_HINT} In the worst case nothing is avoided and this option itself causes about ${caused} CO₂e.`
+      : `${AVOIDED_HINT} In the worst case nothing is avoided.`
+  }
   return `Nothing is credited against buying a comparable new laptop. This option itself causes about ${formatCaused(impact)} CO₂e.`
 }
 

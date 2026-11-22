@@ -426,7 +426,7 @@ describe('ResultsView', () => {
     render(withApi(<ResultsView deviceId={MOCK_DEVICE_IDS.laptop} />))
     const gauge = await screen.findByRole('region', { name: 'CO₂e gauge' })
     // Since feature 013 the Overview gauge shows the sample plan; a category tab shows its best option first.
-    await userEvent.click(screen.getByRole('region', { name: 'Faster storage' }).querySelector('button')!)
+    await userEvent.click((await screen.findByRole('region', { name: 'Faster storage' })).querySelector('button')!)
     await waitFor(() => expect(gauge).toHaveTextContent('Faster storage · Swap the hard disk for a 500 GB SSD'))
     expect(within(gauge).queryByText('AI estimate')).toBeNull()
     const estimate = await screen.findByRole('region', { name: 'Reinstall the operating system' })
