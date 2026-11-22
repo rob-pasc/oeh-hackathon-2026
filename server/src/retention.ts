@@ -1,7 +1,8 @@
 // Deletion of scan data after the retention period that the privacy notice promises (feature 006
 // FR-046, T-042). A scan is removed together with everything stored for its device ID; scan
 // sessions go after the same period because they link to device IDs. The fact cache is kept: it
-// is keyed by laptop model and extracted from public manuals, so it holds no scan data.
+// is keyed by laptop model and extracted from public manuals, so it holds no scan data; the part
+// cache (feature 018) is keyed by part names such as "DDR4" and holds no device reference either.
 import type { DatabaseSync } from 'node:sqlite'
 
 /** Must equal `scanRetentionDays` in web/src/legal/provider.ts; a test checks this. */

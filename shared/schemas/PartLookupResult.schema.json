@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "PartLookupResult.schema.json",
+  "title": "PartLookupResult",
+  "type": "object",
+  "required": [
+    "device_id",
+    "parts"
+  ],
+  "properties": {
+    "device_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{22}$",
+      "description": "22-character base64url string encoding 128 random bits"
+    },
+    "parts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "part_id",
+          "kind",
+          "identifier",
+          "status",
+          "sentence",
+          "source"
+        ],
+        "properties": {
+          "part_id": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique within one result, e.g. \"cpu\", \"gpu-0\", \"storage-1\""
+          },
+          "kind": {
+            "enum": [
+              "cpu",
+              "memory",
+              "gpu",
+              "storage",
+              "battery"
+            ],
+            "description": "Kind of a scanned part; decides the scan specs row it belongs to"
+          },
+          "identifier": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Normalized name that was looked up, e.g. \"Intel Core i5-8250U\". Drives and the battery have no model name in the scan, so they are looked up by type (\"NVMe SSD\", \"laptop battery\")"
+          },
+          "status": {
+            "enum": [
+              "knowledge_base",
+              "web",
+              "no_match"
+            ],
+            "description": "knowledge_base = cites a corpus passage; web = cites a web page (shown as \"check\"); no_match = nothing usable"
+          },
+          "sentence": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 240
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "object",
+                "required": [
+                  "passage_id",
+                  "document_id",
+                  "title",
+                  "url",
+                  "publisher",
+                  "topic",
+                  "section",
+                  "page",
+                  "applicability",
+                  "accessed_on",
+                  "text"
+                ],
+                "properties": {
+                  "passage_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "document_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "publisher": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "topic": {
+                    "enum": [
+                      "repair-hardware",
+                      "software-support",
+                      "environmental",
+                      "circular-economy"
+                    ]
+                  },
+                  "section": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "page": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "applicability": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "manufacturer",
+                          "model"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "model"
+                          },
+                          "manufacturer": {
+                            "type": "string"
+                          },
+                          "model": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "required": [
+                          "kind"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "generic"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "accessed_on": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "source": {
+                    "enum": [
+                      "corpus",
+                      "web"
+                    ],
+                    "description": "web = found by web search for this model (feature 017); absent = corpus"
+                  }
+                },
+                "additionalProperties": false,
+                "description": "At least one of section or page is non-null (checked in invariants.ts)"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "description": "sentence and source are set exactly when status is not no_match"
+      },
+      "description": "Empty when the lookup is off (no LLM configured)"
+    }
+  },
+  "additionalProperties": false
+}

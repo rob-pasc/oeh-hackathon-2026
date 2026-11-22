@@ -171,6 +171,10 @@ function privacyDe(): Block[] {
       type: 'p',
       text: `Fehlt in unserer eigenen Dokumentensammlung etwas zu deinem Gerätemodell, suchen wir öffentliche Webseiten dazu, über die Suchdienste ${LANGSEARCH} und, falls dieser nicht antwortet, ${TINYFISH}. An diese Dienste senden wir nur den Hersteller, die Modellbezeichnung und ein Thema (zum Beispiel „Arbeitsspeicher“). Andere Scan-Daten, die Kennungen von Sitzung oder Gerät und deine IP-Adresse senden wir nicht. Diese Angaben sind keiner Person zugeordnet. Die gefundenen Seiten speichern wir 30 Tage lang pro Gerätemodell, nicht pro Gerät, und zeigen sie im Ergebnis als „Web source“ mit Link an.`,
     },
+    {
+      type: 'p',
+      text: `Auch zu den Bauteilen deines Geräts (Prozessor, Grafik, Speichertyp, Laufwerksart und Akku) suchen wir zuerst in unserer Dokumentensammlung und, wenn sie nichts dazu enthält, über dieselben Suchdienste. An die Suchdienste senden wir dabei nur die Bezeichnung des Bauteils (zum Beispiel „Intel Core i5-8250U“ oder „NVMe SSD“), keine anderen Scan-Daten, keine Kennungen von Sitzung oder Gerät und nicht deine IP-Adresse. Die Ergebnisse speichern wir 30 Tage lang pro Bauteil, nicht pro Gerät.`,
+    },
     { type: 'h2', text: '5. Cookies und Speicher im Browser' },
     {
       type: 'p',
@@ -252,6 +256,10 @@ function privacyEn(): Block[] {
     {
       type: 'p',
       text: `When our own document collection has nothing on your device model, we search public web pages for it, using the search services ${LANGSEARCH} and, if it does not answer, ${TINYFISH}. We send these services only the manufacturer, the model name and a topic (for example "memory"). We send no other scan data, no session or device identifiers and not your IP address. These details are not linked to a person. We keep the pages found for 30 days per device model, not per device, and show them in the result as "Web source" with a link.`,
+    },
+    {
+      type: 'p',
+      text: `We also look up the components of your device (processor, graphics, memory type, drive type and battery), first in our own document collection and, when it has nothing on them, with the same search services. To the search services we send only the component's name (for example "Intel Core i5-8250U" or "NVMe SSD"): no other scan data, no session or device identifiers and not your IP address. We keep the results for 30 days per component, not per device.`,
     },
     { type: 'h2', text: '5. Cookies and browser storage' },
     {

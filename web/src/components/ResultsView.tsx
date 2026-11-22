@@ -2,6 +2,7 @@ import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { Mode } from '@leaaf/shared/common'
 import type { DeviceScan } from '@leaaf/shared/device'
+import type { PartLookup } from '@leaaf/shared/parts'
 import { useEffect, useMemo, useState } from 'react'
 import { ApiClientError, useApi } from '../api'
 import { buildCategoryViews, type OptionView } from '../lib/categoryView'
@@ -48,6 +49,8 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const [openOption, setOpenOption] = useState<string | null>(null)
   const [planOpen, setPlanOpen] = useState(false)
   const plans = useStepPlans(deviceId, use)
+  /** Part lookups for the scan specs (feature 018): null while loading; they never hold up the rest. */
+  const [parts, setParts] = useState<readonly PartLookup[] | null>(null)
 
   // Scan data: loaded once per device.
   useEffect(() => {
@@ -59,6 +62,24 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
       })
       .catch((error: unknown) => {
         if (!cancelled) setScan({ state: 'error', error: toClientError(error) })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [api, deviceId])
+
+  // Part lookups: once per device, independent of the report stream (feature 018 FR-005). A failed request
+  // leaves the specs as they were before the lookup existed.
+  useEffect(() => {
+    let cancelled = false
+    setParts(null)
+    api
+      .getParts(deviceId)
+      .then((result) => {
+        if (!cancelled) setParts(result.parts)
+      })
+      .catch(() => {
+        if (!cancelled) setParts([])
       })
     return () => {
       cancelled = true
@@ -249,7 +270,7 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
                 </>
               )}
             </section>
-            <SpecsCard scan={scan.value} />
+            <SpecsCard scan={scan.value} parts={parts} />
           </div>
         </div>
       )}

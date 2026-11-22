@@ -21,6 +21,7 @@ import { createConfiguredSearch, loadSearchConfig } from './search/config.ts'
 import { createWebEvidence, type WebEvidence } from './search/evidence.ts'
 import { SearchError } from './search/types.ts'
 import { createSqliteSessionStore } from './sessions/store.ts'
+import { createPartLookupService, createSqlitePartCache, type PartWebSearch } from './parts/service.ts'
 import { createStepService } from './steps/service.ts'
 
 const env = process.env
@@ -68,19 +69,21 @@ const warn = (message: string, details?: Record<string, unknown>) => app.log.war
 
 // Web search for models and topics the corpus does not cover (feature 017). Off without a key.
 let webEvidence: WebEvidence | null = null
+// The part lookup (feature 018) shares the provider chain, cache and daily cap.
+let partSearch: PartWebSearch | null = null
 try {
   const search = loadSearchConfig(env)
   if (!search) console.warn('web search off: no LANGSEARCH_API_KEY or TINYFISH_API_KEY set')
   else {
-    webEvidence = createWebEvidence({
+    partSearch = {
       search: createConfiguredSearch(search, { warn }),
       cache: createSqliteSearchCache(db),
       budget: createSqliteSearchBudget(db, search.dailyCalls),
       timeoutMs: search.timeoutMs,
       resultsPerQuery: search.resultsPerQuery,
       maxChars: search.maxChars,
-      warn,
-    })
+    }
+    webEvidence = createWebEvidence({ ...partSearch, warn })
     console.log(`web search on: ${search.providers.map((p) => p.name).join(', then ')}`)
   }
 } catch (error) {
@@ -92,6 +95,10 @@ const assessments = retriever ? createAssessmentService({ retriever, extractor, 
 const fallbackLog = createFallbackLog(db)
 const categorize = createCategoryService(db, llm, { impactTable, warn, onFallback: fallbackLog.record })
 
+// Part lookups need the corpus and an LLM; without the LLM the scan specs stay as before (feature 018 FR-007).
+const parts = retriever && llm ? createPartLookupService({ retriever, llm, cache: createSqlitePartCache(db), web: partSearch, warn }) : undefined
+if (!parts) console.warn('part lookup off: needs the corpus index and LLM_API_KEY')
+
 const app = buildApp({
   limits,
   admin: loadAdminConfig(env),
@@ -100,6 +107,7 @@ const app = buildApp({
   sessions: createSqliteSessionStore(db),
   assessments,
   categorize,
+  parts,
   steps: retriever && assessments ? createStepService(db, llm, { retriever, assessments, shownCategories: categorize.shown, warn, onFallback: fallbackLog.record }) : undefined,
   publicBaseUrl,
   scannerPaths,

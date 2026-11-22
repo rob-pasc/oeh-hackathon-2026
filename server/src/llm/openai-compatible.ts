@@ -20,8 +20,10 @@ const DEADLINES: Partial<Record<LlmTask, (config: LlmConfig) => number>> = {
   explanation: (c) => c.timeoutMs,
   categories: (c) => c.categoryTimeoutMs,
   steps: (c) => c.stepTimeoutMs,
+  // The page shows "Looking up…" until the part lookup ends (feature 018 FR-005).
+  part_lookup: (c) => c.timeoutMs,
 }
-const DEADLINE_NAMES: Record<LlmTask, string> = { fact_extraction: 'Fact extraction', explanation: 'Explanation', categories: 'Category', steps: 'Step' }
+const DEADLINE_NAMES: Record<LlmTask, string> = { fact_extraction: 'Fact extraction', explanation: 'Explanation', categories: 'Category', steps: 'Step', part_lookup: 'Part lookup' }
 
 export interface OpenAiCompatibleOptions {
   /** Injected in tests to simulate the provider. */

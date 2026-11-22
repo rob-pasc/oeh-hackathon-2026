@@ -1,0 +1,54 @@
+{
+  "device_id": "q3Xk9vT2mB7pLw0cZr1sEa",
+  "parts": [
+    {
+      "part_id": "cpu",
+      "kind": "cpu",
+      "identifier": "Example CPU i5-8250U",
+      "status": "knowledge_base",
+      "sentence": "An 8th-generation quad-core processor that Example OS 11 lists as supported.",
+      "source": {
+        "passage_id": "example-os-cpus:0002",
+        "document_id": "example-os-cpus",
+        "title": "Example OS supported processors",
+        "url": "https://example.org/os/supported-cpus",
+        "publisher": "Example OS Vendor",
+        "topic": "software-support",
+        "section": "Intel 8th generation",
+        "page": null,
+        "applicability": { "kind": "generic" },
+        "accessed_on": "2026-11-20",
+        "text": "Intel Core i5-8250U, Intel Core i5-8350U, Intel Core i7-8550U, Intel Core i7-8650U."
+      }
+    },
+    {
+      "part_id": "memory",
+      "kind": "memory",
+      "identifier": "DDR4",
+      "status": "web",
+      "sentence": "DDR4 laptop modules are still widely sold, so adding memory is usually cheap.",
+      "source": {
+        "passage_id": "web:5d41402abc4b2a76:part",
+        "document_id": "web:5d41402abc4b2a76",
+        "title": "DDR4 SO-DIMM buying guide",
+        "url": "https://example.com/ddr4-sodimm-guide",
+        "publisher": "example.com",
+        "topic": "repair-hardware",
+        "section": "DDR4 SO-DIMM buying guide",
+        "page": null,
+        "applicability": { "kind": "generic" },
+        "accessed_on": "2026-11-22",
+        "text": "DDR4 SO-DIMM modules remain widely available for laptops.",
+        "source": "web"
+      }
+    },
+    {
+      "part_id": "gpu-0",
+      "kind": "gpu",
+      "identifier": "Example Integrated Graphics 620",
+      "status": "no_match",
+      "sentence": null,
+      "source": null
+    }
+  ]
+}

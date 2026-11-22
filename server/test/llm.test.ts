@@ -11,7 +11,7 @@ const config: LlmConfig = {
   timeoutMs: 1000,
   categoryTimeoutMs: 1000,
   stepTimeoutMs: 1000,
-  thinking: { fact_extraction: 'enabled', explanation: 'disabled', categories: 'disabled', steps: 'disabled' },
+  thinking: { fact_extraction: 'enabled', explanation: 'disabled', categories: 'disabled', steps: 'disabled', part_lookup: 'disabled' },
 }
 
 const Answer = Type.Object({ status: Type.Literal('ok'), count: Type.Integer() }, { additionalProperties: false })
@@ -116,7 +116,7 @@ describe('OpenAI-compatible client', () => {
     const replies = [{ content: '{"status":"ok","count":1}' }]
     const requests: Record<string, unknown>[] = []
     const client = createOpenAiCompatibleClient(
-      { ...config, thinking: { fact_extraction: 'omit', explanation: 'omit', categories: 'omit', steps: 'omit' } },
+      { ...config, thinking: { fact_extraction: 'omit', explanation: 'omit', categories: 'omit', steps: 'omit', part_lookup: 'omit' } },
       {
         maxRetries: 0,
         fetch: (async (_url: unknown, init?: RequestInit) => {
@@ -236,7 +236,7 @@ describe('loadLlmConfig', () => {
       timeoutMs: 25000,
       categoryTimeoutMs: 40000,
       stepTimeoutMs: 25000,
-      thinking: { fact_extraction: 'disabled', explanation: 'disabled', categories: 'disabled', steps: 'disabled' },
+      thinking: { fact_extraction: 'disabled', explanation: 'disabled', categories: 'disabled', steps: 'disabled', part_lookup: 'disabled' },
     })
   })
 
@@ -253,10 +253,11 @@ describe('loadLlmConfig', () => {
         LLM_THINKING_CATEGORIES: 'enabled',
         LLM_STEP_TIMEOUT_MS: '30000',
         LLM_THINKING_STEPS: 'omit',
+        LLM_THINKING_PART_LOOKUP: 'enabled',
       }),
     ).toMatchObject({
       baseUrl: 'https://other.example/v1', model: 'other-model', timeoutMs: 5000, categoryTimeoutMs: 60000, stepTimeoutMs: 30000,
-      thinking: { fact_extraction: 'omit', explanation: 'enabled', categories: 'enabled', steps: 'omit' },
+      thinking: { fact_extraction: 'omit', explanation: 'enabled', categories: 'enabled', steps: 'omit', part_lookup: 'enabled' },
     })
   })
 
