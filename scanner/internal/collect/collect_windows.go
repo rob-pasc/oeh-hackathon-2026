@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"syscall"
 	"time"
 	"unsafe"
 
@@ -183,6 +184,9 @@ func batteryReport(note func(string, error)) *scan.BatteryReport {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "powercfg", "/batteryreport", "/xml", "/output", out)
+	// The release exe is a GUI program (-H windowsgui) with no console to share, so Windows
+	// would give powercfg its own console window, which flashes up for the length of the run.
+	cmd.SysProcAttr = &syscall.SysProcAttr{CreationFlags: windows.CREATE_NO_WINDOW}
 	if err := cmd.Run(); err != nil {
 		note("powercfg", err)
 		return nil
