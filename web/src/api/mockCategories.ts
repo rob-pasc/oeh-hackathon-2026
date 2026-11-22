@@ -4,10 +4,34 @@
 import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult, OptionKind } from '@leaaf/shared/categories'
 import type { Path } from '@leaaf/shared/common'
+import type { Passage } from '@leaaf/shared/retrieval'
 import laptopCategoriesJson from '@leaaf/fixtures/categories.example-laptop-14.office.json'
 import { PATH_TITLES } from '../lib/labels'
 
-export const LAPTOP_CATEGORIES = laptopCategoriesJson as unknown as CategoryResult
+/** A FICTIONAL web page, so mock mode shows how a web source is labelled (feature 017 FR-007). */
+export const SAMPLE_WEB_PASSAGE: Passage = {
+  passage_id: 'web:0000000000000000:memory',
+  document_id: 'web:0000000000000000',
+  title: 'Example Laptop 14 specifications',
+  url: 'https://example.com/example-laptop-14-specs',
+  publisher: 'example.com',
+  topic: 'repair-hardware',
+  section: 'Example Laptop 14 specifications',
+  page: null,
+  applicability: { kind: 'model', manufacturer: 'Example Manufacturer', model: 'Example Laptop 14' },
+  accessed_on: '2026-11-22',
+  text: 'The Example Laptop 14 has two SO-DIMM slots and supports up to 32 GB of DDR4 memory.',
+  source: 'web',
+}
+
+/** The shared fixture, with the memory option also citing the sample web page. */
+export const LAPTOP_CATEGORIES: CategoryResult = (() => {
+  const result = structuredClone(laptopCategoriesJson as unknown as CategoryResult)
+  const claim = result.categories.flatMap((c) => c.options).find((o) => o.option_id === 'ram-add')?.claims[0]
+  if (claim) claim.passage_ids.push(SAMPLE_WEB_PASSAGE.passage_id)
+  result.passages.push(SAMPLE_WEB_PASSAGE)
+  return result
+})()
 
 const KIND: Record<Path, OptionKind> = { upgrade: 'other', repair: 'battery', pass_on: 'hand_down', salvage: 'salvage', recycle: 'recycle' }
 

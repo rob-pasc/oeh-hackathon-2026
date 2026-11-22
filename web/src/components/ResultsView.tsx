@@ -8,6 +8,7 @@ import { buildCategoryViews, type OptionView } from '../lib/categoryView'
 import { DEFAULT_USE, type ResultTab, type UseTag } from '../lib/labels'
 import { useFlip } from '../lib/motion'
 import { useStepPlans } from '../lib/useStepPlans'
+import { WEB_SEARCH_PHRASE } from '../lib/thinking'
 import { buildPathViews, type CardView } from '../lib/pathView'
 import { buildPlanView, PLAN_TITLE } from '../lib/planView'
 import { explainCategoryModeChange, explainModeChange } from '../lib/modeChange'
@@ -38,6 +39,8 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
   const [categories, setCategories] = useState<CategoryResult | null>(null)
   const [streamError, setStreamError] = useState<ApiClientError | null>(null)
   const [streamEnded, setStreamEnded] = useState(false)
+  /** The server is searching the web for this model before assessing it (feature 017 FR-013). */
+  const [searching, setSearching] = useState(false)
   const [tab, setTab] = useState<ResultTab>('overview')
   /** Key of the option last opened in each category tab; the gauge follows it (feature 011 FR-001, FR-002). */
   const [openedInTab, setOpenedInTab] = useState<Record<string, string>>({})
@@ -67,10 +70,12 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
     setCategories(null)
     setStreamError(null)
     setStreamEnded(false)
+    setSearching(false)
     // A new use has its own plan and step list, so the plan card starts closed again (feature 014).
     setPlanOpen(false)
     return api.streamReport(deviceId, use, {
-      onAssessment: value => { setAssessment(value); setChange([]) },
+      onStatus: () => setSearching(true),
+      onAssessment: value => { setSearching(false); setAssessment(value); setChange([]) },
       onCategories: value => { setCategories(value); setChange([]) },
       onEnd: () => setStreamEnded(true),
       onError: setStreamError,
@@ -159,7 +164,11 @@ export function ResultsView({ deviceId }: { deviceId: string }) {
         <ErrorCard title="We could not load your results" message={streamError.message} />
       ) : !assessment || scan.state === 'loading' ? (
         <div className="flex flex-col gap-3.5">
-          <Thinking label="Assessing your computer…" className="px-1" />
+          {searching ? (
+            <Thinking key="web" phrase={WEB_SEARCH_PHRASE} label="Searching the web for this model…" className="px-1" />
+          ) : (
+            <Thinking label="Assessing your computer…" className="px-1" />
+          )}
           <ResultSkeleton />
         </div>
       ) : (

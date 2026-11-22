@@ -4,6 +4,7 @@ import type { Assessment } from '@leaaf/shared/assessment'
 import { ADMIN_ROUTES, type AdminScanDetail, type AdminScanPage, type AdminSession } from '@leaaf/shared/admin'
 import { API_ROUTES } from '@leaaf/shared/api'
 import type { DeviceRecord } from '@leaaf/shared/device'
+import type { ReportStatus } from '@leaaf/shared/report'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { PlanStepList, StepPlan } from '@leaaf/shared/steps'
 import { ApiClientError, type ApiClient, type ScanSession, type ScanSessionEvent } from './types'
@@ -88,6 +89,10 @@ export const liveClient: ApiClient = {
 
   streamReport(deviceId, use, handlers) {
     const source = new EventSource(API_ROUTES.reportStream(deviceId, use))
+    source.addEventListener('status', (event) => {
+      const data = parse<ReportStatus>(event)
+      if (data && data.phase === 'web_search') handlers.onStatus?.(data)
+    })
     source.addEventListener('assessment', (event) => {
       const data = parse<Assessment>(event)
       if (data) handlers.onAssessment(data)

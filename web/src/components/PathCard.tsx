@@ -1,6 +1,7 @@
 import type { CardView } from '../lib/pathView'
 import type { StepState } from '../lib/steps'
 import { PathHeader } from './PathHeader'
+import { SourceLink } from './SourceLink'
 import { StepList } from './StepList'
 import { Thinking } from './Thinking'
 import { Sk } from './ui'
@@ -94,15 +95,7 @@ export function PathCard({ view, selected, open, pending, onToggle, plan, naviga
               <span className="text-sm text-muted">No explanation available.</span>
             )}
             {view.sources.map((source) => (
-              <a
-                key={source.url + source.label}
-                href={source.url}
-                target="_blank"
-                rel="noreferrer"
-                className="text-[13px] font-medium text-leaf hover:text-leaf-dark"
-              >
-                Source: {source.label}
-              </a>
+              <SourceLink key={source.url + source.label} source={source} />
             ))}
           </div>
           {plan ? (

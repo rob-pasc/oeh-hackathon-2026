@@ -27,13 +27,16 @@ function LeafGlyph() {
  * glyph and a phrase that changes to a random other phrase every few seconds. The changing phrase is hidden from
  * screen readers, which hear the steady `label` once instead.
  */
-export function Thinking({ label = 'Writing the explanation…', className = '' }: { label?: string; className?: string }) {
-  const [phrase, setPhrase] = useState(() => nextThinkingPhrase(null))
+export function Thinking({ label = 'Writing the explanation…', className = '', phrase: fixed }: { label?: string; className?: string; phrase?: string }) {
+  const [rotating, setPhrase] = useState(() => nextThinkingPhrase(null))
+  // A fixed phrase (for example "Searching the web…", feature 017 FR-013) says what is happening, so it does not rotate.
+  const phrase = fixed ?? rotating
 
   useEffect(() => {
+    if (fixed) return
     const timer = window.setInterval(() => setPhrase((p) => nextThinkingPhrase(p)), THINKING_INTERVAL_MS)
     return () => window.clearInterval(timer)
-  }, [])
+  }, [fixed])
 
   return (
     <div role="status" className={`flex items-center gap-2.5 ${className}`} data-testid="thinking">

@@ -1,5 +1,6 @@
 import type { Step, StepPlan } from '@leaaf/shared/steps'
 import { formatMinutes, NO_VERIFIED_STEPS, stepSources, type StepState } from '../lib/steps'
+import { SourceLink } from './SourceLink'
 import { Thinking } from './Thinking'
 import { Sk } from './ui'
 
@@ -54,15 +55,7 @@ function StepBlock({ step, index, plan }: { step: Step; index: number; plan: Ste
         ) : null}
         <StepNeeds step={step} />
         {stepSources(step, plan).map((source) => (
-          <a
-            key={source.url}
-            href={source.url}
-            target="_blank"
-            rel="noreferrer"
-            className="text-[13px] font-medium text-leaf hover:text-leaf-dark"
-          >
-            Source: {source.label}
-          </a>
+          <SourceLink key={source.url} source={source} />
         ))}
       </div>
     </li>

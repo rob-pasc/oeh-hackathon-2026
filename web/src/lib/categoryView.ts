@@ -7,7 +7,7 @@ import type { Mode } from '@leaaf/shared/common'
 import { rankCategories, recommendedCategory, type RankedOption } from '@leaaf/shared/ranking'
 import { avoidsNothing, formatAvoided, formatCaused, formatEur, formatYears, gaugeValue } from './impact'
 import { KIND_ICONS, STATUS_LABELS } from './labels'
-import { co2Of, scoreMetric, type CardView, type SourceRef } from './pathView'
+import { co2Of, scoreMetric, sourceRef, type CardView, type SourceRef } from './pathView'
 
 export interface OptionView extends CardView {
   id: string
@@ -42,7 +42,7 @@ function optionView({ option, total }: RankedOption, categoryId: string, result:
   for (const id of option.claims.flatMap((c) => c.passage_ids)) {
     const p = passages.get(id)
     if (!p || sources.some((s) => s.url === p.url && s.label.startsWith(p.title))) continue
-    sources.push({ label: p.section ? `${p.title}, ${p.section}` : p.title, url: p.url })
+    sources.push(sourceRef(p))
   }
   return {
     key: `${categoryId}:${option.option_id}`,

@@ -129,6 +129,8 @@ export function createMockClient(options: MockOptions = {}): ApiClient {
       }
       const assessment = assessmentFor(deviceId, use)
       const categories = categoriesFor(deviceId, assessment)
+      // The sample laptop cites a fictional web page, so its stream shows the web search line first (feature 017).
+      if (deviceId === MOCK_DEVICE_IDS.laptop) timers.push(setTimeout(() => handlers.onStatus?.({ phase: 'web_search' }), assessmentMs / 4))
       timers.push(setTimeout(() => handlers.onAssessment(assessment), assessmentMs))
       timers.push(
         setTimeout(() => {

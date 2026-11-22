@@ -3,6 +3,7 @@
 // shared/src/ranking.ts so the browser and the server agree (feature 003 FR-012).
 import type { Assessment, Impact } from '@leaaf/shared/assessment'
 import type { Mode, Path, Range, Suitability } from '@leaaf/shared/common'
+import type { Passage } from '@leaaf/shared/retrieval'
 import { rankPaths, recommendedPath } from '@leaaf/shared/ranking'
 import { formatEur, formatYears, gaugeValue, type GaugeValue } from './impact'
 import { PATH_TITLES, STATUS_LABELS, type IconKind } from './labels'
@@ -10,6 +11,15 @@ import { PATH_TITLES, STATUS_LABELS, type IconKind } from './labels'
 export interface SourceRef {
   label: string
   url: string
+  /** Set for pages found by web search (feature 017 FR-007): shown with a "Web source" label. */
+  web?: { publisher: string; retrieved: string }
+}
+
+/** A cited passage as a link: its title and section, plus the web details for web pages. */
+export function sourceRef(p: Passage): SourceRef {
+  // A web passage's section repeats its title, so the title alone labels it.
+  const label = p.section && p.section !== p.title ? `${p.title}, ${p.section}` : p.title
+  return p.source === 'web' ? { label, url: p.url, web: { publisher: p.publisher, retrieved: p.accessed_on } } : { label, url: p.url }
 }
 
 export interface CardMetric {

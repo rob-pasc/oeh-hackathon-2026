@@ -2,7 +2,7 @@
 // and the source links of one step.
 import type { Range } from '@leaaf/shared/common'
 import type { Step, StepPlan } from '@leaaf/shared/steps'
-import type { SourceRef } from './pathView'
+import { sourceRef, type SourceRef } from './pathView'
 
 /** A plan's load state; `error` lets reopening the card try again. */
 export type StepState = { state: 'loading' } | { state: 'ready'; plan: StepPlan } | { state: 'error'; message: string }
@@ -25,7 +25,7 @@ export function stepSources(step: Step, plan: StepPlan): SourceRef[] {
   for (const id of step.passage_ids) {
     const p = passages.get(id)
     if (!p || sources.some((s) => s.url === p.url)) continue
-    sources.push({ label: p.section ? `${p.title}, ${p.section}` : p.title, url: p.url })
+    sources.push(sourceRef(p))
   }
   return sources
 }

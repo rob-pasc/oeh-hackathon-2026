@@ -3,6 +3,7 @@ import type { Assessment } from '@leaaf/shared/assessment'
 import type { CategoryResult } from '@leaaf/shared/categories'
 import type { OsFamily } from '@leaaf/shared/common'
 import type { DeviceRecord } from '@leaaf/shared/device'
+import type { ReportStatus } from '@leaaf/shared/report'
 import type { PlanStepList, StepPlan } from '@leaaf/shared/steps'
 import type { UseTag } from '../lib/labels'
 
@@ -72,6 +73,8 @@ export class ApiClientError extends Error {
 }
 
 export interface ReportStreamHandlers {
+  /** What the server does before the assessment, for example a web search for the model (feature 017 FR-013). */
+  onStatus?: (status: ReportStatus) => void
   onAssessment: (assessment: Assessment) => void
   /** The AI categories, or the five-path fallback (feature 008; shared/src/categories.ts). */
   onCategories: (result: CategoryResult) => void

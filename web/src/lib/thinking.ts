@@ -18,6 +18,9 @@ export const THINKING_PHRASES = [
   'Photosynthesizing…',
 ] as const
 
+/** Shown, without rotating, while the server searches the web for the scanned model (feature 017 FR-013). */
+export const WEB_SEARCH_PHRASE = 'Searching the web…'
+
 /** How long one phrase stays before the next one replaces it. */
 export const THINKING_INTERVAL_MS = 2400
 
